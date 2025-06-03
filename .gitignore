@@ -1,0 +1,14 @@
+.idea
+.vscode
+*.iml
+.project
+.classpath
+.history
+.settings
+.deploy
+.DS_Store
+charts/**/charts
+.cr-*
+/ct_*
+*.jar
+*.tgz
