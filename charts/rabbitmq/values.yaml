@@ -1,0 +1,13 @@
+auth:
+  username: labs64
+  password: labs64pw
+  erlangCookie: P0Zope123
+
+service:
+  type: ClusterIP
+
+replicaCount: 2
+
+persistence:
+  enabled: true
+  size: 1Gi

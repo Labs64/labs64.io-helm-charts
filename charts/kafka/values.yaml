@@ -1,0 +1,15 @@
+replicaCount: 3
+
+zookeeper:
+  replicaCount: 3
+
+persistence:
+  enabled: true
+  size: 10Gi
+
+sasl:
+  client:
+    users:
+      - labs64
+    passwords: "labs64pw"
+  existingSecret: ""

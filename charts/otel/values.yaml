@@ -1,0 +1,35 @@
+mode: deployment
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      protocol: TCP
+
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+        http
+
+  processors:
+    batch: {}
+
+  exporters:
+    otlp:
+      endpoint: jaeger-collector.observability.svc.cluster.local:4317
+      tls:
+        insecure: true
+
+  service:
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [otlp]
