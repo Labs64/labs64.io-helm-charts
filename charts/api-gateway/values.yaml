@@ -88,12 +88,21 @@ resources: {}
 # -- This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
-    path: /
-    port: http
+    path: /actuator/health/liveness
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+  timeoutSeconds: 2
+
 readinessProbe:
   httpGet:
-    path: /
-    port: http
+    path: /actuator/health/readiness
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  failureThreshold: 3
+  timeoutSeconds: 2
 
 # -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
@@ -121,3 +130,27 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# -- Application properties
+application:
+  # -- Message broker; e.g. rabbit, kafka, etc.
+  defaultBroker: rabbit
+  # -- Audit gateway properties
+  audit:
+    # -- Audit topic name
+    topicName: labs64-audit-topic
+  # -- RabbitMQ connection params
+  rabbit:
+    # -- RabbitMQ host name
+    host: rabbitmq.default.svc.cluster.local
+    # -- RabbitMQ port
+    port: 5672
+    # -- RabbitMQ username
+    username: ""
+    # -- RabbitMQ password
+    password: ""
+  # -- Open Telemetry params
+  otel:
+    exporter:
+      otlp:
+        endpoint: http://otel-collector.<namespace>.svc.cluster.local:4317

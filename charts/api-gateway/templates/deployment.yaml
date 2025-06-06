@@ -56,6 +56,11 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "api-gateway.fullname" . }}
+            - secretRef:
+                name: {{ include "api-gateway.fullname" . }}
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}

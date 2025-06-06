@@ -5,6 +5,57 @@
             "properties": {},
             "type": "object"
         },
+        "application": {
+            "properties": {
+                "audit": {
+                    "properties": {
+                        "topicName": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "defaultBroker": {
+                    "type": "string"
+                },
+                "otel": {
+                    "properties": {
+                        "exporter": {
+                            "properties": {
+                                "otlp": {
+                                    "properties": {
+                                        "endpoint": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
+                },
+                "rabbit": {
+                    "properties": {
+                        "host": {
+                            "type": "string"
+                        },
+                        "password": {
+                            "type": "string"
+                        },
+                        "port": {
+                            "type": "integer"
+                        },
+                        "username": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
         "autoscaling": {
             "properties": {
                 "enabled": {
@@ -87,16 +138,28 @@
         },
         "livenessProbe": {
             "properties": {
+                "failureThreshold": {
+                    "type": "integer"
+                },
                 "httpGet": {
                     "properties": {
                         "path": {
                             "type": "string"
                         },
                         "port": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     "type": "object"
+                },
+                "initialDelaySeconds": {
+                    "type": "integer"
+                },
+                "periodSeconds": {
+                    "type": "integer"
+                },
+                "timeoutSeconds": {
+                    "type": "integer"
                 }
             },
             "type": "object"
@@ -122,16 +185,28 @@
         },
         "readinessProbe": {
             "properties": {
+                "failureThreshold": {
+                    "type": "integer"
+                },
                 "httpGet": {
                     "properties": {
                         "path": {
                             "type": "string"
                         },
                         "port": {
-                            "type": "string"
+                            "type": "integer"
                         }
                     },
                     "type": "object"
+                },
+                "initialDelaySeconds": {
+                    "type": "integer"
+                },
+                "periodSeconds": {
+                    "type": "integer"
+                },
+                "timeoutSeconds": {
+                    "type": "integer"
                 }
             },
             "type": "object"

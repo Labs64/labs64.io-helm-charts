@@ -19,16 +19,19 @@ helm search repo bitnami/rabbitmq
 #helm show values bitnami/rabbitmq > charts/third-party/rabbitmq/rabbitmq-values.orig.yaml
 helm upgrade --install rabbitmq bitnami/rabbitmq -f charts/third-party/rabbitmq/values.yaml
 
-## Labs64.io
-helm uninstall labs64io
-helm upgrade --install labs64io ./charts/api-gateway -f overrides/api-gateway.values.LOCAL.yaml
-
-helm ls
+## Labs64.IO
 
 # Generate Helm chart docu
 docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
+
 # Generate Helm values schema
 helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
+
+# Install helm package
+#helm uninstall labs64io
+helm upgrade --install labs64io ./charts/api-gateway -f overrides/api-gateway.values.LOCAL.yaml -f overrides/api-gateway.values.LOCAL.secret.yaml
+
+helm ls
 
 # k8s
 kubectl get pods
