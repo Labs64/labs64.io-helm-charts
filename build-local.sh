@@ -7,17 +7,17 @@
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
-## Kafka
+## Inslatt Kafka manually
 #helm uninstall kafka
 #helm search repo bitnami/kafka
 #helm show values bitnami/kafka > charts/third-party/kafka/kafka-values.orig.yaml
 #helm upgrade --install kafka bitnami/kafka -f charts/third-party/kafka/values.yaml
 
-## RabbitMQ
+## Install RabbitMQ manually
 #helm uninstall rabbitmq
-helm search repo bitnami/rabbitmq
+#helm search repo bitnami/rabbitmq
 #helm show values bitnami/rabbitmq > charts/third-party/rabbitmq/rabbitmq-values.orig.yaml
-helm upgrade --install rabbitmq bitnami/rabbitmq -f charts/third-party/rabbitmq/values.yaml
+#helm upgrade --install rabbitmq bitnami/rabbitmq -f charts/third-party/rabbitmq/values.yaml
 
 ## Labs64.IO
 
@@ -29,7 +29,8 @@ helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/val
 
 # Install helm package
 #helm uninstall labs64io
-helm upgrade --install labs64io ./charts/api-gateway -f overrides/api-gateway.values.LOCAL.yaml -f overrides/api-gateway.values.LOCAL.secret.yaml
+helm dependency build ./charts/api-gateway
+helm upgrade --install labs64io ./charts/api-gateway --set image.repository=localhost:5005/api-gateway
 
 helm ls
 
@@ -39,10 +40,10 @@ kubectl get pods
 
 ## Cheatsheet
 
-# kubectl port-forward service/labs64io-api-gateway 8080:80
+# kubectl port-forward service/labs64io-api-gateway 8080:8080
 # => http://localhost:8080/swagger-ui/index.html
 # => curl -X POST "http://localhost:8080/audit/publish" -H "Content-Type: application/json" -d '{"message":"msg"}'
-# kubectl port-forward service/rabbitmq 15672:15672
+# kubectl port-forward service/labs64io-rabbitmq 15672:15672
 # => http://localhost:15672
 
 # kubectl scale deployment labs64io-api-gateway --replicas=0/1/2

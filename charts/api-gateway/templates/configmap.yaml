@@ -6,8 +6,8 @@ metadata:
     {{- include "api-gateway.labels" . | nindent 4 }}
 data:
   APP_DEFAULT_BROKER: "{{ .Values.application.defaultBroker }}"
-  RABBITMQ_HOST: "{{ .Values.application.rabbit.host }}"
-  RABBITMQ_PORT: "{{ .Values.application.rabbit.port }}"
-  RABBITMQ_USERNAME: "{{ .Values.application.rabbit.username }}"
+  RABBITMQ_HOST: "{{ .Values.application.rabbitmq.host }}"
+  RABBITMQ_PORT: "{{ .Values.application.rabbitmq.port }}"
+  RABBITMQ_USERNAME: "{{ .Values.rabbitmq.auth.username }}"
   AUDIT_TOPIC_NAME: "{{ .Values.application.audit.topicName }}"
   OTLP_ENDPONT: "{{ .Values.application.otel.exporter.otlp.endpoint }}"

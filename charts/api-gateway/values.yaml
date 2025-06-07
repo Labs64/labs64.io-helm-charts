@@ -54,7 +54,7 @@ service:
   # -- This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
+  port: 8080
 
 # -- This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -85,7 +85,7 @@ resources: {}
   #   cpu: 100m
   #   memory: 128Mi
 
-# -- This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
     path: /actuator/health/liveness
@@ -95,6 +95,7 @@ livenessProbe:
   failureThreshold: 3
   timeoutSeconds: 2
 
+# -- This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 readinessProbe:
   httpGet:
     path: /actuator/health/readiness
@@ -137,20 +138,30 @@ application:
   defaultBroker: rabbit
   # -- Audit gateway properties
   audit:
-    # -- Audit topic name
+    # -- Audit topic name; default: labs64-audit-topic
     topicName: labs64-audit-topic
   # -- RabbitMQ connection params
-  rabbit:
-    # -- RabbitMQ host name
-    host: rabbitmq.default.svc.cluster.local
-    # -- RabbitMQ port
+  rabbitmq:
+    # -- Use RabbitMQ message broker
+    enabled: true
+    # -- RabbitMQ host name; default: rabbitmq.default.svc.cluster.local
+    host: labs64io-rabbitmq.default.svc.cluster.local
+    # -- RabbitMQ port; default: 5672
     port: 5672
-    # -- RabbitMQ username
-    username: ""
-    # -- RabbitMQ password
-    password: ""
   # -- Open Telemetry params
   otel:
     exporter:
       otlp:
-        endpoint: http://otel-collector.<namespace>.svc.cluster.local:4317
+        endpoint: http://otel-collector.observability.svc.cluster.local:4317
+
+# -- RabbitMQ properties
+rabbitmq:
+  replicaCount: 2
+  auth:
+    # -- RabbitMQ username; default: labs64
+    username: labs64
+    # -- RabbitMQ password; default: labs64pw
+    password: labs64pw
+  persistence:
+    enabled: true
+    size: 1Gi

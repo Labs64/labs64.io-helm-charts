@@ -36,19 +36,16 @@
                     },
                     "type": "object"
                 },
-                "rabbit": {
+                "rabbitmq": {
                     "properties": {
-                        "host": {
-                            "type": "string"
+                        "enabled": {
+                            "type": "boolean"
                         },
-                        "password": {
+                        "host": {
                             "type": "string"
                         },
                         "port": {
                             "type": "integer"
-                        },
-                        "username": {
-                            "type": "string"
                         }
                     },
                     "type": "object"
@@ -181,6 +178,36 @@
         },
         "podSecurityContext": {
             "properties": {},
+            "type": "object"
+        },
+        "rabbitmq": {
+            "properties": {
+                "auth": {
+                    "properties": {
+                        "password": {
+                            "type": "string"
+                        },
+                        "username": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "persistence": {
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "size": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "replicaCount": {
+                    "type": "integer"
+                }
+            },
             "type": "object"
         },
         "readinessProbe": {
