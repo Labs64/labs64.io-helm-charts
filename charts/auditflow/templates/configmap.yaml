@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart-libs.fullname" . }}
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+data:
+  APP_DEFAULT_BROKER: "{{ .Values.application.defaultBroker }}"
+  AUDIT_TOPIC_NAME: "{{ .Values.application.audit.topicName }}"
+  {{- if .Values.application.rabbitmq.enabled }}
+  RABBITMQ_HOST: "{{ .Values.application.rabbitmq.host }}"
+  RABBITMQ_PORT: "{{ .Values.application.rabbitmq.port }}"
+  RABBITMQ_USERNAME: "{{ .Values.rabbitmq.auth.username }}"
+  {{- end }}
+  OTLP_ENDPONT: "{{ .Values.application.otel.exporter.otlp.endpoint }}"

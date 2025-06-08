@@ -37,11 +37,16 @@ docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:late
 # Generate Helm values schema
 helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
 
-# Install helm package
+# Install Labs64.IO helm packages
 #helm uninstall labs64io
+
 helm dependencies update ./charts/api-gateway
 #helm dependency build ./charts/api-gateway
 helm upgrade --install labs64io ./charts/api-gateway --set image.repository=localhost:5005/api-gateway
+
+helm dependencies update ./charts/auditflow
+#helm dependency build ./charts/auditflow
+helm upgrade --install labs64io ./charts/auditflow --set image.repository=localhost:5005/auditflow
 
 helm ls
 
