@@ -3,7 +3,7 @@ name: Labs64.IO - Release Charts
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'charts/**'
 
