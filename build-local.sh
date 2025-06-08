@@ -19,6 +19,16 @@ helm repo update
 #helm show values bitnami/rabbitmq > charts/third-party/rabbitmq/rabbitmq-values.orig.yaml
 #helm upgrade --install rabbitmq bitnami/rabbitmq -f charts/third-party/rabbitmq/values.yaml
 
+## Add Open Telemetry Repo
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+helm repo update
+
+## Install Open Telemetry manually
+#helm uninstall otel-collector
+#helm search repo open-telemetry
+#helm show values open-telemetry/opentelemetry-collector > charts/third-party/otel/opentelemetry-collector-values.orig.yaml
+#helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector -f charts/third-party/otel/values.yaml
+
 ## Labs64.IO
 
 # Generate Helm chart docu
