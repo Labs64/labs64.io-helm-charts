@@ -29,7 +29,8 @@ helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/val
 
 # Install helm package
 #helm uninstall labs64io
-helm dependency build ./charts/api-gateway
+helm dependencies update ./charts/api-gateway
+#helm dependency build ./charts/api-gateway
 helm upgrade --install labs64io ./charts/api-gateway --set image.repository=localhost:5005/api-gateway
 
 helm ls

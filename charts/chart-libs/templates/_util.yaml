@@ -1,0 +1,13 @@
+{{- /*
+  chart-libs.util.merge merges two YAML templates and outputs the result.
+  It takes an array of three values:
+    - the top-level context
+    - the template name for the overrides (destination)
+    - the template name for the base (source)
+  */}}
+  {{- define "chart-libs.util.merge" -}}
+  {{- $top := first . -}}
+  {{- $overrides := fromYaml (include (index . 1) $top) | default (dict ) -}}
+  {{- $tpl := fromYaml (include (index . 2) $top) | default (dict ) -}}
+  {{- toYaml (merge $overrides $tpl) -}}
+  {{- end -}}
