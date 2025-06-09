@@ -3,8 +3,9 @@
 
 # Install helm charts
 
-## Bitnami Repo
+## Add External Repos
 helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
 helm repo update
 
 ## Install Kafka manually
@@ -18,10 +19,6 @@ helm repo update
 #helm search repo bitnami/rabbitmq
 #helm show values bitnami/rabbitmq > charts/third-party/rabbitmq/rabbitmq-values.orig.yaml
 #helm upgrade --install rabbitmq bitnami/rabbitmq -f charts/third-party/rabbitmq/values.yaml
-
-## Add Open Telemetry Repo
-helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
-helm repo update
 
 ## Install Open Telemetry manually
 #helm uninstall otel-collector
