@@ -7,7 +7,7 @@
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
-## Inslatt Kafka manually
+## Install Kafka manually
 #helm uninstall kafka
 #helm search repo bitnami/kafka
 #helm show values bitnami/kafka > charts/third-party/kafka/kafka-values.orig.yaml

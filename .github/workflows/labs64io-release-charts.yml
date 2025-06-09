@@ -44,9 +44,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Exclude not-to-be-released charts
+        run: |
+          EXCLUDED_CHARTS=("third-party")
+          for chart in "${EXCLUDED_CHARTS[@]}"; do
+            rm -rf "./charts/$chart"
+          done
+          ls -la ./charts
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
           charts_dir: charts
+          skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
