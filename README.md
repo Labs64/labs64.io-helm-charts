@@ -8,18 +8,33 @@
 
 Once Helm has been set up correctly, add the repo as follows:
 
-  helm repo add <alias> https://labs64.github.io/labs64.io-helm-charts
+```
+helm repo add <alias> https://labs64.github.io/labs64.io-helm-charts
+```
 
 If you had already added this repo earlier, run `helm repo update` to retrieve the latest versions of the packages.
 You can then run `helm search repo <alias>` to see the charts.
 
-To install the <chart-name> chart:
+To view all available versions:
+```
+helm repo update
+helm search repo <alias>/<chart-name>
+```
 
-    helm install my-<chart-name> <alias>/<chart-name>
+To view charts values:
+```
+helm show values <alias>/<chart-name>
+```
+
+To install the <chart-name> chart:
+```
+helm upgrade --install my-<chart-name> <alias>/<chart-name>
+```
 
 To uninstall the chart:
-
-    helm uninstall my-<chart-name>
+```
+helm uninstall my-<chart-name>
+```
 
 ## Star History
 
