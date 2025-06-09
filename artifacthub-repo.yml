@@ -1,0 +1,6 @@
+repositoryID: 282f0ae1-edf1-4061-8dec-95b53964e807
+owners:
+  - name: labs64
+    email: info@labs64.com
+ignore:
+  - name: chart-libs
