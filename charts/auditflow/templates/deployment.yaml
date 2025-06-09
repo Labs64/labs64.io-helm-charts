@@ -19,9 +19,9 @@ spec:
       {{- end }}
       labels:
         {{- include "chart-libs.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
+          {{- with .Values.podLabels }}
+          {{- toYaml . | nindent 8 }}
+          {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -33,6 +33,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
+        # Main Application Container (auditflow)
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}
           securityContext:
@@ -65,9 +66,44 @@ spec:
           volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
+        # AuditFlow Transformer Sidecar Container
+        {{- if .Values.application.transformer.enabled }}
+        - name: auditflow-transformer
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.transformer.image.repository }}:{{ .Values.transformer.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.transformer.image.pullPolicy }}
+          ports:
+            - name: http-trn
+              containerPort: {{ .Values.transformer.service.port }}
+              protocol: TCP
+          env:
+            - name: APP_NAME
+              value: "auditflow-transformer"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          {{- with .Values.transformer.livenessProbe }}
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: {{ .Values.transformer.service.port }}
+            {{- toYaml (omit . "httpGet") | nindent 12 }}
+          {{- end }}
+          {{- with .Values.transformer.readinessProbe }}
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: {{ .Values.transformer.service.port }}
+            {{- toYaml (omit . "httpGet") | nindent 12 }}
+          {{- end }}
+        {{- end }}
       volumes:
-        {{- toYaml . | nindent 8 }}
+      {{- with .Values.volumes }}
+      {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:

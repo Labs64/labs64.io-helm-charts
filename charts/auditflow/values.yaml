@@ -7,11 +7,21 @@ replicaCount: 1
 
 # -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: auditflow
+  repository: labs64/auditflow
   # -- This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
+
+transformer:
+  image:
+    repository: labs64/auditflow-transformer
+    pullPolicy: IfNotPresent
+    tag: ""
+  # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+  service:
+    # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+    port: 8081
 
 # -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -30,6 +40,10 @@ serviceAccount:
   # -- The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+# RBAC configuration (create RBAC resources: Role, RoleBinding)
+rbac:
+  create: true
 
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
@@ -134,6 +148,8 @@ affinity: {}
 
 # -- Application properties
 application:
+  transformer:
+    enabled: true
   # -- Message broker; e.g. rabbit, kafka, etc.
   defaultBroker: rabbit
   # -- Audit properties
@@ -144,8 +160,8 @@ application:
   rabbitmq:
     # -- Use RabbitMQ message broker
     enabled: true
-    # -- RabbitMQ host name; default: rabbitmq.default.svc.cluster.local
-    host: labs64io-rabbitmq.default.svc.cluster.local
+    # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
+    host: rabbitmq.default.svc.cluster.local
     # -- RabbitMQ port; default: 5672
     port: 5672
   # -- Open Telemetry params

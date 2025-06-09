@@ -1,8 +1,8 @@
 # api-gateway
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
+![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
-A Helm chart for Labs64.IO - API Gateway
+Labs64.IO :: API Gateway - A secure, high-performance entry point for managing and routing API traffic across Labs64.IO microservices
 
 **Homepage:** <https://labs64.io>
 
@@ -21,25 +21,25 @@ A Helm chart for Labs64.IO - API Gateway
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.bitnami.com/bitnami | rabbitmq | 16.0.6 |
+| file://../chart-libs | chart-libs | 0.0.1 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":"labs64io-rabbitmq.default.svc.cluster.local","port":5672}}` | Application properties |
+| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672}}` | Application properties |
 | application.audit | object | `{"topicName":"labs64-audit-topic"}` | Audit gateway properties |
 | application.audit.topicName | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
 | application.defaultBroker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
 | application.otel | object | `{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}}` | Open Telemetry params |
-| application.rabbitmq | object | `{"enabled":true,"host":"labs64io-rabbitmq.default.svc.cluster.local","port":5672}` | RabbitMQ connection params |
+| application.rabbitmq | object | `{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672}` | RabbitMQ connection params |
 | application.rabbitmq.enabled | bool | `true` | Use RabbitMQ message broker |
-| application.rabbitmq.host | string | `"labs64io-rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.default.svc.cluster.local |
+| application.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
 | application.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
 | autoscaling | object | `{"enabled":false,"maxReplicas":100,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | fullnameOverride | string | `""` |  |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"api-gateway","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/api-gateway","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |

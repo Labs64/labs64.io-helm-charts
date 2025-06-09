@@ -49,6 +49,14 @@
                         }
                     },
                     "type": "object"
+                },
+                "transformer": {
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    },
+                    "type": "object"
                 }
             },
             "type": "object"
@@ -210,6 +218,14 @@
             },
             "type": "object"
         },
+        "rbac": {
+            "properties": {
+                "create": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object"
+        },
         "readinessProbe": {
             "properties": {
                 "failureThreshold": {
@@ -280,6 +296,33 @@
         },
         "tolerations": {
             "type": "array"
+        },
+        "transformer": {
+            "properties": {
+                "image": {
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "service": {
+                    "properties": {
+                        "port": {
+                            "type": "integer"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
         },
         "volumeMounts": {
             "type": "array"

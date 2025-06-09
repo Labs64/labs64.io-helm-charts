@@ -2,8 +2,8 @@ apiVersion: v2
 name: auditflow
 type: application
 version: 0.0.1
-appVersion: "latest"
-description: A Helm chart for Labs64.IO - API AuditFlow
+appVersion: 0.0.1
+description: "Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing Solution"
 icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
 home: https://labs64.io
 keywords:
@@ -21,7 +21,3 @@ dependencies:
   - name: chart-libs
     version: 0.0.1
     repository: file://../chart-libs
-  - name: rabbitmq
-    version: 16.0.6
-    repository: https://charts.bitnami.com/bitnami
-    condition: application.rabbitmq.enabled
