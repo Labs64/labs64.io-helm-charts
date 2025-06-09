@@ -1,8 +1,8 @@
-# Auditflow
+# auditflow
 
 ![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
-A Helm chart for Labs64.IO - Audit Flow
+Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing Solution
 
 **Homepage:** <https://labs64.io>
 
@@ -21,7 +21,7 @@ A Helm chart for Labs64.IO - Audit Flow
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.bitnami.com/bitnami | rabbitmq | 16.0.6 |
+| file://../chart-libs | chart-libs | 0.0.1 |
 
 ## Values
 
@@ -29,7 +29,7 @@ A Helm chart for Labs64.IO - Audit Flow
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | application | object | `{"audit":{"topicName":"labs64-audit-topic"},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":"labs64io-rabbitmq.default.svc.cluster.local","port":5672}}` | Application properties |
-| application.audit | object | `{"topicName":"labs64-audit-topic"}` | Auditflow properties |
+| application.audit | object | `{"topicName":"labs64-audit-topic"}` | Audit properties |
 | application.audit.topicName | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
 | application.defaultBroker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
 | application.otel | object | `{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}}` | Open Telemetry params |

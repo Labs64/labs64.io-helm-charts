@@ -2,7 +2,7 @@
 
 ![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: latest](https://img.shields.io/badge/AppVersion-latest-informational?style=flat-square)
 
-A Helm chart for Labs64.IO - API Gateway
+Labs64.IO :: API Gateway - A secure, high-performance entry point for managing and routing API traffic across Labs64.IO microservices
 
 **Homepage:** <https://labs64.io>
 
@@ -21,6 +21,7 @@ A Helm chart for Labs64.IO - API Gateway
 
 | Repository | Name | Version |
 |------------|------|---------|
+| file://../chart-libs | chart-libs | 0.0.1 |
 | https://charts.bitnami.com/bitnami | rabbitmq | 16.0.6 |
 
 ## Values
