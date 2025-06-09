@@ -1,0 +1,84 @@
+apiVersion: v1
+entries:
+  api-gateway:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2025-06-09T06:01:08.145270336Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    - condition: application.rabbitmq.enabled
+      name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 16.0.6
+    description: A Helm chart for Labs64.IO - API Gateway
+    digest: 0819a1ad2d72c33d6e08a937b9641ee6dce26b861ddab697a4970a2dccb0153d
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - api
+    - gateway
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: api-gateway
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-api-gateway
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/api-gateway-0.0.1/api-gateway-0.0.1.tgz
+    version: 0.0.1
+  auditflow:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2025-06-09T06:01:08.35598746Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: A Helm chart for Labs64.IO - API AuditFlow
+    digest: 2f161fca649b4b316fd50bd3c59cd14bcfa6dfbd1059ddde87bba3acc0e36d03
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - auditflow
+    - audit
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: auditflow
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-auditflow
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/auditflow-0.0.1/auditflow-0.0.1.tgz
+    version: 0.0.1
+  chart-libs:
+  - apiVersion: v2
+    created: "2025-06-09T06:01:08.619458554Z"
+    description: A Helm chart for Labs64.IO - Heln Charts Common Templates
+    digest: 1904ac7be38b16e6d1a6abbf7dfc0e6159c8ba850a910031b5a5fe4680a580ef
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - library
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: chart-libs
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: library
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/chart-libs-0.0.1/chart-libs-0.0.1.tgz
+    version: 0.0.1
+generated: "2025-06-09T06:01:08.619464606Z"
