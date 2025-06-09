@@ -6,22 +6,22 @@
 
 [Helm](https://helm.sh) must be installed to use the charts.  Please refer to Helm's [documentation](https://helm.sh/docs) to get started.
 
-Once Helm has been set up correctly, add the repo as follows:
-
+Once Helm is properly set up, add the repository as follows:
 ```
 helm repo add <alias> https://labs64.github.io/labs64.io-helm-charts
 ```
 
-If you had already added this repo earlier, run `helm repo update` to retrieve the latest versions of the packages.
-You can then run `helm search repo <alias>` to see the charts.
-
-To view all available versions:
+If you have already added this repository, run the following command to retrieve the latest versions of the packages:
 ```
 helm repo update
-helm search repo <alias>/<chart-name>
 ```
 
-To view charts values:
+To list the available chart versions:
+```
+helm search repo <alias>
+```
+
+To view default chart values:
 ```
 helm show values <alias>/<chart-name>
 ```
