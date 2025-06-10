@@ -42,7 +42,7 @@
                             "type": "boolean"
                         },
                         "host": {
-                            "type": "string"
+                            "type": ["string", "null"]
                         },
                         "port": {
                             "type": "integer"

@@ -34,17 +34,24 @@ docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:late
 
 # Generate Helm values schema
 helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
+helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
 
 # Install Labs64.IO helm packages
-#helm uninstall labs64io
 
+#helm uninstall l64-local-gw
 helm dependencies update ./charts/api-gateway
 #helm dependency build ./charts/api-gateway
-helm upgrade --install labs64io ./charts/api-gateway --set image.repository=localhost:5005/api-gateway
+helm upgrade --install l64-local-gw ./charts/api-gateway \
+  --set image.repository=localhost:5005/api-gateway \
+  --set image.tag=latest
 
+#helm uninstall l64-local-au
 helm dependencies update ./charts/auditflow
 #helm dependency build ./charts/auditflow
-helm upgrade --install labs64io ./charts/auditflow --set image.repository=localhost:5005/auditflow
+helm upgrade --install l64-local-au ./charts/auditflow \
+  --set image.repository=localhost:5005/auditflow \
+  --set image.tag=latest \
+  --set application.rabbitmq.host=l64-local-gw-rabbitmq.default.svc.cluster.local
 
 helm ls
 
@@ -54,15 +61,16 @@ kubectl get pods
 
 ## Cheatsheet
 
-# kubectl port-forward service/labs64io-api-gateway 8080:8080
+# kubectl port-forward service/l64-local-gw-api-gateway 8080:8080
 # => http://localhost:8080/swagger-ui/index.html
 # => curl -X POST "http://localhost:8080/audit/publish" -H "Content-Type: application/json" -d '{"message":"msg"}'
 # kubectl port-forward service/labs64io-rabbitmq 15672:15672
 # => http://localhost:15672
 
-# kubectl scale deployment labs64io-api-gateway --replicas=0/1/2
+# kubectl scale deployment l64-local-gw-api-gateway --replicas=0/1/2
 
 # kubectl logs -l app.kubernetes.io/name=api-gateway -f
+# kubectl logs -l app.kubernetes.io/name=auditflow -f
 
 
 ## Links

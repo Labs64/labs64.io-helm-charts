@@ -144,8 +144,8 @@ application:
   rabbitmq:
     # -- Use RabbitMQ message broker
     enabled: true
-    # -- RabbitMQ host name; default: rabbitmq.default.svc.cluster.local
-    host: labs64io-rabbitmq.default.svc.cluster.local
+    # -- RabbitMQ host name; default: <helm-name>-rabbitmq.<namespace>.svc.cluster.local
+    host:
     # -- RabbitMQ port; default: 5672
     port: 5672
   # -- Open Telemetry params
