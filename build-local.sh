@@ -4,6 +4,7 @@
 # Install helm charts
 
 ## Add External Repos
+helm repo add labs64io-pub https://labs64.github.io/labs64.io-helm-charts
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
 helm repo update
