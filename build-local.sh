@@ -32,7 +32,7 @@ helm repo update
 # Generate Helm chart docu
 docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
 
-# Generate Helm values schema
+# Generate Helm values schema ( https://github.com/losisin/helm-values-schema-json ; alternative: https://github.com/dadav/helm-schema )
 helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
 helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
 
