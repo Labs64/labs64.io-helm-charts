@@ -96,6 +96,34 @@ entries:
   auditflow:
   - apiVersion: v2
     appVersion: 0.0.2
+    created: "2025-06-12T11:47:59.208309341Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based
+      Auditing Solution'
+    digest: 8e6cfc20d3e44b664607e36bbfcc97e167449fd59afd858bd52a845b357e91ce
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - auditflow
+    - audit
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: auditflow
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-auditflow
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/auditflow-0.0.4/auditflow-0.0.4.tgz
+    version: 0.0.4
+  - apiVersion: v2
+    appVersion: 0.0.2
     created: "2025-06-12T11:21:34.880989934Z"
     dependencies:
     - name: chart-libs
@@ -199,4 +227,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/chart-libs-0.0.1/chart-libs-0.0.1.tgz
     version: 0.0.1
-generated: "2025-06-12T11:21:34.881015261Z"
+generated: "2025-06-12T11:47:59.208328157Z"
