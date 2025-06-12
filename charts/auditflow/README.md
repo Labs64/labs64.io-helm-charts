@@ -28,14 +28,14 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":null,"port":5672}}` | Application properties |
+| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672}}` | Application properties |
 | application.audit | object | `{"topicName":"labs64-audit-topic"}` | Audit properties |
 | application.audit.topicName | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
 | application.defaultBroker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
 | application.otel | object | `{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}}` | Open Telemetry params |
-| application.rabbitmq | object | `{"enabled":true,"host":null,"port":5672}` | RabbitMQ connection params |
+| application.rabbitmq | object | `{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672}` | RabbitMQ connection params |
 | application.rabbitmq.enabled | bool | `true` | Use RabbitMQ message broker |
-| application.rabbitmq.host | string | `nil` | RabbitMQ host name; default: <helm-name>-rabbitmq.<namespace>.svc.cluster.local |
+| application.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
 | application.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
 | autoscaling | object | `{"enabled":false,"maxReplicas":100,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | fullnameOverride | string | `""` |  |

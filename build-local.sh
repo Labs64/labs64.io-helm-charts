@@ -17,9 +17,9 @@ helm repo update
 
 ## Install RabbitMQ manually
 #helm uninstall rabbitmq
-#helm search repo bitnami/rabbitmq
+helm search repo bitnami/rabbitmq
 #helm show values bitnami/rabbitmq > charts/third-party/rabbitmq/rabbitmq-values.orig.yaml
-#helm upgrade --install rabbitmq bitnami/rabbitmq -f charts/third-party/rabbitmq/values.yaml
+helm upgrade --install rabbitmq bitnami/rabbitmq -f charts/third-party/rabbitmq/values.yaml
 
 ## Install Open Telemetry manually
 #helm uninstall otel-collector
@@ -50,8 +50,7 @@ helm dependencies update ./charts/auditflow
 #helm dependency build ./charts/auditflow
 helm upgrade --install l64-local-au ./charts/auditflow \
   --set image.repository=localhost:5005/auditflow \
-  --set image.tag=latest \
-  --set application.rabbitmq.host=l64-local-gw-rabbitmq.default.svc.cluster.local
+  --set image.tag=latest
 
 helm ls
 
