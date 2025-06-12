@@ -210,6 +210,14 @@
             },
             "type": "object"
         },
+        "rbac": {
+            "properties": {
+                "create": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object"
+        },
         "readinessProbe": {
             "properties": {
                 "failureThreshold": {

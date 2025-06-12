@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing Solution
 
@@ -53,6 +53,7 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | rabbitmq | object | `{"auth":{"password":"labs64pw","username":"labs64"},"persistence":{"enabled":true,"size":"1Gi"},"replicaCount":2}` | RabbitMQ properties |
 | rabbitmq.auth.password | string | `"labs64pw"` | RabbitMQ password; default: labs64pw |
 | rabbitmq.auth.username | string | `"labs64"` | RabbitMQ username; default: labs64 |
+| rbac.create | bool | `true` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources | object | `{}` |  |
