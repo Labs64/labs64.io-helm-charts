@@ -1,6 +1,3 @@
-## Toolset
-# Local: k8s, kubectl, helm
-
 # Install helm charts
 
 ## Add External Repos
@@ -50,7 +47,9 @@ helm dependencies update ./charts/auditflow
 #helm dependency build ./charts/auditflow
 helm upgrade --install l64-local-au ./charts/auditflow \
   --set image.repository=localhost:5005/auditflow \
-  --set image.tag=latest
+  --set image.tag=latest \
+  --set transformer.image.repository=localhost:5005/auditflow-transformer \
+  --set transformer.image.tag=latest
 
 helm ls
 
@@ -70,14 +69,3 @@ kubectl get pods
 
 # kubectl logs -l app.kubernetes.io/name=api-gateway -f
 # kubectl logs -l app.kubernetes.io/name=auditflow -f
-
-
-## Links
-# - Kubernetes – https://kubernetes.io  Open-source container orchestration platform for automating deployment, scaling, and management of containerized applications
-# - Helm – https://helm.sh  Package manager for Kubernetes that uses charts to define, install, and manage applications in a Kubernetes cluster
-# - Spring Cloud Stream – https://spring.io/projects/spring-cloud-stream  Framework for building event-driven microservices connected to messaging systems like Kafka or RabbitMQ using binders
-# - Kafka – https://kafka.apache.org  Distributed streaming platform for building real-time data pipelines and event-driven applications with scalable publish-subscribe messaging
-# - RabbitMQ – https://www.rabbitmq.com  Message broker implementing AMQP and other protocols, enabling reliable inter-service communication in distributed systems
-# - OpenAPI – https://www.openapis.org  Standard for describing RESTful APIs in a machine-readable format to support documentation, validation, and code generation
-# - Logfmt – https://brandur.org/logfmt  Documentation for parsing logfmt log lines into structured fields, used with Grafana Loki for log aggregation
-# - FastAPI – https://fastapi.tiangolo.com  High-performance Python web framework for building APIs with automatic docs, type validation, and async support

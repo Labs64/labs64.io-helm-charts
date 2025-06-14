@@ -49,6 +49,14 @@
                         }
                     },
                     "type": "object"
+                },
+                "transformer": {
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        }
+                    },
+                    "type": "object"
                 }
             },
             "type": "object"
@@ -288,6 +296,25 @@
         },
         "tolerations": {
             "type": "array"
+        },
+        "transformer": {
+            "properties": {
+                "image": {
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
+            "type": "object"
         },
         "volumeMounts": {
             "type": "array"

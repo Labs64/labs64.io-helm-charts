@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
+![Version: 0.0.4](https://img.shields.io/badge/Version-0.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing Solution
 
@@ -28,7 +28,7 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672}}` | Application properties |
+| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672},"transformer":{"enabled":true}}` | Application properties |
 | application.audit | object | `{"topicName":"labs64-audit-topic"}` | Audit properties |
 | application.audit.topicName | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
 | application.defaultBroker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
@@ -67,6 +67,9 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | tolerations | list | `[]` |  |
+| transformer.image.pullPolicy | string | `"IfNotPresent"` |  |
+| transformer.image.repository | string | `"labs64/auditflow-transformer"` |  |
+| transformer.image.tag | string | `""` |  |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 
