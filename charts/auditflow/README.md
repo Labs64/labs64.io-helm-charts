@@ -70,6 +70,9 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | transformer.image.pullPolicy | string | `"IfNotPresent"` |  |
 | transformer.image.repository | string | `"labs64/auditflow-transformer"` |  |
 | transformer.image.tag | string | `""` |  |
+| transformer.service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| transformer.service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
+| transformer.service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 

@@ -312,6 +312,17 @@
                         }
                     },
                     "type": "object"
+                },
+                "service": {
+                    "properties": {
+                        "port": {
+                            "type": "integer"
+                        },
+                        "type": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
                 }
             },
             "type": "object"
