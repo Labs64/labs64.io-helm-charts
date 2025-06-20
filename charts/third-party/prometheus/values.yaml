@@ -1,0 +1,9 @@
+prometheus-node-exporter:
+  hostRootFsMount:
+    enabled: false
+
+grafana:
+  enabled: false # Deploy a separate Grafana instance
+
+alertmanager:
+  enabled: false # Optional, can be enabled if you need alerting

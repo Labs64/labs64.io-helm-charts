@@ -1,52 +1,75 @@
-mode: deployment
+mode: "deployment" # Can be daemonset, deployment, or statefulset
+
 image:
-  repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+  repository: otel/opentelemetry-collector-contrib
+  tag: latest
+  pullPolicy: IfNotPresent
+
+presets:
+  logsCollection:
+    enabled: true
+    includeCollectorLogs: false
+    storeCheckpoints: false
+    maxRecombineLogSize: 102400
+  hostMetrics:
+    enabled: false
+  kubernetesAttributes:
+    enabled: true
+    extractAllPodLabels: true
+    extractAllPodAnnotations: true
+  kubeletMetrics:
+    enabled: true
+  kubernetesEvents:
+    enabled: true
+  clusterMetrics:
+    enabled: true
+
+clusterRole:
+  create: true
 
 config:
   receivers:
     otlp:
       protocols:
-        grpc:
-        http:
+        grpc: {}
+        http: {}
+    prometheus:
+      config:
+        scrape_configs:
+          - job_name: 'kubernetes-pods'
+            kubernetes_sd_configs:
+              - role: pod
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                action: keep
+                regex: true
 
   processors:
     batch:
       send_batch_size: 1000
       timeout: 10s
-    memory_limiter:
-      limit_mib: 256
-      spike_limit_mib: 64
-    k8sattributes:
-      auth_type: "kubeConfig"
-      passthrough: false
-      extract:
-        metadata:
-          - k8s.namespace.name
-          - k8s.deployment.name
-          - k8s.pod.name
-          - k8s.container.name
-          - k8s.node.name
-          - k8s.cluster.name
 
   exporters:
-    jaeger:
-      endpoint: "jaeger-collector.observability.svc.cluster.local:14250" # Adjust hostname/port
+    prometheusremotewrite:
+      endpoint: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+    otlphttp/loki:
+      endpoint: "http://loki-write.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+    otlp/tempo:
+      endpoint: "tempo.monitoring.svc.cluster.local:4317"
       tls:
-        insecure: true # Use TLS in production!
-    debug:
-      verbosity: detailed
+        insecure: true
 
   service:
     pipelines:
-      traces:
-        receivers: [otlp]
-        processors: [memory_limiter, k8sattributes, batch]
-        exporters: [jaeger, debug] # Add other exporters as needed
       metrics:
-        receivers: [otlp]
-        processors: [memory_limiter, k8sattributes, batch]
-        exporters: [debug] # Add prometheusremotewrite or other metrics exporters
+        receivers: [otlp, prometheus]
+        processors: [batch]
+        exporters: [prometheusremotewrite]
       logs:
         receivers: [otlp]
-        processors: [memory_limiter, k8sattributes, batch]
-        exporters: [debug] # Add loki or other log exporters
+        processors: [batch]
+        exporters: [otlphttp/loki]
+      traces:
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [otlp/tempo]
