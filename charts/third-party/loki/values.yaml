@@ -1,0 +1,37 @@
+loki:
+  auth_enabled: false
+  commonConfig:
+    replication_factor: 1
+
+  mode: SingleBinary
+
+  useTestSchema: true
+
+  singleBinary:
+    replicas: 1
+
+  storage:
+    index:
+      boltdb:
+        directory: /loki/index
+
+    chunk_store_config:
+      fs:
+        path: /loki/chunks
+
+    bucketNames:
+      chunks: filesystem
+      ruler: filesystem
+      admin: filesystem
+
+  persistence:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+
+promtail:
+  enabled: false
+
+grafana:
+  enabled: false

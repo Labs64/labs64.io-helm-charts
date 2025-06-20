@@ -1,0 +1,14 @@
+tempo:
+  searchEnabled: true
+  metricsGenerator:
+    enabled: true # Generates metrics from spans
+    remoteWriteUrl: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write
+  storage:
+    trace:
+      backend: local # For production, use a supported object store like S3 or GCS.
+      local:
+        path: /var/tempo/traces
+
+# We disable the bundled Grafana as we deploy it separately.
+grafana:
+  enabled: false

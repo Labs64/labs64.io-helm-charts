@@ -1,0 +1,19 @@
+prometheus:
+  prometheusSpec:
+    # Enable remote write to send metrics to OpenTelemetry Collector
+    remoteWrite:
+      - url: "http://otel-collector.monitoring.svc.cluster.local:4318/api/v1/prometheus/remote_write"
+        queueConfig:
+          maxSamplesPerSend: 1000
+          maxShards: 20
+          capacity: 2500
+
+prometheus-node-exporter:
+  hostRootFsMount:
+    enabled: false
+
+grafana:
+  enabled: false # Deploy a separate Grafana instance
+
+alertmanager:
+  enabled: false # Optional, can be enabled if you need alerting
