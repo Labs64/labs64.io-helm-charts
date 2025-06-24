@@ -2,6 +2,17 @@ NAMESPACE_LABS64IO := "labs64io"
 NAMESPACE_MONITORING := "monitoring"
 NAMESPACE_TOOLS := "tools"
 
+## Useful Commands ##
+
+# show helm releases
+helm-ls:
+    helm ls --all-namespaces
+
+# show pods, services in all namespaces
+kubectl-pods:
+    kubectl get pods,svc --all-namespaces -o wide
+
+
 # add external helm repositories
 repo-add:
     helm repo add labs64io-pub https://labs64.github.io/labs64.io-helm-charts
@@ -9,6 +20,7 @@ repo-add:
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
     helm repo add grafana https://grafana.github.io/helm-charts
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    helm repo add opensearch https://opensearch-project.github.io/helm-charts/
 
 # update helm repositories
 repo-update:
@@ -46,6 +58,21 @@ kafka-uninstall:
 
 
 ## Install Monitoring Tools ##
+
+# install OpenSearch
+opensearch-install:
+    helm search repo opensearch
+    helm show values opensearch/opensearch > charts/third-party/opensearch/values.orig.yaml
+    helm show values opensearch/opensearch-dashboards > charts/third-party/opensearch/values-dashboards.orig.yaml
+    helm upgrade --install opensearch opensearch/opensearch -f charts/third-party/opensearch/values.yaml -n {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f charts/third-party/opensearch/values-dashboards.yaml -n {{NAMESPACE_MONITORING}} --create-namespace
+    kubectl --namespace {{NAMESPACE_MONITORING}} get pods | grep "opensearch"
+    echo "Run this command to open Grafana: kubectl port-forward svc/opensearch-cluster-master -n {{NAMESPACE_MONITORING}} 9200:9200"
+
+# uninstall OpenSearch
+opensearch-uninstall:
+    helm uninstall opensearch -n {{NAMESPACE_MONITORING}}
+    helm uninstall opensearch-dashboards -n {{NAMESPACE_MONITORING}}
 
 # install Prometheus
 prometheus-install:
@@ -112,10 +139,6 @@ generate-docu:
 generate-schema:
     helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
     helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
-
-# show helm releases
-helm-ls:
-    helm ls --all-namespaces
 
 # install Labs64.IO :: API Gateway
 helm-install-gw:
