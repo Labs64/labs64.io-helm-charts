@@ -59,6 +59,16 @@ kafka-uninstall:
 
 ## Install Monitoring Tools ##
 
+# install Grafana Alloy
+alloy-install:
+    helm search repo grafana/alloy
+    helm show values grafana/alloy > charts/third-party/alloy/values.orig.yaml
+    helm upgrade --install alloy grafana/alloy -f charts/third-party/alloy/values.yaml -n {{NAMESPACE_MONITORING}} --create-namespace
+
+# uninstall Grafana Alloy
+alloy-uninstall:
+    helm uninstall alloy -n {{NAMESPACE_MONITORING}}
+
 # install OpenSearch
 opensearch-install:
     helm search repo opensearch
@@ -66,8 +76,8 @@ opensearch-install:
     helm show values opensearch/opensearch-dashboards > charts/third-party/opensearch/values-dashboards.orig.yaml
     helm upgrade --install opensearch opensearch/opensearch -f charts/third-party/opensearch/values.yaml -n {{NAMESPACE_MONITORING}} --create-namespace
     helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f charts/third-party/opensearch/values-dashboards.yaml -n {{NAMESPACE_MONITORING}} --create-namespace
-    kubectl --namespace {{NAMESPACE_MONITORING}} get pods | grep "opensearch"
-    echo "Run this command to open Grafana: kubectl port-forward svc/opensearch-cluster-master -n {{NAMESPACE_MONITORING}} 9200:9200"
+    kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc | grep "opensearch"
+    echo "Run this command to open OpenSearch Dashboard: kubectl port-forward svc/opensearch-dashboards -n {{NAMESPACE_MONITORING}} 5601:5601"
 
 # uninstall OpenSearch
 opensearch-uninstall:
@@ -79,7 +89,7 @@ prometheus-install:
     helm search repo prometheus-community
     helm show values prometheus-community/kube-prometheus-stack > charts/third-party/prometheus/values.orig.yaml
     helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f charts/third-party/prometheus/values.yaml -n {{NAMESPACE_MONITORING}} --create-namespace
-    kubectl --namespace {{NAMESPACE_MONITORING}} get pods -l "release=prometheus"
+    kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
 
 # uninstall Prometheus
 prometheus-uninstall:
