@@ -1,6 +1,8 @@
+replicas: 2
+
 resources:
   requests:
-    memory: "2Gi"
+    memory: "1Gi"
     cpu: "100m"
 
 persistence:

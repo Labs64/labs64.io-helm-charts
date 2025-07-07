@@ -1,5 +1,6 @@
 NAMESPACE_LABS64IO := "labs64io"
 NAMESPACE_INGRESS := "ingress-nginx"
+NAMESPACE_KUBE_SYSTEM := "kube-system"
 NAMESPACE_MONITORING := "monitoring"
 NAMESPACE_TOOLS := "tools"
 
@@ -18,6 +19,7 @@ kubectl-pods:
 repo-add:
     helm repo add labs64io-pub https://labs64.github.io/labs64.io-helm-charts
     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
     helm repo add grafana https://grafana.github.io/helm-charts
@@ -35,13 +37,23 @@ repo-search: repo-update
 
 ## Install Tools ##
 
+# install Metrics Server
+metrics-server-install:
+    helm search repo metrics-server/metrics-server
+    helm show values metrics-server/metrics-server > charts/third-party/metrics-server/values.orig.yaml
+    helm upgrade --install metrics-server metrics-server/metrics-server -f charts/third-party/metrics-server/values.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
+:
+# uninstall Metrics Server
+metrics-server-uninstall:
+    helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}}
+
 # install Ingress controller
 ingress-install:
     helm search repo ingress-nginx/ingress-nginx
     helm show values ingress-nginx/ingress-nginx > charts/third-party/ingress-nginx/values.orig.yaml
     helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f charts/third-party/ingress-nginx/values.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
 
-# uninstall RabIngress controller
+# uninstall Ingress controller
 ingress-uninstall:
     helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}
 
