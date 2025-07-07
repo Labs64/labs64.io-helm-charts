@@ -4,4 +4,4 @@ controller:
   #  https: 443
   service:
     ports:
-      http: 8081
+      http: 8080
