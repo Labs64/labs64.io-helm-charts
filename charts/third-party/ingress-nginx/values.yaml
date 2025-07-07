@@ -1,0 +1,7 @@
+controller:
+  #containerPort:
+  #  http: 80
+  #  https: 443
+  service:
+    ports:
+      http: 8081
