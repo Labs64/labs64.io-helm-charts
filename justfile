@@ -42,7 +42,7 @@ metrics-server-install:
     helm search repo metrics-server/metrics-server
     helm show values metrics-server/metrics-server > charts/third-party/metrics-server/values.orig.yaml
     helm upgrade --install metrics-server metrics-server/metrics-server -f charts/third-party/metrics-server/values.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
-:
+
 # uninstall Metrics Server
 metrics-server-uninstall:
     helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}}
