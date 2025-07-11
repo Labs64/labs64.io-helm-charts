@@ -1,7 +1,3 @@
-# Default values for api-gateway.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
@@ -103,7 +99,7 @@ readinessProbe:
 
 # -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 80

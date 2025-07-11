@@ -15,6 +15,64 @@
                     },
                     "type": "object"
                 },
+                "auditflow": {
+                    "properties": {
+                        "pipelines": {
+                            "items": {
+                                "properties": {
+                                    "enabled": {
+                                        "type": "boolean"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "processor": {
+                                        "properties": {
+                                            "clazz": {
+                                                "type": "string"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "properties": {
+                                                "properties": {
+                                                    "log-level": {
+                                                        "type": "string"
+                                                    },
+                                                    "password": {
+                                                        "type": "string"
+                                                    },
+                                                    "service-path": {
+                                                        "type": "string"
+                                                    },
+                                                    "service-url": {
+                                                        "type": "string"
+                                                    },
+                                                    "username": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "transformer": {
+                                        "properties": {
+                                            "name": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                },
                 "defaultBroker": {
                     "type": "string"
                 },
@@ -52,8 +110,13 @@
                 },
                 "transformer": {
                     "properties": {
-                        "enabled": {
-                            "type": "boolean"
+                        "container": {
+                            "properties": {
+                                "enabled": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "type": "object"
                         }
                     },
                     "type": "object"
@@ -77,6 +140,20 @@
                 }
             },
             "type": "object"
+        },
+        "env": {
+            "items": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "type": "array"
         },
         "fullnameOverride": {
             "type": "string"
@@ -258,7 +335,19 @@
             "type": "integer"
         },
         "resources": {
-            "properties": {},
+            "properties": {
+                "requests": {
+                    "properties": {
+                        "cpu": {
+                            "type": "string"
+                        },
+                        "memory": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                }
+            },
             "type": "object"
         },
         "securityContext": {
@@ -325,9 +414,61 @@
             "type": "object"
         },
         "volumeMounts": {
+            "items": {
+                "properties": {
+                    "mountPath": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "readOnly": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
             "type": "array"
         },
         "volumes": {
+            "items": {
+                "properties": {
+                    "configMap": {
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "secret": {
+                        "properties": {
+                            "items": {
+                                "items": {
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "path": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            "secretName": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "type": "array"
         }
     },

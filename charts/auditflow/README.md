@@ -28,7 +28,7 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672},"transformer":{"enabled":true}}` | Application properties |
+| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"auditflow":{"pipelines":[{"enabled":true,"name":"logs","processor":{"clazz":"io.labs64.audit.processors.LoggingProcessor","name":"logging_processor","properties":{"log-level":"DEBUG"}},"transformer":{"name":"zero"}},{"enabled":true,"name":"opensearch-raw","processor":{"clazz":"io.labs64.audit.processors.WebClientPostProcessor","name":"opensearch_processor","properties":{"password":"Labs64pw+","service-path":"/auditflow_raw_index/_doc","service-url":"https://opensearch-cluster-master.monitoring.svc.cluster.local:9200","username":"admin"}},"transformer":{"name":"zero"}},{"enabled":true,"name":"opensearch-transformed","processor":{"clazz":"io.labs64.audit.processors.WebClientPostProcessor","name":"opensearch_processor","properties":{"password":"Labs64pw+","service-path":"/auditflow_index/_doc","service-url":"https://opensearch-cluster-master.monitoring.svc.cluster.local:9200","username":"admin"}},"transformer":{"name":"audit_opensearch"}},{"enabled":false,"name":"loki","processor":{"clazz":"io.labs64.audit.processors.WebClientPostProcessor","name":"loki_processor","properties":{"service-path":"/loki/api/v1/push","service-url":"http://loki-write.monitoring.svc.cluster.local:3100"}},"transformer":{"name":"audit_loki"}}]},"defaultBroker":"rabbit","otel":{"exporter":{"otlp":{"endpoint":"http://otel-collector.observability.svc.cluster.local:4317"}}},"rabbitmq":{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672},"transformer":{"container":{"enabled":true}}}` | Application properties |
 | application.audit | object | `{"topicName":"labs64-audit-topic"}` | Audit properties |
 | application.audit.topicName | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
 | application.defaultBroker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
@@ -37,7 +37,12 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | application.rabbitmq.enabled | bool | `true` | Use RabbitMQ message broker |
 | application.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
 | application.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
-| autoscaling | object | `{"enabled":false,"maxReplicas":100,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
+| application.transformer.container.enabled | bool | `true` | Enable the transformer sidecar container |
+| autoscaling | object | `{"enabled":true,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
+| env[0].name | string | `"SPRING_CONFIG_IMPORT"` |  |
+| env[0].value | string | `"optional:file:/etc/auditflow/pipelines.yaml"` |  |
+| env[1].name | string | `"JAVA_OPTS"` |  |
+| env[1].value | string | `"-Djavax.net.ssl.trustStore=/etc/auditflow/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit"` |  |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/auditflow","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
@@ -56,7 +61,8 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | rbac.create | bool | `true` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
-| resources | object | `{}` |  |
+| resources.requests.cpu | string | `"100m"` |  |
+| resources.requests.memory | string | `"512Mi"` |  |
 | securityContext | object | `{}` |  |
 | service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
@@ -72,8 +78,8 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | transformer.image.tag | string | `""` |  |
 | transformer.service | object | `{"port":8081}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | transformer.service.port | int | `8081` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
-| volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
-| volumes | list | `[]` | Additional volumes on the output Deployment definition. |
+| volumeMounts | list | `[{"mountPath":"/etc/auditflow","name":"auditflow-pipelines","readOnly":true},{"mountPath":"/etc/auditflow/certs","name":"opensearch-truststore","readOnly":true}]` | Additional volumeMounts on the output Deployment definition. |
+| volumes | list | `[{"configMap":{"name":"l64-local-au-auditflow-pipelines"},"name":"auditflow-pipelines"},{"name":"opensearch-truststore","secret":{"items":[{"key":"truststore.jks","path":"truststore.jks"}],"secretName":"opensearch-truststore-secret"}}]` | Additional volumes on the output Deployment definition. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)
