@@ -1,0 +1,99 @@
+image:
+  repository: localhost:5005/auditflow
+  tag: latest
+
+transformer:
+  image:
+    repository: localhost:5005/auditflow-transformer
+    tag: latest
+
+resources:
+  #limits:
+  #  cpu: 200m
+  #  memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+volumes:
+ - name: auditflow-pipelines
+   configMap:
+     name: l64-local-au-auditflow-pipelines
+ - name: opensearch-truststore
+   secret:
+     secretName: opensearch-truststore-secret
+     items:
+       - key: truststore.jks
+         path: truststore.jks
+
+volumeMounts:
+ - name: auditflow-pipelines
+   mountPath: /etc/auditflow
+   readOnly: true
+ - name: opensearch-truststore
+   mountPath: /etc/auditflow/certs
+   readOnly: true
+
+env:
+  - name: SPRING_CONFIG_IMPORT
+    value: "optional:file:/etc/auditflow/pipelines.yaml"
+  - name: JAVA_OPTS
+    value: "-Djavax.net.ssl.trustStore=/etc/auditflow/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit"
+
+application:
+  auditflow:
+    pipelines:
+      - name: 'logs'
+        enabled: true
+        transformer:
+          name: 'zero'
+        processor:
+          name: 'logging_processor'
+          clazz: 'io.labs64.audit.processors.LoggingProcessor'
+          properties:
+            log-level: "DEBUG"
+      - name: 'opensearch-raw'
+        enabled: true
+        transformer:
+          name: 'zero'
+        processor:
+          name: 'opensearch_processor'
+          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+          properties:
+            service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
+            service-path: "/auditflow_raw_index/_doc"
+            username: "admin"
+            password: "Labs64pw+"
+      - name: 'opensearch-transformed'
+        enabled: true
+        transformer:
+          name: 'audit_opensearch'
+        processor:
+          name: 'opensearch_processor'
+          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+          properties:
+            service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
+            service-path: "/auditflow_index/_doc"
+            username: "admin"
+            password: "Labs64pw+"
+      - name: 'loki'
+        enabled: false
+        transformer:
+          name: 'audit_loki'
+        processor:
+          name: 'loki_processor'
+          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+          properties:
+            service-url: "http://loki-write.monitoring.svc.cluster.local:3100"
+            service-path: "/loki/api/v1/push"
+  rabbitmq:
+    host: rabbitmq.tools.svc.cluster.local
+
+rabbitmq:
+  replicaCount: 2
+  auth:
+    username: labs64
+    password: labs64pw
+  persistence:
+    enabled: true
+    size: 1Gi

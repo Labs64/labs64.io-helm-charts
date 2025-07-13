@@ -46,7 +46,7 @@ jobs:
 
       - name: Exclude not-to-be-released charts
         run: |
-          EXCLUDED_CHARTS=("third-party")
+          EXCLUDED_CHARTS=("overrides")
           for chart in "${EXCLUDED_CHARTS[@]}"; do
             rm -rf "./charts/$chart"
           done

@@ -12,4 +12,3 @@ data:
   RABBITMQ_PORT: "{{ .Values.application.rabbitmq.port }}"
   RABBITMQ_USERNAME: "{{ .Values.rabbitmq.auth.username }}"
   {{- end }}
-  OTLP_ENDPONT: "{{ .Values.application.otel.exporter.otlp.endpoint }}"

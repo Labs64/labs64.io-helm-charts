@@ -1,3 +1,4 @@
+ENV := "local"
 NAMESPACE_LABS64IO := "labs64io"
 NAMESPACE_INGRESS := "ingress-nginx"
 NAMESPACE_KUBE_SYSTEM := "kube-system"
@@ -40,8 +41,8 @@ repo-search: repo-update
 # install Metrics Server
 metrics-server-install:
     helm search repo metrics-server/metrics-server
-    helm show values metrics-server/metrics-server > charts/third-party/metrics-server/values.orig.yaml
-    helm upgrade --install metrics-server metrics-server/metrics-server -f charts/third-party/metrics-server/values.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
+    helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
+    helm upgrade --install metrics-server metrics-server/metrics-server -f overrides/metrics-server/values.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
 
 # uninstall Metrics Server
 metrics-server-uninstall:
@@ -50,8 +51,8 @@ metrics-server-uninstall:
 # install Ingress controller
 ingress-install:
     helm search repo ingress-nginx/ingress-nginx
-    helm show values ingress-nginx/ingress-nginx > charts/third-party/ingress-nginx/values.orig.yaml
-    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f charts/third-party/ingress-nginx/values.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
+    helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
+    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f overrides/ingress-nginx/values.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
 
 # uninstall Ingress controller
 ingress-uninstall:
@@ -61,8 +62,8 @@ ingress-uninstall:
 # install RabbitMQ
 rabbitmq-install:
     helm search repo bitnami/rabbitmq
-    helm show values bitnami/rabbitmq > charts/third-party/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq -f charts/third-party/rabbitmq/values.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
+    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
     echo "Username      : labs64"
     echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
     echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
@@ -74,8 +75,8 @@ rabbitmq-uninstall:
 # install Kafka
 kafka-install:
     helm search repo bitnami/kafka
-    helm show values bitnami/kafka > charts/third-party/kafka/values.orig.yaml
-    helm upgrade --install kafka bitnami/kafka -f charts/third-party/kafka/values.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm show values bitnami/kafka > overrides/kafka/values.orig.yaml
+    helm upgrade --install kafka bitnami/kafka -f overrides/kafka/values.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
 
 # uninstall Kafka
 kafka-uninstall:
@@ -87,8 +88,8 @@ kafka-uninstall:
 # install Grafana Alloy
 alloy-install:
     helm search repo grafana/alloy
-    helm show values grafana/alloy > charts/third-party/alloy/values.orig.yaml
-    helm upgrade --install alloy grafana/alloy -f charts/third-party/alloy/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm show values grafana/alloy > overrides/alloy/values.orig.yaml
+    helm upgrade --install alloy grafana/alloy -f overrides/alloy/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall Grafana Alloy
 alloy-uninstall:
@@ -97,20 +98,20 @@ alloy-uninstall:
 # install OpenSearch
 opensearch-install:
     helm search repo opensearch
-    helm show values opensearch/opensearch > charts/third-party/opensearch/values.orig.yaml
-    helm show values opensearch/opensearch-dashboards > charts/third-party/opensearch/values-dashboards.orig.yaml
-    helm upgrade --install opensearch opensearch/opensearch -f charts/third-party/opensearch/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f charts/third-party/opensearch/values-dashboards.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm show values opensearch/opensearch > overrides/opensearch/values.orig.yaml
+    helm show values opensearch/opensearch-dashboards > overrides/opensearch/values-dashboards.orig.yaml
+    helm upgrade --install opensearch opensearch/opensearch -f overrides/opensearch/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f overrides/opensearch/values-dashboards.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc | grep "opensearch"
     echo "Run this command to open OpenSearch Dashboard: kubectl port-forward svc/opensearch-dashboards --namespace {{NAMESPACE_MONITORING}} 5601:5601"
 
 # extract OpenSearch certificate
 opensearch-extract-cert:
-    kubectl --namespace {{NAMESPACE_MONITORING}} cp opensearch-cluster-master-0:/usr/share/opensearch/config/root-ca.pem charts/third-party/opensearch/root-ca.pem -c opensearch
-    rm -f charts/third-party/opensearch/truststore.jks
-    keytool -import -trustcacerts -file charts/third-party/opensearch/root-ca.pem -alias opensearch-ca -keystore charts/third-party/opensearch/truststore.jks -storepass "changeit" -noprompt
+    kubectl --namespace {{NAMESPACE_MONITORING}} cp opensearch-cluster-master-0:/usr/share/opensearch/config/root-ca.pem overrides/opensearch/root-ca.pem -c opensearch
+    rm -f overrides/opensearch/truststore.jks
+    keytool -import -trustcacerts -file overrides/opensearch/root-ca.pem -alias opensearch-ca -keystore overrides/opensearch/truststore.jks -storepass "changeit" -noprompt
     kubectl --namespace {{NAMESPACE_LABS64IO}} delete secret opensearch-truststore-secret
-    kubectl --namespace {{NAMESPACE_LABS64IO}} create secret generic opensearch-truststore-secret --from-file=./charts/third-party/opensearch/truststore.jks
+    kubectl --namespace {{NAMESPACE_LABS64IO}} create secret generic opensearch-truststore-secret --from-file=./overrides/opensearch/truststore.jks
     kubectl --namespace {{NAMESPACE_LABS64IO}} get secret opensearch-truststore-secret -o yaml
 
 # uninstall OpenSearch
@@ -121,8 +122,8 @@ opensearch-uninstall:
 # install Prometheus
 prometheus-install:
     helm search repo prometheus-community
-    helm show values prometheus-community/kube-prometheus-stack > charts/third-party/prometheus/values.orig.yaml
-    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f charts/third-party/prometheus/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
+    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f overrides/prometheus/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
 
 # uninstall Prometheus
@@ -132,8 +133,8 @@ prometheus-uninstall:
 # install Loki
 loki-install:
     helm search repo grafana/loki
-    helm show values grafana/loki > charts/third-party/loki/values.orig.yaml
-    helm upgrade --install loki grafana/loki -f charts/third-party/loki/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm show values grafana/loki > overrides/loki/values.orig.yaml
+    helm upgrade --install loki grafana/loki -f overrides/loki/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall Loki
 loki-uninstall:
@@ -142,8 +143,8 @@ loki-uninstall:
 # install tempo
 tempo-install:
     helm search repo grafana/tempo
-    helm show values grafana/tempo > charts/third-party/tempo/values.orig.yaml
-    helm upgrade --install tempo grafana/tempo -f charts/third-party/tempo/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm show values grafana/tempo > overrides/tempo/values.orig.yaml
+    helm upgrade --install tempo grafana/tempo -f overrides/tempo/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall tempo
 tempo-uninstall:
@@ -152,8 +153,8 @@ tempo-uninstall:
 # install grafana
 grafana-install:
     helm search repo grafana/grafana
-    helm show values grafana/grafana > charts/third-party/grafana/values.orig.yaml
-    helm upgrade --install grafana grafana/grafana -f charts/third-party/grafana/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm show values grafana/grafana > overrides/grafana/values.orig.yaml
+    helm upgrade --install grafana grafana/grafana -f overrides/grafana/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
     echo "Username: admin"
     echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
@@ -165,8 +166,8 @@ grafana-uninstall:
 # install Open Telemetry
 open-telemetry-install:
     helm search repo open-telemetry
-    helm show values open-telemetry/opentelemetry-collector > charts/third-party/otel/values.orig.yaml
-    helm upgrade --install otel open-telemetry/opentelemetry-collector -f charts/third-party/otel/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm show values open-telemetry/opentelemetry-collector > overrides/otel/values.orig.yaml
+    helm upgrade --install otel open-telemetry/opentelemetry-collector -f overrides/otel/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall Open Telemetry
 open-telemetry-uninstall:
@@ -187,35 +188,31 @@ generate-schema:
 # install Labs64.IO :: API Gateway
 helm-install-gw:
     helm dependencies update ./charts/api-gateway
-    helm upgrade --install l64-local-gw ./charts/api-gateway \
+    helm upgrade --install l64-{{ENV}}-gw ./charts/api-gateway \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      --set image.repository=localhost:5005/api-gateway \
-      --set image.tag=latest \
-      --set application.rabbitmq.host=rabbitmq.{{NAMESPACE_TOOLS}}.svc.cluster.local
-    echo "Run this command to tunnel API Gateway: kubectl --namespace {{NAMESPACE_LABS64IO}} port-forward svc/l64-local-gw-api-gateway 8080:8080"
+      -f ./charts/api-gateway/values.yaml \
+      -f ./overrides/api-gateway/values.{{ENV}}.yaml
+    echo "Run this command to tunnel API Gateway: kubectl --namespace {{NAMESPACE_LABS64IO}} port-forward svc/l64-{{ENV}}-gw-api-gateway 8080:8080"
     echo "Visit http://localhost:8080/swagger-ui/index.html for API documentation"
 
 # install Labs64.IO :: AuditFlow
 helm-install-au:
     helm dependencies update ./charts/auditflow
-    helm upgrade --install l64-local-au ./charts/auditflow \
+    helm upgrade --install l64-{{ENV}}-au ./charts/auditflow \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      --set image.repository=localhost:5005/auditflow \
-      --set image.tag=latest \
-      --set application.rabbitmq.host=rabbitmq.{{NAMESPACE_TOOLS}}.svc.cluster.local \
-      --set transformer.image.repository=localhost:5005/auditflow-transformer \
-      --set transformer.image.tag=latest
+      -f ./charts/auditflow/values.yaml \
+      -f ./overrides/auditflow/values.{{ENV}}.yaml
 
 # install Labs64.IO :: all components
 helm-install-all: helm-install-gw helm-install-au
 
 # uninstall Labs64.IO :: API Gateway
 helm-uninstall-gw:
-    helm uninstall l64-local-gw
+    helm uninstall l64-{{ENV}}-gw
 
 # uninstall Labs64.IO :: AuditFlow
 helm-uninstall-au:
-    helm uninstall l64-local-au
+    helm uninstall l64-{{ENV}}-au
 
 # uninstall Labs64.IO :: all components
 helm-uninstall-all: helm-uninstall-gw helm-uninstall-au

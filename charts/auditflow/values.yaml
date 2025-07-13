@@ -120,32 +120,18 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # -- Additional volumes on the output Deployment definition.
-volumes:
- - name: auditflow-pipelines
-   configMap:
-     name: l64-local-au-auditflow-pipelines
- - name: opensearch-truststore
-   secret:
-     secretName: opensearch-truststore-secret
-     items:
-       - key: truststore.jks
-         path: truststore.jks
+volumes: []
 # - name: foo
 #   secret:
 #     secretName: mysecret
 #     optional: false
 
 # -- Additional volumeMounts on the output Deployment definition.
-volumeMounts:
- - name: auditflow-pipelines
-   mountPath: /etc/auditflow
-   readOnly: true
- - name: opensearch-truststore
-   mountPath: /etc/auditflow/certs
-   readOnly: true
+volumeMounts: []
 # - name: foo
 #   mountPath: "/etc/foo"
 #   readOnly: true
+
 
 nodeSelector: {}
 
@@ -153,11 +139,7 @@ tolerations: []
 
 affinity: {}
 
-env:
-  - name: SPRING_CONFIG_IMPORT
-    value: "optional:file:/etc/auditflow/pipelines.yaml"
-  - name: JAVA_OPTS
-    value: "-Djavax.net.ssl.trustStore=/etc/auditflow/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit"
+env: []
 
 # -- Application properties
 application:
@@ -166,50 +148,16 @@ application:
       # -- Enable the transformer sidecar container
       enabled: true
   auditflow:
-    pipelines:
-      - name: 'logs'
-        enabled: true
-        transformer:
-          name: 'zero'
-        processor:
-          name: 'logging_processor'
-          clazz: 'io.labs64.audit.processors.LoggingProcessor'
-          properties:
-            log-level: "DEBUG"
-      - name: 'opensearch-raw'
-        enabled: true
-        transformer:
-          name: 'zero'
-        processor:
-          name: 'opensearch_processor'
-          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
-          properties:
-            service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
-            service-path: "/auditflow_raw_index/_doc"
-            username: "admin"
-            password: "Labs64pw+"
-      - name: 'opensearch-transformed'
-        enabled: true
-        transformer:
-          name: 'audit_opensearch'
-        processor:
-          name: 'opensearch_processor'
-          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
-          properties:
-            service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
-            service-path: "/auditflow_index/_doc"
-            username: "admin"
-            password: "Labs64pw+"
-      - name: 'loki'
-        enabled: false
-        transformer:
-          name: 'audit_loki'
-        processor:
-          name: 'loki_processor'
-          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
-          properties:
-            service-url: "http://loki-write.monitoring.svc.cluster.local:3100"
-            service-path: "/loki/api/v1/push"
+    pipelines: []
+      #- name: 'logs'
+      #  enabled: true
+      #  transformer:
+      #    name: 'zero'
+      #  processor:
+      #    name: 'logging_processor'
+      #    clazz: 'io.labs64.audit.processors.LoggingProcessor'
+      #    properties:
+      #      log-level: "DEBUG"
   # -- Message broker; e.g. rabbit, kafka, etc.
   defaultBroker: rabbit
   # -- Audit properties
@@ -224,20 +172,15 @@ application:
     host: rabbitmq.default.svc.cluster.local
     # -- RabbitMQ port; default: 5672
     port: 5672
-  # -- Open Telemetry params
-  otel:
-    exporter:
-      otlp:
-        endpoint: http://otel-collector.observability.svc.cluster.local:4317
 
 # -- RabbitMQ properties
 rabbitmq:
   replicaCount: 2
   auth:
-    # -- RabbitMQ username; default: labs64
-    username: labs64
-    # -- RabbitMQ password; default: labs64pw
-    password: labs64pw
+    # -- RabbitMQ username
+    username: <TODO>
+    # -- RabbitMQ password
+    password: <TODO>
   persistence:
     enabled: true
     size: 1Gi

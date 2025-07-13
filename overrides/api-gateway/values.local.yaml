@@ -1,0 +1,26 @@
+image:
+  repository: localhost:5005/api-gateway
+  tag: latest
+
+service:
+  type: LoadBalancer
+
+resources:
+  #limits:
+  #  cpu: 200m
+  #  memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+application:
+  rabbitmq:
+    host: rabbitmq.tools.svc.cluster.local
+
+rabbitmq:
+  auth:
+    username: labs64
+    password: labs64pw
+  persistence:
+    enabled: true
+    size: 1Gi
