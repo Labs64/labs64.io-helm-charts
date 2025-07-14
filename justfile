@@ -13,7 +13,7 @@ helm-ls:
 
 # show pods, services in all namespaces
 kubectl-pods:
-    kubectl get pods,svc --all-namespaces -o wide
+    kubectl get svc,pods --all-namespaces -o wide
 
 
 # add external helm repositories
