@@ -1,0 +1,26 @@
+service:
+  type: LoadBalancer
+
+alloy:
+  configMap:
+    content: |-
+      // Write your Alloy config here:
+      logging {
+        level = "info"
+        format = "json"
+      }
+      // 1. Configure where to write logs
+      loki.write "default" {
+        endpoint {
+          url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+        }
+      }
+      // 2. Discover Kubernetes pods
+      discovery.kubernetes "pods" {
+        role = "pod"
+        selector {
+           kubernetes_namespace_selector {
+             name = "labs64io"
+           }
+        }
+      }

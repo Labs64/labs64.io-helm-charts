@@ -1,3 +1,7 @@
+service:
+  type: LoadBalancer
+  #port: 3000
+
 datasources:
   datasources.yaml:
     apiVersion: 1

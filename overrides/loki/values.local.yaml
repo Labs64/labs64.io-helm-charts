@@ -1,3 +1,12 @@
+read:
+  replicas: 1
+
+write:
+  replicas: 1
+
+backend:
+  replicas: 1
+
 loki:
   auth_enabled: false
   commonConfig:

@@ -36,13 +36,13 @@ repo-search: repo-update
     helm search repo
 
 
-## Install Tools ##
+## Install Kubernetes Components ##
 
 # install Metrics Server
 metrics-server-install:
     helm search repo metrics-server/metrics-server
     helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
-    helm upgrade --install metrics-server metrics-server/metrics-server -f overrides/metrics-server/values.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
+    helm upgrade --install metrics-server metrics-server/metrics-server -f overrides/metrics-server/values.{{ENV}}.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
 
 # uninstall Metrics Server
 metrics-server-uninstall:
@@ -52,35 +52,11 @@ metrics-server-uninstall:
 ingress-install:
     helm search repo ingress-nginx/ingress-nginx
     helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
-    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f overrides/ingress-nginx/values.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
+    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f overrides/ingress-nginx/values.{{ENV}}.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
 
 # uninstall Ingress controller
 ingress-uninstall:
     helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}
-
-
-# install RabbitMQ
-rabbitmq-install:
-    helm search repo bitnami/rabbitmq
-    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.local.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    echo "Username      : labs64"
-    echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
-    echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
-
-# uninstall RabbitMQ
-rabbitmq-uninstall:
-    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
-
-# install Kafka
-kafka-install:
-    helm search repo bitnami/kafka
-    helm show values bitnami/kafka > overrides/kafka/values.orig.yaml
-    helm upgrade --install kafka bitnami/kafka -f overrides/kafka/values.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-
-# uninstall Kafka
-kafka-uninstall:
-    helm uninstall kafka --namespace {{NAMESPACE_TOOLS}}
 
 
 ## Install Monitoring Tools ##
@@ -89,7 +65,7 @@ kafka-uninstall:
 alloy-install:
     helm search repo grafana/alloy
     helm show values grafana/alloy > overrides/alloy/values.orig.yaml
-    helm upgrade --install alloy grafana/alloy -f overrides/alloy/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install alloy grafana/alloy -f overrides/alloy/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall Grafana Alloy
 alloy-uninstall:
@@ -100,7 +76,7 @@ opensearch-install:
     helm search repo opensearch
     helm show values opensearch/opensearch > overrides/opensearch/values.orig.yaml
     helm show values opensearch/opensearch-dashboards > overrides/opensearch/values-dashboards.orig.yaml
-    helm upgrade --install opensearch opensearch/opensearch -f overrides/opensearch/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install opensearch opensearch/opensearch -f overrides/opensearch/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f overrides/opensearch/values-dashboards.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc | grep "opensearch"
     echo "Run this command to open OpenSearch Dashboard: kubectl port-forward svc/opensearch-dashboards --namespace {{NAMESPACE_MONITORING}} 5601:5601"
@@ -123,7 +99,7 @@ opensearch-uninstall:
 prometheus-install:
     helm search repo prometheus-community
     helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
-    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f overrides/prometheus/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f overrides/prometheus/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
 
 # uninstall Prometheus
@@ -134,7 +110,7 @@ prometheus-uninstall:
 loki-install:
     helm search repo grafana/loki
     helm show values grafana/loki > overrides/loki/values.orig.yaml
-    helm upgrade --install loki grafana/loki -f overrides/loki/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install loki grafana/loki -f overrides/loki/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall Loki
 loki-uninstall:
@@ -144,7 +120,7 @@ loki-uninstall:
 tempo-install:
     helm search repo grafana/tempo
     helm show values grafana/tempo > overrides/tempo/values.orig.yaml
-    helm upgrade --install tempo grafana/tempo -f overrides/tempo/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install tempo grafana/tempo -f overrides/tempo/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall tempo
 tempo-uninstall:
@@ -154,7 +130,7 @@ tempo-uninstall:
 grafana-install:
     helm search repo grafana/grafana
     helm show values grafana/grafana > overrides/grafana/values.orig.yaml
-    helm upgrade --install grafana grafana/grafana -f overrides/grafana/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install grafana grafana/grafana -f overrides/grafana/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
     echo "Username: admin"
     echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
@@ -167,11 +143,37 @@ grafana-uninstall:
 open-telemetry-install:
     helm search repo open-telemetry
     helm show values open-telemetry/opentelemetry-collector > overrides/otel/values.orig.yaml
-    helm upgrade --install otel open-telemetry/opentelemetry-collector -f overrides/otel/values.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install otel open-telemetry/opentelemetry-collector -f overrides/otel/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall Open Telemetry
 open-telemetry-uninstall:
     helm uninstall otel --namespace {{NAMESPACE_MONITORING}}
+
+
+## Install Tools ##
+
+# install RabbitMQ
+rabbitmq-install:
+    helm search repo bitnami/rabbitmq
+    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
+    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    echo "Username      : labs64"
+    echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
+    echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
+
+# uninstall RabbitMQ
+rabbitmq-uninstall:
+    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
+
+# install Kafka
+kafka-install:
+    helm search repo bitnami/kafka
+    helm show values bitnami/kafka > overrides/kafka/values.orig.yaml
+    helm upgrade --install kafka bitnami/kafka -f overrides/kafka/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+
+# uninstall Kafka
+kafka-uninstall:
+    helm uninstall kafka --namespace {{NAMESPACE_TOOLS}}
 
 
 ## Install Labs64.IO Components ##
