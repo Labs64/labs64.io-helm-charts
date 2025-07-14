@@ -16,9 +16,6 @@ resources:
     memory: 512Mi
 
 volumes:
- - name: auditflow-pipelines
-   configMap:
-     name: l64-local-au-auditflow-pipelines
  - name: opensearch-truststore
    secret:
      secretName: opensearch-truststore-secret
@@ -27,20 +24,27 @@ volumes:
          path: truststore.jks
 
 volumeMounts:
- - name: auditflow-pipelines
-   mountPath: /etc/auditflow
-   readOnly: true
  - name: opensearch-truststore
    mountPath: /etc/auditflow/certs
    readOnly: true
 
 env:
-  - name: SPRING_CONFIG_IMPORT
-    value: "optional:file:/etc/auditflow/pipelines.yaml"
   - name: JAVA_OPTS
     value: "-Djavax.net.ssl.trustStore=/etc/auditflow/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=changeit"
 
-application:
+applicationYaml:
+  application:
+    default-broker: rabbit
+
+  transformer:
+    discovery:
+      mode: local # "local" or "kubernetes"
+    local:
+      url: "http://localhost:8081"
+    service:
+      name: auditflow-transformer
+      namespace: default
+
   auditflow:
     pipelines:
       - name: 'logs'
@@ -86,14 +90,10 @@ application:
           properties:
             service-url: "http://loki-write.monitoring.svc.cluster.local:3100"
             service-path: "/loki/api/v1/push"
-  rabbitmq:
-    host: rabbitmq.tools.svc.cluster.local
 
-rabbitmq:
-  replicaCount: 2
-  auth:
-    username: labs64
-    password: labs64pw
-  persistence:
-    enabled: true
-    size: 1Gi
+  spring:
+    rabbitmq:
+      host: rabbitmq.tools.svc.cluster.local
+      port: 5672
+      username: labs64
+      password: labs64pw

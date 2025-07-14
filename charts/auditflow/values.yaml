@@ -141,46 +141,58 @@ affinity: {}
 
 env: []
 
-# -- Application properties
-application:
+# -- Additional application properties
+applicationYaml:
+  # -- Application properties
+  application:
+    # -- Message broker; e.g. rabbit, kafka, etc.
+    default-broker: rabbit
+
+  # -- Transformer configuration
   transformer:
-    container:
-      # -- Enable the transformer sidecar container
-      enabled: true
+    # -- Discovery mode; "local" or "kubernetes"
+    discovery:
+      mode: local
+    # -- Local URL for the transformer service
+    local:
+      url: "http://localhost:8081"
+    # -- Service name and namespace for the transformer
+    service:
+      name: auditflow-transformer
+      namespace: default
+
+  # -- AuditFlow pipelines configuration
   auditflow:
     pipelines: []
-      #- name: 'logs'
-      #  enabled: true
-      #  transformer:
-      #    name: 'zero'
-      #  processor:
-      #    name: 'logging_processor'
-      #    clazz: 'io.labs64.audit.processors.LoggingProcessor'
-      #    properties:
-      #      log-level: "DEBUG"
-  # -- Message broker; e.g. rabbit, kafka, etc.
-  defaultBroker: rabbit
-  # -- Audit properties
-  audit:
-    # -- Audit topic name; default: labs64-audit-topic
-    topicName: labs64-audit-topic
-  # -- RabbitMQ connection params
-  rabbitmq:
-    # -- Use RabbitMQ message broker
-    enabled: true
-    # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
-    host: rabbitmq.default.svc.cluster.local
-    # -- RabbitMQ port; default: 5672
-    port: 5672
+  #    - name: 'logs'
+  #      enabled: true
+  #      transformer:
+  #        name: 'zero'
+  #      processor:
+  #        name: 'logging_processor'
+  #        clazz: 'io.labs64.audit.processors.LoggingProcessor'
+  #        properties:
+  #          log-level: "DEBUG"
 
-# -- RabbitMQ properties
-rabbitmq:
-  replicaCount: 2
-  auth:
-    # -- RabbitMQ username
-    username: <TODO>
-    # -- RabbitMQ password
-    password: <TODO>
-  persistence:
-    enabled: true
-    size: 1Gi
+  # -- Spring configuration
+  spring:
+    cloud:
+      stream:
+        bindings:
+          receive-in-0:
+            # -- Audit topic name; default: labs64-audit-topic
+            destination: labs64-audit-topic
+            binder: rabbit
+        binders:
+          rabbit:
+            type: rabbit
+    # -- RabbitMQ connection params
+    rabbitmq:
+      # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
+      host: rabbitmq.default.svc.cluster.local
+      # -- RabbitMQ port; default: 5672
+      port: 5672
+      # -- RabbitMQ username
+      username: <TODO>
+      # -- RabbitMQ password
+      password: <TODO>

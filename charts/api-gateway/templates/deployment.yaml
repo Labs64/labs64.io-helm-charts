@@ -56,8 +56,10 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.env }}
           env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:file:/opt/application-config/application.yaml"
+          {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
           envFrom:
@@ -65,12 +67,17 @@ spec:
                 name: {{ include "chart-libs.fullname" . }}
             - secretRef:
                 name: {{ include "chart-libs.fullname" . }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
+            - name: config-additional-location
+              mountPath: /opt/application-config
+          {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
       volumes:
+        - name: config-additional-location
+          configMap:
+            name: {{ include "chart-libs.fullname" . }}-app-ext
+      {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}

@@ -13,14 +13,13 @@ resources:
     cpu: 100m
     memory: 512Mi
 
-application:
-  rabbitmq:
-    host: rabbitmq.tools.svc.cluster.local
+applicationYaml:
+  application:
+    default-broker: rabbit
 
-rabbitmq:
-  auth:
-    username: labs64
-    password: labs64pw
-  persistence:
-    enabled: true
-    size: 1Gi
+  spring:
+    rabbitmq:
+      host: rabbitmq.tools.svc.cluster.local
+      port: 5672
+      username: labs64
+      password: labs64pw

@@ -126,31 +126,34 @@ affinity: {}
 
 env: []
 
-# -- Application properties
-application:
-  # -- Message broker; e.g. rabbit, kafka, etc.
-  defaultBroker: rabbit
-  # -- Audit gateway properties
-  audit:
-    # -- Audit topic name; default: labs64-audit-topic
-    topicName: labs64-audit-topic
-  # -- RabbitMQ connection params
-  rabbitmq:
-    # -- Use RabbitMQ message broker
-    enabled: true
-    # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
-    host: rabbitmq.default.svc.cluster.local
-    # -- RabbitMQ port; default: 5672
-    port: 5672
+# -- Additional application properties
+applicationYaml:
+  # -- Application properties
+  application:
+    # -- Message broker; e.g. rabbit, kafka, etc.
+    default-broker: rabbit
 
-# -- RabbitMQ properties
-rabbitmq:
-  replicaCount: 2
-  auth:
-    # -- RabbitMQ username
-    username: <TODO>
-    # -- RabbitMQ password
-    password: <TODO>
-  persistence:
-    enabled: true
-    size: 1Gi
+  # -- Spring configuration
+  spring:
+    cloud:
+      stream:
+        bindings:
+          rabbit-out-0:
+            # -- Audit topic name; default: labs64-audit-topic
+            destination: labs64-audit-topic
+            binder: rabbit
+        rabbit:
+          bindings:
+            rabbit-out-0:
+              producer:
+                exchangeType: topic
+    # -- RabbitMQ connection params
+    rabbitmq:
+      # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
+      host: rabbitmq.default.svc.cluster.local
+      # -- RabbitMQ port; default: 5672
+      port: 5672
+      # -- RabbitMQ username
+      username: <TODO>
+      # -- RabbitMQ password
+      password: <TODO>

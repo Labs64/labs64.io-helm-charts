@@ -5,11 +5,11 @@
             "properties": {},
             "type": "object"
         },
-        "application": {
+        "applicationYaml": {
             "properties": {
-                "audit": {
+                "application": {
                     "properties": {
-                        "topicName": {
+                        "default-broker": {
                             "type": "string"
                         }
                     },
@@ -23,29 +23,92 @@
                     },
                     "type": "object"
                 },
-                "defaultBroker": {
-                    "type": "string"
-                },
-                "rabbitmq": {
+                "spring": {
                     "properties": {
-                        "enabled": {
-                            "type": "boolean"
+                        "cloud": {
+                            "properties": {
+                                "stream": {
+                                    "properties": {
+                                        "binders": {
+                                            "properties": {
+                                                "rabbit": {
+                                                    "properties": {
+                                                        "type": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "bindings": {
+                                            "properties": {
+                                                "receive-in-0": {
+                                                    "properties": {
+                                                        "binder": {
+                                                            "type": "string"
+                                                        },
+                                                        "destination": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
                         },
-                        "host": {
-                            "type": "string"
-                        },
-                        "port": {
-                            "type": "integer"
+                        "rabbitmq": {
+                            "properties": {
+                                "host": {
+                                    "type": "string"
+                                },
+                                "password": {
+                                    "type": "string"
+                                },
+                                "port": {
+                                    "type": "integer"
+                                },
+                                "username": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
                         }
                     },
                     "type": "object"
                 },
                 "transformer": {
                     "properties": {
-                        "container": {
+                        "discovery": {
                             "properties": {
-                                "enabled": {
-                                    "type": "boolean"
+                                "mode": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "local": {
+                            "properties": {
+                                "url": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "service": {
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "namespace": {
+                                    "type": "string"
                                 }
                             },
                             "type": "object"
@@ -184,36 +247,6 @@
         },
         "podSecurityContext": {
             "properties": {},
-            "type": "object"
-        },
-        "rabbitmq": {
-            "properties": {
-                "auth": {
-                    "properties": {
-                        "password": {
-                            "type": "string"
-                        },
-                        "username": {
-                            "type": "string"
-                        }
-                    },
-                    "type": "object"
-                },
-                "persistence": {
-                    "properties": {
-                        "enabled": {
-                            "type": "boolean"
-                        },
-                        "size": {
-                            "type": "string"
-                        }
-                    },
-                    "type": "object"
-                },
-                "replicaCount": {
-                    "type": "integer"
-                }
-            },
             "type": "object"
         },
         "rbac": {

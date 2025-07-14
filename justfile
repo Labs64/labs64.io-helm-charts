@@ -63,14 +63,14 @@ ingress-uninstall:
 rabbitmq-install:
     helm search repo bitnami/rabbitmq
     helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.local.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
     echo "Username      : labs64"
     echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
     echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
 
 # uninstall RabbitMQ
 rabbitmq-uninstall:
-    helm uninstall rabbitmq
+    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
 
 # install Kafka
 kafka-install:
@@ -80,7 +80,7 @@ kafka-install:
 
 # uninstall Kafka
 kafka-uninstall:
-    helm uninstall kafka
+    helm uninstall kafka --namespace {{NAMESPACE_TOOLS}}
 
 
 ## Install Monitoring Tools ##

@@ -28,15 +28,21 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| application | object | `{"audit":{"topicName":"labs64-audit-topic"},"auditflow":{"pipelines":[]},"defaultBroker":"rabbit","rabbitmq":{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672},"transformer":{"container":{"enabled":true}}}` | Application properties |
-| application.audit | object | `{"topicName":"labs64-audit-topic"}` | Audit properties |
-| application.audit.topicName | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
-| application.defaultBroker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
-| application.rabbitmq | object | `{"enabled":true,"host":"rabbitmq.default.svc.cluster.local","port":5672}` | RabbitMQ connection params |
-| application.rabbitmq.enabled | bool | `true` | Use RabbitMQ message broker |
-| application.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
-| application.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
-| application.transformer.container.enabled | bool | `true` | Enable the transformer sidecar container |
+| applicationYaml | object | `{"application":{"default-broker":"rabbit"},"auditflow":{"pipelines":[]},"spring":{"cloud":{"stream":{"binders":{"rabbit":{"type":"rabbit"}},"bindings":{"receive-in-0":{"binder":"rabbit","destination":"labs64-audit-topic"}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
+| applicationYaml.application | object | `{"default-broker":"rabbit"}` | Application properties |
+| applicationYaml.application.default-broker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
+| applicationYaml.auditflow | object | `{"pipelines":[]}` | AuditFlow pipelines configuration |
+| applicationYaml.spring | object | `{"cloud":{"stream":{"binders":{"rabbit":{"type":"rabbit"}},"bindings":{"receive-in-0":{"binder":"rabbit","destination":"labs64-audit-topic"}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
+| applicationYaml.spring.cloud.stream.bindings.receive-in-0.destination | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
+| applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
+| applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
+| applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |
+| applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
+| applicationYaml.spring.rabbitmq.username | string | `"<TODO>"` | RabbitMQ username |
+| applicationYaml.transformer | object | `{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}` | Transformer configuration |
+| applicationYaml.transformer.discovery | object | `{"mode":"local"}` | Discovery mode; "local" or "kubernetes" |
+| applicationYaml.transformer.local | object | `{"url":"http://localhost:8081"}` | Local URL for the transformer service |
+| applicationYaml.transformer.service | object | `{"name":"auditflow-transformer","namespace":"default"}` | Service name and namespace for the transformer |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
@@ -51,9 +57,6 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
-| rabbitmq | object | `{"auth":{"password":"<TODO>","username":"<TODO>"},"persistence":{"enabled":true,"size":"1Gi"},"replicaCount":2}` | RabbitMQ properties |
-| rabbitmq.auth.password | string | `"<TODO>"` | RabbitMQ password |
-| rabbitmq.auth.username | string | `"<TODO>"` | RabbitMQ username |
 | rbac.create | bool | `true` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
