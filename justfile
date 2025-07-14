@@ -15,6 +15,10 @@ helm-ls:
 kubectl-pods:
     kubectl get svc,pods --all-namespaces -o wide
 
+# show persistent volumes and claims in all namespaces
+kubectl-pv:
+    kubectl get pv,pvc --all-namespaces -o wide
+
 
 # add external helm repositories
 repo-add:
@@ -135,6 +139,11 @@ grafana-install:
     echo "Username: admin"
     echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
+# retrieve grafana password
+grafana-password:
+    echo "Username: admin"
+    echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
 # uninstall grafana
 grafana-uninstall:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
@@ -210,11 +219,11 @@ helm-install-all: helm-install-gw helm-install-au
 
 # uninstall Labs64.IO :: API Gateway
 helm-uninstall-gw:
-    helm uninstall l64-{{ENV}}-gw
+    helm uninstall l64-{{ENV}}-gw --namespace {{NAMESPACE_LABS64IO}}
 
 # uninstall Labs64.IO :: AuditFlow
 helm-uninstall-au:
-    helm uninstall l64-{{ENV}}-au
+    helm uninstall l64-{{ENV}}-au --namespace {{NAMESPACE_LABS64IO}}
 
 # uninstall Labs64.IO :: all components
 helm-uninstall-all: helm-uninstall-gw helm-uninstall-au

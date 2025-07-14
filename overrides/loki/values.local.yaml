@@ -39,6 +39,16 @@ loki:
       - ReadWriteOnce
     size: 10Gi
 
+memcached:
+  enabled: false
+
+chunksCache:
+  enabled: false
+
+lokiCanary:
+  enabled: true
+  #lokiurl: "loki-gateway.monitoring.svc.cluster.local:80"
+
 promtail:
   enabled: false
 
