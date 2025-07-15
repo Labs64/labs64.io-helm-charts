@@ -80,8 +80,10 @@ opensearch-install:
     helm search repo opensearch
     helm show values opensearch/opensearch > overrides/opensearch/values.orig.yaml
     helm show values opensearch/opensearch-dashboards > overrides/opensearch/values-dashboards.orig.yaml
+    helm show values opensearch/data-prepper > overrides/opensearch/values-data-prepper.orig.yaml
     helm upgrade --install opensearch opensearch/opensearch -f overrides/opensearch/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f overrides/opensearch/values-dashboards.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f overrides/opensearch/values-dashboards.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install opensearch-data-prepper opensearch/data-prepper -f overrides/opensearch/values-data-prepper.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc | grep "opensearch"
     echo "Run this command to open OpenSearch Dashboard: kubectl port-forward svc/opensearch-dashboards --namespace {{NAMESPACE_MONITORING}} 5601:5601"
 
@@ -98,6 +100,7 @@ opensearch-extract-cert:
 opensearch-uninstall:
     helm uninstall opensearch --namespace {{NAMESPACE_MONITORING}}
     helm uninstall opensearch-dashboards --namespace {{NAMESPACE_MONITORING}}
+    helm uninstall opensearch-data-prepper --namespace {{NAMESPACE_MONITORING}}
 
 # install Prometheus
 prometheus-install:
@@ -149,14 +152,17 @@ grafana-uninstall:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
 
 # install Open Telemetry
-open-telemetry-install:
+opentelemetry-install:
     helm search repo open-telemetry
-    helm show values open-telemetry/opentelemetry-collector > overrides/otel/values.orig.yaml
-    helm upgrade --install otel open-telemetry/opentelemetry-collector -f overrides/otel/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
+    helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
+    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator -f overrides/opentelemetry/values-operator.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector -f overrides/opentelemetry/values-collector.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
 # uninstall Open Telemetry
-open-telemetry-uninstall:
-    helm uninstall otel --namespace {{NAMESPACE_MONITORING}}
+opentelemetry-uninstall:
+    helm uninstall opentelemetry-operator --namespace {{NAMESPACE_MONITORING}}
+    helm uninstall opentelemetry-collector --namespace {{NAMESPACE_MONITORING}}
 
 
 ## Install Tools ##

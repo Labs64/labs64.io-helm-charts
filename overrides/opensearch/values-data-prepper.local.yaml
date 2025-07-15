@@ -1,0 +1,38 @@
+# -- Pipeline configuration
+pipelineConfig:
+  enabled: true
+  config:
+    # Provide your pipeline configuration here if 'enabled' is set to true. See documentation for more advanced pipelines
+    simple-sample-pipeline:
+      workers: 2
+      delay: 5000
+      source:
+        random: {}
+      buffer:
+        bounded_blocking:
+          buffer_size: 1024
+          batch_size: 256
+      processor:
+        - string_converter:
+            upper_case: true
+      sink:
+        - stdout: {}
+
+# -- Data Prepper ports
+ports:
+  # -- The port that the source is running on. Default value is 2021. Valid options are between 0 and 65535.
+  # https://opensearch.org/docs/latest/data-prepper/pipelines/configuration/sources/http-source/
+  - name: http-source
+    port: 2021
+  # -- The port that the otel_trace_source source runs on. Default value is 21890.
+  # https://opensearch.org/docs/latest/data-prepper/pipelines/configuration/sources/otel-trace-source/
+  - name: otel-traces
+    port: 21890
+  # -- The port that the OpenTelemtry metrics source runs on. Default value is 21891.
+  # https://opensearch.org/docs/latest/data-prepper/pipelines/configuration/sources/otel-metrics-source/
+  - name: otel-metrics
+    port: 21891
+  # -- Represents the port that the otel_logs_source source is running on. Default value is 21892.
+  # https://opensearch.org/docs/latest/data-prepper/pipelines/configuration/sources/otel-logs-source/
+  - name: otel-logs
+    port: 21892
