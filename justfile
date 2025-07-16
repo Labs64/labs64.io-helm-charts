@@ -180,16 +180,6 @@ rabbitmq-install:
 rabbitmq-uninstall:
     helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
 
-# install Kafka
-kafka-install:
-    helm search repo bitnami/kafka
-    helm show values bitnami/kafka > overrides/kafka/values.orig.yaml
-    helm upgrade --install kafka bitnami/kafka -f overrides/kafka/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-
-# uninstall Kafka
-kafka-uninstall:
-    helm uninstall kafka --namespace {{NAMESPACE_TOOLS}}
-
 
 ## Install Labs64.IO Components ##
 
