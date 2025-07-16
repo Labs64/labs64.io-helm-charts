@@ -65,6 +65,19 @@ ingress-uninstall:
 
 ## Install Monitoring Tools ##
 
+# install Open Telemetry
+opentelemetry-install:
+    helm search repo open-telemetry
+    helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
+    helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
+    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator -f overrides/opentelemetry/values-operator.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector -f overrides/opentelemetry/values-collector.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+
+# uninstall Open Telemetry
+opentelemetry-uninstall:
+    helm uninstall opentelemetry-operator --namespace {{NAMESPACE_MONITORING}}
+    helm uninstall opentelemetry-collector --namespace {{NAMESPACE_MONITORING}}
+
 # install OpenSearch
 opensearch-install:
     helm search repo opensearch
@@ -140,19 +153,6 @@ grafana-password:
 # uninstall grafana
 grafana-uninstall:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
-
-# install Open Telemetry
-opentelemetry-install:
-    helm search repo open-telemetry
-    helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
-    helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
-    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator -f overrides/opentelemetry/values-operator.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector -f overrides/opentelemetry/values-collector.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall Open Telemetry
-opentelemetry-uninstall:
-    helm uninstall opentelemetry-operator --namespace {{NAMESPACE_MONITORING}}
-    helm uninstall opentelemetry-collector --namespace {{NAMESPACE_MONITORING}}
 
 
 ## Install Tools ##

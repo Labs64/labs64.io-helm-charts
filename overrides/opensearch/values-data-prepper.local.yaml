@@ -2,21 +2,55 @@
 pipelineConfig:
   enabled: true
   config:
-    # Provide your pipeline configuration here if 'enabled' is set to true. See documentation for more advanced pipelines
-    simple-sample-pipeline:
-      workers: 2
-      delay: 5000
+    otel-trace-pipeline:
+      delay: 100
       source:
-        random: {}
+        otel_trace_source:
+          ssl: false
+      buffer:
+        bounded_blocking:
+          buffer_size: 1024
+          batch_size: 256
+      sink:
+        - pipeline:
+            name: "raw-trace-pipeline"
+        - pipeline:
+            name: "service-map-pipeline"
+    raw-trace-pipeline:
+      source:
+        pipeline:
+          name: "otel-trace-pipeline"
       buffer:
         bounded_blocking:
           buffer_size: 1024
           batch_size: 256
       processor:
-        - string_converter:
-            upper_case: true
+        - otel_traces:
       sink:
-        - stdout: {}
+        - opensearch:
+            hosts: ["https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"]
+            insecure: true
+            username: admin
+            password: "Labs64pw+"
+            index_type: trace-analytics-raw
+    service-map-pipeline:
+      delay: 100
+      source:
+        pipeline:
+          name: "otel-trace-pipeline"
+      buffer:
+        bounded_blocking:
+          buffer_size: 1024
+          batch_size: 256
+      processor:
+        - service_map:
+      sink:
+        - opensearch:
+            hosts: ["https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"]
+            insecure: true
+            username: admin
+            password: "Labs64pw+"
+            index_type: trace-analytics-service-map
 
 # -- Data Prepper ports
 ports:

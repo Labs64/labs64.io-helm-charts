@@ -3,7 +3,6 @@ mode: "deployment" # Can be daemonset, deployment, or statefulset
 image:
   repository: otel/opentelemetry-collector-contrib
   tag: latest
-  pullPolicy: IfNotPresent
 
 presets:
   logsCollection:
@@ -18,7 +17,7 @@ presets:
     extractAllPodLabels: true
     extractAllPodAnnotations: true
   kubeletMetrics:
-    enabled: true
+    enabled: false
   kubernetesEvents:
     enabled: true
   clusterMetrics:
@@ -33,43 +32,46 @@ config:
       protocols:
         grpc: {}
         http: {}
-    prometheus:
-      config:
-        scrape_configs:
-          - job_name: 'kubernetes-pods'
-            kubernetes_sd_configs:
-              - role: pod
-            relabel_configs:
-              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-                action: keep
-                regex: true
+    #prometheus:
+    #  config:
+    #    scrape_configs:
+    #      - job_name: 'kubernetes-pods'
+    #        kubernetes_sd_configs:
+    #          - role: pod
+    #        relabel_configs:
+    #          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+    #            action: keep
+    #            regex: true
 
   processors:
     batch:
-      send_batch_size: 1000
+      send_batch_size: 256
+      timeout: 10s
+    batch/traces:
+      send_batch_size: 256
       timeout: 10s
 
   exporters:
-    prometheusremotewrite:
-      endpoint: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
-    otlphttp/loki:
-      endpoint: "http://loki-write.monitoring.svc.cluster.local:3100/loki/api/v1/push"
-    otlp/tempo:
-      endpoint: "tempo.monitoring.svc.cluster.local:4317"
+    #prometheusremotewrite:
+    #  endpoint: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+    #otlphttp/loki:
+    #  endpoint: "http://loki-write.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+    otlp/data-prepper:
+      endpoint: "http://opensearch-data-prepper.monitoring.svc.cluster.local:21890"
       tls:
         insecure: true
 
   service:
     pipelines:
-      metrics:
-        receivers: [otlp, prometheus]
-        processors: [batch]
-        exporters: [prometheusremotewrite]
-      logs:
-        receivers: [otlp]
-        processors: [batch]
-        exporters: [otlphttp/loki]
+      #metrics:
+      #  receivers: [otlp, prometheus]
+      #  processors: [batch]
+      #  exporters: [prometheusremotewrite]
+      #logs:
+      #  receivers: [otlp]
+      #  processors: [batch]
+      #  exporters: [otlphttp/loki]
       traces:
         receivers: [otlp]
-        processors: [batch]
-        exporters: [otlp/tempo]
+        processors: [batch/traces]
+        exporters: [otlp/data-prepper]
