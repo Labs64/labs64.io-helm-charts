@@ -65,16 +65,6 @@ ingress-uninstall:
 
 ## Install Monitoring Tools ##
 
-# install Grafana Alloy
-alloy-install:
-    helm search repo grafana/alloy
-    helm show values grafana/alloy > overrides/alloy/values.orig.yaml
-    helm upgrade --install alloy grafana/alloy -f overrides/alloy/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall Grafana Alloy
-alloy-uninstall:
-    helm uninstall alloy --namespace {{NAMESPACE_MONITORING}}
-
 # install OpenSearch
 opensearch-install:
     helm search repo opensearch
