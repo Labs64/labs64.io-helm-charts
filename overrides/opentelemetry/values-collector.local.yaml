@@ -1,4 +1,4 @@
-mode: "deployment" # Can be daemonset, deployment, or statefulset
+mode: deployment
 
 image:
   repository: otel/opentelemetry-collector-contrib
@@ -14,7 +14,10 @@ presets:
     enabled: false
   kubernetesAttributes:
     enabled: true
+    # This can lead to a lot of labels, which might increase cardinality and cost in your backend, but it ensures you get all available labels.
+    # Be mindful of this in production!
     extractAllPodLabels: true
+    # Similar to labels, annotations can also add significant metadata.
     extractAllPodAnnotations: true
   kubeletMetrics:
     enabled: false
@@ -32,16 +35,6 @@ config:
       protocols:
         grpc: {}
         http: {}
-    #prometheus:
-    #  config:
-    #    scrape_configs:
-    #      - job_name: 'kubernetes-pods'
-    #        kubernetes_sd_configs:
-    #          - role: pod
-    #        relabel_configs:
-    #          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-    #            action: keep
-    #            regex: true
 
   processors:
     batch:
@@ -50,28 +43,36 @@ config:
     batch/traces:
       send_batch_size: 256
       timeout: 10s
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 80
+      spike_limit_percentage: 25
 
   exporters:
-    #prometheusremotewrite:
-    #  endpoint: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
-    #otlphttp/loki:
-    #  endpoint: "http://loki-write.monitoring.svc.cluster.local:3100/loki/api/v1/push"
-    otlp/data-prepper:
-      endpoint: "http://opensearch-data-prepper.monitoring.svc.cluster.local:21890"
+    otlp/data-prepper-traces:
+      endpoint: "https://opensearch-data-prepper.monitoring.svc.cluster.local:21890"
+      tls:
+        insecure: true
+    otlp/data-prepper-metrics:
+      endpoint: "https://opensearch-data-prepper.monitoring.svc.cluster.local:21891"
+      tls:
+        insecure: true
+    otlp/data-prepper-logs:
+      endpoint: "https://opensearch-data-prepper.monitoring.svc.cluster.local:21892"
       tls:
         insecure: true
 
   service:
     pipelines:
-      #metrics:
-      #  receivers: [otlp, prometheus]
-      #  processors: [batch]
-      #  exporters: [prometheusremotewrite]
-      #logs:
-      #  receivers: [otlp]
-      #  processors: [batch]
-      #  exporters: [otlphttp/loki]
+      metrics:
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [otlp/data-prepper-metrics]
+      logs:
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [otlp/data-prepper-logs]
       traces:
         receivers: [otlp]
-        processors: [batch/traces]
-        exporters: [otlp/data-prepper]
+        processors: [batch/traces, memory_limiter]
+        exporters: [otlp/data-prepper-traces]
