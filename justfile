@@ -40,7 +40,7 @@ repo-search: repo-update
     helm search repo
 
 
-## Install Kubernetes Components ##
+## Kubernetes Components ##
 
 # install Metrics Server
 metrics-server-install:
@@ -63,7 +63,7 @@ ingress-uninstall:
     helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}
 
 
-## Install Monitoring Tools ##
+## Monitoring Tools ##
 
 # install Open Telemetry
 opentelemetry-install:
@@ -104,6 +104,69 @@ opensearch-uninstall:
     helm uninstall opensearch --namespace {{NAMESPACE_MONITORING}}
     helm uninstall opensearch-dashboards --namespace {{NAMESPACE_MONITORING}}
     helm uninstall opensearch-data-prepper --namespace {{NAMESPACE_MONITORING}}
+
+
+## Tools ##
+
+# install RabbitMQ
+rabbitmq-install:
+    helm search repo bitnami/rabbitmq
+    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
+    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    echo "Username      : labs64"
+    echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
+    echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
+
+# uninstall RabbitMQ
+rabbitmq-uninstall:
+    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
+
+
+## Labs64.IO Components ##
+
+# Generate Helm chart docu
+generate-docu:
+    docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
+
+# Generate Helm values schema
+generate-schema:
+    helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
+    helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
+
+# install Labs64.IO :: API Gateway
+helm-install-gw:
+    helm dependencies update ./charts/api-gateway
+    helm upgrade --install l64-{{ENV}}-gw ./charts/api-gateway \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/api-gateway/values.yaml \
+      -f ./overrides/api-gateway/values.{{ENV}}.yaml
+    echo "Run this command to tunnel API Gateway: kubectl --namespace {{NAMESPACE_LABS64IO}} port-forward svc/l64-{{ENV}}-gw-api-gateway 8080:8080"
+    echo "Visit http://localhost:8080/swagger-ui/index.html for API documentation"
+
+# install Labs64.IO :: AuditFlow
+helm-install-au:
+    helm dependencies update ./charts/auditflow
+    helm upgrade --install l64-{{ENV}}-au ./charts/auditflow \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/auditflow/values.yaml \
+      -f ./overrides/auditflow/values.{{ENV}}.yaml
+
+# install Labs64.IO :: all components
+helm-install-all: helm-install-gw helm-install-au
+
+# uninstall Labs64.IO :: API Gateway
+helm-uninstall-gw:
+    helm uninstall l64-{{ENV}}-gw --namespace {{NAMESPACE_LABS64IO}}
+
+# uninstall Labs64.IO :: AuditFlow
+helm-uninstall-au:
+    helm uninstall l64-{{ENV}}-au --namespace {{NAMESPACE_LABS64IO}}
+
+# uninstall Labs64.IO :: all components
+helm-uninstall-all: helm-uninstall-gw helm-uninstall-au
+
+
+## Other/Backup Tools ##
 
 # install Prometheus
 prometheus-install:
@@ -153,63 +216,3 @@ grafana-password:
 # uninstall grafana
 grafana-uninstall:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
-
-
-## Install Tools ##
-
-# install RabbitMQ
-rabbitmq-install:
-    helm search repo bitnami/rabbitmq
-    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    echo "Username      : labs64"
-    echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
-    echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
-
-# uninstall RabbitMQ
-rabbitmq-uninstall:
-    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
-
-
-## Install Labs64.IO Components ##
-
-# Generate Helm chart docu
-generate-docu:
-    docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
-
-# Generate Helm values schema
-generate-schema:
-    helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
-    helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
-
-# install Labs64.IO :: API Gateway
-helm-install-gw:
-    helm dependencies update ./charts/api-gateway
-    helm upgrade --install l64-{{ENV}}-gw ./charts/api-gateway \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/api-gateway/values.yaml \
-      -f ./overrides/api-gateway/values.{{ENV}}.yaml
-    echo "Run this command to tunnel API Gateway: kubectl --namespace {{NAMESPACE_LABS64IO}} port-forward svc/l64-{{ENV}}-gw-api-gateway 8080:8080"
-    echo "Visit http://localhost:8080/swagger-ui/index.html for API documentation"
-
-# install Labs64.IO :: AuditFlow
-helm-install-au:
-    helm dependencies update ./charts/auditflow
-    helm upgrade --install l64-{{ENV}}-au ./charts/auditflow \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/auditflow/values.yaml \
-      -f ./overrides/auditflow/values.{{ENV}}.yaml
-
-# install Labs64.IO :: all components
-helm-install-all: helm-install-gw helm-install-au
-
-# uninstall Labs64.IO :: API Gateway
-helm-uninstall-gw:
-    helm uninstall l64-{{ENV}}-gw --namespace {{NAMESPACE_LABS64IO}}
-
-# uninstall Labs64.IO :: AuditFlow
-helm-uninstall-au:
-    helm uninstall l64-{{ENV}}-au --namespace {{NAMESPACE_LABS64IO}}
-
-# uninstall Labs64.IO :: all components
-helm-uninstall-all: helm-uninstall-gw helm-uninstall-au
