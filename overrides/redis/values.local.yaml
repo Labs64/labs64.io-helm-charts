@@ -1,0 +1,4 @@
+architecture: replication
+
+replica:
+  replicaCount: 1

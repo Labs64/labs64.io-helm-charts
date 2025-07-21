@@ -128,6 +128,16 @@ rabbitmq-install:
 rabbitmq-uninstall:
     helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
 
+# install Redis
+redis-install:
+    helm search repo bitnami/redis
+    helm show values bitnami/redis > overrides/redis/values.orig.yaml
+    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+
+# uninstall Redis
+redis-uninstall:
+    helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
+
 
 ## Labs64.IO Components ##
 
