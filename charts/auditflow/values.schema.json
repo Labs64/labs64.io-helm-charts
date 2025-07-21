@@ -15,13 +15,8 @@
                     },
                     "type": "object"
                 },
-                "auditflow": {
-                    "properties": {
-                        "pipelines": {
-                            "type": "array"
-                        }
-                    },
-                    "type": "object"
+                "pipelines": {
+                    "type": "array"
                 },
                 "spring": {
                     "properties": {

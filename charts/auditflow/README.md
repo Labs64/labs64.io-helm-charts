@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing Solution
 
@@ -28,10 +28,10 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"application":{"default-broker":"rabbit"},"auditflow":{"pipelines":[]},"spring":{"cloud":{"stream":{"binders":{"rabbit":{"type":"rabbit"}},"bindings":{"receive-in-0":{"binder":"rabbit","destination":"labs64-audit-topic"}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
+| applicationYaml | object | `{"application":{"default-broker":"rabbit"},"pipelines":[],"spring":{"cloud":{"stream":{"binders":{"rabbit":{"type":"rabbit"}},"bindings":{"receive-in-0":{"binder":"rabbit","destination":"labs64-audit-topic"}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
 | applicationYaml.application | object | `{"default-broker":"rabbit"}` | Application properties |
 | applicationYaml.application.default-broker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
-| applicationYaml.auditflow | object | `{"pipelines":[]}` | AuditFlow pipelines configuration |
+| applicationYaml.pipelines | list | `[]` | AuditFlow pipelines configuration |
 | applicationYaml.spring | object | `{"cloud":{"stream":{"binders":{"rabbit":{"type":"rabbit"}},"bindings":{"receive-in-0":{"binder":"rabbit","destination":"labs64-audit-topic"}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
 | applicationYaml.spring.cloud.stream.bindings.receive-in-0.destination | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
 | applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |

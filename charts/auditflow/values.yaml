@@ -162,17 +162,16 @@ applicationYaml:
       namespace: default
 
   # -- AuditFlow pipelines configuration
-  auditflow:
-    pipelines: []
-  #    - name: 'logs'
-  #      enabled: true
-  #      transformer:
-  #        name: 'zero'
-  #      processor:
-  #        name: 'logging_processor'
-  #        clazz: 'io.labs64.audit.processors.LoggingProcessor'
-  #        properties:
-  #          log-level: "DEBUG"
+  pipelines: []
+  #  - name: 'logs'
+  #    enabled: true
+  #    transformer:
+  #      name: 'zero'
+  #    processor:
+  #      name: 'logging_processor'
+  #      clazz: 'io.labs64.audit.processors.LoggingProcessor'
+  #      properties:
+  #        log-level: "DEBUG"
 
   # -- Spring configuration
   spring:

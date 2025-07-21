@@ -45,51 +45,50 @@ applicationYaml:
       name: auditflow-transformer
       namespace: default
 
-  auditflow:
-    pipelines:
-      - name: 'logs'
-        enabled: true
-        transformer:
-          name: 'zero'
-        processor:
-          name: 'logging_processor'
-          clazz: 'io.labs64.audit.processors.LoggingProcessor'
-          properties:
-            log-level: "DEBUG"
-      - name: 'opensearch-raw'
-        enabled: true
-        transformer:
-          name: 'zero'
-        processor:
-          name: 'opensearch_processor'
-          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
-          properties:
-            service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
-            service-path: "/auditflow_raw_index/_doc"
-            username: "admin"
-            password: "Labs64pw+"
-      - name: 'opensearch-transformed'
-        enabled: true
-        transformer:
-          name: 'audit_opensearch'
-        processor:
-          name: 'opensearch_processor'
-          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
-          properties:
-            service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
-            service-path: "/auditflow_index/_doc"
-            username: "admin"
-            password: "Labs64pw+"
-      - name: 'loki'
-        enabled: false
-        transformer:
-          name: 'audit_loki'
-        processor:
-          name: 'loki_processor'
-          clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
-          properties:
-            service-url: "http://loki-write.monitoring.svc.cluster.local:3100"
-            service-path: "/loki/api/v1/push"
+  pipelines:
+    - name: 'logs'
+      enabled: true
+      transformer:
+        name: 'zero'
+      processor:
+        name: 'logging_processor'
+        clazz: 'io.labs64.audit.processors.LoggingProcessor'
+        properties:
+          log-level: "DEBUG"
+    - name: 'opensearch-raw'
+      enabled: true
+      transformer:
+        name: 'zero'
+      processor:
+        name: 'opensearch_processor'
+        clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+        properties:
+          service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
+          service-path: "/auditflow_raw_index/_doc"
+          username: "admin"
+          password: "Labs64pw+"
+    - name: 'opensearch-transformed'
+      enabled: true
+      transformer:
+        name: 'audit_opensearch'
+      processor:
+        name: 'opensearch_processor'
+        clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+        properties:
+          service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
+          service-path: "/auditflow_index/_doc"
+          username: "admin"
+          password: "Labs64pw+"
+    - name: 'loki'
+      enabled: false
+      transformer:
+        name: 'audit_loki'
+      processor:
+        name: 'loki_processor'
+        clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+        properties:
+          service-url: "http://loki-write.monitoring.svc.cluster.local:3100"
+          service-path: "/loki/api/v1/push"
 
   spring:
     rabbitmq:
