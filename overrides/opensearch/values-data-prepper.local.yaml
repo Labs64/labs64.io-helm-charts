@@ -30,9 +30,13 @@ pipelineConfig:
         - opensearch:
             hosts: ["https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"]
             insecure: true
+            # https://docs.opensearch.org/docs/latest/data-prepper/pipelines/configuration/sinks/opensearch/#opensearch-cluster-security
             username: admin
             password: "Labs64pw+"
             index_type: trace-analytics-raw
+            connection_timeout: 30000
+            socket_timeout: 60000
+            max_retries: 10
     service-map-pipeline:
       delay: 100
       source:
@@ -48,9 +52,13 @@ pipelineConfig:
         - opensearch:
             hosts: ["https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"]
             insecure: true
+            # https://docs.opensearch.org/docs/latest/data-prepper/pipelines/configuration/sinks/opensearch/#opensearch-cluster-security
             username: admin
             password: "Labs64pw+"
             index_type: trace-analytics-service-map
+            connection_timeout: 30000
+            socket_timeout: 60000
+            max_retries: 10
 
 # -- Data Prepper ports
 ports:

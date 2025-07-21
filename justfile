@@ -83,10 +83,8 @@ opensearch-install:
     helm search repo opensearch
     helm show values opensearch/opensearch > overrides/opensearch/values.orig.yaml
     helm show values opensearch/opensearch-dashboards > overrides/opensearch/values-dashboards.orig.yaml
-    helm show values opensearch/data-prepper > overrides/opensearch/values-data-prepper.orig.yaml
     helm upgrade --install opensearch opensearch/opensearch -f overrides/opensearch/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f overrides/opensearch/values-dashboards.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    helm upgrade --install opensearch-data-prepper opensearch/data-prepper -f overrides/opensearch/values-data-prepper.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc | grep "opensearch"
     echo "Run this command to open OpenSearch Dashboard: kubectl port-forward svc/opensearch-dashboards --namespace {{NAMESPACE_MONITORING}} 5601:5601"
 
@@ -103,6 +101,15 @@ opensearch-extract-cert:
 opensearch-uninstall:
     helm uninstall opensearch --namespace {{NAMESPACE_MONITORING}}
     helm uninstall opensearch-dashboards --namespace {{NAMESPACE_MONITORING}}
+
+# install OpenSearch Data Prepper
+opensearch-data-prepper-install:
+    helm search repo opensearch
+    helm show values opensearch/data-prepper > overrides/opensearch/values-data-prepper.orig.yaml
+    helm upgrade --install opensearch-data-prepper opensearch/data-prepper -f overrides/opensearch/values-data-prepper.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+
+# uninstall OpenSearch Data Prepper
+opensearch-data-prepper-uninstall:
     helm uninstall opensearch-data-prepper --namespace {{NAMESPACE_MONITORING}}
 
 
