@@ -69,6 +69,17 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# -- IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
+ingressroute:
+  # -- This sets whether the IngressRoute is enabled or not
+  enabled: true
+  # -- Host for the IngressRoute
+  host: localhost
+  # -- Entry points for the IngressRoute
+  entryPoints:
+    - web
+    - websecure
+
 resources:
   #limits:
   #  cpu: 200m

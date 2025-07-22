@@ -24,6 +24,7 @@ kubectl-pv:
 repo-add:
     helm repo add labs64io-pub https://labs64.github.io/labs64.io-helm-charts
     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    helm repo add traefik https://traefik.github.io/charts
     helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
@@ -32,7 +33,7 @@ repo-add:
     helm repo add opensearch https://opensearch-project.github.io/helm-charts/
 
 # update helm repositories
-repo-update:
+repo-update: repo-add
     helm repo update
 
 # show repositories versions
@@ -46,21 +47,25 @@ repo-search: repo-update
 metrics-server-install:
     helm search repo metrics-server/metrics-server
     helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
-    helm upgrade --install metrics-server metrics-server/metrics-server -f overrides/metrics-server/values.{{ENV}}.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
+    helm upgrade --install metrics-server metrics-server/metrics-server -f overrides/metrics-server/values.{{ENV}}.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}" --wait
 
 # uninstall Metrics Server
 metrics-server-uninstall:
     helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}}
 
-# install Ingress controller
-ingress-install:
-    helm search repo ingress-nginx/ingress-nginx
-    helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
-    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f overrides/ingress-nginx/values.{{ENV}}.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
+# install Traefik
+traefik-install:
+    helm search repo traefik/traefik
+    helm show values traefik/traefik > overrides/traefik/values.orig.yaml
+    helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
 
-# uninstall Ingress controller
-ingress-uninstall:
-    helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}
+# Traefik Dashboard
+traefik-dashboard:
+    open "http://dashboard.localhost/dashboard/"
+
+# uninstall Traefik
+traefik-uninstall:
+    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}}
 
 
 ## Monitoring Tools ##
@@ -70,8 +75,8 @@ opentelemetry-install:
     helm search repo open-telemetry
     helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
     helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
-    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator -f overrides/opentelemetry/values-operator.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector -f overrides/opentelemetry/values-collector.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator -f overrides/opentelemetry/values-operator.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
+    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector -f overrides/opentelemetry/values-collector.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
 
 # uninstall Open Telemetry
 opentelemetry-uninstall:
@@ -119,7 +124,7 @@ opensearch-data-prepper-uninstall:
 rabbitmq-install:
     helm search repo bitnami/rabbitmq
     helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
     echo "Username      : labs64"
     echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
     echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
@@ -132,7 +137,7 @@ rabbitmq-uninstall:
 redis-install:
     helm search repo bitnami/redis
     helm show values bitnami/redis > overrides/redis/values.orig.yaml
-    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
 
 # uninstall Redis
 redis-uninstall:
@@ -184,6 +189,16 @@ helm-uninstall-all: helm-uninstall-gw helm-uninstall-au
 
 
 ## Other/Backup Tools ##
+
+# install Ingress controller
+ingress-install:
+    helm search repo ingress-nginx/ingress-nginx
+    helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
+    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f overrides/ingress-nginx/values.{{ENV}}.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
+
+# uninstall Ingress controller
+ingress-uninstall:
+    helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}
 
 # install Prometheus
 prometheus-install:

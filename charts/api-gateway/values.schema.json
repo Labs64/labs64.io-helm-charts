@@ -172,6 +172,23 @@
             },
             "type": "object"
         },
+        "ingressroute": {
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "entryPoints": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "host": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
         "livenessProbe": {
             "properties": {
                 "failureThreshold": {

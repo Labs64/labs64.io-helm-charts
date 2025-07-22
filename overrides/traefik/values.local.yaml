@@ -1,0 +1,14 @@
+ingressRoute:
+  dashboard:
+    enabled: true
+    matchRule: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+    entryPoints: ["web"]
+
+providers:
+  kubernetesGateway:
+    enabled: false
+
+gateway:
+  listeners:
+    web:
+      namespacePolicy: All
