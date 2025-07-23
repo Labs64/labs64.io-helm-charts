@@ -218,6 +218,9 @@
             "properties": {
                 "create": {
                     "type": "boolean"
+                },
+                "rules": {
+                    "type": "array"
                 }
             },
             "type": "object"

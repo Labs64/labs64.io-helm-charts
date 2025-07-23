@@ -39,7 +39,11 @@ serviceAccount:
 
 # RBAC configuration (create RBAC resources: Role, RoleBinding)
 rbac:
-  create: true
+  create: false
+  rules: []
+    #- apiGroups: [""]
+    #  resources: ["pods"]
+    #  verbs: ["get", "list", "watch"]
 
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/

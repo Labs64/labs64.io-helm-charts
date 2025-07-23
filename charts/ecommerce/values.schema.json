@@ -179,6 +179,17 @@
             "properties": {},
             "type": "object"
         },
+        "rbac": {
+            "properties": {
+                "create": {
+                    "type": "boolean"
+                },
+                "rules": {
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
         "readinessProbe": {
             "properties": {
                 "failureThreshold": {

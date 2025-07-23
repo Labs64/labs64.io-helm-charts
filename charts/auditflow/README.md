@@ -58,7 +58,8 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
-| rbac.create | bool | `true` |  |
+| rbac.create | bool | `false` |  |
+| rbac.rules | list | `[]` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources.requests.cpu | string | `"100m"` |  |

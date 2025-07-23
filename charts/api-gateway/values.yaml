@@ -27,6 +27,14 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
+# RBAC configuration (create RBAC resources: Role, RoleBinding)
+rbac:
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources: ["pods", "services", "endpoints"]
+      verbs: ["get", "list", "watch"]
+
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 podAnnotations: {}
@@ -145,6 +153,7 @@ applicationYaml:
       gateway:
         server:
           webflux:
+            # -- Define the routes for the API Gateway
             routes: []
               #- id: auditflow_service_route
               #  uri: lb://labs64io-auditflow

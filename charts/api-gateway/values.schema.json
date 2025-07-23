@@ -198,6 +198,40 @@
             "properties": {},
             "type": "object"
         },
+        "rbac": {
+            "properties": {
+                "create": {
+                    "type": "boolean"
+                },
+                "rules": {
+                    "items": {
+                        "properties": {
+                            "apiGroups": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "resources": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            },
+                            "verbs": {
+                                "items": {
+                                    "type": "string"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
         "readinessProbe": {
             "properties": {
                 "failureThreshold": {

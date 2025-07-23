@@ -30,6 +30,7 @@ Labs64.IO :: API Gateway - A secure, high-performance entry point for managing a
 | affinity | object | `{}` |  |
 | applicationYaml | object | `{"spring":{"cloud":{"gateway":{"server":{"webflux":{"routes":[]}}}}},"springdoc":{"swagger-ui":{"urls":[]}}}` | Additional application properties |
 | applicationYaml.spring | object | `{"cloud":{"gateway":{"server":{"webflux":{"routes":[]}}}}}` | Spring configuration |
+| applicationYaml.spring.cloud.gateway.server.webflux.routes | list | `[]` | Define the routes for the API Gateway |
 | applicationYaml.springdoc | object | `{"swagger-ui":{"urls":[]}}` | SpringDoc configuration for the API Gateway |
 | applicationYaml.springdoc.swagger-ui | object | `{"urls":[]}` | Define the locations for the Swagger UI to fetch the docs |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
@@ -50,6 +51,14 @@ Labs64.IO :: API Gateway - A secure, high-performance entry point for managing a
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
+| rbac.create | bool | `true` |  |
+| rbac.rules[0].apiGroups[0] | string | `""` |  |
+| rbac.rules[0].resources[0] | string | `"pods"` |  |
+| rbac.rules[0].resources[1] | string | `"services"` |  |
+| rbac.rules[0].resources[2] | string | `"endpoints"` |  |
+| rbac.rules[0].verbs[0] | string | `"get"` |  |
+| rbac.rules[0].verbs[1] | string | `"list"` |  |
+| rbac.rules[0].verbs[2] | string | `"watch"` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources.requests.cpu | string | `"100m"` |  |
