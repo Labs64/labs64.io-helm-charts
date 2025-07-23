@@ -154,6 +154,7 @@ generate-docu:
 generate-schema:
     helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
     helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
+    helm schema -input charts/ecommerce/values.yaml -output charts/ecommerce/values.schema.json
 
 # install Labs64.IO :: API Gateway
 helm-install-gw:
@@ -173,8 +174,16 @@ helm-install-au:
       -f ./charts/auditflow/values.yaml \
       -f ./overrides/auditflow/values.{{ENV}}.yaml
 
+# install Labs64.IO :: eCommerce
+helm-install-ecom:
+    helm dependencies update ./charts/ecommerce
+    helm upgrade --install l64-{{ENV}}-ecom ./charts/ecommerce \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/ecommerce/values.yaml \
+      -f ./overrides/ecommerce/values.{{ENV}}.yaml
+
 # install Labs64.IO :: all components
-helm-install-all: helm-install-gw helm-install-au
+helm-install-all: helm-install-gw helm-install-au helm-install-ecom
 
 # uninstall Labs64.IO :: API Gateway
 helm-uninstall-gw:
@@ -184,8 +193,12 @@ helm-uninstall-gw:
 helm-uninstall-au:
     helm uninstall l64-{{ENV}}-au --namespace {{NAMESPACE_LABS64IO}}
 
+# uninstall Labs64.IO :: eCommerce
+helm-uninstall-ecom:
+    helm uninstall l64-{{ENV}}-ecom --namespace {{NAMESPACE_LABS64IO}}
+
 # uninstall Labs64.IO :: all components
-helm-uninstall-all: helm-uninstall-gw helm-uninstall-au
+helm-uninstall-all: helm-uninstall-gw helm-uninstall-au helm-uninstall-ecom
 
 
 ## Other/Backup Tools ##
