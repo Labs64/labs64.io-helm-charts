@@ -139,25 +139,8 @@ env: []
 
 # -- Additional application properties
 applicationYaml:
-  # -- Application properties
-  application:
-    # -- Message broker; e.g. rabbit, kafka, etc.
-    default-broker: rabbit
-
   # -- Spring configuration
   spring:
-    cloud:
-      stream:
-        bindings:
-          rabbit-out-0:
-            # -- Audit topic name; default: labs64-audit-topic
-            destination: labs64-audit-topic
-            binder: rabbit
-        rabbit:
-          bindings:
-            rabbit-out-0:
-              producer:
-                exchangeType: topic
     # -- RabbitMQ connection params
     rabbitmq:
       # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local

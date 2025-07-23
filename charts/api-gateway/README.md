@@ -28,11 +28,8 @@ Labs64.IO :: API Gateway - A secure, high-performance entry point for managing a
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"application":{"default-broker":"rabbit"},"spring":{"cloud":{"stream":{"bindings":{"rabbit-out-0":{"binder":"rabbit","destination":"labs64-audit-topic"}},"rabbit":{"bindings":{"rabbit-out-0":{"producer":{"exchangeType":"topic"}}}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}}` | Additional application properties |
-| applicationYaml.application | object | `{"default-broker":"rabbit"}` | Application properties |
-| applicationYaml.application.default-broker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
-| applicationYaml.spring | object | `{"cloud":{"stream":{"bindings":{"rabbit-out-0":{"binder":"rabbit","destination":"labs64-audit-topic"}},"rabbit":{"bindings":{"rabbit-out-0":{"producer":{"exchangeType":"topic"}}}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
-| applicationYaml.spring.cloud.stream.bindings.rabbit-out-0.destination | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
+| applicationYaml | object | `{"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}}` | Additional application properties |
+| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
 | applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
 | applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
 | applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |

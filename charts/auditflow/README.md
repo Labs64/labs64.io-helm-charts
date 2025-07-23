@@ -28,12 +28,9 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"application":{"default-broker":"rabbit"},"pipelines":[],"spring":{"cloud":{"stream":{"binders":{"rabbit":{"type":"rabbit"}},"bindings":{"receive-in-0":{"binder":"rabbit","destination":"labs64-audit-topic"}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
-| applicationYaml.application | object | `{"default-broker":"rabbit"}` | Application properties |
-| applicationYaml.application.default-broker | string | `"rabbit"` | Message broker; e.g. rabbit, kafka, etc. |
+| applicationYaml | object | `{"pipelines":[],"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
 | applicationYaml.pipelines | list | `[]` | AuditFlow pipelines configuration |
-| applicationYaml.spring | object | `{"cloud":{"stream":{"binders":{"rabbit":{"type":"rabbit"}},"bindings":{"receive-in-0":{"binder":"rabbit","destination":"labs64-audit-topic"}}}},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
-| applicationYaml.spring.cloud.stream.bindings.receive-in-0.destination | string | `"labs64-audit-topic"` | Audit topic name; default: labs64-audit-topic |
+| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
 | applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
 | applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
 | applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |
@@ -51,6 +48,10 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ingress | object | `{"annotations":{},"className":"","enabled":false,"hosts":[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}],"tls":[]}` | This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/ |
+| ingressroute | object | `{"enabled":true,"entryPoints":["web","websecure"],"host":"localhost"}` | IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/ |
+| ingressroute.enabled | bool | `true` | This sets whether the IngressRoute is enabled or not |
+| ingressroute.entryPoints | list | `["web","websecure"]` | Entry points for the IngressRoute |
+| ingressroute.host | string | `"localhost"` | Host for the IngressRoute |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/liveness","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
 | nodeSelector | object | `{}` |  |

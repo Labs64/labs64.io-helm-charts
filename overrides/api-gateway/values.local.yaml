@@ -14,9 +14,6 @@ resources:
     memory: 512Mi
 
 applicationYaml:
-  application:
-    default-broker: rabbit
-
   spring:
     rabbitmq:
       host: rabbitmq.tools.svc.cluster.local

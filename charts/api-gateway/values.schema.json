@@ -7,65 +7,8 @@
         },
         "applicationYaml": {
             "properties": {
-                "application": {
-                    "properties": {
-                        "default-broker": {
-                            "type": "string"
-                        }
-                    },
-                    "type": "object"
-                },
                 "spring": {
                     "properties": {
-                        "cloud": {
-                            "properties": {
-                                "stream": {
-                                    "properties": {
-                                        "bindings": {
-                                            "properties": {
-                                                "rabbit-out-0": {
-                                                    "properties": {
-                                                        "binder": {
-                                                            "type": "string"
-                                                        },
-                                                        "destination": {
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        },
-                                        "rabbit": {
-                                            "properties": {
-                                                "bindings": {
-                                                    "properties": {
-                                                        "rabbit-out-0": {
-                                                            "properties": {
-                                                                "producer": {
-                                                                    "properties": {
-                                                                        "exchangeType": {
-                                                                            "type": "string"
-                                                                        }
-                                                                    },
-                                                                    "type": "object"
-                                                                }
-                                                            },
-                                                            "type": "object"
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            },
-                            "type": "object"
-                        },
                         "rabbitmq": {
                             "properties": {
                                 "host": {

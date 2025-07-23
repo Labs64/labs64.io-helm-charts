@@ -83,6 +83,17 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# -- IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
+ingressroute:
+  # -- This sets whether the IngressRoute is enabled or not
+  enabled: true
+  # -- Host for the IngressRoute
+  host: localhost
+  # -- Entry points for the IngressRoute
+  entryPoints:
+    - web
+    - websecure
+
 resources:
   #limits:
   #  cpu: 200m
@@ -143,11 +154,6 @@ env: []
 
 # -- Additional application properties
 applicationYaml:
-  # -- Application properties
-  application:
-    # -- Message broker; e.g. rabbit, kafka, etc.
-    default-broker: rabbit
-
   # -- Transformer configuration
   transformer:
     # -- Discovery mode; "local" or "kubernetes"
@@ -175,16 +181,6 @@ applicationYaml:
 
   # -- Spring configuration
   spring:
-    cloud:
-      stream:
-        bindings:
-          receive-in-0:
-            # -- Audit topic name; default: labs64-audit-topic
-            destination: labs64-audit-topic
-            binder: rabbit
-        binders:
-          rabbit:
-            type: rabbit
     # -- RabbitMQ connection params
     rabbitmq:
       # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
