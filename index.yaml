@@ -135,4 +135,32 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/chart-libs-0.0.1/chart-libs-0.0.1.tgz
     version: 0.0.1
-generated: "2025-07-14T10:32:28.708366851Z"
+  ecommerce:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-07-23T05:45:55.706486989Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: eCommerce'
+    digest: 0660c2bdc5926f7f2801e8a9b57e67b3bc2cbbf5f8f3f081d664ef89afe876a9
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - api
+    - gateway
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: ecommerce
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-ecommerce
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-0.0.1/ecommerce-0.0.1.tgz
+    version: 0.0.1
+generated: "2025-07-23T05:45:55.706504091Z"
