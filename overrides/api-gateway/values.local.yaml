@@ -15,8 +15,23 @@ resources:
 
 applicationYaml:
   spring:
-    rabbitmq:
-      host: rabbitmq.tools.svc.cluster.local
-      port: 5672
-      username: labs64
-      password: labs64pw
+    cloud:
+      gateway:
+        server:
+          webflux:
+            routes:
+              - id: auditflow_service_route
+                uri: lb://labs64io-auditflow
+                predicates:
+                  - Path=/api/v1/audit/**
+              - id: ecommerce_service_route
+                uri: lb://labs64io-ecommerce
+                predicates:
+                  - Path=/api/v1/cart/**
+  springdoc:
+    swagger-ui:
+      urls:
+        - name: auditflow
+          url: http://labs64io-auditflow.localhost/v3/api-docs
+        - name: ecommerce
+          url: http://labs64io-ecommerce.localhost/v3/api-docs

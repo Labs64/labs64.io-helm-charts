@@ -141,13 +141,25 @@ env: []
 applicationYaml:
   # -- Spring configuration
   spring:
-    # -- RabbitMQ connection params
-    rabbitmq:
-      # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
-      host: rabbitmq.default.svc.cluster.local
-      # -- RabbitMQ port; default: 5672
-      port: 5672
-      # -- RabbitMQ username
-      username: <TODO>
-      # -- RabbitMQ password
-      password: <TODO>
+    cloud:
+      gateway:
+        server:
+          webflux:
+            routes: []
+              #- id: auditflow_service_route
+              #  uri: lb://labs64io-auditflow
+              #  predicates:
+              #    - Path=/api/v1/audit/**
+              #- id: ecommerce_service_route
+              #  uri: lb://labs64io-ecommerce
+              #  predicates:
+              #    - Path=/api/v1/cart/**
+  # -- SpringDoc configuration for the API Gateway
+  springdoc:
+    # -- Define the locations for the Swagger UI to fetch the docs
+    swagger-ui:
+      urls: []
+        #- name: auditflow
+        #  url: http://labs64io-auditflow.localhost/v3/api-docs
+        #- name: ecommerce
+        #  url: http://labs64io-ecommerce.localhost/v3/api-docs

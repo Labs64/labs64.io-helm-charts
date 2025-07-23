@@ -28,13 +28,10 @@ Labs64.IO :: API Gateway - A secure, high-performance entry point for managing a
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}}` | Additional application properties |
-| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
-| applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
-| applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
-| applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |
-| applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
-| applicationYaml.spring.rabbitmq.username | string | `"<TODO>"` | RabbitMQ username |
+| applicationYaml | object | `{"spring":{"cloud":{"gateway":{"server":{"webflux":{"routes":[]}}}}},"springdoc":{"swagger-ui":{"urls":[]}}}` | Additional application properties |
+| applicationYaml.spring | object | `{"cloud":{"gateway":{"server":{"webflux":{"routes":[]}}}}}` | Spring configuration |
+| applicationYaml.springdoc | object | `{"swagger-ui":{"urls":[]}}` | SpringDoc configuration for the API Gateway |
+| applicationYaml.springdoc.swagger-ui | object | `{"urls":[]}` | Define the locations for the Swagger UI to fetch the docs |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |

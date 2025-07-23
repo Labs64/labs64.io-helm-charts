@@ -137,11 +137,11 @@ rabbitmq-uninstall:
 redis-install:
     helm search repo bitnami/redis
     helm show values bitnami/redis > overrides/redis/values.orig.yaml
-    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
+    helm upgrade --install redis2 bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
 
 # uninstall Redis
 redis-uninstall:
-    helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
+    helm uninstall redis2 --namespace {{NAMESPACE_TOOLS}}
 
 
 ## Labs64.IO Components ##
@@ -157,48 +157,46 @@ generate-schema:
     helm schema -input charts/ecommerce/values.yaml -output charts/ecommerce/values.schema.json
 
 # install Labs64.IO :: API Gateway
-helm-install-gw:
+helm-install-api-gateway:
     helm dependencies update ./charts/api-gateway
-    helm upgrade --install l64-{{ENV}}-gw ./charts/api-gateway \
+    helm upgrade --install labs64io-api-gateway ./charts/api-gateway \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/api-gateway/values.yaml \
       -f ./overrides/api-gateway/values.{{ENV}}.yaml
-    echo "Run this command to tunnel API Gateway: kubectl --namespace {{NAMESPACE_LABS64IO}} port-forward svc/l64-{{ENV}}-gw-api-gateway 8080:8080"
-    echo "Visit http://localhost:8080/swagger-ui/index.html for API documentation"
 
 # install Labs64.IO :: AuditFlow
-helm-install-au:
+helm-install-auditflow:
     helm dependencies update ./charts/auditflow
-    helm upgrade --install l64-{{ENV}}-au ./charts/auditflow \
+    helm upgrade --install labs64io-auditflow ./charts/auditflow \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/auditflow/values.yaml \
       -f ./overrides/auditflow/values.{{ENV}}.yaml
 
 # install Labs64.IO :: eCommerce
-helm-install-ecom:
+helm-install-ecommerce:
     helm dependencies update ./charts/ecommerce
-    helm upgrade --install l64-{{ENV}}-ecom ./charts/ecommerce \
+    helm upgrade --install labs64io-ecommerce ./charts/ecommerce \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/ecommerce/values.yaml \
       -f ./overrides/ecommerce/values.{{ENV}}.yaml
 
 # install Labs64.IO :: all components
-helm-install-all: helm-install-gw helm-install-au helm-install-ecom
+helm-install-all: helm-install-api-gateway helm-install-auditflow helm-install-ecommerce
 
 # uninstall Labs64.IO :: API Gateway
-helm-uninstall-gw:
-    helm uninstall l64-{{ENV}}-gw --namespace {{NAMESPACE_LABS64IO}}
+helm-uninstall-api-gateway:
+    helm uninstall labs64io-api-gateway --namespace {{NAMESPACE_LABS64IO}}
 
 # uninstall Labs64.IO :: AuditFlow
-helm-uninstall-au:
-    helm uninstall l64-{{ENV}}-au --namespace {{NAMESPACE_LABS64IO}}
+helm-uninstall-auditflow:
+    helm uninstall labs64io-auditflow --namespace {{NAMESPACE_LABS64IO}}
 
 # uninstall Labs64.IO :: eCommerce
-helm-uninstall-ecom:
-    helm uninstall l64-{{ENV}}-ecom --namespace {{NAMESPACE_LABS64IO}}
+helm-uninstall-ecommerce:
+    helm uninstall labs64io-ecommerce --namespace {{NAMESPACE_LABS64IO}}
 
 # uninstall Labs64.IO :: all components
-helm-uninstall-all: helm-uninstall-gw helm-uninstall-au helm-uninstall-ecom
+helm-uninstall-all: helm-uninstall-api-gateway helm-uninstall-auditflow helm-uninstall-ecommerce
 
 
 ## Other/Backup Tools ##

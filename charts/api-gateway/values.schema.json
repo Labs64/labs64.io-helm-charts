@@ -9,19 +9,38 @@
             "properties": {
                 "spring": {
                     "properties": {
-                        "rabbitmq": {
+                        "cloud": {
                             "properties": {
-                                "host": {
-                                    "type": "string"
-                                },
-                                "password": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "integer"
-                                },
-                                "username": {
-                                    "type": "string"
+                                "gateway": {
+                                    "properties": {
+                                        "server": {
+                                            "properties": {
+                                                "webflux": {
+                                                    "properties": {
+                                                        "routes": {
+                                                            "type": "array"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
+                },
+                "springdoc": {
+                    "properties": {
+                        "swagger-ui": {
+                            "properties": {
+                                "urls": {
+                                    "type": "array"
                                 }
                             },
                             "type": "object"
