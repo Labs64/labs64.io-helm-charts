@@ -156,19 +156,31 @@ applicationYaml:
             # -- Define the routes for the API Gateway
             routes: []
               #- id: auditflow_service_route
-              #  uri: lb://labs64io-auditflow
+              #  uri: http://labs64io-auditflow:8080
               #  predicates:
               #    - Path=/api/v1/audit/**
+              #- id: auditflow_apidocs_route
+              #  uri: http://labs64io-auditflow:8080
+              #  predicates:
+              #    - Path=/auditflow/v3/api-docs
+              #  filters:
+              #    - RewritePath=/auditflow/v3/api-docs, /v3/api-docs
               #- id: ecommerce_service_route
-              #  uri: lb://labs64io-ecommerce
+              #  uri: http://labs64io-ecommerce:8080
               #  predicates:
               #    - Path=/api/v1/cart/**
+              #- id: ecommerce_apidocs_route
+              #  uri: http://labs64io-ecommerce:8080
+              #  predicates:
+              #    - Path=/ecommerce/v3/api-docs
+              #  filters:
+              #    - RewritePath=/ecommerce/v3/api-docs, /v3/api-docs
   # -- SpringDoc configuration for the API Gateway
   springdoc:
     # -- Define the locations for the Swagger UI to fetch the docs
     swagger-ui:
       urls: []
         #- name: auditflow
-        #  url: http://labs64io-auditflow.localhost/v3/api-docs
+        #  url: http://labs64io-api-gateway.localhost/auditflow/v3/api-docs
         #- name: ecommerce
-        #  url: http://labs64io-ecommerce.localhost/v3/api-docs
+        #  url: http://labs64io-api-gateway.localhost/ecommerce/v3/api-docs

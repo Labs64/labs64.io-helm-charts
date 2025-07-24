@@ -181,7 +181,7 @@ helm-install-ecommerce:
       -f ./overrides/ecommerce/values.{{ENV}}.yaml
 
 # install Labs64.IO :: all components
-helm-install-all: helm-install-api-gateway helm-install-auditflow helm-install-ecommerce
+helm-install-all: helm-install-auditflow helm-install-ecommerce helm-install-api-gateway
 
 # uninstall Labs64.IO :: API Gateway
 helm-uninstall-api-gateway:
@@ -196,7 +196,7 @@ helm-uninstall-ecommerce:
     helm uninstall labs64io-ecommerce --namespace {{NAMESPACE_LABS64IO}}
 
 # uninstall Labs64.IO :: all components
-helm-uninstall-all: helm-uninstall-api-gateway helm-uninstall-auditflow helm-uninstall-ecommerce
+helm-uninstall-all: helm-uninstall-auditflow helm-uninstall-ecommerce helm-uninstall-api-gateway
 
 
 ## Other/Backup Tools ##

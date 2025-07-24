@@ -14,6 +14,10 @@ resources:
     memory: 512Mi
 
 applicationYaml:
+  logging:
+    level:
+      org.springframework.cloud.gateway: DEBUG
+      reactor.netty: DEBUG
   spring:
     cloud:
       gateway:
@@ -21,17 +25,36 @@ applicationYaml:
           webflux:
             routes:
               - id: auditflow_service_route
-                uri: lb://labs64io-auditflow
+                uri: http://labs64io-auditflow:8080
                 predicates:
                   - Path=/api/v1/audit/**
+                filters:
+                  - name: RequestRateLimiter
+                    args:
+                      key-resolver: "#{@ipAddressKeyResolver}"
+                      replenishRate: 1
+                      burstCapacity: 1
+                      rateLimiter.periodDuration: 60S
+              - id: auditflow_apidocs_route
+                uri: http://labs64io-auditflow:8080
+                predicates:
+                  - Path=/auditflow/v3/api-docs
+                filters:
+                  - RewritePath=/auditflow/v3/api-docs, /v3/api-docs
               - id: ecommerce_service_route
-                uri: lb://labs64io-ecommerce
+                uri: http://labs64io-ecommerce:8080
                 predicates:
                   - Path=/api/v1/cart/**
+              - id: ecommerce_apidocs_route
+                uri: http://labs64io-ecommerce:8080
+                predicates:
+                  - Path=/ecommerce/v3/api-docs
+                filters:
+                  - RewritePath=/ecommerce/v3/api-docs, /v3/api-docs
   springdoc:
     swagger-ui:
       urls:
         - name: auditflow
-          url: http://labs64io-auditflow.localhost/v3/api-docs
+          url: http://labs64io-api-gateway.localhost/auditflow/v3/api-docs
         - name: ecommerce
-          url: http://labs64io-ecommerce.localhost/v3/api-docs
+          url: http://labs64io-api-gateway.localhost/ecommerce/v3/api-docs
