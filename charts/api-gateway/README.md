@@ -28,9 +28,12 @@ Labs64.IO :: API Gateway - A secure, high-performance entry point for managing a
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"spring":{"cloud":{"gateway":{"server":{"webflux":{"routes":[]}}}}},"springdoc":{"swagger-ui":{"urls":[]}}}` | Additional application properties |
-| applicationYaml.spring | object | `{"cloud":{"gateway":{"server":{"webflux":{"routes":[]}}}}}` | Spring configuration |
+| applicationYaml | object | `{"spring":{"cloud":{"gateway":{"server":{"webflux":{"routes":[]}}}},"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}}},"springdoc":{"swagger-ui":{"urls":[]}}}` | Additional application properties |
+| applicationYaml.spring | object | `{"cloud":{"gateway":{"server":{"webflux":{"routes":[]}}}},"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}}}` | Spring configuration |
 | applicationYaml.spring.cloud.gateway.server.webflux.routes | list | `[]` | Define the routes for the API Gateway |
+| applicationYaml.spring.data.redis | object | `{"host":"redis-master.tools.svc.cluster.local","port":6379}` | Redis configuration |
+| applicationYaml.spring.data.redis.host | string | `"redis-master.tools.svc.cluster.local"` | Host for the Redis server |
+| applicationYaml.spring.data.redis.port | int | `6379` | Port for the Redis server |
 | applicationYaml.springdoc | object | `{"swagger-ui":{"urls":[]}}` | SpringDoc configuration for the API Gateway |
 | applicationYaml.springdoc.swagger-ui | object | `{"urls":[]}` | Define the locations for the Swagger UI to fetch the docs |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |

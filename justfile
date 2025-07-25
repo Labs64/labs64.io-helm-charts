@@ -137,11 +137,11 @@ rabbitmq-uninstall:
 redis-install:
     helm search repo bitnami/redis
     helm show values bitnami/redis > overrides/redis/values.orig.yaml
-    helm upgrade --install redis2 bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
+    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
 
 # uninstall Redis
 redis-uninstall:
-    helm uninstall redis2 --namespace {{NAMESPACE_TOOLS}}
+    helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
 
 
 ## Labs64.IO Components ##
@@ -197,6 +197,10 @@ helm-uninstall-ecommerce:
 
 # uninstall Labs64.IO :: all components
 helm-uninstall-all: helm-uninstall-auditflow helm-uninstall-ecommerce helm-uninstall-api-gateway
+
+# show errors in Labs64.IO kubectl logs
+show-labs64io-errors:
+    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED'
 
 
 ## Other/Backup Tools ##

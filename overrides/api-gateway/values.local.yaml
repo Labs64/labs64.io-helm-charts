@@ -19,6 +19,10 @@ applicationYaml:
       org.springframework.cloud.gateway: DEBUG
       reactor.netty: DEBUG
   spring:
+    data:
+      redis:
+        host: redis-master.tools.svc.cluster.local
+        port: 6379
     cloud:
       gateway:
         server:
@@ -32,9 +36,9 @@ applicationYaml:
                   - name: RequestRateLimiter
                     args:
                       key-resolver: "#{@ipAddressKeyResolver}"
-                      replenishRate: 1
-                      burstCapacity: 1
-                      rateLimiter.periodDuration: 60S
+                      redis-rate-limiter.replenishRate: 1
+                      redis-rate-limiter.burstCapacity: 1
+                      redis-rate-limiter.requestedTokens: 1
               - id: auditflow_apidocs_route
                 uri: http://labs64io-auditflow:8080
                 predicates:

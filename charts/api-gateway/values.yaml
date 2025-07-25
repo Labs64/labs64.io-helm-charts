@@ -149,6 +149,13 @@ env: []
 applicationYaml:
   # -- Spring configuration
   spring:
+    data:
+        # -- Redis configuration
+      redis:
+        # -- Host for the Redis server
+        host: redis-master.tools.svc.cluster.local
+        # -- Port for the Redis server
+        port: 6379
     cloud:
       gateway:
         server:

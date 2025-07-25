@@ -31,6 +31,22 @@
                                 }
                             },
                             "type": "object"
+                        },
+                        "data": {
+                            "properties": {
+                                "redis": {
+                                    "properties": {
+                                        "host": {
+                                            "type": "string"
+                                        },
+                                        "port": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "type": "object"
                         }
                     },
                     "type": "object"
