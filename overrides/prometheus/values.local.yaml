@@ -7,3 +7,7 @@ grafana:
 
 alertmanager:
   enabled: false # Optional, can be enabled if you need alerting
+
+prometheus:
+  prometheusSpec:
+    enableRemoteWriteReceiver: true

@@ -1,4 +1,4 @@
-mode: deployment
+mode: daemonset
 
 image:
   repository: otel/opentelemetry-collector-contrib
@@ -24,7 +24,7 @@ presets:
   kubernetesEvents:
     enabled: true
   clusterMetrics:
-    enabled: true
+    enabled: false
 
 clusterRole:
   create: true
@@ -35,6 +35,35 @@ config:
       protocols:
         grpc: {}
         http: {}
+    prometheus:
+      config:
+        scrape_configs:
+          - job_name: 'kubernetes-pods'
+            kubernetes_sd_configs:
+              - role: pod
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                action: keep
+                regex: true
+    filelog:
+      include: [ /var/log/pods/*/*.log ]
+      start_at: beginning
+      # Exclude logs from the collector itself to avoid self-loop
+      exclude: [ /var/log/pods/*/otel-collector-*.log ]
+      # Parse multiline logs (e.g., stack traces)
+      #multiline:
+      #  pattern: '^\S'
+      #  line_end_pattern: '^\S'
+      # Optional: for Kubernetes enrichment, ensure you have the `k8sattributes` processor in your pipeline
+      # body:
+      #   # If you want to customize how logs are parsed (e.g., JSON, regex)
+      #   # check out the filelog receiver documentation for more options.
+      #   encoding: utf-8
+      #   attributes:
+      #     # Add Kubernetes metadata
+      #     kubernetes.pod.name: "$FILE_NAME_REGEX(^/var/log/pods/[^/]+/[^/]+_([^/]+)/)"
+      #     kubernetes.namespace.name: "$FILE_NAME_REGEX(^/var/log/pods/([^/]+)/)"
+      #     kubernetes.container.name: "$FILE_NAME_REGEX(^/var/log/pods/[^/]+/[^/]+_([^/]+)-([^_]+)/)"
 
   processors:
     batch:
@@ -49,30 +78,30 @@ config:
       spike_limit_percentage: 25
 
   exporters:
-    otlp/data-prepper-traces:
-      endpoint: "http://opensearch-data-prepper.monitoring.svc.cluster.local:21890"
+    prometheusremotewrite:
+      endpoint: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
       tls:
         insecure: true
-    otlp/data-prepper-metrics:
-      endpoint: "http://opensearch-data-prepper.monitoring.svc.cluster.local:21891"
+    otlp/tempo:
+      endpoint: "http://tempo.monitoring.svc.cluster.local:4317"
       tls:
         insecure: true
-    otlp/data-prepper-logs:
-      endpoint: "http://opensearch-data-prepper.monitoring.svc.cluster.local:21892"
+    otlphttp/victorialogs:
+      endpoint: "http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428/insert/opentelemetry/v1/logs"
       tls:
         insecure: true
 
   service:
     pipelines:
+      metrics:
+        receivers: [otlp, prometheus]
+        processors: [batch]
+        exporters: [prometheusremotewrite]
       traces:
         receivers: [otlp]
         processors: [batch/traces, memory_limiter]
-        exporters: [otlp/data-prepper-traces]
-      metrics:
-        receivers: [otlp]
-        processors: [batch]
-        exporters: [otlp/data-prepper-metrics]
+        exporters: [otlp/tempo]
       logs:
-        receivers: [otlp]
+        receivers: [otlp, filelog]
         processors: [batch]
-        exporters: [otlp/data-prepper-logs]
+        exporters: [otlphttp/victorialogs]

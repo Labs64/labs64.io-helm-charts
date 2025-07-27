@@ -11,9 +11,9 @@ datasources:
         url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
         access: proxy
         isDefault: true
-      - name: Loki
-        type: loki
-        url: http://loki-read.monitoring.svc.cluster.local:3100
+      - name: VictoriaLogs
+        type: victoriametrics-logs-datasource
+        url: http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428
         access: proxy
       - name: Tempo
         type: tempo

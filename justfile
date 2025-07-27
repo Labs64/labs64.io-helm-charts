@@ -28,6 +28,7 @@ repo-add:
     helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+    helm repo add victoria-metrics https://victoriametrics.github.io/helm-charts/
     helm repo add grafana https://grafana.github.io/helm-charts
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
     helm repo add opensearch https://opensearch-project.github.io/helm-charts/
@@ -83,6 +84,55 @@ opentelemetry-uninstall:
     helm uninstall opentelemetry-operator --namespace {{NAMESPACE_MONITORING}}
     helm uninstall opentelemetry-collector --namespace {{NAMESPACE_MONITORING}}
 
+# install Prometheus
+prometheus-install:
+    helm search repo prometheus-community
+    helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
+    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f overrides/prometheus/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
+
+# uninstall Prometheus
+prometheus-uninstall:
+    helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}}
+
+# install tempo
+tempo-install:
+    helm search repo grafana/tempo
+    helm show values grafana/tempo > overrides/tempo/values.orig.yaml
+    helm upgrade --install tempo grafana/tempo -f overrides/tempo/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+
+# uninstall tempo
+tempo-uninstall:
+    helm uninstall tempo --namespace {{NAMESPACE_MONITORING}}
+
+# install VictoriaLogs
+victoria-logs-install:
+    helm search repo victoria-metrics
+    helm show values victoria-metrics/victoria-logs-single > overrides/victoria-logs/values.orig.yaml
+    helm upgrade --install victoria-logs victoria-metrics/victoria-logs-single -f overrides/victoria-logs/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+
+# uninstall VictoriaLogs
+victoria-logs-uninstall:
+    helm uninstall victoria-logs --namespace {{NAMESPACE_MONITORING}}
+
+# install grafana
+grafana-install:
+    helm search repo grafana/grafana
+    helm show values grafana/grafana > overrides/grafana/values.orig.yaml
+    helm upgrade --install grafana grafana/grafana -f overrides/grafana/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
+    echo "Username: admin"
+    echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+# retrieve grafana password
+grafana-password:
+    echo "Username: admin"
+    echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+# uninstall grafana
+grafana-uninstall:
+    helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
+
 # install OpenSearch
 opensearch-install:
     helm search repo opensearch
@@ -106,16 +156,6 @@ opensearch-extract-cert:
 opensearch-uninstall:
     helm uninstall opensearch --namespace {{NAMESPACE_MONITORING}}
     helm uninstall opensearch-dashboards --namespace {{NAMESPACE_MONITORING}}
-
-# install OpenSearch Data Prepper
-opensearch-data-prepper-install:
-    helm search repo opensearch
-    helm show values opensearch/data-prepper > overrides/opensearch/values-data-prepper.orig.yaml
-    helm upgrade --install opensearch-data-prepper opensearch/data-prepper -f overrides/opensearch/values-data-prepper.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall OpenSearch Data Prepper
-opensearch-data-prepper-uninstall:
-    helm uninstall opensearch-data-prepper --namespace {{NAMESPACE_MONITORING}}
 
 
 ## Tools ##
@@ -215,17 +255,6 @@ ingress-install:
 ingress-uninstall:
     helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}
 
-# install Prometheus
-prometheus-install:
-    helm search repo prometheus-community
-    helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
-    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f overrides/prometheus/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
-
-# uninstall Prometheus
-prometheus-uninstall:
-    helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}}
-
 # install Loki
 loki-install:
     helm search repo grafana/loki
@@ -236,30 +265,12 @@ loki-install:
 loki-uninstall:
     helm uninstall loki --namespace {{NAMESPACE_MONITORING}}
 
-# install tempo
-tempo-install:
-    helm search repo grafana/tempo
-    helm show values grafana/tempo > overrides/tempo/values.orig.yaml
-    helm upgrade --install tempo grafana/tempo -f overrides/tempo/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+# install OpenSearch Data Prepper
+opensearch-data-prepper-install:
+    helm search repo opensearch
+    helm show values opensearch/data-prepper > overrides/opensearch/values-data-prepper.orig.yaml
+    helm upgrade --install opensearch-data-prepper opensearch/data-prepper -f overrides/opensearch/values-data-prepper.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
-# uninstall tempo
-tempo-uninstall:
-    helm uninstall tempo --namespace {{NAMESPACE_MONITORING}}
-
-# install grafana
-grafana-install:
-    helm search repo grafana/grafana
-    helm show values grafana/grafana > overrides/grafana/values.orig.yaml
-    helm upgrade --install grafana grafana/grafana -f overrides/grafana/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
-    echo "Username: admin"
-    echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-
-# retrieve grafana password
-grafana-password:
-    echo "Username: admin"
-    echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-
-# uninstall grafana
-grafana-uninstall:
-    helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
+# uninstall OpenSearch Data Prepper
+opensearch-data-prepper-uninstall:
+    helm uninstall opensearch-data-prepper --namespace {{NAMESPACE_MONITORING}}
