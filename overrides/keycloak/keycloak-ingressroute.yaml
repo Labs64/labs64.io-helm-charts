@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: keycloak-ingressroute
+  #namespace: tools
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`keycloak.localhost`) && PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: keycloak
+          port: 80
