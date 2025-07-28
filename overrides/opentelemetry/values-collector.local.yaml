@@ -46,7 +46,10 @@ config:
                 action: keep
                 regex: true
     filelog:
-      include: [ /var/log/pods/*/*.log ]
+      include:
+        - /var/lib/docker/containers/*.log
+        #- /var/log/containers/*.log
+        #- /var/log/pods/*/*.log
       start_at: beginning
       # Exclude logs from the collector itself to avoid self-loop
       exclude: [ /var/log/pods/*/otel-collector-*.log ]
@@ -78,6 +81,8 @@ config:
       spike_limit_percentage: 25
 
   exporters:
+    debug:
+      verbosity: detailed
     prometheusremotewrite:
       endpoint: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
       tls:
@@ -102,6 +107,6 @@ config:
         processors: [batch/traces, memory_limiter]
         exporters: [otlp/tempo]
       logs:
-        receivers: [otlp, filelog]
+        receivers: [filelog]
         processors: [batch]
         exporters: [otlphttp/victorialogs]

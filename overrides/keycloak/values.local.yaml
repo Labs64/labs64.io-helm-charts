@@ -1,0 +1,21 @@
+auth:
+  adminUser: labs64
+  adminPassword: labs64pw
+
+postgresql:
+  enabled: false
+
+externalDatabase:
+  host: your-postgres-host
+  port: 5432
+  user: keycloak
+  password: yourpassword
+  database: keycloak
+
+ingress:
+  enabled: true
+  hostname: keycloak.example.com
+  ingressClassName: nginx
+  tls: true
+  annotations:
+    kubernetes.io/ingress.class: nginx

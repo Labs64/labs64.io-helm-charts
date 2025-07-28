@@ -160,6 +160,16 @@ opensearch-uninstall:
 
 ## Tools ##
 
+# install Keycloak
+keycloak-install:
+    helm search repo bitnami/keycloak
+    helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
+    helm upgrade --install keycloak bitnami/keycloak -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
+
+# uninstall Keycloak
+keycloak-uninstall:
+    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
+
 # install RabbitMQ
 rabbitmq-install:
     helm search repo bitnami/rabbitmq
