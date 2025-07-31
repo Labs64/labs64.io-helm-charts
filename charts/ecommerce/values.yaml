@@ -149,6 +149,14 @@ env: []
 applicationYaml:
   # -- Spring configuration
   spring:
+    # -- Security configuration for OAuth2
+    security:
+      oauth2:
+        resourceserver:
+          # -- JWT configuration
+          jwt:
+            # -- Issuer URI for the JWT tokens
+            issuer-uri: http://keycloak.tools.svc.cluster.local/realms/<realm-name>
     # -- RabbitMQ connection params
     rabbitmq:
       # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local

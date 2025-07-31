@@ -23,6 +23,11 @@ applicationYaml:
       redis:
         host: redis-master.tools.svc.cluster.local
         port: 6379
+    security:
+      oauth2:
+        resourceserver:
+          jwt:
+            issuer-uri: http://keycloak.tools.svc.cluster.local/realms/labs64io
     cloud:
       gateway:
         server:
@@ -33,22 +38,28 @@ applicationYaml:
                 predicates:
                   - Path=/api/v1/audit/**
                 filters:
+                  - TokenRelay=
                   - name: RequestRateLimiter
                     args:
                       key-resolver: "#{@ipAddressKeyResolver}"
                       redis-rate-limiter.replenishRate: 1
                       redis-rate-limiter.burstCapacity: 1
                       redis-rate-limiter.requestedTokens: 1
+
               - id: auditflow_apidocs_route
                 uri: http://labs64io-auditflow:8080
                 predicates:
                   - Path=/auditflow/v3/api-docs
                 filters:
                   - RewritePath=/auditflow/v3/api-docs, /v3/api-docs
+
               - id: ecommerce_service_route
                 uri: http://labs64io-ecommerce:8080
                 predicates:
                   - Path=/api/v1/cart/**
+                filters:
+                  - TokenRelay=
+
               - id: ecommerce_apidocs_route
                 uri: http://labs64io-ecommerce:8080
                 predicates:

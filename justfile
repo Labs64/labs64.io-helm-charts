@@ -54,20 +54,6 @@ metrics-server-install:
 metrics-server-uninstall:
     helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}}
 
-# install Traefik
-traefik-install:
-    helm search repo traefik/traefik
-    helm show values traefik/traefik > overrides/traefik/values.orig.yaml
-    helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
-
-# Traefik Dashboard
-traefik-dashboard:
-    open "http://dashboard.localhost/dashboard/"
-
-# uninstall Traefik
-traefik-uninstall:
-    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}}
-
 
 ## Monitoring Tools ##
 
@@ -159,6 +145,20 @@ opensearch-uninstall:
 
 
 ## Tools ##
+
+# install Traefik
+traefik-install:
+    helm search repo traefik/traefik
+    helm show values traefik/traefik > overrides/traefik/values.orig.yaml
+    helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
+
+# Traefik Dashboard
+traefik-dashboard:
+    open "http://dashboard.localhost/dashboard/"
+
+# uninstall Traefik
+traefik-uninstall:
+    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}}
 
 # install Keycloak
 keycloak-install:

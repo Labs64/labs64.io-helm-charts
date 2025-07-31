@@ -12,3 +12,8 @@ gateway:
   listeners:
     web:
       namespacePolicy: All
+
+logs:
+  general:
+    #format: json
+    level: "TRACE"

@@ -28,14 +28,17 @@ Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing So
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"pipelines":[],"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
+| applicationYaml | object | `{"pipelines":[],"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"},"security":{"oauth2":{"resourceserver":{"jwt":{"issuer-uri":"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"}}}}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
 | applicationYaml.pipelines | list | `[]` | AuditFlow pipelines configuration |
-| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
+| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"},"security":{"oauth2":{"resourceserver":{"jwt":{"issuer-uri":"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"}}}}}` | Spring configuration |
 | applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
 | applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
 | applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |
 | applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
 | applicationYaml.spring.rabbitmq.username | string | `"<TODO>"` | RabbitMQ username |
+| applicationYaml.spring.security | object | `{"oauth2":{"resourceserver":{"jwt":{"issuer-uri":"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"}}}}` | Security configuration for OAuth2 |
+| applicationYaml.spring.security.oauth2.resourceserver.jwt | object | `{"issuer-uri":"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"}` | JWT configuration |
+| applicationYaml.spring.security.oauth2.resourceserver.jwt.issuer-uri | string | `"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"` | Issuer URI for the JWT tokens |
 | applicationYaml.transformer | object | `{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}` | Transformer configuration |
 | applicationYaml.transformer.discovery | object | `{"mode":"local"}` | Discovery mode; "local" or "kubernetes" |
 | applicationYaml.transformer.local | object | `{"url":"http://localhost:8081"}` | Local URL for the transformer service |

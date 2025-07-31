@@ -28,13 +28,16 @@ Labs64.IO :: eCommerce
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}}` | Additional application properties |
-| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
+| applicationYaml | object | `{"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"},"security":{"oauth2":{"resourceserver":{"jwt":{"issuer-uri":"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"}}}}}}` | Additional application properties |
+| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"},"security":{"oauth2":{"resourceserver":{"jwt":{"issuer-uri":"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"}}}}}` | Spring configuration |
 | applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
 | applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
 | applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |
 | applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
 | applicationYaml.spring.rabbitmq.username | string | `"<TODO>"` | RabbitMQ username |
+| applicationYaml.spring.security | object | `{"oauth2":{"resourceserver":{"jwt":{"issuer-uri":"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"}}}}` | Security configuration for OAuth2 |
+| applicationYaml.spring.security.oauth2.resourceserver.jwt | object | `{"issuer-uri":"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"}` | JWT configuration |
+| applicationYaml.spring.security.oauth2.resourceserver.jwt.issuer-uri | string | `"http://keycloak.tools.svc.cluster.local/realms/<realm-name>"` | Issuer URI for the JWT tokens |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
