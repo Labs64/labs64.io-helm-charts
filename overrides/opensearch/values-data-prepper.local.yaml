@@ -28,7 +28,7 @@ pipelineConfig:
         - otel_traces:
       sink:
         - opensearch:
-            hosts: ["https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"]
+            hosts: ["https://opensearch-cluster-master.tools.svc.cluster.local:9200"]
             insecure: true
             # https://docs.opensearch.org/docs/latest/data-prepper/pipelines/configuration/sinks/opensearch/#opensearch-cluster-security
             username: admin
@@ -50,7 +50,7 @@ pipelineConfig:
         - service_map:
       sink:
         - opensearch:
-            hosts: ["https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"]
+            hosts: ["https://opensearch-cluster-master.tools.svc.cluster.local:9200"]
             insecure: true
             # https://docs.opensearch.org/docs/latest/data-prepper/pipelines/configuration/sinks/opensearch/#opensearch-cluster-security
             username: admin

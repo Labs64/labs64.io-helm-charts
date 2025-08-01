@@ -60,7 +60,7 @@ applicationYaml:
         name: 'opensearch_processor'
         clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
         properties:
-          service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
+          service-url: "https://opensearch-cluster-master.tools.svc.cluster.local:9200"
           service-path: "/auditflow_raw_index/_doc"
           username: "admin"
           password: "Labs64pw+"
@@ -72,7 +72,7 @@ applicationYaml:
         name: 'opensearch_processor'
         clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
         properties:
-          service-url: "https://opensearch-cluster-master.monitoring.svc.cluster.local:9200"
+          service-url: "https://opensearch-cluster-master.tools.svc.cluster.local:9200"
           service-path: "/auditflow_index/_doc"
           username: "admin"
           password: "Labs64pw+"

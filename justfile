@@ -42,6 +42,65 @@ repo-search: repo-update
     helm search repo
 
 
+## Labs64.IO Components ##
+
+# Generate Helm chart docu
+generate-docu:
+    docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
+
+# Generate Helm values schema
+generate-schema:
+    helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
+    helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
+    helm schema -input charts/ecommerce/values.yaml -output charts/ecommerce/values.schema.json
+
+# install Labs64.IO :: API Gateway
+labs64io-install-api-gateway:
+    helm dependencies update ./charts/api-gateway
+    helm upgrade --install labs64io-api-gateway ./charts/api-gateway \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/api-gateway/values.yaml \
+      -f ./overrides/api-gateway/values.{{ENV}}.yaml
+
+# install Labs64.IO :: AuditFlow
+labs64io-install-auditflow:
+    helm dependencies update ./charts/auditflow
+    helm upgrade --install labs64io-auditflow ./charts/auditflow \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/auditflow/values.yaml \
+      -f ./overrides/auditflow/values.{{ENV}}.yaml
+
+# install Labs64.IO :: eCommerce
+labs64io-install-ecommerce:
+    helm dependencies update ./charts/ecommerce
+    helm upgrade --install labs64io-ecommerce ./charts/ecommerce \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/ecommerce/values.yaml \
+      -f ./overrides/ecommerce/values.{{ENV}}.yaml
+
+# install Labs64.IO :: all components
+labs64io-install-all: labs64io-install-auditflow labs64io-install-ecommerce labs64io-install-api-gateway
+
+# uninstall Labs64.IO :: API Gateway
+labs64io-uninstall-api-gateway:
+    helm uninstall labs64io-api-gateway --namespace {{NAMESPACE_LABS64IO}}
+
+# uninstall Labs64.IO :: AuditFlow
+labs64io-uninstall-auditflow:
+    helm uninstall labs64io-auditflow --namespace {{NAMESPACE_LABS64IO}}
+
+# uninstall Labs64.IO :: eCommerce
+labs64io-uninstall-ecommerce:
+    helm uninstall labs64io-ecommerce --namespace {{NAMESPACE_LABS64IO}}
+
+# uninstall Labs64.IO :: all components
+labs64io-uninstall-all: labs64io-uninstall-auditflow labs64io-uninstall-ecommerce labs64io-uninstall-api-gateway
+
+# show errors in Labs64.IO kubectl logs
+show-labs64io-errors:
+    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED'
+
+
 ## Kubernetes Components ##
 
 # install Metrics Server
@@ -53,6 +112,82 @@ metrics-server-install:
 # uninstall Metrics Server
 metrics-server-uninstall:
     helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}}
+
+
+## Tools ##
+
+# install Traefik
+traefik-install:
+    helm search repo traefik/traefik
+    helm show values traefik/traefik > overrides/traefik/values.orig.yaml
+    helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
+
+# Traefik Dashboard
+traefik-dashboard:
+    open "http://dashboard.localhost/dashboard/"
+
+# uninstall Traefik
+traefik-uninstall:
+    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}}
+
+# install Keycloak
+keycloak-install:
+    helm search repo bitnami/keycloak
+    helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
+    helm upgrade --install keycloak bitnami/keycloak -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    kubectl --namespace {{NAMESPACE_TOOLS}} apply -f overrides/keycloak/keycloak-ingressroute.yaml
+
+# uninstall Keycloak
+keycloak-uninstall:
+    kubectl --namespace {{NAMESPACE_TOOLS}} delete -f overrides/keycloak/keycloak-ingressroute.yaml
+    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
+
+# install RabbitMQ
+rabbitmq-install:
+    helm search repo bitnami/rabbitmq
+    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
+    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    echo "Username      : labs64"
+    echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
+    echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
+
+# uninstall RabbitMQ
+rabbitmq-uninstall:
+    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
+
+# install Redis
+redis-install:
+    helm search repo bitnami/redis
+    helm show values bitnami/redis > overrides/redis/values.orig.yaml
+    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+
+# uninstall Redis
+redis-uninstall:
+    helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
+
+# install OpenSearch
+opensearch-install:
+    helm search repo opensearch
+    helm show values opensearch/opensearch > overrides/opensearch/values.orig.yaml
+    helm show values opensearch/opensearch-dashboards > overrides/opensearch/values-dashboards.orig.yaml
+    helm upgrade --install opensearch opensearch/opensearch -f overrides/opensearch/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f overrides/opensearch/values-dashboards.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    kubectl --namespace {{NAMESPACE_TOOLS}} get pods,svc | grep "opensearch"
+    echo "Run this command to open OpenSearch Dashboard: kubectl port-forward svc/opensearch-dashboards --namespace {{NAMESPACE_TOOLS}} 5601:5601"
+
+# extract OpenSearch certificate
+opensearch-extract-cert:
+    kubectl --namespace {{NAMESPACE_TOOLS}} cp opensearch-cluster-master-0:/usr/share/opensearch/config/root-ca.pem overrides/opensearch/root-ca.pem -c opensearch
+    rm -f overrides/opensearch/truststore.jks
+    keytool -import -trustcacerts -file overrides/opensearch/root-ca.pem -alias opensearch-ca -keystore overrides/opensearch/truststore.jks -storepass "changeit" -noprompt
+    kubectl --namespace {{NAMESPACE_LABS64IO}} delete secret opensearch-truststore-secret
+    kubectl --namespace {{NAMESPACE_LABS64IO}} create secret generic opensearch-truststore-secret --from-file=./overrides/opensearch/truststore.jks
+    kubectl --namespace {{NAMESPACE_LABS64IO}} get secret opensearch-truststore-secret -o yaml
+
+# uninstall OpenSearch
+opensearch-uninstall:
+    helm uninstall opensearch --namespace {{NAMESPACE_TOOLS}}
+    helm uninstall opensearch-dashboards --namespace {{NAMESPACE_TOOLS}}
 
 
 ## Monitoring Tools ##
@@ -118,141 +253,6 @@ grafana-password:
 # uninstall grafana
 grafana-uninstall:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
-
-# install OpenSearch
-opensearch-install:
-    helm search repo opensearch
-    helm show values opensearch/opensearch > overrides/opensearch/values.orig.yaml
-    helm show values opensearch/opensearch-dashboards > overrides/opensearch/values-dashboards.orig.yaml
-    helm upgrade --install opensearch opensearch/opensearch -f overrides/opensearch/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f overrides/opensearch/values-dashboards.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc | grep "opensearch"
-    echo "Run this command to open OpenSearch Dashboard: kubectl port-forward svc/opensearch-dashboards --namespace {{NAMESPACE_MONITORING}} 5601:5601"
-
-# extract OpenSearch certificate
-opensearch-extract-cert:
-    kubectl --namespace {{NAMESPACE_MONITORING}} cp opensearch-cluster-master-0:/usr/share/opensearch/config/root-ca.pem overrides/opensearch/root-ca.pem -c opensearch
-    rm -f overrides/opensearch/truststore.jks
-    keytool -import -trustcacerts -file overrides/opensearch/root-ca.pem -alias opensearch-ca -keystore overrides/opensearch/truststore.jks -storepass "changeit" -noprompt
-    kubectl --namespace {{NAMESPACE_LABS64IO}} delete secret opensearch-truststore-secret
-    kubectl --namespace {{NAMESPACE_LABS64IO}} create secret generic opensearch-truststore-secret --from-file=./overrides/opensearch/truststore.jks
-    kubectl --namespace {{NAMESPACE_LABS64IO}} get secret opensearch-truststore-secret -o yaml
-
-# uninstall OpenSearch
-opensearch-uninstall:
-    helm uninstall opensearch --namespace {{NAMESPACE_MONITORING}}
-    helm uninstall opensearch-dashboards --namespace {{NAMESPACE_MONITORING}}
-
-
-## Tools ##
-
-# install Traefik
-traefik-install:
-    helm search repo traefik/traefik
-    helm show values traefik/traefik > overrides/traefik/values.orig.yaml
-    helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
-
-# Traefik Dashboard
-traefik-dashboard:
-    open "http://dashboard.localhost/dashboard/"
-
-# uninstall Traefik
-traefik-uninstall:
-    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}}
-
-# install Keycloak
-keycloak-install:
-    helm search repo bitnami/keycloak
-    helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
-    helm upgrade --install keycloak bitnami/keycloak -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    kubectl --namespace {{NAMESPACE_TOOLS}} apply -f overrides/keycloak/keycloak-ingressroute.yaml
-
-# uninstall Keycloak
-keycloak-uninstall:
-    kubectl --namespace {{NAMESPACE_TOOLS}} delete -f overrides/keycloak/keycloak-ingressroute.yaml
-    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
-
-# install RabbitMQ
-rabbitmq-install:
-    helm search repo bitnami/rabbitmq
-    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    echo "Username      : labs64"
-    echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
-    echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
-
-# uninstall RabbitMQ
-rabbitmq-uninstall:
-    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
-
-# install Redis
-redis-install:
-    helm search repo bitnami/redis
-    helm show values bitnami/redis > overrides/redis/values.orig.yaml
-    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-
-# uninstall Redis
-redis-uninstall:
-    helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
-
-
-## Labs64.IO Components ##
-
-# Generate Helm chart docu
-generate-docu:
-    docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
-
-# Generate Helm values schema
-generate-schema:
-    helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
-    helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
-    helm schema -input charts/ecommerce/values.yaml -output charts/ecommerce/values.schema.json
-
-# install Labs64.IO :: API Gateway
-helm-install-api-gateway:
-    helm dependencies update ./charts/api-gateway
-    helm upgrade --install labs64io-api-gateway ./charts/api-gateway \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/api-gateway/values.yaml \
-      -f ./overrides/api-gateway/values.{{ENV}}.yaml
-
-# install Labs64.IO :: AuditFlow
-helm-install-auditflow:
-    helm dependencies update ./charts/auditflow
-    helm upgrade --install labs64io-auditflow ./charts/auditflow \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/auditflow/values.yaml \
-      -f ./overrides/auditflow/values.{{ENV}}.yaml
-
-# install Labs64.IO :: eCommerce
-helm-install-ecommerce:
-    helm dependencies update ./charts/ecommerce
-    helm upgrade --install labs64io-ecommerce ./charts/ecommerce \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/ecommerce/values.yaml \
-      -f ./overrides/ecommerce/values.{{ENV}}.yaml
-
-# install Labs64.IO :: all components
-helm-install-all: helm-install-auditflow helm-install-ecommerce helm-install-api-gateway
-
-# uninstall Labs64.IO :: API Gateway
-helm-uninstall-api-gateway:
-    helm uninstall labs64io-api-gateway --namespace {{NAMESPACE_LABS64IO}}
-
-# uninstall Labs64.IO :: AuditFlow
-helm-uninstall-auditflow:
-    helm uninstall labs64io-auditflow --namespace {{NAMESPACE_LABS64IO}}
-
-# uninstall Labs64.IO :: eCommerce
-helm-uninstall-ecommerce:
-    helm uninstall labs64io-ecommerce --namespace {{NAMESPACE_LABS64IO}}
-
-# uninstall Labs64.IO :: all components
-helm-uninstall-all: helm-uninstall-auditflow helm-uninstall-ecommerce helm-uninstall-api-gateway
-
-# show errors in Labs64.IO kubectl logs
-show-labs64io-errors:
-    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED'
 
 
 ## Other/Backup Tools ##
