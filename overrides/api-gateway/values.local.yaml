@@ -23,11 +23,6 @@ applicationYaml:
       redis:
         host: redis-master.tools.svc.cluster.local
         port: 6379
-    security:
-      oauth2:
-        resourceserver:
-          jwt:
-            issuer-uri: http://keycloak.tools.svc.cluster.local/realms/labs64io
     cloud:
       gateway:
         server:
@@ -38,7 +33,6 @@ applicationYaml:
                 predicates:
                   - Path=/api/v1/audit/**
                 filters:
-                  - TokenRelay=
                   - name: RequestRateLimiter
                     args:
                       key-resolver: "#{@ipAddressKeyResolver}"
@@ -57,8 +51,6 @@ applicationYaml:
                 uri: http://labs64io-ecommerce:8080
                 predicates:
                   - Path=/api/v1/cart/**
-                filters:
-                  - TokenRelay=
 
               - id: ecommerce_apidocs_route
                 uri: http://labs64io-ecommerce:8080

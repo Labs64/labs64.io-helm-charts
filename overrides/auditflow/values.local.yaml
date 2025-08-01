@@ -88,11 +88,6 @@ applicationYaml:
           service-path: "/loki/api/v1/push"
 
   spring:
-    security:
-      oauth2:
-        resourceserver:
-          jwt:
-            issuer-uri: http://keycloak.tools.svc.cluster.local/realms/labs64io
     rabbitmq:
       host: rabbitmq.tools.svc.cluster.local
       port: 5672
