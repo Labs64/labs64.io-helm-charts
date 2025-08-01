@@ -7,6 +7,10 @@ NAMESPACE_TOOLS := "tools"
 
 ## Useful Commands ##
 
+# setup docker registry (precondition)
+docker-registry-install:
+    docker run -d -p 5005:5000 --restart=always --name registry registry:2
+
 # show helm releases
 helm-ls:
     helm ls --all-namespaces
@@ -177,10 +181,10 @@ opensearch-install: repo-update
 
 # extract OpenSearch certificate
 opensearch-extract-cert:
-    kubectl --namespace {{NAMESPACE_TOOLS}} cp opensearch-cluster-master-0:/usr/share/opensearch/config/root-ca.pem overrides/opensearch/root-ca.pem -c opensearch
+    kubectl --namespace {{NAMESPACE_TOOLS}} cp opensearch-cluster-master-0:/usr/share/opensearch/config/root-ca.pem ./overrides/opensearch/root-ca.pem -c opensearch
     rm -f overrides/opensearch/truststore.jks
-    keytool -import -trustcacerts -file overrides/opensearch/root-ca.pem -alias opensearch-ca -keystore overrides/opensearch/truststore.jks -storepass "changeit" -noprompt
-    kubectl --namespace {{NAMESPACE_LABS64IO}} delete secret opensearch-truststore-secret
+    keytool -import -trustcacerts -file overrides/opensearch/root-ca.pem -alias opensearch-ca -keystore ./overrides/opensearch/truststore.jks -storepass "changeit" -noprompt
+    kubectl --namespace {{NAMESPACE_LABS64IO}} delete secret opensearch-truststore-secret || true
     kubectl --namespace {{NAMESPACE_LABS64IO}} create secret generic opensearch-truststore-secret --from-file=./overrides/opensearch/truststore.jks
     kubectl --namespace {{NAMESPACE_LABS64IO}} get secret opensearch-truststore-secret -o yaml
 
