@@ -55,56 +55,56 @@ generate-schema:
     helm schema -input charts/ecommerce/values.yaml -output charts/ecommerce/values.schema.json
 
 # install Labs64.IO :: API Gateway
-labs64io-install-api-gateway:
+labs64io-api-gateway-install:
     helm dependencies update ./charts/api-gateway
     helm upgrade --install labs64io-api-gateway ./charts/api-gateway \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/api-gateway/values.yaml \
       -f ./overrides/api-gateway/values.{{ENV}}.yaml
 
+# uninstall Labs64.IO :: API Gateway
+labs64io-api-gateway-uninstall:
+    helm uninstall labs64io-api-gateway --namespace {{NAMESPACE_LABS64IO}}
+
 # install Labs64.IO :: AuditFlow
-labs64io-install-auditflow:
+labs64io-auditflow-install:
     helm dependencies update ./charts/auditflow
     helm upgrade --install labs64io-auditflow ./charts/auditflow \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/auditflow/values.yaml \
       -f ./overrides/auditflow/values.{{ENV}}.yaml
 
+# uninstall Labs64.IO :: AuditFlow
+labs64io-auditflow-uninstall:
+    helm uninstall labs64io-auditflow --namespace {{NAMESPACE_LABS64IO}}
+
 # install Labs64.IO :: eCommerce
-labs64io-install-ecommerce:
+labs64io-ecommerce-install:
     helm dependencies update ./charts/ecommerce
     helm upgrade --install labs64io-ecommerce ./charts/ecommerce \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/ecommerce/values.yaml \
       -f ./overrides/ecommerce/values.{{ENV}}.yaml
 
-# install Labs64.IO :: all components
-labs64io-install-all: labs64io-install-auditflow labs64io-install-ecommerce labs64io-install-api-gateway
-
-# uninstall Labs64.IO :: API Gateway
-labs64io-uninstall-api-gateway:
-    helm uninstall labs64io-api-gateway --namespace {{NAMESPACE_LABS64IO}}
-
-# uninstall Labs64.IO :: AuditFlow
-labs64io-uninstall-auditflow:
-    helm uninstall labs64io-auditflow --namespace {{NAMESPACE_LABS64IO}}
-
 # uninstall Labs64.IO :: eCommerce
-labs64io-uninstall-ecommerce:
+labs64io-ecommerce-uninstall:
     helm uninstall labs64io-ecommerce --namespace {{NAMESPACE_LABS64IO}}
 
+# install Labs64.IO :: all components
+labs64io-all-install: labs64io-auditflow-install labs64io-ecommerce-install labs64io-api-gateway-install
+
 # uninstall Labs64.IO :: all components
-labs64io-uninstall-all: labs64io-uninstall-auditflow labs64io-uninstall-ecommerce labs64io-uninstall-api-gateway
+labs64io-all-uninstall: labs64io-auditflow-uninstall labs64io-ecommerce-uninstall labs64io-api-gateway-uninstall
 
 # show errors in Labs64.IO kubectl logs
-show-labs64io-errors:
+labs64io-show-errors:
     kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED'
 
 
 ## Kubernetes Components ##
 
 # install Metrics Server
-metrics-server-install:
+metrics-server-install: repo-update
     helm search repo metrics-server/metrics-server
     helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
     helm upgrade --install metrics-server metrics-server/metrics-server -f overrides/metrics-server/values.{{ENV}}.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
@@ -117,7 +117,7 @@ metrics-server-uninstall:
 ## Tools ##
 
 # install Traefik
-traefik-install:
+traefik-install: repo-update
     helm search repo traefik/traefik
     helm show values traefik/traefik > overrides/traefik/values.orig.yaml
     helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
@@ -131,7 +131,7 @@ traefik-uninstall:
     helm uninstall traefik --namespace {{NAMESPACE_TOOLS}}
 
 # install Keycloak
-keycloak-install:
+keycloak-install: repo-update
     helm search repo bitnami/keycloak
     helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
     helm upgrade --install keycloak bitnami/keycloak -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
@@ -143,7 +143,7 @@ keycloak-uninstall:
     helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
 
 # install RabbitMQ
-rabbitmq-install:
+rabbitmq-install: repo-update
     helm search repo bitnami/rabbitmq
     helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
     helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
@@ -156,7 +156,7 @@ rabbitmq-uninstall:
     helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
 
 # install Redis
-redis-install:
+redis-install: repo-update
     helm search repo bitnami/redis
     helm show values bitnami/redis > overrides/redis/values.orig.yaml
     helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
@@ -166,7 +166,7 @@ redis-uninstall:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
 
 # install OpenSearch
-opensearch-install:
+opensearch-install: repo-update
     helm search repo opensearch
     helm show values opensearch/opensearch > overrides/opensearch/values.orig.yaml
     helm show values opensearch/opensearch-dashboards > overrides/opensearch/values-dashboards.orig.yaml
@@ -193,7 +193,7 @@ opensearch-uninstall:
 ## Monitoring Tools ##
 
 # install Open Telemetry
-opentelemetry-install:
+opentelemetry-install: repo-update
     helm search repo open-telemetry
     helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
     helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
@@ -206,7 +206,7 @@ opentelemetry-uninstall:
     helm uninstall opentelemetry-collector --namespace {{NAMESPACE_MONITORING}}
 
 # install Prometheus
-prometheus-install:
+prometheus-install: repo-update
     helm search repo prometheus-community
     helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
     helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f overrides/prometheus/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
@@ -217,7 +217,7 @@ prometheus-uninstall:
     helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}}
 
 # install tempo
-tempo-install:
+tempo-install: repo-update
     helm search repo grafana/tempo
     helm show values grafana/tempo > overrides/tempo/values.orig.yaml
     helm upgrade --install tempo grafana/tempo -f overrides/tempo/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
@@ -227,7 +227,7 @@ tempo-uninstall:
     helm uninstall tempo --namespace {{NAMESPACE_MONITORING}}
 
 # install VictoriaLogs
-victoria-logs-install:
+victoria-logs-install: repo-update
     helm search repo victoria-metrics
     helm show values victoria-metrics/victoria-logs-single > overrides/victoria-logs/values.orig.yaml
     helm upgrade --install victoria-logs victoria-metrics/victoria-logs-single -f overrides/victoria-logs/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
@@ -237,7 +237,7 @@ victoria-logs-uninstall:
     helm uninstall victoria-logs --namespace {{NAMESPACE_MONITORING}}
 
 # install grafana
-grafana-install:
+grafana-install: repo-update
     helm search repo grafana/grafana
     helm show values grafana/grafana > overrides/grafana/values.orig.yaml
     helm upgrade --install grafana grafana/grafana -f overrides/grafana/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
@@ -258,7 +258,7 @@ grafana-uninstall:
 ## Other/Backup Tools ##
 
 # install Ingress controller
-ingress-install:
+ingress-install: repo-update
     helm search repo ingress-nginx/ingress-nginx
     helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
     helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f overrides/ingress-nginx/values.{{ENV}}.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
@@ -268,7 +268,7 @@ ingress-uninstall:
     helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}
 
 # install Loki
-loki-install:
+loki-install: repo-update
     helm search repo grafana/loki
     helm show values grafana/loki > overrides/loki/values.orig.yaml
     helm upgrade --install loki grafana/loki -f overrides/loki/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
@@ -278,7 +278,7 @@ loki-uninstall:
     helm uninstall loki --namespace {{NAMESPACE_MONITORING}}
 
 # install OpenSearch Data Prepper
-opensearch-data-prepper-install:
+opensearch-data-prepper-install: repo-update
     helm search repo opensearch
     helm show values opensearch/data-prepper > overrides/opensearch/values-data-prepper.orig.yaml
     helm upgrade --install opensearch-data-prepper opensearch/data-prepper -f overrides/opensearch/values-data-prepper.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
