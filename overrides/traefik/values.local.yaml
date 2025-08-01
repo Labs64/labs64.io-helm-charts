@@ -8,10 +8,10 @@ providers:
   kubernetesGateway:
     enabled: false
 
-gateway:
-  listeners:
-    web:
-      namespacePolicy: All
+#gateway:
+#  listeners:
+#    web:
+#      namespacePolicy: All
 
 logs:
   general:
