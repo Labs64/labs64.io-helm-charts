@@ -1,0 +1,110 @@
+apiVersion: v1
+entries:
+  api-gateway:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-08-02T09:10:38.601921706Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: API Gateway - A secure, high-performance entry point
+      for managing and routing API traffic across Labs64.IO microservices'
+    digest: e0934cd1faa9d26bc0d6353a84e0d07a3d601c4bd584a9f3f9df04cf6e1d7540
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - api
+    - gateway
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: api-gateway
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-api-gateway
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/api-gateway-0.0.1/api-gateway-0.0.1.tgz
+    version: 0.0.1
+  auditflow:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-08-02T09:10:38.755899023Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based
+      Auditing Solution'
+    digest: 80ee90363edfb9bdb1f3d15706ab1b40f2431fe9e6b01b7de21733d1aa3a67f1
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - auditflow
+    - audit
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: auditflow
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-auditflow
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/auditflow-0.0.1/auditflow-0.0.1.tgz
+    version: 0.0.1
+  chart-libs:
+  - apiVersion: v2
+    created: "2025-08-02T09:10:38.915237286Z"
+    description: 'Labs64.IO :: Helm Charts Common Templates'
+    digest: ef1a1cc462231b6fdc109f566f5038100b5c57066bc58d878b2de3077bb23d5d
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - library
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: chart-libs
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: library
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/chart-libs-0.0.1/chart-libs-0.0.1.tgz
+    version: 0.0.1
+  ecommerce:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-08-02T09:10:39.066399794Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: eCommerce'
+    digest: 6821b08baf43eca61347d684b2d93b5376d8d957021148c1f516eb2189406df4
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - api
+    - gateway
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: ecommerce
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-ecommerce
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-0.0.1/ecommerce-0.0.1.tgz
+    version: 0.0.1
+generated: "2025-08-02T09:10:39.066406247Z"
