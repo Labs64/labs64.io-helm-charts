@@ -1,8 +1,8 @@
 apiVersion: v2
 name: api-gateway
 type: application
-version: 0.0.1
-appVersion: 0.0.1
+version: 0.0.2
+appVersion: 0.0.2
 description: "Labs64.IO :: API Gateway - A secure, high-performance entry point for managing and routing API traffic across Labs64.IO microservices"
 icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
 home: https://labs64.io
