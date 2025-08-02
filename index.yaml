@@ -3,6 +3,33 @@ entries:
   api-gateway:
   - apiVersion: v2
     appVersion: 0.0.2
+    created: "2025-08-02T10:17:40.415953665Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: API Gateway - Unified API Gateway for Labs64.IO Microservices'
+    digest: 6336609cea3dcf9d6b51b244d32b5d94863c910c672403e08b3086f76bb3bc3d
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - api
+    - gateway
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: api-gateway
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-api-gateway
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/api-gateway-0.0.3/api-gateway-0.0.3.tgz
+    version: 0.0.3
+  - apiVersion: v2
+    appVersion: 0.0.2
     created: "2025-08-02T09:15:24.341352455Z"
     dependencies:
     - name: chart-libs
@@ -138,6 +165,33 @@ entries:
   ecommerce:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2025-08-02T10:17:40.628943482Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales
+      Enablement'
+    digest: e9bd542ffca6013a7dc91b5d27fa2b67c0b7d46ab8d087b4d3da61b747cbbacd
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - ecommerce
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: ecommerce
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-ecommerce
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-0.0.2/ecommerce-0.0.2.tgz
+    version: 0.0.2
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2025-08-02T09:10:39.066399794Z"
     dependencies:
     - name: chart-libs
@@ -163,4 +217,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-0.0.1/ecommerce-0.0.1.tgz
     version: 0.0.1
-generated: "2025-08-02T09:15:24.473858933Z"
+generated: "2025-08-02T10:17:40.628960795Z"
