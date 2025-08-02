@@ -32,10 +32,9 @@ jobs:
            version: '3.17.0'
         id: install
 
-      - name: Add dependent repositories
-        run: |
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+      #- name: Add dependent repositories
+      #  run: |
+      #    helm repo add bitnami https://charts.bitnami.com/bitnami
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
