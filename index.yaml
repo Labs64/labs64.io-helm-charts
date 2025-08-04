@@ -244,4 +244,38 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-0.0.1/ecommerce-0.0.1.tgz
     version: 0.0.1
-generated: "2025-08-02T10:19:16.063883242Z"
+  traefik-authproxy:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-08-04T11:59:25.859158565Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: Traefik Auth (M2M) Middleware'
+    digest: 116c27758301d8dbf298dc0603a15322c48edd589242dac6c00a2d365cab322a
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - traefik
+    - authproxy
+    - security
+    - authentication
+    - authorization
+    - aouth2
+    - oidc
+    - middleware
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: traefik-authproxy
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-api-gateway/tree/master/traefik-authproxy
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/traefik-authproxy-0.0.1/traefik-authproxy-0.0.1.tgz
+    version: 0.0.1
+generated: "2025-08-04T11:59:25.859176408Z"
