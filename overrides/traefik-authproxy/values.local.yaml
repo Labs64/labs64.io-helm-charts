@@ -3,6 +3,9 @@ image:
   tag: latest
 
 roleMapping:
+  /auditflow/v3/api-docs: []
+  /ecommerce/v3/api-docs: []
+
   /api/v1/admin:
     - admin-role
   /api/v1/auditflow:

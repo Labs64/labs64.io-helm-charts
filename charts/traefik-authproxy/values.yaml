@@ -154,6 +154,8 @@ env:
     value: account
   - name: ROLE_MAPPING_FILE
     value: /opt/application-config/role_mapping.yaml
+  - name: LOG_LEVEL
+    value: DEBUG
 
 # -- Role mappings for the auth proxy.
 roleMapping:
@@ -161,6 +163,7 @@ roleMapping:
   /auth: []
   /public: []
   /docs: []
+  /swagger-ui: []
   /v3/api-docs: []
   /health: []
   /actuator: []
