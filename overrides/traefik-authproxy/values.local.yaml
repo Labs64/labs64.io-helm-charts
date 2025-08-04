@@ -8,10 +8,10 @@ roleMapping:
 
   /api/v1/admin:
     - admin-role
-  /api/v1/auditflow:
+  /api/v1/audit:
     - admin-role
     - auditflow-role
     - default-roles-labs64io
-  /api/v1/ecommerce:
+  /api/v1/cart:
     - admin-role
     - ecommerce-role
