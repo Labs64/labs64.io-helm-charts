@@ -1,8 +1,8 @@
 # auditflow
 
-![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
+![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
 
-Labs64.IO :: AuditFlow - A Scalable & Searchable Microservices-based Auditing Solution
+Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
 **Homepage:** <https://labs64.io>
 

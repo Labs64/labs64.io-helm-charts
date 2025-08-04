@@ -1,8 +1,8 @@
-# ecommerce
+# traefik-authproxy
 
-![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
-Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
+Labs64.IO :: Traefik Auth (M2M) Middleware
 
 **Homepage:** <https://labs64.io>
 
@@ -15,7 +15,7 @@ Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
 ## Source Code
 
 * <https://github.com/Labs64/labs64.io-helm-charts>
-* <https://github.com/Labs64/labs64.io-ecommerce>
+* <https://github.com/Labs64/labs64.io-api-gateway/tree/master/traefik-authproxy>
 
 ## Requirements
 
@@ -28,17 +28,19 @@ Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}}` | Additional application properties |
-| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
-| applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
-| applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
-| applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |
-| applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
-| applicationYaml.spring.rabbitmq.username | string | `"<TODO>"` | RabbitMQ username |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
-| env | list | `[]` |  |
+| env[0].name | string | `"KEYCLOAK_DISCOVERY_URL"` |  |
+| env[0].value | string | `"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"` |  |
+| env[1].name | string | `"KEYCLOAK_URL"` |  |
+| env[1].value | string | `"http://keycloak.tools.svc.cluster.local"` |  |
+| env[2].name | string | `"KEYCLOAK_REALM"` |  |
+| env[2].value | string | `"labs64io"` |  |
+| env[3].name | string | `"KEYCLOAK_AUDIENCE"` |  |
+| env[3].value | string | `"account"` |  |
+| env[4].name | string | `"ROLE_MAPPING_FILE"` |  |
+| env[4].value | string | `"/opt/application-config/role_mapping.yaml"` |  |
 | fullnameOverride | string | `""` |  |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/ecommerce","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
@@ -47,7 +49,7 @@ Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
 | ingressroute.enabled | bool | `false` | This sets whether the IngressRoute is enabled or not |
 | ingressroute.entryPoints | list | `["web","websecure"]` | Entry points for the IngressRoute |
 | ingressroute.host | string | `"localhost"` | Host for the IngressRoute |
-| livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/liveness","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
+| livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/docs","port":8081},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
@@ -55,13 +57,15 @@ Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
 | podSecurityContext | object | `{}` |  |
 | rbac.create | bool | `false` |  |
 | rbac.rules | list | `[]` |  |
-| readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
+| readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/docs","port":8081},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
+| roleMapping | object | `{"/actuator":[],"/docs":[],"/health":[],"/public":[],"/v3/api-docs":[]}` | Role mappings for the auth proxy. |
+| roleMapping./public | list | `[]` | public paths |
 | securityContext | object | `{}` |  |
-| service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
-| service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
+| service | object | `{"port":8081,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| service.port | int | `8081` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | serviceAccount | object | `{"annotations":{},"automount":true,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |

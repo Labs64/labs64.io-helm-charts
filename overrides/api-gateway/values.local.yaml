@@ -13,6 +13,22 @@ resources:
     cpu: 100m
     memory: 512Mi
 
+ingressroute:
+  enabled: true
+  host: localhost
+  entryPoints:
+    - web
+    - websecure
+  middleware:
+    name: "auth-middleware"
+    spec:
+      forwardAuth:
+        address: "http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - "X-User-Id"
+          - "X-Roles"
+
 applicationYaml:
   logging:
     level:

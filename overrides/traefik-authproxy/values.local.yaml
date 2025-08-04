@@ -1,0 +1,14 @@
+image:
+  repository: localhost:5005/traefik-authproxy
+  tag: latest
+
+roleMapping:
+  /api/v1/admin:
+    - admin-role
+  /api/v1/auditflow:
+    - admin-role
+    - auditflow-role
+    - default-roles-labs64io
+  /api/v1/ecommerce:
+    - admin-role
+    - ecommerce-role
