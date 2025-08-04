@@ -12,4 +12,8 @@ spec:
       services:
         - name: {{ include "chart-libs.fullname" . }}
           port: {{ .Values.service.port }}
-  {{- end }}
+      {{- if .Values.ingressroute.middleware }}
+      middlewares:
+        - name: {{ include "chart-libs.fullname" . }}-{{ .Values.ingressroute.middleware.name }}
+      {{- end }}
+{{- end }}

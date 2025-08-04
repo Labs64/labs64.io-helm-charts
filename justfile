@@ -55,8 +55,21 @@ generate-docu:
 # Generate Helm values schema
 generate-schema:
     helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
+    helm schema -input charts/traefik-authproxy/values.yaml -output charts/traefik-authproxy/values.schema.json
     helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
     helm schema -input charts/ecommerce/values.yaml -output charts/ecommerce/values.schema.json
+
+# install Labs64.IO :: API Gateway
+labs64io-traefik-authproxy-install:
+    helm dependencies update ./charts/traefik-authproxy
+    helm upgrade --install labs64io-traefik-authproxy ./charts/traefik-authproxy \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/traefik-authproxy/values.yaml \
+      -f ./overrides/traefik-authproxy/values.{{ENV}}.yaml
+
+# uninstall Labs64.IO :: API Gateway
+labs64io-traefik-authproxy-uninstall:
+    helm uninstall labs64io-traefik-authproxy --namespace {{NAMESPACE_LABS64IO}}
 
 # install Labs64.IO :: API Gateway
 labs64io-api-gateway-install:
@@ -95,10 +108,10 @@ labs64io-ecommerce-uninstall:
     helm uninstall labs64io-ecommerce --namespace {{NAMESPACE_LABS64IO}}
 
 # install Labs64.IO :: all components
-labs64io-all-install: labs64io-auditflow-install labs64io-ecommerce-install labs64io-api-gateway-install
+labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-ecommerce-install labs64io-api-gateway-install
 
 # uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-auditflow-uninstall labs64io-ecommerce-uninstall labs64io-api-gateway-uninstall
+labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-auditflow-uninstall labs64io-ecommerce-uninstall labs64io-api-gateway-uninstall
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
@@ -124,6 +137,8 @@ metrics-server-uninstall:
 traefik-install: repo-update
     helm search repo traefik/traefik
     helm show values traefik/traefik > overrides/traefik/values.orig.yaml
+    helm show values traefik/traefik-crds > overrides/traefik/values-crds.orig.yaml
+    #helm upgrade --install traefik-crds traefik/traefik-crds --namespace {{NAMESPACE_TOOLS}} --create-namespace
     helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
 
 # Traefik Dashboard
