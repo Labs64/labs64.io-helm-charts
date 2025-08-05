@@ -2,6 +2,16 @@ image:
   repository: localhost:5005/traefik-authproxy
   tag: latest
 
+env:
+  - name: KEYCLOAK_DISCOVERY_URL
+    value: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  - name: KEYCLOAK_AUDIENCE
+    value: account
+  - name: ROLE_MAPPING_FILE
+    value: /opt/application-config/role_mapping.yaml
+  - name: LOG_LEVEL
+    value: DEBUG
+
 roleMapping:
   /auditflow/v3/api-docs: []
   /ecommerce/v3/api-docs: []
@@ -15,3 +25,4 @@ roleMapping:
   /api/v1/cart:
     - admin-role
     - ecommerce-role
+    - default-roles-labs64io

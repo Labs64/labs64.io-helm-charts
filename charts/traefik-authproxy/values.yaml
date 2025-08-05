@@ -144,18 +144,18 @@ tolerations: []
 affinity: {}
 
 env:
+  # -- Keycloak discovery URL for the auth proxy.
   - name: KEYCLOAK_DISCOVERY_URL
     value: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
-  - name: KEYCLOAK_URL
-    value: http://keycloak.tools.svc.cluster.local
-  - name: KEYCLOAK_REALM
-    value: labs64io
+  # -- Audience for the auth proxy.
   - name: KEYCLOAK_AUDIENCE
     value: account
+  # -- Path to the role mapping file for the auth proxy.
   - name: ROLE_MAPPING_FILE
     value: /opt/application-config/role_mapping.yaml
+  # -- Log level for the auth proxy.
   - name: LOG_LEVEL
-    value: DEBUG
+    value: INFO
 
 # -- Role mappings for the auth proxy.
 roleMapping:
