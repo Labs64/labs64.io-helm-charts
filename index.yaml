@@ -244,6 +244,37 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-0.0.1/ecommerce-0.0.1.tgz
     version: 0.0.1
+  ecommerce-ui:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-08-06T10:25:57.429145048Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: eCommerce UI – Frontend Interface for the Labs64 eCommerce
+      Platform, built with Vite and Vue 3. Provides a responsive and customizable
+      user experience for digital commerce workflows.'
+    digest: cab03f233f1b02c7cf82672576e370efda8b63b56c35dd0cffbcb4bf4f7379a2
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - ecommerce
+    - frontend
+    - vue
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: ecommerce-ui
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-ecommerce
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-ui-0.0.1/ecommerce-ui-0.0.1.tgz
+    version: 0.0.1
   traefik-authproxy:
   - apiVersion: v2
     appVersion: 0.0.1
@@ -278,4 +309,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/traefik-authproxy-0.0.1/traefik-authproxy-0.0.1.tgz
     version: 0.0.1
-generated: "2025-08-04T11:59:25.859176408Z"
+generated: "2025-08-06T10:25:57.544719434Z"
