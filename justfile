@@ -107,6 +107,19 @@ labs64io-ecommerce-install:
 labs64io-ecommerce-uninstall:
     helm uninstall labs64io-ecommerce --namespace {{NAMESPACE_LABS64IO}}
 
+# install Labs64.IO :: eCommerce-UI
+labs64io-ecommerce-ui-install:
+    helm dependencies update ./charts/ecommerce-ui
+    helm upgrade --install labs64io-ecommerce-ui ./charts/ecommerce-ui \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/ecommerce-ui/values.yaml \
+      -f ./overrides/ecommerce-ui/values.{{ENV}}.yaml
+
+# uninstall Labs64.IO :: eCommerce
+labs64io-ecommerce-ui-uninstall:
+    helm uninstall labs64io-ecommerce-ui --namespace {{NAMESPACE_LABS64IO}}
+
+
 # install Labs64.IO :: all components
 labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-ecommerce-install labs64io-api-gateway-install
 

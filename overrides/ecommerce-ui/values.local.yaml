@@ -1,0 +1,10 @@
+image:
+  repository: localhost:5005/ecommerce-ui
+  tag: latest
+
+service:
+  type: ClusterIP
+
+application:
+  env:
+    VITE_API_URL: https://labs64io-api-gateway.localhost/api/v1/cart

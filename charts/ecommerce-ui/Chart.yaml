@@ -1,0 +1,24 @@
+apiVersion: v2
+name: ecommerce-ui
+type: application
+version: 0.0.1
+appVersion: 0.0.1
+description: "Labs64.IO :: eCommerce UI – Frontend Interface for the Labs64 eCommerce Platform, built with Vite and Vue 3. Provides a responsive and customizable user experience for digital commerce workflows."
+icon: https://raw.githubusercontent.com/Labs64/.github/master/assets/labs64-avatar-128x128.png
+home: https://labs64.io
+keywords:
+  - labs64io
+  - ecosystem
+  - ecommerce
+  - frontend
+  - vue
+sources:
+  - https://github.com/Labs64/labs64.io-helm-charts
+  - https://github.com/Labs64/labs64.io-ecommerce
+maintainers:
+  - name: labs64
+    email: info@labs64.com
+dependencies:
+  - name: chart-libs
+    version: 0.0.1
+    repository: file://../chart-libs
