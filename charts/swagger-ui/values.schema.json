@@ -101,9 +101,6 @@
                 },
                 "host": {
                     "type": "string"
-                },
-                "middleware": {
-                    "type": "null"
                 }
             },
             "type": "object"
@@ -269,23 +266,12 @@
             },
             "type": "object"
         },
-        "swagger-ui": {
+        "swaggerUI": {
             "properties": {
                 "dom_id": {
                     "type": "string"
                 },
                 "urls": {
-                    "items": {
-                        "properties": {
-                            "name": {
-                                "type": "string"
-                            },
-                            "url": {
-                                "type": "string"
-                            }
-                        },
-                        "type": "object"
-                    },
                     "type": "array"
                 },
                 "validatorUrl": {

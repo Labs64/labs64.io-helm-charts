@@ -58,7 +58,7 @@ spec:
           {{- end }}
           env:
             - name: CONFIG_URL
-              value: "/opt/swagger-ui/swagger-config.yaml"
+              value: "./swagger-config.yaml"
           {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -69,7 +69,8 @@ spec:
                 name: {{ include "chart-libs.fullname" . }}
           volumeMounts:
             - name: swagger-config-location
-              mountPath: /opt/swagger-ui
+              mountPath: /usr/share/nginx/html/swagger-config.yaml
+              subPath: swagger-config.yaml
               readOnly: true
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
