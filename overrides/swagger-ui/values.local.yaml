@@ -1,6 +1,35 @@
+ingressroute:
+  routes:
+    # -- Map Swagger UI to the root path
+    - path: /
+      service:
+        name: labs64io-swagger-ui
+        port: 8080
+    # -- Map AuditFlow API docs
+    - path: /auditflow/v3/api-docs
+      service:
+        name: labs64io-auditflow
+        port: 8080
+      middleware:
+        name: labs64io-swagger-ui-path-stripper
+    # -- Map eCommerce API docs
+    - path: /ecommerce/v3/api-docs
+      service:
+        name: labs64io-ecommerce
+        port: 8080
+      middleware:
+        name: labs64io-swagger-ui-path-stripper
+  middleware:
+    name: "path-stripper"
+    spec:
+      stripPrefix:
+        prefixes:
+          - /auditflow
+          - /ecommerce
+
 swaggerUI:
   urls:
-    - url: http://labs64io-api-gateway.localhost/auditflow/v3/api-docs
+    - url: http://swagger-ui.localhost/auditflow/v3/api-docs
       name: AuditFlow API
-    - url: http://labs64io-api-gateway.localhost/ecommerce/v3/api-docs
+    - url: http://swagger-ui.localhost/ecommerce/v3/api-docs
       name: eCommerce API

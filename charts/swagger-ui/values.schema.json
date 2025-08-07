@@ -101,6 +101,12 @@
                 },
                 "host": {
                     "type": "string"
+                },
+                "middleware": {
+                    "type": "null"
+                },
+                "routes": {
+                    "type": "array"
                 }
             },
             "type": "object"

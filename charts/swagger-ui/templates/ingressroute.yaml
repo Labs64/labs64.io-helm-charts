@@ -7,13 +7,15 @@ spec:
   entryPoints:
     {{- toYaml .Values.ingressroute.entryPoints | nindent 4 }}
   routes:
-    - match: Host(`{{ include "chart-libs.fullname" . }}.{{ .Values.ingressroute.host }}`) && PathPrefix(`/`)
+    {{- range $route := .Values.ingressroute.routes }}
+    - match: Host(`{{ $.Values.ingressroute.host }}`) && PathPrefix(`{{ $route.path }}`)
       kind: Rule
       services:
-        - name: {{ include "chart-libs.fullname" . }}
-          port: {{ .Values.service.port }}
-      {{- if .Values.ingressroute.middleware }}
+        - name: {{ $route.service.name }}
+          port: {{ $route.service.port }}
+      {{- with $route.middleware }}
       middlewares:
-        - name: {{ include "chart-libs.fullname" . }}-{{ .Values.ingressroute.middleware.name }}
+        - name: {{ .name }}
       {{- end }}
+    {{- end }}
 {{- end }}
