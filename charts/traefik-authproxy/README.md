@@ -29,16 +29,10 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
-| env[0].name | string | `"KEYCLOAK_DISCOVERY_URL"` |  |
-| env[0].value | string | `"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"` |  |
-| env[1].name | string | `"KEYCLOAK_URL"` |  |
-| env[1].value | string | `"http://keycloak.tools.svc.cluster.local"` |  |
-| env[2].name | string | `"KEYCLOAK_REALM"` |  |
-| env[2].value | string | `"labs64io"` |  |
-| env[3].name | string | `"KEYCLOAK_AUDIENCE"` |  |
-| env[3].value | string | `"account"` |  |
-| env[4].name | string | `"ROLE_MAPPING_FILE"` |  |
-| env[4].value | string | `"/opt/application-config/role_mapping.yaml"` |  |
+| env[0] | object | `{"name":"KEYCLOAK_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | Keycloak discovery URL for the auth proxy. |
+| env[1] | object | `{"name":"KEYCLOAK_AUDIENCE","value":"account"}` | Audience for the auth proxy. |
+| env[2] | object | `{"name":"ROLE_MAPPING_FILE","value":"/opt/application-config/role_mapping.yaml"}` | Path to the role mapping file for the auth proxy. |
+| env[3] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
@@ -61,8 +55,8 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
-| roleMapping | object | `{"/actuator":[],"/docs":[],"/health":[],"/public":[],"/v3/api-docs":[]}` | Role mappings for the auth proxy. |
-| roleMapping./public | list | `[]` | public paths |
+| roleMapping | object | `{"/actuator":[],"/auth":[],"/docs":[],"/health":[],"/public":[],"/swagger-ui":[],"/v3/api-docs":[]}` | Role mappings for the auth proxy. |
+| roleMapping./auth | list | `[]` | public paths |
 | securityContext | object | `{}` |  |
 | service | object | `{"port":8081,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8081` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |

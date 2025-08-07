@@ -226,6 +226,9 @@
                 "/actuator": {
                     "type": "array"
                 },
+                "/auth": {
+                    "type": "array"
+                },
                 "/docs": {
                     "type": "array"
                 },
@@ -233,6 +236,9 @@
                     "type": "array"
                 },
                 "/public": {
+                    "type": "array"
+                },
+                "/swagger-ui": {
                     "type": "array"
                 },
                 "/v3/api-docs": {
