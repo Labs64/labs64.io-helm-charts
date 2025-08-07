@@ -102,7 +102,7 @@
                 "host": {
                     "type": "string"
                 },
-                "middleware": {
+                "middlewareSpec": {
                     "type": "null"
                 },
                 "routes": {

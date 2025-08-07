@@ -96,7 +96,7 @@ ingressroute:
   #    middleware:
   #      name: <swagger-ui-service-name>-path-stripper
   # -- Middleware configuration for the IngressRoute
-  middleware:
+  middlewareSpec:
   # -- Middleware name suffix
   #name: "path-stripper"
   # -- Middleware specification

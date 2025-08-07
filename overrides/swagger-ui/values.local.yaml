@@ -5,6 +5,11 @@ ingressroute:
       service:
         name: labs64io-swagger-ui
         port: 8080
+    # -- Map AuditFlow API
+    - path: /api/v1/audit
+      service:
+        name: labs64io-auditflow
+        port: 8080
     # -- Map AuditFlow API docs
     - path: /auditflow/v3/api-docs
       service:
@@ -12,6 +17,11 @@ ingressroute:
         port: 8080
       middleware:
         name: labs64io-swagger-ui-path-stripper
+    # -- Map eCommerce API
+    - path: /api/v1/cart
+      service:
+        name: labs64io-ecommerce
+        port: 8080
     # -- Map eCommerce API docs
     - path: /ecommerce/v3/api-docs
       service:
@@ -19,7 +29,7 @@ ingressroute:
         port: 8080
       middleware:
         name: labs64io-swagger-ui-path-stripper
-  middleware:
+  middlewareSpec:
     name: "path-stripper"
     spec:
       stripPrefix:
