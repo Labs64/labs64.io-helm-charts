@@ -275,6 +275,34 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-ui-0.0.1/ecommerce-ui-0.0.1.tgz
     version: 0.0.1
+  swagger-ui:
+  - apiVersion: v2
+    appVersion: v5.27.1
+    created: "2025-08-07T09:48:45.684438448Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: API - Swagger UI'
+    digest: 84d20a4db8ee4eca6e041d205b2baae5b055cbed35d42ddb5bf2ff3715dff6c5
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - api
+    - documentation
+    - swagger
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: swagger-ui
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/swagger-ui-0.0.1/swagger-ui-0.0.1.tgz
+    version: 0.0.1
   traefik-authproxy:
   - apiVersion: v2
     appVersion: 0.0.1
@@ -309,4 +337,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/traefik-authproxy-0.0.1/traefik-authproxy-0.0.1.tgz
     version: 0.0.1
-generated: "2025-08-06T10:25:57.544719434Z"
+generated: "2025-08-07T09:48:45.684455841Z"
