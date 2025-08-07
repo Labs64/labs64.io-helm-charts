@@ -1,0 +1,15 @@
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-binding
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "chart-libs.serviceAccountName" . }}
+roleRef:
+  kind: Role
+  name: {{ include "chart-libs.fullname" . }}-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

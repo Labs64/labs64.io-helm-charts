@@ -1,0 +1,23 @@
+apiVersion: v2
+name: swagger-ui
+type: application
+version: 0.0.1
+appVersion: v5.27.1
+description: "Labs64.IO :: API - Swagger UI"
+icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+home: https://labs64.io
+keywords:
+  - labs64io
+  - ecosystem
+  - api
+  - documentation
+  - swagger
+sources:
+  - https://github.com/Labs64/labs64.io-helm-charts
+maintainers:
+  - name: labs64
+    email: info@labs64.com
+dependencies:
+  - name: chart-libs
+    version: 0.0.1
+    repository: file://../chart-libs

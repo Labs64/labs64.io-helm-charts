@@ -1,0 +1,10 @@
+{{- if and .Values.ingressroute.enabled .Values.ingressroute.middleware }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-{{ .Values.ingressroute.middleware.name }}
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+spec:
+{{ toYaml .Values.ingressroute.middleware.spec | nindent 2 }}
+{{- end }}

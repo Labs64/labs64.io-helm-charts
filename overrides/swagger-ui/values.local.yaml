@@ -1,0 +1,6 @@
+swaggerUI:
+  urls:
+    - url: http://labs64io-api-gateway.localhost/auditflow/v3/api-docs
+      name: AuditFlow API
+    - url: http://labs64io-api-gateway.localhost/ecommerce/v3/api-docs
+      name: eCommerce API
