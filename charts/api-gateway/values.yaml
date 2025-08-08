@@ -88,7 +88,7 @@ ingressroute:
     - web
     - websecure
   # -- Middleware configuration for the IngressRoute
-  middleware:
+  #middlewareSpec:
     # -- Middleware name suffix
     #name: "auth-middleware"
     # -- Middleware specification

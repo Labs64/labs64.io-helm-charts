@@ -102,9 +102,6 @@
                 "host": {
                     "type": "string"
                 },
-                "middlewareSpec": {
-                    "type": "null"
-                },
                 "routes": {
                     "type": "array"
                 }

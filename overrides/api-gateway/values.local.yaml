@@ -19,7 +19,7 @@ ingressroute:
   entryPoints:
     - web
     - websecure
-  middleware:
+  middlewareSpec:
     name: "auth-middleware"
     spec:
       forwardAuth:

@@ -163,9 +163,6 @@
                 },
                 "host": {
                     "type": "string"
-                },
-                "middleware": {
-                    "type": "null"
                 }
             },
             "type": "object"

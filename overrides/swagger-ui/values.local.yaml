@@ -10,6 +10,8 @@ ingressroute:
       service:
         name: labs64io-auditflow
         port: 8080
+      #middleware:
+      #  name: labs64io-swagger-ui-ratelimit
     # -- Map AuditFlow API docs
     - path: /auditflow/v3/api-docs
       service:
@@ -22,6 +24,8 @@ ingressroute:
       service:
         name: labs64io-ecommerce
         port: 8080
+      #middleware:
+      #  name: labs64io-swagger-ui-ratelimit
     # -- Map eCommerce API docs
     - path: /ecommerce/v3/api-docs
       service:
