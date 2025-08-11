@@ -5,6 +5,7 @@ image:
 service:
   type: ClusterIP
 
+
 resources:
   #limits:
   #  cpu: 200m
