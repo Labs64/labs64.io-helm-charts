@@ -20,3 +20,15 @@ applicationYaml:
       port: 5672
       username: labs64
       password: labs64pw
+
+  data:
+    redis:
+      host: redis-master.tools.svc.cluster.local
+      port: 6379
+      timeout: 60000
+      username: labs64
+      password: labs64pw
+      database: 0
+
+cart:
+  ttl-hours: 6

@@ -159,3 +159,23 @@ applicationYaml:
       username: <TODO>
       # -- RabbitMQ password
       password: <TODO>
+
+  data:
+    # -- Redis connection params
+    redis:
+      # -- Redis host name or IP address; default: redis-master.<namespace>.svc.cluster.local
+      host: redis-master.tools.svc.cluster.local
+      # -- Redis server port; default: 6379
+      port: 6379
+      # -- Connection timeout in milliseconds
+      timeout: 60000
+      # -- Redis username (used for ACL authentication, Redis 6+)
+      username: <TODO>
+      # -- Redis password for authentication
+      password: <TODO>
+      # -- Redis logical database number; default is 0
+      database: 0
+
+cart:
+  # -- Time-to-live for cart entries in Redis (in hours)
+  ttl-hours: 6
