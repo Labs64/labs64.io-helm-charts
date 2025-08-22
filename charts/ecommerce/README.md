@@ -28,7 +28,14 @@ Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}}` | Additional application properties |
+| applicationYaml | object | `{"data":{"redis":{"database":0,"host":"redis-master.tools.svc.cluster.local","password":"<TODO>","port":6379,"timeout":60000,"username":"<TODO>"}},"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}}` | Additional application properties |
+| applicationYaml.data.redis | object | `{"database":0,"host":"redis-master.tools.svc.cluster.local","password":"<TODO>","port":6379,"timeout":60000,"username":"<TODO>"}` | Redis connection params |
+| applicationYaml.data.redis.database | int | `0` | Redis logical database number; default is 0 |
+| applicationYaml.data.redis.host | string | `"redis-master.tools.svc.cluster.local"` | Redis host name or IP address; default: redis-master.<namespace>.svc.cluster.local |
+| applicationYaml.data.redis.password | string | `"<TODO>"` | Redis password for authentication |
+| applicationYaml.data.redis.port | int | `6379` | Redis server port; default: 6379 |
+| applicationYaml.data.redis.timeout | int | `60000` | Connection timeout in milliseconds |
+| applicationYaml.data.redis.username | string | `"<TODO>"` | Redis username (used for ACL authentication, Redis 6+) |
 | applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
 | applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
 | applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
@@ -36,6 +43,7 @@ Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
 | applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
 | applicationYaml.spring.rabbitmq.username | string | `"<TODO>"` | RabbitMQ username |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
+| cart.ttl-hours | int | `6` | Time-to-live for cart entries in Redis (in hours) |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/ecommerce","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
