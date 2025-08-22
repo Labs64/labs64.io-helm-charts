@@ -1,8 +1,8 @@
-# swagger-ui
+# gateway
 
 ![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.27.1](https://img.shields.io/badge/AppVersion-v5.27.1-informational?style=flat-square)
 
-Labs64.IO :: API - Swagger UI
+Labs64.IO :: API Gateway
 
 **Homepage:** <https://labs64.io>
 
@@ -35,10 +35,10 @@ Labs64.IO :: API - Swagger UI
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ingress | object | `{"annotations":{},"className":"nginx","enabled":false,"hosts":[{"host":"localhost","paths":[{"path":"/","pathType":"Prefix"}]}],"tls":[]}` | This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/ |
-| ingressroute | object | `{"enabled":true,"entryPoints":["web","websecure"],"host":"swagger-ui.localhost","routes":[]}` | IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/ |
+| ingressroute | object | `{"enabled":true,"entryPoints":["web","websecure"],"host":"gateway.localhost","routes":[]}` | IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/ |
 | ingressroute.enabled | bool | `true` | This sets whether the IngressRoute is enabled or not |
 | ingressroute.entryPoints | list | `["web","websecure"]` | Entry points for the IngressRoute |
-| ingressroute.host | string | `"swagger-ui.localhost"` | Host for the IngressRoute |
+| ingressroute.host | string | `"gateway.localhost"` | Host for the IngressRoute |
 | ingressroute.routes | list | `[]` | IngressRoute routes definitions |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |

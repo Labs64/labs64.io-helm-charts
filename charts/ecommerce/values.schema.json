@@ -7,6 +7,34 @@
         },
         "applicationYaml": {
             "properties": {
+                "data": {
+                    "properties": {
+                        "redis": {
+                            "properties": {
+                                "database": {
+                                    "type": "integer"
+                                },
+                                "host": {
+                                    "type": "string"
+                                },
+                                "password": {
+                                    "type": "string"
+                                },
+                                "port": {
+                                    "type": "integer"
+                                },
+                                "timeout": {
+                                    "type": "integer"
+                                },
+                                "username": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
+                },
                 "spring": {
                     "properties": {
                         "rabbitmq": {
@@ -44,6 +72,14 @@
                     "type": "integer"
                 },
                 "targetCPUUtilizationPercentage": {
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "cart": {
+            "properties": {
+                "ttl-hours": {
                     "type": "integer"
                 }
             },

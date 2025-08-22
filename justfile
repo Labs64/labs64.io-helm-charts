@@ -54,8 +54,7 @@ generate-docu:
 
 # Generate Helm values schema
 generate-schema:
-    helm schema -input charts/swagger-ui/values.yaml -output charts/swagger-ui/values.schema.json
-    helm schema -input charts/api-gateway/values.yaml -output charts/api-gateway/values.schema.json
+    helm schema -input charts/gateway/values.yaml -output charts/gateway/values.schema.json
     helm schema -input charts/traefik-authproxy/values.yaml -output charts/traefik-authproxy/values.schema.json
     helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
     helm schema -input charts/ecommerce/values.yaml -output charts/ecommerce/values.schema.json
@@ -73,28 +72,16 @@ labs64io-traefik-authproxy-uninstall:
     helm uninstall labs64io-traefik-authproxy --namespace {{NAMESPACE_LABS64IO}}
 
 # install Swagger UI
-labs64io-swagger-ui-install:
-    helm dependencies update ./charts/swagger-ui
-    helm upgrade --install labs64io-swagger-ui ./charts/swagger-ui \
+labs64io-gateway-install:
+    helm dependencies update ./charts/gateway
+    helm upgrade --install labs64io-gateway ./charts/gateway \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/swagger-ui/values.yaml \
-      -f ./overrides/swagger-ui/values.{{ENV}}.yaml
+      -f ./charts/gateway/values.yaml \
+      -f ./overrides/gateway/values.{{ENV}}.yaml
 
 # uninstall Swagger UI
-labs64io-swagger-ui-uninstall:
-    helm uninstall labs64io-swagger-ui --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: API Gateway
-labs64io-api-gateway-install:
-    helm dependencies update ./charts/api-gateway
-    helm upgrade --install labs64io-api-gateway ./charts/api-gateway \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/api-gateway/values.yaml \
-      -f ./overrides/api-gateway/values.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: API Gateway
-labs64io-api-gateway-uninstall:
-    helm uninstall labs64io-api-gateway --namespace {{NAMESPACE_LABS64IO}}
+labs64io-gateway-uninstall:
+    helm uninstall labs64io-gateway --namespace {{NAMESPACE_LABS64IO}}
 
 # install Labs64.IO :: AuditFlow
 labs64io-auditflow-install:
@@ -134,14 +121,18 @@ labs64io-ecommerce-ui-uninstall:
 
 
 # install Labs64.IO :: all components
-labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-ecommerce-install labs64io-api-gateway-install labs64io-swagger-ui-install
+labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-ecommerce-install labs64io-gateway-install
 
 # uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-auditflow-uninstall labs64io-ecommerce-uninstall labs64io-api-gateway-uninstall labs64io-swagger-ui-uninstall
+labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-auditflow-uninstall labs64io-ecommerce-uninstall labs64io-gateway-uninstall
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
     kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED'
+
+# Labs64.IO :: Documentation
+labs64io-documentation:
+    open "http://gateway.localhost/swagger-ui/"
 
 
 ## Kubernetes Components ##

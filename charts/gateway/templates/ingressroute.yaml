@@ -13,11 +13,11 @@ spec:
       services:
         - name: {{ $route.service.name }}
           port: {{ $route.service.port }}
-      {{- if $route.middleware }}
-      {{- with $route.middleware }}
+      {{- if $route.middlewares }}
       middlewares:
-        - name: {{ .name }}
-      {{- end }}
+        {{- range $middleware := $route.middlewares }}
+        - name: {{ include "chart-libs.fullname" $ }}-{{ $middleware.name }}
+        {{- end }}
       {{- end }}
     {{- end }}
 {{- end }}

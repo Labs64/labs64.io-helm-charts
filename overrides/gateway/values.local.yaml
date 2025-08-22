@@ -1,0 +1,65 @@
+ingressroute:
+  routes:
+    # -- Map Swagger UI to the root path
+    - path: /swagger-ui
+      service:
+        name: labs64io-gateway
+        port: 8080
+      middlewares:
+        - name: path-stripper-middleware
+    # -- Map AuditFlow API
+    - path: /api/v1/audit
+      service:
+        name: labs64io-auditflow
+        port: 8080
+      middlewares:
+        - name: ratelimit-middleware
+    # -- Map AuditFlow API docs
+    - path: /auditflow/v3/api-docs
+      service:
+        name: labs64io-auditflow
+        port: 8080
+      middlewares:
+        - name: path-stripper-middleware
+    # -- Map eCommerce API
+    - path: /api/v1/cart
+      service:
+        name: labs64io-ecommerce
+        port: 8080
+      middlewares:
+        - name: ratelimit-middleware
+    # -- Map eCommerce API docs
+    - path: /ecommerce/v3/api-docs
+      service:
+        name: labs64io-ecommerce
+        port: 8080
+      middlewares:
+        - name: path-stripper-middleware
+  middlewares:
+    - name: path-stripper-middleware
+      spec:
+        stripPrefix:
+          prefixes:
+            - /swagger-ui
+            - /auditflow
+            - /ecommerce
+    - name: auth-middleware
+      spec:
+        forwardAuth:
+          address: "http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth"
+          trustForwardHeader: true
+          authResponseHeaders:
+            - "X-User-Id"
+            - "X-Roles"
+    - name: ratelimit-middleware
+      spec:
+        rateLimit:
+          average: 1
+          burst: 1
+
+swaggerUI:
+  urls:
+    - url: http://gateway.localhost/auditflow/v3/api-docs
+      name: AuditFlow API
+    - url: http://gateway.localhost/ecommerce/v3/api-docs
+      name: eCommerce API

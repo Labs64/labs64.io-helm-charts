@@ -82,7 +82,7 @@ ingressroute:
   # -- This sets whether the IngressRoute is enabled or not
   enabled: true
   # -- Host for the IngressRoute
-  host: swagger-ui.localhost
+  host: gateway.localhost
   # -- Entry points for the IngressRoute
   entryPoints:
     - web
@@ -94,7 +94,7 @@ ingressroute:
   #      name: <service-name>
   #      port: 8080
   #    middleware:
-  #      name: <swagger-ui-service-name>-path-stripper
+  #      name: <gateway-service-name>-path-stripper
   # -- Middleware configuration for the IngressRoute
   #middlewareSpec:
   # -- Middleware name suffix
