@@ -275,6 +275,34 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/ecommerce-ui-0.0.1/ecommerce-ui-0.0.1.tgz
     version: 0.0.1
+  gateway:
+  - apiVersion: v2
+    appVersion: v5.27.1
+    created: "2025-08-22T14:08:19.664795744Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: API Gateway'
+    digest: 65d0ca547bc43a5afbae898eddbd9029b5665814e6679ac744649344413c64cd
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - api
+    - documentation
+    - swagger
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: gateway
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/gateway-0.0.1/gateway-0.0.1.tgz
+    version: 0.0.1
   swagger-ui:
   - apiVersion: v2
     appVersion: v5.27.1
@@ -337,4 +365,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/traefik-authproxy-0.0.1/traefik-authproxy-0.0.1.tgz
     version: 0.0.1
-generated: "2025-08-07T09:48:45.684455841Z"
+generated: "2025-08-22T14:08:19.838275639Z"
