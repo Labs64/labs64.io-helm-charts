@@ -303,6 +303,67 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/gateway-0.0.1/gateway-0.0.1.tgz
     version: 0.0.1
+  shopping-cart:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-08-25T11:40:41.22456671Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: Shopping Cart - Commerce-Ready Platform for Digital
+      Sales Enablement'
+    digest: 31f0e3559e7e8eb162c92347304aeb93d2a4174ebeeadcfb037403b3890efe4d
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - ecommerce
+    - shopping-cart
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: shopping-cart
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-shopping-cart
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/shopping-cart-0.0.2/shopping-cart-0.0.2.tgz
+    version: 0.0.2
+  shopping-cart-ui:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-08-25T11:40:41.352198265Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: Shopping Cart UI – Frontend Interface for the Labs64
+      Shopping Cart Platform, built with Vite and Vue 3. Provides a responsive and
+      customizable user experience for digital commerce workflows.'
+    digest: b3823b656310c2ffbfc7bc084ce234c7946042df3d28fc678f064e3ca45899d2
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - ecommerce
+    - shopping-cart
+    - frontend
+    - vue
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: shopping-cart-ui
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-shopping-cart
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/shopping-cart-ui-0.0.1/shopping-cart-ui-0.0.1.tgz
+    version: 0.0.1
   swagger-ui:
   - apiVersion: v2
     appVersion: v5.27.1
@@ -365,4 +426,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/traefik-authproxy-0.0.1/traefik-authproxy-0.0.1.tgz
     version: 0.0.1
-generated: "2025-08-22T14:08:19.838275639Z"
+generated: "2025-08-25T11:40:41.470339838Z"
