@@ -53,7 +53,7 @@ applicationYaml:
         properties:
           log-level: "DEBUG"
     - name: 'opensearch-raw'
-      enabled: true
+      enabled: false
       transformer:
         name: 'zero'
       processor:
@@ -65,7 +65,7 @@ applicationYaml:
           username: "admin"
           password: "Labs64pw+"
     - name: 'opensearch-transformed'
-      enabled: true
+      enabled: false
       transformer:
         name: 'audit_opensearch'
       processor:
@@ -77,15 +77,16 @@ applicationYaml:
           username: "admin"
           password: "Labs64pw+"
     - name: 'loki'
-      enabled: false
+      enabled: true
       transformer:
         name: 'audit_loki'
       processor:
         name: 'loki_processor'
         clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
         properties:
-          service-url: "http://loki-write.monitoring.svc.cluster.local:3100"
+          service-url: "https://logs-prod-012.grafana.net"
           service-path: "/loki/api/v1/push"
+          username: "1314691"
 
   spring:
     rabbitmq:
