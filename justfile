@@ -57,7 +57,7 @@ generate-schema:
     helm schema -input charts/gateway/values.yaml -output charts/gateway/values.schema.json
     helm schema -input charts/traefik-authproxy/values.yaml -output charts/traefik-authproxy/values.schema.json
     helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
-    helm schema -input charts/ecommerce/values.yaml -output charts/ecommerce/values.schema.json
+    helm schema -input charts/shopping-cart/values.yaml -output charts/shopping-cart/values.schema.json
 
 # install Labs64.IO :: API Gateway
 labs64io-traefik-authproxy-install:
@@ -95,36 +95,36 @@ labs64io-auditflow-install:
 labs64io-auditflow-uninstall:
     helm uninstall labs64io-auditflow --namespace {{NAMESPACE_LABS64IO}}
 
-# install Labs64.IO :: eCommerce
-labs64io-ecommerce-install:
-    helm dependencies update ./charts/ecommerce
-    helm upgrade --install labs64io-ecommerce ./charts/ecommerce \
+# install Labs64.IO :: Shopping Cart
+labs64io-shopping-cart-install:
+    helm dependencies update ./charts/shopping-cart
+    helm upgrade --install labs64io-shopping-cart ./charts/shopping-cart \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/ecommerce/values.yaml \
-      -f ./overrides/ecommerce/values.{{ENV}}.yaml
+      -f ./charts/shopping-cart/values.yaml \
+      -f ./overrides/shopping-cart/values.{{ENV}}.yaml
 
-# uninstall Labs64.IO :: eCommerce
-labs64io-ecommerce-uninstall:
-    helm uninstall labs64io-ecommerce --namespace {{NAMESPACE_LABS64IO}}
+# uninstall Labs64.IO :: Shopping Art
+labs64io-shopping-cart-uninstall:
+    helm uninstall labs64io-shopping-cart --namespace {{NAMESPACE_LABS64IO}}
 
-# install Labs64.IO :: eCommerce-UI
-labs64io-ecommerce-ui-install:
-    helm dependencies update ./charts/ecommerce-ui
-    helm upgrade --install labs64io-ecommerce-ui ./charts/ecommerce-ui \
+# install Labs64.IO :: Shopping Cart  UI
+labs64io-shopping-cart-ui-install:
+    helm dependencies update ./charts/shopping-cart-ui
+    helm upgrade --install labs64io-shopping-cart-ui ./charts/shopping-cart-ui \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/ecommerce-ui/values.yaml \
-      -f ./overrides/ecommerce-ui/values.{{ENV}}.yaml
+      -f ./charts/shopping-cart-ui/values.yaml \
+      -f ./overrides/shopping-cart-ui/values.{{ENV}}.yaml
 
-# uninstall Labs64.IO :: eCommerce
-labs64io-ecommerce-ui-uninstall:
-    helm uninstall labs64io-ecommerce-ui --namespace {{NAMESPACE_LABS64IO}}
+# uninstall Labs64.IO :: Shopping Cart
+labs64io-shopping-cart-ui-uninstall:
+    helm uninstall labs64io-shopping-cart-ui --namespace {{NAMESPACE_LABS64IO}}
 
 
 # install Labs64.IO :: all components
-labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-ecommerce-install labs64io-gateway-install
+labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-shopping-cart-install labs64io-gateway-install
 
 # uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-auditflow-uninstall labs64io-ecommerce-uninstall labs64io-gateway-uninstall
+labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-auditflow-uninstall labs64io-shopping-cart-uninstall labs64io-gateway-uninstall
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
