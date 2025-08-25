@@ -1,5 +1,5 @@
 image:
-  repository: localhost:5005/ecommerce-ui
+  repository: localhost:5005/shopping-cart-ui
   tag: latest
 
 service:

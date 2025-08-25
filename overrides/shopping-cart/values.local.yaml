@@ -1,5 +1,5 @@
 image:
-  repository: localhost:5005/ecommerce
+  repository: localhost:5005/shopping-cart
   tag: latest
 
 service:
@@ -31,7 +31,7 @@ applicationYaml:
         database: 0
 
   cart:
-    prefix: "ecommerce:cart:"
+    prefix: "shopping-cart:"
     ttl: PT6H
     currency:
       - USD

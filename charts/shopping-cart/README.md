@@ -1,8 +1,8 @@
-# ecommerce
+# shopping-cart
 
 ![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
-Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
+Labs64.IO :: Shopping Cart - Commerce-Ready Platform for Digital Sales Enablement
 
 **Homepage:** <https://labs64.io>
 
@@ -15,7 +15,7 @@ Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
 ## Source Code
 
 * <https://github.com/Labs64/labs64.io-helm-charts>
-* <https://github.com/Labs64/labs64.io-ecommerce>
+* <https://github.com/Labs64/labs64.io-shopping-cart>
 
 ## Requirements
 
@@ -46,7 +46,7 @@ Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement
 | cart.ttl-hours | int | `6` | Time-to-live for cart entries in Redis (in hours) |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/ecommerce","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/shopping-cart","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |

@@ -1,18 +1,19 @@
 apiVersion: v2
-name: ecommerce
+name: shopping-cart
 type: application
 version: 0.0.2
 appVersion: 0.0.1
-description: "Labs64.IO :: eCommerce - Commerce-Ready Platform for Digital Sales Enablement"
+description: "Labs64.IO :: Shopping Cart - Commerce-Ready Platform for Digital Sales Enablement"
 icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
 home: https://labs64.io
 keywords:
   - labs64io
   - ecosystem
   - ecommerce
+  - shopping-cart
 sources:
   - https://github.com/Labs64/labs64.io-helm-charts
-  - https://github.com/Labs64/labs64.io-ecommerce
+  - https://github.com/Labs64/labs64.io-shopping-cart
 maintainers:
   - name: labs64
     email: info@labs64.com

@@ -21,17 +21,17 @@ ingressroute:
         port: 8080
       middlewares:
         - name: path-stripper-middleware
-    # -- Map eCommerce API
+    # -- Map Shopping Cart API
     - path: /api/v1/cart
       service:
-        name: labs64io-ecommerce
+        name: labs64io-shopping-cart
         port: 8080
       middlewares:
         - name: ratelimit-middleware
-    # -- Map eCommerce API docs
-    - path: /ecommerce/v3/api-docs
+    # -- Map Shopping Cart API docs
+    - path: /shopping-cart/v3/api-docs
       service:
-        name: labs64io-ecommerce
+        name: labs64io-shopping-cart
         port: 8080
       middlewares:
         - name: path-stripper-middleware
@@ -42,7 +42,7 @@ ingressroute:
           prefixes:
             - /swagger-ui
             - /auditflow
-            - /ecommerce
+            - /shopping-cart
     - name: auth-middleware
       spec:
         forwardAuth:
@@ -61,5 +61,5 @@ swaggerUI:
   urls:
     - url: http://gateway.localhost/auditflow/v3/api-docs
       name: AuditFlow API
-    - url: http://gateway.localhost/ecommerce/v3/api-docs
-      name: eCommerce API
+    - url: http://gateway.localhost/shopping-cart/v3/api-docs
+      name: Shopping Cart API

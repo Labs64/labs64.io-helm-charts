@@ -1,8 +1,8 @@
-# ecommerce-ui
+# shopping-cart-ui
 
 ![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
-Labs64.IO :: eCommerce UI – Frontend Interface for the Labs64 eCommerce Platform, built with Vite and Vue 3. Provides a responsive and customizable user experience for digital commerce workflows.
+Labs64.IO :: Shopping Cart UI – Frontend Interface for the Labs64 Shopping Cart Platform, built with Vite and Vue 3. Provides a responsive and customizable user experience for digital commerce workflows.
 
 **Homepage:** <https://labs64.io>
 
@@ -15,7 +15,7 @@ Labs64.IO :: eCommerce UI – Frontend Interface for the Labs64 eCommerce Platfo
 ## Source Code
 
 * <https://github.com/Labs64/labs64.io-helm-charts>
-* <https://github.com/Labs64/labs64.io-ecommerce>
+* <https://github.com/Labs64/labs64.io-shopping-cart>
 
 ## Requirements
 
@@ -36,20 +36,20 @@ Labs64.IO :: eCommerce UI – Frontend Interface for the Labs64 eCommerce Platfo
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"labs64/ecommerce-ui"` |  |
+| image.repository | string | `"labs64/shopping-cart-ui"` |  |
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.annotations | object | `{}` |  |
 | ingress.className | string | `"nginx"` |  |
 | ingress.enabled | bool | `false` |  |
-| ingress.hosts[0].host | string | `"ecommerce-ui.local"` |  |
+| ingress.hosts[0].host | string | `"shopping-cart-ui.local"` |  |
 | ingress.hosts[0].paths[0].path | string | `"/"` |  |
 | ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
 | ingress.tls | list | `[]` |  |
 | ingressroute.enabled | bool | `false` |  |
 | ingressroute.entryPoints[0] | string | `"web"` |  |
 | ingressroute.entryPoints[1] | string | `"websecure"` |  |
-| ingressroute.host | string | `"ecommerce-ui.local"` |  |
+| ingressroute.host | string | `"shopping-cart-ui.local"` |  |
 | livenessProbe.failureThreshold | int | `3` |  |
 | livenessProbe.httpGet.path | string | `"/"` |  |
 | livenessProbe.httpGet.port | int | `80` |  |

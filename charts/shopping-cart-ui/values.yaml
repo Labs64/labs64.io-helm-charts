@@ -1,4 +1,4 @@
-# Default values for ecommerce-ui.
+# Default values for shopping-cart-ui.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -6,7 +6,7 @@
 replicaCount: 1
 
 image:
-  repository: labs64/ecommerce-ui
+  repository: labs64/shopping-cart-ui
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
@@ -66,7 +66,7 @@ ingress:
   className: "nginx"
   annotations: {}
   hosts:
-    - host: ecommerce-ui.local
+    - host: shopping-cart-ui.local
       paths:
         - path: /
           pathType: Prefix
@@ -74,7 +74,7 @@ ingress:
 
 ingressroute:
   enabled: false
-  host: ecommerce-ui.local
+  host: shopping-cart-ui.local
   entryPoints:
     - web
     - websecure
