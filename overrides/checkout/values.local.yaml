@@ -1,0 +1,27 @@
+image:
+  repository: localhost:5005/checkout
+  tag: latest
+
+service:
+  type: ClusterIP
+
+resources:
+  #limits:
+  #  cpu: 200m
+  #  memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+applicationYaml:
+  spring:
+    rabbitmq:
+      host: rabbitmq.tools.svc.cluster.local
+      port: 5672
+      username: labs64
+      password: labs64pw
+
+    datasource:
+      url: jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/checkout
+      username: labs64
+      password: labs64pw

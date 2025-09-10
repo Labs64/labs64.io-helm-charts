@@ -1,0 +1,13 @@
+architecture: "replication"
+
+auth:
+  username: labs64
+  password: labs64pw
+  postgresPassword: labs64pw
+  replicationPassword: labs64pw
+
+passwordUpdateJob:
+  enabled: true
+
+readReplicas:
+  replicaCount: 1

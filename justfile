@@ -58,6 +58,7 @@ generate-schema:
     helm schema -input charts/traefik-authproxy/values.yaml -output charts/traefik-authproxy/values.schema.json
     helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
     helm schema -input charts/shopping-cart/values.yaml -output charts/shopping-cart/values.schema.json
+    helm schema -input charts/checkout/values.yaml -output charts/checkout/values.schema.json
 
 # install Labs64.IO :: API Gateway
 labs64io-traefik-authproxy-install:
@@ -119,12 +120,24 @@ labs64io-shopping-cart-ui-install:
 labs64io-shopping-cart-ui-uninstall:
     helm uninstall labs64io-shopping-cart-ui --namespace {{NAMESPACE_LABS64IO}}
 
+# install Labs64.IO :: Checkout
+labs64io-checkout-install:
+    helm dependencies update ./charts/checkout
+    helm upgrade --install labs64io-checkout ./charts/checkout \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/checkout/values.yaml \
+      -f ./overrides/checkout/values.{{ENV}}.yaml
+
+# uninstall Labs64.IO :: Checkout
+labs64io-checkout-uninstall:
+    helm uninstall labs64io-checkout --namespace {{NAMESPACE_LABS64IO}}
+
 
 # install Labs64.IO :: all components
-labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-shopping-cart-install labs64io-gateway-install
+labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-shopping-cart-install labs64io-gateway-install labs64io-checkout-install
 
 # uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-auditflow-uninstall labs64io-shopping-cart-uninstall labs64io-gateway-uninstall
+labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-auditflow-uninstall labs64io-shopping-cart-uninstall labs64io-gateway-uninstall labs64io-checkout-uninstall
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
@@ -200,6 +213,17 @@ redis-install: repo-update
 # uninstall Redis
 redis-uninstall:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
+
+# install PostgreSQL
+postgresql-install: repo-update
+    helm search repo bitnami/postgresql
+    helm show values bitnami/postgresql > overrides/postgresql/values.orig.yaml
+    helm upgrade --install postgresql bitnami/postgresql -f overrides/postgresql/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+
+# uninstall PostgreSQL
+postgresql-uninstall:
+    helm uninstall postgresql --namespace {{NAMESPACE_TOOLS}}
+
 
 # install OpenSearch
 opensearch-install: repo-update
