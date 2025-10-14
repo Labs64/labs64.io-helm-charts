@@ -32,20 +32,6 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      initContainers:
-        - name: init-checkout-db
-          image: postgres:15
-          env:
-            - name: PGPASSWORD
-              value: {{ .Values.applicationYaml.spring.datasource.password }}
-          command:
-            - sh
-            - -c
-            - |
-              DB_HOST=$(echo {{ .Values.applicationYaml.spring.datasource.url }} | sed -E 's|jdbc:postgresql://([^:/]+):?.*|\1|')
-              DB_USER={{ .Values.applicationYaml.spring.datasource.username }}
-              psql -h $DB_HOST -U $DB_USER -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='checkout'" | grep -q 1 || \
-              psql -h $DB_HOST -U $DB_USER -d postgres -c "CREATE DATABASE checkout;"
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}
