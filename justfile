@@ -132,6 +132,17 @@ labs64io-checkout-install:
 labs64io-checkout-uninstall:
     helm uninstall labs64io-checkout --namespace {{NAMESPACE_LABS64IO}}
 
+# install Labs64.IO :: Checkout UI
+labs64io-checkout-ui-install:
+    helm dependencies update ./charts/checkout-ui
+    helm upgrade --install labs64io-checkout-ui ./charts/checkout-ui \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/checkout-ui/values.yaml \
+      -f ./overrides/checkout-ui/values.{{ENV}}.yaml
+
+# uninstall Labs64.IO :: Checkout
+labs64io-checkout-ui-uninstall:
+    helm uninstall labs64io-checkout-ui --namespace {{NAMESPACE_LABS64IO}}
 
 # install Labs64.IO :: all components
 labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-shopping-cart-install labs64io-gateway-install labs64io-checkout-install
