@@ -7,36 +7,22 @@
         },
         "applicationYaml": {
             "properties": {
-                "data": {
+                "spring": {
                     "properties": {
-                        "redis": {
+                        "datasource": {
                             "properties": {
-                                "database": {
-                                    "type": "integer"
-                                },
-                                "host": {
-                                    "type": "string"
-                                },
                                 "password": {
                                     "type": "string"
                                 },
-                                "port": {
-                                    "type": "integer"
-                                },
-                                "timeout": {
-                                    "type": "integer"
+                                "url": {
+                                    "type": "string"
                                 },
                                 "username": {
                                     "type": "string"
                                 }
                             },
                             "type": "object"
-                        }
-                    },
-                    "type": "object"
-                },
-                "spring": {
-                    "properties": {
+                        },
                         "rabbitmq": {
                             "properties": {
                                 "host": {
@@ -49,20 +35,6 @@
                                     "type": "integer"
                                 },
                                 "username": {
-                                    "type": "string"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        "datasource": {
-                            "properties": {
-                                "url": {
-                                    "type": "string"
-                                },
-                                "username": {
-                                    "type": "string"
-                                },
-                                "password": {
                                     "type": "string"
                                 }
                             },

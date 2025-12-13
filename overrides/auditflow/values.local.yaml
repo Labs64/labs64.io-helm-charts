@@ -22,10 +22,16 @@ volumes:
      items:
        - key: truststore.jks
          path: truststore.jks
+ - name: boostrapped-transformers
+   persistentVolumeClaim:
+     claimName: auditflow-transformer-pvc # points to AWS S3 / EFS
 
 volumeMounts:
  - name: opensearch-truststore
    mountPath: /etc/auditflow/certs
+   readOnly: true
+ - name: boostrapped-transformers
+   mountPath: /transformers_bootstrap
    readOnly: true
 
 env:
@@ -42,47 +48,55 @@ applicationYaml:
       name: auditflow-transformer
       namespace: default
 
+  sink:
+    discovery:
+      mode: local # "local" or "kubernetes"
+    local:
+      url: "http://localhost:8082"
+    service:
+      name: auditflow-sink
+      namespace: default
+
   pipelines:
     - name: 'logs'
       enabled: true
       transformer:
         name: 'zero'
-      processor:
-        name: 'logging_processor'
-        clazz: 'io.labs64.audit.processors.LoggingProcessor'
+      sink:
+        name: 'logging_sink'
         properties:
           log-level: "DEBUG"
+          format: "json"
     - name: 'opensearch-raw'
       enabled: false
       transformer:
         name: 'zero'
-      processor:
-        name: 'opensearch_processor'
-        clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+      sink:
+        name: 'opensearch_sink'
         properties:
           service-url: "https://opensearch-cluster-master.tools.svc.cluster.local:9200"
           service-path: "/auditflow_raw_index/_doc"
           username: "admin"
           password: "Labs64pw+"
+          verify-ssl: "false"
     - name: 'opensearch-transformed'
       enabled: false
       transformer:
         name: 'audit_opensearch'
-      processor:
-        name: 'opensearch_processor'
-        clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+      sink:
+        name: 'opensearch_sink'
         properties:
           service-url: "https://opensearch-cluster-master.tools.svc.cluster.local:9200"
           service-path: "/auditflow_index/_doc"
           username: "admin"
           password: "Labs64pw+"
+          verify-ssl: "false"
     - name: 'loki'
       enabled: true
       transformer:
         name: 'audit_loki'
-      processor:
-        name: 'loki_processor'
-        clazz: 'io.labs64.audit.processors.WebClientPostProcessor'
+      sink:
+        name: 'loki_sink'
         properties:
           service-url: "https://logs-prod-012.grafana.net"
           service-path: "/loki/api/v1/push"

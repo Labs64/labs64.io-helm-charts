@@ -14,7 +14,7 @@ env:
 
 roleMapping:
   /auditflow/v3/api-docs: []
-  /shopping-cart/v3/api-docs: []
+  /checkout/v3/api-docs: []
 
   /api/v1/admin:
     - admin-role

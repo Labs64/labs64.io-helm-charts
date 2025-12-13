@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ include "chart-libs.fullname" . }}-env
-data:
-  env.json: |-
-    {{ include "chart-libs.envjson" (dict "env" .Values.application.env) | nindent 4 }}
-

@@ -25,67 +25,66 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 
 ## Values
 
-| Key                                        | Type | Default                   | Description |
-|--------------------------------------------|------|---------------------------|-------------|
-| affinity                                   | object | `{}`                      |  |
-| application.runtimeEnv.enabled             | bool   | `false`                                      | Enable loading a runtime config file (env.json).       |
-| application.runtimeEnv.strict              | bool   | `false`                                      | If true, the pod must not start when env.json is missing/invalid (ConfigMap not mounted).     |
-| application.runtimeEnv.path                | string | `"/usr/share/nginx/html/config/env.json"`    | Absolute container path where env.json is mounted and served (must match Nginx/Ingress).      |
-| application.runtimeEnv.env                 | object | `{}`                                         | Key–value pairs written into env.json. Keys should match variables your UI reads (VITE_*).    |
-| application.runtimeEnv.env.VITE_API_URL    | string | `"https://<HOST>/api/v1/checkout"`           | Primary API base URL used by the UI. Replace `<HOST>` with your domain/host.                  |
-| autoscaling.enabled                        | bool | `false`                   |  |
-| autoscaling.maxReplicas                    | int | `3`                       |  |
-| autoscaling.minReplicas                    | int | `1`                       |  |
-| autoscaling.targetCPUUtilizationPercentage | int | `80`                      |  |
-| env                                        | list | `[]`                      |  |
-| fullnameOverride                           | string | `""`                      |  |
-| image.pullPolicy                           | string | `"IfNotPresent"`          |  |
-| image.repository                           | string | `"labs64/checkout-ui"`    |  |
-| image.tag                                  | string | `""`                      |  |
-| imagePullSecrets                           | list | `[]`                      |  |
-| ingress.annotations                        | object | `{}`                      |  |
-| ingress.className                          | string | `"nginx"`                 |  |
-| ingress.enabled                            | bool | `false`                   |  |
-| ingress.hosts[0].host                      | string | `"checkout-ui.local"`     |  |
-| ingress.hosts[0].paths[0].path             | string | `"/"`                     |  |
-| ingress.hosts[0].paths[0].pathType         | string | `"Prefix"`                |  |
-| ingress.tls                                | list | `[]`                      |  |
-| ingressroute.enabled                       | bool | `false`                   |  |
-| ingressroute.entryPoints[0]                | string | `"web"`                   |  |
-| ingressroute.entryPoints[1]                | string | `"websecure"`             |  |
-| ingressroute.host                          | string | `"checkout-ui.local"`     |  |
-| livenessProbe.failureThreshold             | int | `3`                       |  |
-| livenessProbe.httpGet.path                 | string | `"/"`                     |  |
-| livenessProbe.httpGet.port                 | int | `80`                      |  |
-| livenessProbe.initialDelaySeconds          | int | `10`                      |  |
-| livenessProbe.periodSeconds                | int | `10`                      |  |
-| livenessProbe.timeoutSeconds               | int | `2`                       |  |
-| nameOverride                               | string | `""`                      |  |
-| nodeSelector                               | object | `{}`                      |  |
-| podAnnotations                             | object | `{}`                      |  |
-| podLabels                                  | object | `{}`                      |  |
-| podSecurityContext                         | object | `{}`                      |  |
-| rbac.create                                | bool | `false`                   |  |
-| rbac.rules                                 | list | `[]`                      |  |
-| readinessProbe.failureThreshold            | int | `3`                       |  |
-| readinessProbe.httpGet.path                | string | `"/"`                     |  |
-| readinessProbe.httpGet.port                | int | `80`                      |  |
-| readinessProbe.initialDelaySeconds         | int | `5`                       |  |
-| readinessProbe.periodSeconds               | int | `5`                       |  |
-| readinessProbe.timeoutSeconds              | int | `2`                       |  |
-| replicaCount                               | int | `1`                       |  |
-| resources.requests.cpu                     | string | `"50m"`                   |  |
-| resources.requests.memory                  | string | `"128Mi"`                 |  |
-| securityContext                            | object | `{}`                      |  |
-| service.port                               | int | `80`                      |  |
-| service.type                               | string | `"ClusterIP"`             |  |
-| serviceAccount.annotations                 | object | `{}`                      |  |
-| serviceAccount.automount                   | bool | `true`                    |  |
-| serviceAccount.create                      | bool | `false`                   |  |
-| serviceAccount.name                        | string | `""`                      |  |
-| tolerations                                | list | `[]`                      |  |
-| volumeMounts                               | list | `[]`                      |  |
-| volumes                                    | list | `[]`                      |  |
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` |  |
+| application.runtimeEnv.enabled | bool | `true` |  |
+| application.runtimeEnv.env.VITE_API_URL | string | `"https://<HOST>/api/v1/checkout"` |  |
+| application.runtimeEnv.path | string | `"/usr/share/nginx/html/config/env.json"` |  |
+| application.runtimeEnv.strict | bool | `true` |  |
+| autoscaling.enabled | bool | `false` |  |
+| autoscaling.maxReplicas | int | `3` |  |
+| autoscaling.minReplicas | int | `1` |  |
+| autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| env | list | `[]` |  |
+| fullnameOverride | string | `""` |  |
+| image.pullPolicy | string | `"IfNotPresent"` |  |
+| image.repository | string | `"labs64/checkout-ui"` |  |
+| image.tag | string | `""` |  |
+| imagePullSecrets | list | `[]` |  |
+| ingress.annotations | object | `{}` |  |
+| ingress.className | string | `"nginx"` |  |
+| ingress.enabled | bool | `false` |  |
+| ingress.hosts[0].host | string | `"checkout-ui.local"` |  |
+| ingress.hosts[0].paths[0].path | string | `"/"` |  |
+| ingress.hosts[0].paths[0].pathType | string | `"Prefix"` |  |
+| ingress.tls | list | `[]` |  |
+| ingressroute.enabled | bool | `false` |  |
+| ingressroute.entryPoints[0] | string | `"web"` |  |
+| ingressroute.entryPoints[1] | string | `"websecure"` |  |
+| ingressroute.host | string | `"checkout-ui.local"` |  |
+| livenessProbe.failureThreshold | int | `3` |  |
+| livenessProbe.httpGet.path | string | `"/"` |  |
+| livenessProbe.httpGet.port | int | `80` |  |
+| livenessProbe.initialDelaySeconds | int | `10` |  |
+| livenessProbe.periodSeconds | int | `10` |  |
+| livenessProbe.timeoutSeconds | int | `2` |  |
+| nameOverride | string | `""` |  |
+| nodeSelector | object | `{}` |  |
+| podAnnotations | object | `{}` |  |
+| podLabels | object | `{}` |  |
+| podSecurityContext | object | `{}` |  |
+| rbac.create | bool | `false` |  |
+| rbac.rules | list | `[]` |  |
+| readinessProbe.failureThreshold | int | `3` |  |
+| readinessProbe.httpGet.path | string | `"/"` |  |
+| readinessProbe.httpGet.port | int | `80` |  |
+| readinessProbe.initialDelaySeconds | int | `5` |  |
+| readinessProbe.periodSeconds | int | `5` |  |
+| readinessProbe.timeoutSeconds | int | `2` |  |
+| replicaCount | int | `1` |  |
+| resources.requests.cpu | string | `"50m"` |  |
+| resources.requests.memory | string | `"128Mi"` |  |
+| securityContext | object | `{}` |  |
+| service.port | int | `80` |  |
+| service.type | string | `"ClusterIP"` |  |
+| serviceAccount.annotations | object | `{}` |  |
+| serviceAccount.automount | bool | `true` |  |
+| serviceAccount.create | bool | `false` |  |
+| serviceAccount.name | string | `""` |  |
+| tolerations | list | `[]` |  |
+| volumeMounts | list | `[]` |  |
+| volumes | list | `[]` |  |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

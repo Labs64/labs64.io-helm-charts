@@ -67,7 +67,7 @@ Labs64.IO :: API Gateway
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
-| swaggerUI | object | `{"dom_id":"#swagger-ui","urls":[],"validatorUrl":"https://validator.swagger.io/validator"}` | Swagger UI configuration |
+| swaggerUI | object | `{"dom_id":"#swagger-ui","urls":[],"validatorUrl":"https://validator.swagger.io/validator"}` | Swagger UI configuration (ref: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/) |
 | swaggerUI.dom_id | string | `"#swagger-ui"` | The ID of a DOM element inside which SwaggerUI will put its user interface. |
 | swaggerUI.urls | list | `[]` | An array of API definition objects used by Topbar plugin. When used and Topbar plugin is enabled, the url parameter will not be parsed. Names and URLs must be unique among all items in this array, since they’re used as identifiers. |
 | swaggerUI.validatorUrl | string | `"https://validator.swagger.io/validator"` | By default, Swagger UI attempts to validate specs against swagger.io’s online validator. You can use this parameter to set a different validator URL, for example for locally deployed validators. Setting it to either none, 127.0.0.1 or localhost will disable validation. |

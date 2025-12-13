@@ -1,22 +1,95 @@
-1. Get the application URL by running these commands:
+**********************************************************************
+***   Labs64.IO :: AuditFlow has been successfully deployed!    ***
+**********************************************************************
+
+Release Name: {{ .Release.Name }}
+Namespace:    {{ .Release.Namespace }}
+Chart:        {{ .Chart.Name }}-{{ .Chart.Version }}
+App Version:  {{ .Chart.AppVersion }}
+
+{{- if .Values.applicationYaml }}
+{{- if .Values.applicationYaml.pipelines }}
+{{- if gt (len .Values.applicationYaml.pipelines) 0 }}
+
+📊 Configured Pipelines ({{ len .Values.applicationYaml.pipelines }}):
+{{- range .Values.applicationYaml.pipelines }}
+  - {{ .name }} ({{ if .enabled }}✓ enabled{{ else }}✗ disabled{{ end }})
+{{- end }}
+{{- else }}
+
+⚠️  No pipelines configured. Events will be published but not processed.
+{{- end }}
+{{- end }}
+{{- end }}
+
+🔗 Service Information:
+   kubectl get svc {{ include "chart-libs.fullname" . }} -n {{ .Release.Namespace }}
+
+📦 Pod Status:
+   kubectl get pods -l app.kubernetes.io/name={{ include "chart-libs.name" . }} -n {{ .Release.Namespace }}
+
+📋 Logs:
+   kubectl logs -l app.kubernetes.io/name={{ include "chart-libs.name" . }} -n {{ .Release.Namespace }} -f
+
+{{- if .Values.ingressroute.enabled }}
+
+🌐 IngressRoute:
+   Host: {{ .Values.ingressroute.host }}
+   Entry Points: {{ join ", " .Values.ingressroute.entryPoints }}
+{{- end }}
+
 {{- if .Values.ingress.enabled }}
-{{- range $host := .Values.ingress.hosts }}
-  {{- range .paths }}
-  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
-  {{- end }}
+
+🌐 Ingress:
+{{- range .Values.ingress.hosts }}
+   Host: {{ .host }}
 {{- end }}
-{{- else if contains "NodePort" .Values.service.type }}
-  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "chart-libs.fullname" . }})
-  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
-  echo http://$NODE_IP:$NODE_PORT
-{{- else if contains "LoadBalancer" .Values.service.type }}
-     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
-           You can watch its status by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "chart-libs.fullname" . }}'
-  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "chart-libs.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
-  echo http://$SERVICE_IP:{{ .Values.service.port }}
-{{- else if contains "ClusterIP" .Values.service.type }}
-  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "chart-libs.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
-  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
-  echo "Visit http://127.0.0.1:8080 to use your application"
-  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
 {{- end }}
+
+🏥 Health Checks:
+   Liveness:  http://{{ include "chart-libs.fullname" . }}:{{ .Values.service.port }}/actuator/health/liveness
+   Readiness: http://{{ include "chart-libs.fullname" . }}:{{ .Values.service.port }}/actuator/health/readiness
+
+📖 API Documentation:
+   Swagger UI: http://{{ include "chart-libs.fullname" . }}:{{ .Values.service.port }}/swagger-ui.html
+   OpenAPI:    http://{{ include "chart-libs.fullname" . }}:{{ .Values.service.port }}/v3/api-docs
+
+{{- if eq .Values.applicationYaml.transformer.discovery.mode "local" }}
+
+🔄 Transformer Mode: Local (Sidecar)
+   The transformer is running as a sidecar container in the same pod.
+{{- else }}
+
+🔄 Transformer Mode: Kubernetes Service Discovery
+   Service: {{ .Values.applicationYaml.transformer.service.name }}
+   Namespace: {{ .Values.applicationYaml.transformer.service.namespace }}
+{{- end }}
+
+📚 Documentation:
+   GitHub: https://github.com/Labs64/labs64.io-auditflow
+   Website: https://labs64.io
+
+💡 Quick Commands:
+
+   # Port-forward to access locally
+   kubectl port-forward svc/{{ include "chart-libs.fullname" . }} {{ .Values.service.port }}:{{ .Values.service.port }} -n {{ .Release.Namespace }}
+
+   # Test the API
+   curl http://localhost:{{ .Values.service.port }}/actuator/health
+
+   # View configuration
+   kubectl get configmap {{ include "chart-libs.fullname" . }} -n {{ .Release.Namespace }} -o yaml
+
+{{- if not .Values.autoscaling.enabled }}
+
+⚡ Scaling:
+   kubectl scale deployment {{ include "chart-libs.fullname" . }} --replicas=3 -n {{ .Release.Namespace }}
+{{- else }}
+
+⚡ Autoscaling: Enabled
+   Min Replicas: {{ .Values.autoscaling.minReplicas }}
+   Max Replicas: {{ .Values.autoscaling.maxReplicas }}
+{{- end }}
+
+**********************************************************************
+

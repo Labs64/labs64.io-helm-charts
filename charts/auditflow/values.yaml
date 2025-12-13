@@ -52,16 +52,22 @@ podAnnotations: {}
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1064
+  runAsGroup: 1064
+  fsGroup: 1064
+  seccompProfile:
+    type: RuntimeDefault
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
   # runAsNonRoot: true
-  # runAsUser: 1000
+  # runAsUser: 1064
 
 # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
@@ -98,10 +104,12 @@ ingressroute:
     - web
     - websecure
 
+# -- Resource limits and requests for the container
+# For production, it's recommended to set both requests and limits
 resources:
-  #limits:
-  #  cpu: 200m
-  #  memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
   requests:
     cpu: 100m
     memory: 512Mi
@@ -148,13 +156,41 @@ volumeMounts: []
 #   readOnly: true
 
 
+# -- Node labels for pod assignment
+# For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
 nodeSelector: {}
+#  kubernetes.io/arch: amd64
+#  disktype: ssd
 
+# -- Tolerations for pod assignment
+# For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
 tolerations: []
+#  - key: "key1"
+#    operator: "Equal"
+#    value: "value1"
+#    effect: "NoSchedule"
 
+# -- Affinity for pod assignment
+# For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
 affinity: {}
+#  podAntiAffinity:
+#    preferredDuringSchedulingIgnoredDuringExecution:
+#      - weight: 100
+#        podAffinityTerm:
+#          labelSelector:
+#            matchExpressions:
+#              - key: app.kubernetes.io/name
+#                operator: In
+#                values:
+#                  - auditflow
+#          topologyKey: kubernetes.io/hostname
 
+# -- Environment variables to add to the container
 env: []
+#  - name: JAVA_OPTS
+#    value: "-Xmx512m -Xms256m"
+#  - name: SPRING_PROFILES_ACTIVE
+#    value: "production"
 
 # -- Additional application properties
 applicationYaml:
