@@ -109,6 +109,41 @@ spec:
             {{- toYaml (omit . "httpGet") | nindent 12 }}
           {{- end }}
         {{- end }}
+        {{- if eq .Values.applicationYaml.sink.discovery.mode "local" }}
+        # AuditFlow Sink Sidecar Container
+        - name: auditflow-sink
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.sink.image.repository }}:{{ .Values.sink.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.sink.image.pullPolicy }}
+          ports:
+            - name: http-trn
+              containerPort: {{ .Values.sink.service.port }}
+              protocol: TCP
+          env:
+            - name: APP_NAME
+              value: "auditflow-sink"
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          {{- with .Values.sink.livenessProbe }}
+          livenessProbe:
+            httpGet:
+              path: /docs
+              port: {{ .Values.sink.service.port }}
+            {{- toYaml (omit . "httpGet") | nindent 12 }}
+          {{- end }}
+          {{- with .Values.sink.readinessProbe }}
+          readinessProbe:
+            httpGet:
+              path: /docs
+              port: {{ .Values.sink.service.port }}
+            {{- toYaml (omit . "httpGet") | nindent 12 }}
+          {{- end }}
+        {{- end }}
       volumes:
         - name: config-additional-location
           configMap:

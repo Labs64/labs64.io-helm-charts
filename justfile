@@ -121,10 +121,10 @@ labs64io-checkout-ui-uninstall:
 
 
 # install Labs64.IO :: all components
-labs64io-all-install: labs64io-traefik-authproxy-install labs64io-auditflow-install labs64io-checkout-install labs64io-gateway-install
+labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install
 
 # uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-gateway-uninstall
+labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
