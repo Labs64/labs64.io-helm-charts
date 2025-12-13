@@ -19,6 +19,16 @@ transformer:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
     port: 8081
 
+sink:
+  image:
+    repository: labs64/auditflow-sink
+    pullPolicy: IfNotPresent
+    tag: ""
+  # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+  service:
+    # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+    port: 8082
+
 # -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # -- This is to override the chart name.
@@ -206,6 +216,18 @@ applicationYaml:
     service:
       name: auditflow-transformer
       namespace: default
+  # -- Sink configuration
+  sink:
+    # -- Discovery mode; "local" or "kubernetes"
+    discovery:
+      mode: local
+    # -- Local URL for the sink service
+    local:
+      url: "http://localhost:8082"
+    # -- Service name and namespace for the sink
+    service:
+      name: auditflow-sink
+      namespace: default
 
   # -- AuditFlow pipelines configuration
   pipelines: []
@@ -213,11 +235,11 @@ applicationYaml:
   #    enabled: true
   #    transformer:
   #      name: 'zero'
-  #    processor:
-  #      name: 'logging_processor'
-  #      clazz: 'io.labs64.audit.processors.LoggingProcessor'
+  #    sink:
+  #      name: 'logging_sink'
   #      properties:
   #        log-level: "DEBUG"
+  #        format: "json"
 
   # -- Spring configuration
   spring:

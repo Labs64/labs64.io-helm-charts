@@ -7,6 +7,11 @@ transformer:
     repository: localhost:5005/auditflow-transformer
     tag: latest
 
+sink:
+  image:
+    repository: localhost:5005/auditflow-sink
+    tag: latest
+
 resources:
   #limits:
   #  cpu: 200m
@@ -22,17 +27,17 @@ volumes:
      items:
        - key: truststore.jks
          path: truststore.jks
- - name: boostrapped-transformers
-   persistentVolumeClaim:
-     claimName: auditflow-transformer-pvc # points to AWS S3 / EFS
+ #- name: boostrapped-transformers
+ #  persistentVolumeClaim:
+ #    claimName: auditflow-transformer-pvc # points to AWS S3 / EFS
 
 volumeMounts:
  - name: opensearch-truststore
    mountPath: /etc/auditflow/certs
    readOnly: true
- - name: boostrapped-transformers
-   mountPath: /transformers_bootstrap
-   readOnly: true
+ #- name: boostrapped-transformers
+ #  mountPath: /transformers_bootstrap
+ #  readOnly: true
 
 env:
   - name: JAVA_OPTS
