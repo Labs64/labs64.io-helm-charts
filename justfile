@@ -32,10 +32,8 @@ repo-add:
     helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
-    helm repo add victoria-metrics https://victoriametrics.github.io/helm-charts/
     helm repo add grafana https://grafana.github.io/helm-charts
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-    helm repo add opensearch https://opensearch-project.github.io/helm-charts/
 
 # update helm repositories
 repo-update: repo-add
@@ -201,30 +199,6 @@ redis-install: repo-update
 redis-uninstall:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
 
-# install OpenSearch
-opensearch-install: repo-update
-    helm search repo opensearch
-    helm show values opensearch/opensearch > overrides/opensearch/values.orig.yaml
-    helm show values opensearch/opensearch-dashboards > overrides/opensearch/values-dashboards.orig.yaml
-    helm upgrade --install opensearch opensearch/opensearch -f overrides/opensearch/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    helm upgrade --install opensearch-dashboards opensearch/opensearch-dashboards -f overrides/opensearch/values-dashboards.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    kubectl --namespace {{NAMESPACE_TOOLS}} get pods,svc | grep "opensearch"
-    echo "Run this command to open OpenSearch Dashboard: kubectl port-forward svc/opensearch-dashboards --namespace {{NAMESPACE_TOOLS}} 5601:5601"
-
-# extract OpenSearch certificate
-opensearch-extract-cert:
-    kubectl --namespace {{NAMESPACE_TOOLS}} cp opensearch-cluster-master-0:/usr/share/opensearch/config/root-ca.pem ./overrides/opensearch/root-ca.pem -c opensearch
-    rm -f overrides/opensearch/truststore.jks
-    keytool -import -trustcacerts -file overrides/opensearch/root-ca.pem -alias opensearch-ca -keystore ./overrides/opensearch/truststore.jks -storepass "changeit" -noprompt
-    kubectl --namespace {{NAMESPACE_LABS64IO}} delete secret opensearch-truststore-secret || true
-    kubectl --namespace {{NAMESPACE_LABS64IO}} create secret generic opensearch-truststore-secret --from-file=./overrides/opensearch/truststore.jks
-    kubectl --namespace {{NAMESPACE_LABS64IO}} get secret opensearch-truststore-secret -o yaml
-
-# uninstall OpenSearch
-opensearch-uninstall:
-    helm uninstall opensearch --namespace {{NAMESPACE_TOOLS}}
-    helm uninstall opensearch-dashboards --namespace {{NAMESPACE_TOOLS}}
-
 
 ## Monitoring Tools ##
 
@@ -262,16 +236,6 @@ tempo-install: repo-update
 tempo-uninstall:
     helm uninstall tempo --namespace {{NAMESPACE_MONITORING}}
 
-# install VictoriaLogs
-victoria-logs-install: repo-update
-    helm search repo victoria-metrics
-    helm show values victoria-metrics/victoria-logs-single > overrides/victoria-logs/values.orig.yaml
-    helm upgrade --install victoria-logs victoria-metrics/victoria-logs-single -f overrides/victoria-logs/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall VictoriaLogs
-victoria-logs-uninstall:
-    helm uninstall victoria-logs --namespace {{NAMESPACE_MONITORING}}
-
 # install grafana
 grafana-install: repo-update
     helm search repo grafana/grafana
@@ -302,23 +266,3 @@ ingress-install: repo-update
 # uninstall Ingress controller
 ingress-uninstall:
     helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}
-
-# install Loki
-loki-install: repo-update
-    helm search repo grafana/loki
-    helm show values grafana/loki > overrides/loki/values.orig.yaml
-    helm upgrade --install loki grafana/loki -f overrides/loki/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall Loki
-loki-uninstall:
-    helm uninstall loki --namespace {{NAMESPACE_MONITORING}}
-
-# install OpenSearch Data Prepper
-opensearch-data-prepper-install: repo-update
-    helm search repo opensearch
-    helm show values opensearch/data-prepper > overrides/opensearch/values-data-prepper.orig.yaml
-    helm upgrade --install opensearch-data-prepper opensearch/data-prepper -f overrides/opensearch/values-data-prepper.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall OpenSearch Data Prepper
-opensearch-data-prepper-uninstall:
-    helm uninstall opensearch-data-prepper --namespace {{NAMESPACE_MONITORING}}

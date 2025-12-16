@@ -1,6 +1,0 @@
-
-server:
-  service:
-    clusterIP: ''
-    type: ClusterIP
-  mode: statefulSet
