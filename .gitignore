@@ -8,6 +8,7 @@
 .deploy
 .DS_Store
 charts/**/charts
+values.secrets.*.yaml
 .cr-*
 /ct_*
 *.jar

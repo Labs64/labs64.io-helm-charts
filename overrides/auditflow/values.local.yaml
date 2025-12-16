@@ -70,8 +70,8 @@ applicationYaml:
       sink:
         name: 'aws_s3_sink'
         properties:
-          access-key-id: ""
-          secret-access-key: ""
+          access-key-id: "${AWS_ACCESS_KEY_ID}"
+          secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
           bucket: "labs64-io-dev-01"
           region: "us-east-1"
           compress: "false"
@@ -88,10 +88,11 @@ applicationYaml:
           service-url: "https://logs-prod-012.grafana.net"
           service-path: "/loki/api/v1/push"
           username: "1314691"
+          password: "${GRAFANA_PASSWORD}"
 
   spring:
     rabbitmq:
       host: rabbitmq.tools.svc.cluster.local
       port: 5672
       username: labs64
-      password: labs64pw
+      password: "${RABBITMQ_PASSWORD}"

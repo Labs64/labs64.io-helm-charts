@@ -202,6 +202,10 @@ env: []
 #  - name: SPRING_PROFILES_ACTIVE
 #    value: "production"
 
+# -- Secret data to be used as environment variables
+secrets:
+  data: {}
+
 # -- Additional application properties
 applicationYaml:
   # -- Transformer configuration

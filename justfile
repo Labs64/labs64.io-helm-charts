@@ -87,7 +87,8 @@ labs64io-auditflow-install:
     helm upgrade --install labs64io-auditflow ./charts/auditflow \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/auditflow/values.yaml \
-      -f ./overrides/auditflow/values.{{ENV}}.yaml
+      -f ./overrides/auditflow/values.{{ENV}}.yaml \
+      -f ./overrides/auditflow/values.secrets.{{ENV}}.yaml
 
 # uninstall Labs64.IO :: AuditFlow
 labs64io-auditflow-uninstall:
