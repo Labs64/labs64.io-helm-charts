@@ -20,21 +20,12 @@ resources:
     cpu: 100m
     memory: 512Mi
 
-volumes:
- - name: opensearch-truststore
-   secret:
-     secretName: opensearch-truststore-secret
-     items:
-       - key: truststore.jks
-         path: truststore.jks
+volumes: []
  #- name: boostrapped-transformers
  #  persistentVolumeClaim:
  #    claimName: auditflow-transformer-pvc # points to AWS S3 / EFS
 
-volumeMounts:
- - name: opensearch-truststore
-   mountPath: /etc/auditflow/certs
-   readOnly: true
+volumeMounts: []
  #- name: boostrapped-transformers
  #  mountPath: /transformers_bootstrap
  #  readOnly: true
@@ -72,30 +63,21 @@ applicationYaml:
         properties:
           log-level: "DEBUG"
           format: "json"
-    - name: 'opensearch-raw'
-      enabled: false
+    - name: 'aws_s3'
+      enabled: true
       transformer:
         name: 'zero'
       sink:
-        name: 'opensearch_sink'
+        name: 'aws_s3_sink'
         properties:
-          service-url: "https://opensearch-cluster-master.tools.svc.cluster.local:9200"
-          service-path: "/auditflow_raw_index/_doc"
-          username: "admin"
-          password: "Labs64pw+"
-          verify-ssl: "false"
-    - name: 'opensearch-transformed'
-      enabled: false
-      transformer:
-        name: 'audit_opensearch'
-      sink:
-        name: 'opensearch_sink'
-        properties:
-          service-url: "https://opensearch-cluster-master.tools.svc.cluster.local:9200"
-          service-path: "/auditflow_index/_doc"
-          username: "admin"
-          password: "Labs64pw+"
-          verify-ssl: "false"
+          access-key-id: "",
+          secret-access-key: "",
+          bucket: "labs64-io-dev-01",
+          region: "us-east-1",
+          compress: "false",
+          partition-by-date: "true",
+          partition-format: "year=%Y/month=%m/day=%d/",
+          file-format: "json"
     - name: 'loki'
       enabled: true
       transformer:
