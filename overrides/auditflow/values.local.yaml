@@ -70,13 +70,13 @@ applicationYaml:
       sink:
         name: 'aws_s3_sink'
         properties:
-          access-key-id: "",
-          secret-access-key: "",
-          bucket: "labs64-io-dev-01",
-          region: "us-east-1",
-          compress: "false",
-          partition-by-date: "true",
-          partition-format: "year=%Y/month=%m/day=%d/",
+          access-key-id: ""
+          secret-access-key: ""
+          bucket: "labs64-io-dev-01"
+          region: "us-east-1"
+          compress: "false"
+          partition-by-date: "true"
+          partition-format: "year=%Y/month=%m/day=%d/"
           file-format: "json"
     - name: 'loki'
       enabled: true
