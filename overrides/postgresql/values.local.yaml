@@ -1,0 +1,9 @@
+auth:
+  postgresPassword: postgres
+  username: labs64
+  password: labs64pw
+
+primary:
+  persistence:
+    enabled: true
+    size: 1Gi

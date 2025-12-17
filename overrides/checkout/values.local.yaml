@@ -1,0 +1,28 @@
+image:
+  repository: checkout
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# -- Additional application properties
+applicationYaml:
+  # -- Spring configuration
+  spring:
+    # -- RabbitMQ connection params
+    rabbitmq:
+      # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
+      host: rabbitmq.tools.svc.cluster.local
+      # -- RabbitMQ port; default: 5672
+      port: 5672
+      # -- RabbitMQ username
+      username: labs64
+      # -- RabbitMQ password
+      password: labs64pw
+
+    # -- PostgreSQL connection params
+    datasource:
+      # -- JDBC connection URL to PostgreSQL
+      url: jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout
+      # -- PostgreSQL username
+      username: labs64
+      # -- PostgreSQL password
+      password: labs64pw

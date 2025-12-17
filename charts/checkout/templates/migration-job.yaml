@@ -13,7 +13,7 @@ spec:
       restartPolicy: OnFailure
       initContainers:
         - name: ensure-db
-          image: postgres:15
+          image: postgres:18
           env:
             - name: PGPASSWORD
               value: {{ .Values.applicationYaml.spring.datasource.password | quote }}
