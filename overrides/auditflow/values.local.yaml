@@ -80,6 +80,15 @@ applicationYaml:
           file-format: "json"
     - name: 'aws_cloudwatch'
       enabled: true
+      condition:
+        match: 'any'  # 'all' (AND) or 'any' (OR)
+        rules:
+          - field: 'extra.action_status'
+            operator: 'eq'
+            value: 'FAILURE'
+          - field: 'eventType'
+            operator: 'in'
+            value: 'security.alert,auth.failed,access.denied'
       transformer:
         name: 'zero'
       sink:
@@ -92,6 +101,28 @@ applicationYaml:
           log-stream: "fedcba98-7654-3210-fedc-ba9876543210"
           create-log-group: "true"
           create-log-stream: "true"
+    - name: 'webhook_site'
+      enabled: true
+      condition:
+        match: 'all'  # 'all' (AND) or 'any' (OR)
+        rules:
+          - field: 'eventType'
+            operator: 'eq'
+            value: 'api.call'
+          - field: 'sourceSystem'
+            operator: 'startsWith'
+            value: 'netlicensing'
+      transformer:
+        name: 'zero'
+      sink:
+        name: 'webhook_sink'
+        properties:
+          webhook-url: 'https://webhook.site/491e9858-1660-4cd6-8fb8-b2c4cfa637e0'
+          method: 'POST'
+          content-type: 'application/json'
+          timeout: 30
+          verify-ssl: true
+          retry-count: 3
     - name: 'loki'
       enabled: true
       transformer:
