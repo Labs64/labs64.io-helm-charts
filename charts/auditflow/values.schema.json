@@ -10,6 +10,38 @@
                 "pipelines": {
                     "type": "array"
                 },
+                "sink": {
+                    "properties": {
+                        "discovery": {
+                            "properties": {
+                                "mode": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "local": {
+                            "properties": {
+                                "url": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "service": {
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                },
+                                "namespace": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    },
+                    "type": "object"
+                },
                 "spring": {
                     "properties": {
                         "rabbitmq": {
@@ -304,6 +336,15 @@
             },
             "type": "object"
         },
+        "secrets": {
+            "properties": {
+                "data": {
+                    "properties": {},
+                    "type": "object"
+                }
+            },
+            "type": "object"
+        },
         "securityContext": {
             "properties": {
                 "allowPrivilegeEscalation": {
@@ -351,6 +392,33 @@
                 },
                 "name": {
                     "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "sink": {
+            "properties": {
+                "image": {
+                    "properties": {
+                        "pullPolicy": {
+                            "type": "string"
+                        },
+                        "repository": {
+                            "type": "string"
+                        },
+                        "tag": {
+                            "type": "string"
+                        }
+                    },
+                    "type": "object"
+                },
+                "service": {
+                    "properties": {
+                        "port": {
+                            "type": "integer"
+                        }
+                    },
+                    "type": "object"
                 }
             },
             "type": "object"

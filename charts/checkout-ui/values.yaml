@@ -141,6 +141,10 @@ affinity: {}
 
 env: []
 
+# -- Secret data to be used as environment variables
+secrets:
+  data: {}
+
 application:
   runtimeEnv:
     # Enable loading a runtime config file (env.json).

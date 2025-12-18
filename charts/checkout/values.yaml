@@ -145,6 +145,10 @@ affinity: {}
 
 env: []
 
+# -- Secret data to be used as environment variables
+secrets:
+  data: {}
+
 # -- Additional application properties
 applicationYaml:
   # -- Spring configuration

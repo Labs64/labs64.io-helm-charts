@@ -5,40 +5,26 @@
             "properties": {},
             "type": "object"
         },
-        "applicationYaml": {
+        "application": {
             "properties": {
-                "spring": {
+                "runtimeEnv": {
                     "properties": {
-                        "datasource": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "env": {
                             "properties": {
-                                "password": {
-                                    "type": "string"
-                                },
-                                "url": {
-                                    "type": "string"
-                                },
-                                "username": {
+                                "VITE_API_URL": {
                                     "type": "string"
                                 }
                             },
                             "type": "object"
                         },
-                        "rabbitmq": {
-                            "properties": {
-                                "host": {
-                                    "type": "string"
-                                },
-                                "password": {
-                                    "type": "string"
-                                },
-                                "port": {
-                                    "type": "integer"
-                                },
-                                "username": {
-                                    "type": "string"
-                                }
-                            },
-                            "type": "object"
+                        "path": {
+                            "type": "string"
+                        },
+                        "strict": {
+                            "type": "boolean"
                         }
                     },
                     "type": "object"

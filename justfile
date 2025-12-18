@@ -56,6 +56,7 @@ generate-schema:
     helm schema -input charts/traefik-authproxy/values.yaml -output charts/traefik-authproxy/values.schema.json
     helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
     helm schema -input charts/checkout/values.yaml -output charts/checkout/values.schema.json
+    helm schema -input charts/checkout-ui/values.yaml -output charts/checkout-ui/values.schema.json
 
 # install Labs64.IO :: API Gateway
 labs64io-traefik-authproxy-install:
@@ -120,10 +121,10 @@ labs64io-checkout-ui-uninstall:
 
 
 # install Labs64.IO :: all components
-labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install
+labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install labs64io-checkout-ui-install
 
 # uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall
+labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-checkout-ui-uninstall
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
