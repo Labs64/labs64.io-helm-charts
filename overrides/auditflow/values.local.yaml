@@ -72,12 +72,26 @@ applicationYaml:
         properties:
           access-key-id: "${AWS_ACCESS_KEY_ID}"
           secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
-          bucket: "labs64-io-dev-01"
           region: "us-east-1"
+          bucket: "labs64-io-dev-01"
           compress: "false"
           partition-by-date: "true"
           partition-format: "year=%Y/month=%m/day=%d/"
           file-format: "json"
+    - name: 'aws_cloudwatch'
+      enabled: true
+      transformer:
+        name: 'zero'
+      sink:
+        name: 'aws_cloudwatch_sink'
+        properties:
+          access-key-id: "${AWS_ACCESS_KEY_ID}"
+          secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
+          region: "us-east-1"
+          log-group: "/labs64-io/auditflow/api.call"
+          log-stream: "fedcba98-7654-3210-fedc-ba9876543210"
+          create-log-group: "true"
+          create-log-stream: "true"
     - name: 'loki'
       enabled: true
       transformer:
