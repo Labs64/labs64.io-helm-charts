@@ -1,0 +1,15 @@
+image:
+  repository: checkout-ui
+  tag: latest
+  pullPolicy: IfNotPresent
+
+application:
+  runtimeEnv:
+    # Enable loading a runtime config file (env.json).
+    enabled: true
+    # Strict mode: if true, the container must not start when env.json is missing/invalid (e.g., ConfigMap not mounted).
+    strict: true
+    # Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).
+    env:
+      # Primary API base URL — replace <HOST> with your domain/host.
+      VITE_API_URL: http://localhost:8010
