@@ -190,6 +190,21 @@ rabbitmq-install: repo-update
 rabbitmq-uninstall:
     helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
 
+# install PostgreSQL
+postgresql-install: repo-update
+    helm search repo bitnami/postgresql
+    helm show values bitnami/postgresql > overrides/postgresql/values.orig.yaml
+    helm upgrade --install postgresql bitnami/postgresql \
+      -f overrides/postgresql/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
+    echo "postgres password : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgres-password}" | base64 -d 2>/dev/null || kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgresql-password}" | base64 -d)"
+    echo "user password     : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || true)"
+
+# uninstall PostgreSQL
+postgresql-uninstall:
+    helm uninstall postgresql --namespace {{NAMESPACE_TOOLS}}
+
 # install Redis
 redis-install: repo-update
     helm search repo bitnami/redis
