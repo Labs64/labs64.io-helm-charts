@@ -84,11 +84,8 @@ applicationYaml:
         match: 'any'  # 'all' (AND) or 'any' (OR)
         rules:
           - field: 'extra.action_status'
-            operator: 'eq'
-            value: 'FAILURE'
-          - field: 'eventType'
             operator: 'in'
-            value: 'security.alert,auth.failed,access.denied'
+            value: 'PENDING,FAILURE,WARN,ERROR'
       transformer:
         name: 'zero'
       sink:
