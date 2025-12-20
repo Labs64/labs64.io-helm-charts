@@ -145,10 +145,10 @@ affinity: {}
 
 env:
   # -- Keycloak discovery URL for the auth proxy.
-  - name: KEYCLOAK_DISCOVERY_URL
+  - name: OIDC_DISCOVERY_URL
     value: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
   # -- Audience for the auth proxy.
-  - name: KEYCLOAK_AUDIENCE
+  - name: OIDC_AUDIENCE
     value: account
   # -- Path to the role mapping file for the auth proxy.
   - name: ROLE_MAPPING_FILE
@@ -172,5 +172,4 @@ roleMapping:
   #  - <role-name-1>
   #  - <role-name-2>
   #/<path-2>:
-  #  - <role-name-2>
   #  - <role-name-2>

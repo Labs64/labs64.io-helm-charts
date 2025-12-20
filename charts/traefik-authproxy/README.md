@@ -29,8 +29,8 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
-| env[0] | object | `{"name":"KEYCLOAK_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | Keycloak discovery URL for the auth proxy. |
-| env[1] | object | `{"name":"KEYCLOAK_AUDIENCE","value":"account"}` | Audience for the auth proxy. |
+| env[0] | object | `{"name":"OIDC_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | Keycloak discovery URL for the auth proxy. |
+| env[1] | object | `{"name":"OIDC_AUDIENCE","value":"account"}` | Audience for the auth proxy. |
 | env[2] | object | `{"name":"ROLE_MAPPING_FILE","value":"/opt/application-config/role_mapping.yaml"}` | Path to the role mapping file for the auth proxy. |
 | env[3] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
 | fullnameOverride | string | `""` |  |

@@ -3,9 +3,9 @@ image:
   tag: latest
 
 env:
-  - name: KEYCLOAK_DISCOVERY_URL
+  - name: OIDC_DISCOVERY_URL
     value: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
-  - name: KEYCLOAK_AUDIENCE
+  - name: OIDC_AUDIENCE
     value: account
   - name: ROLE_MAPPING_FILE
     value: /opt/application-config/role_mapping.yaml
@@ -18,11 +18,11 @@ roleMapping:
 
   /api/v1/admin:
     - admin-role
-  /api/v1/audit:
+  /api/v1/auditflow:
     - admin-role
     - auditflow-role
     - default-roles-labs64io
-  /api/v1/cart:
+  /api/v1/checkout:
     - admin-role
     - ecommerce-role
     - default-roles-labs64io

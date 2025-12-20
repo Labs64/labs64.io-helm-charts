@@ -1,4 +1,6 @@
 ingressroute:
+
+  # -- Define IngressRoute(s) for labs64io-gateway
   routes:
     # -- Map Swagger UI to the root path
     - path: /swagger-ui
@@ -6,43 +8,63 @@ ingressroute:
         name: labs64io-gateway
         port: 8080
       middlewares:
-        - name: path-stripper-middleware
+        - name: strip-prefix-middleware
+
     # -- Map AuditFlow API
-    - path: /api/v1/audit
+    - path: /auditflow/api
       service:
         name: labs64io-auditflow
         port: 8080
       middlewares:
         - name: ratelimit-middleware
+
     # -- Map AuditFlow API docs
     - path: /auditflow/v3/api-docs
       service:
         name: labs64io-auditflow
         port: 8080
       middlewares:
-        - name: path-stripper-middleware
+        - name: strip-prefix-middleware
+
     # -- Map Checkout API
-    - path: /api/v1/cart
+    - path: /checkout/api
       service:
         name: labs64io-checkout
         port: 8080
       middlewares:
         - name: ratelimit-middleware
+
+    # -- Map Checkout UI
+    - path: /checkout
+      service:
+        name: labs64io-checkout-ui
+        port: 80
+      middlewares:
+        - name: ratelimit-middleware
+
     # -- Map Checkout API docs
     - path: /checkout/v3/api-docs
       service:
         name: labs64io-checkout
         port: 8080
       middlewares:
-        - name: path-stripper-middleware
+        - name: strip-prefix-middleware
+
+  # -- Standard Middlewares for labs64io-gateway
   middlewares:
-    - name: path-stripper-middleware
+    # -- Strip Prefix Middleware
+    - name: strip-prefix-middleware
       spec:
         stripPrefix:
           prefixes:
             - /swagger-ui
             - /auditflow
             - /checkout
+            - /payment-gateway
+            - /customer-portal
+            - /netlicensing
+
+    # -- Auth Middleware
     - name: auth-middleware
       spec:
         forwardAuth:
@@ -51,15 +73,24 @@ ingressroute:
           authResponseHeaders:
             - "X-User-Id"
             - "X-Roles"
+
+    # -- Rate Limit Middleware
     - name: ratelimit-middleware
       spec:
         rateLimit:
           average: 1
           burst: 1
 
+# -- Swagger UI Configuration
 swaggerUI:
   urls:
     - url: http://gateway.localhost/auditflow/v3/api-docs
       name: AuditFlow API
     - url: http://gateway.localhost/checkout/v3/api-docs
       name: Checkout API
+    - url: http://gateway.localhost/payment-gateway/v3/api-docs
+      name: Payment Gateway API
+    - url: http://gateway.localhost/customer-portal/v3/api-docs
+      name: Customer Portal API
+    - url: http://gateway.localhost/netlicensing/v3/api-docs
+      name: NetLicensing API
