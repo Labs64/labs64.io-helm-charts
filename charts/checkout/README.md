@@ -63,6 +63,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
+| secrets | object | `{"data":{}}` | Secret data to be used as environment variables |
 | securityContext | object | `{}` |  |
 | service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |

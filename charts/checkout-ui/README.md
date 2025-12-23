@@ -75,6 +75,7 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 | replicaCount | int | `1` |  |
 | resources.requests.cpu | string | `"50m"` |  |
 | resources.requests.memory | string | `"128Mi"` |  |
+| secrets | object | `{"data":{}}` | Secret data to be used as environment variables |
 | securityContext | object | `{}` |  |
 | service.port | int | `80` |  |
 | service.type | string | `"ClusterIP"` |  |
