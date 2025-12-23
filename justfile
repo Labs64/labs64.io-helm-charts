@@ -166,18 +166,6 @@ traefik-dashboard:
 traefik-uninstall:
     helm uninstall traefik --namespace {{NAMESPACE_TOOLS}}
 
-# install Keycloak
-keycloak-install: repo-update
-    helm search repo bitnami/keycloak
-    helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
-    helm upgrade --install keycloak bitnami/keycloak -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    kubectl --namespace {{NAMESPACE_TOOLS}} apply -f overrides/keycloak/keycloak-ingressroute.yaml
-
-# uninstall Keycloak
-keycloak-uninstall:
-    kubectl --namespace {{NAMESPACE_TOOLS}} delete -f overrides/keycloak/keycloak-ingressroute.yaml
-    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
-
 # install RabbitMQ
 rabbitmq-install: repo-update
     helm search repo bitnami/rabbitmq
@@ -215,6 +203,18 @@ redis-install: repo-update
 # uninstall Redis
 redis-uninstall:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
+
+# install Keycloak
+keycloak-install: repo-update
+    helm search repo bitnami/keycloak
+    helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
+    helm upgrade --install keycloak bitnami/keycloak -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    kubectl --namespace {{NAMESPACE_TOOLS}} apply -f overrides/keycloak/keycloak-ingressroute.yaml
+
+# uninstall Keycloak
+keycloak-uninstall:
+    kubectl --namespace {{NAMESPACE_TOOLS}} delete -f overrides/keycloak/keycloak-ingressroute.yaml
+    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
 
 
 ## Monitoring Tools ##
