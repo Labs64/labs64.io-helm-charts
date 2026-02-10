@@ -155,7 +155,7 @@ traefik-install: repo-update
     helm search repo traefik/traefik
     helm show values traefik/traefik > overrides/traefik/values.orig.yaml
     helm show values traefik/traefik-crds > overrides/traefik/values-crds.orig.yaml
-    #helm upgrade --install traefik-crds traefik/traefik-crds --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install traefik-crds traefik/traefik-crds --namespace {{NAMESPACE_TOOLS}} --create-namespace
     helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
 
 # Traefik Dashboard
@@ -164,7 +164,9 @@ traefik-dashboard:
 
 # uninstall Traefik
 traefik-uninstall:
-    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}}
+    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}} || true
+    helm uninstall traefik-crds –namespace {{NAMESPACE_TOOLS}} || true
+    #kubectl delete crd $(kubectl get crd | grep traefik | awk '{print $1}')
 
 # install RabbitMQ
 rabbitmq-install: repo-update
