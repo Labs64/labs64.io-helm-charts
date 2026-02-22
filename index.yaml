@@ -250,6 +250,36 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/checkout-ui-0.0.1/checkout-ui-0.0.1.tgz
     version: 0.0.1
+  customer-portal-ui:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-02-22T07:39:08.241377242Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64
+      Customer Portal, built with Vite and Vue 3.'
+    digest: d82c6c78b6e7aa152d35b51271f062921d0dd8185cabbc4669d1e045b26e8f45
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - customer-portal
+    - frontend
+    - vue
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: customer-portal-ui
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-customer-portal
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/customer-portal-ui-0.0.1/customer-portal-ui-0.0.1.tgz
+    version: 0.0.1
   ecommerce:
   - apiVersion: v2
     appVersion: 0.0.1
@@ -363,6 +393,39 @@ entries:
     type: application
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/gateway-0.0.1/gateway-0.0.1.tgz
+    version: 0.0.1
+  payment-gateway:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-02-22T07:39:08.581633442Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP
+      Integration'
+    digest: c37eec36452ad62c0220e551afe9be68de05d842cf46852b7c078d65d37ed107
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - ecommerce
+    - payment
+    - gateway
+    - psp
+    - stripe
+    - paypal
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: payment-gateway
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-payment-gateway
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/payment-gateway-0.0.1/payment-gateway-0.0.1.tgz
     version: 0.0.1
   shopping-cart:
   - apiVersion: v2
@@ -487,4 +550,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/traefik-authproxy-0.0.1/traefik-authproxy-0.0.1.tgz
     version: 0.0.1
-generated: "2025-12-01T14:37:44.541124483Z"
+generated: "2026-02-22T07:39:08.760966687Z"
