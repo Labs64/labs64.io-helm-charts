@@ -1,0 +1,38 @@
+image:
+  repository: payment-gateway
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# -- Additional application properties
+applicationYaml:
+  # -- Spring configuration
+  spring:
+    # -- RabbitMQ connection params
+    rabbitmq:
+      # -- RabbitMQ host name
+      host: rabbitmq.tools.svc.cluster.local
+      # -- RabbitMQ port; default: 5672
+      port: 5672
+      # -- RabbitMQ username
+      username: labs64
+      # -- RabbitMQ password
+      password: labs64pw
+
+    # -- PostgreSQL connection params
+    datasource:
+      # -- JDBC connection URL to PostgreSQL
+      url: jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway
+      # -- PostgreSQL username
+      username: labs64
+      # -- PostgreSQL password
+      password: labs64pw
+
+    # -- Redis connection params
+    data:
+      redis:
+        # -- Redis host
+        host: redis-master.tools.svc.cluster.local
+        # -- Redis port; default: 6379
+        port: 6379
+        # -- Redis password
+        password: labs64pw
