@@ -1,0 +1,10 @@
+{{- if .Values.application.runtimeEnv.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-runtime-env
+data:
+  env.json: |-
+    {{ include "chart-libs.envjson" (dict "env" .Values.application.runtimeEnv.env) | nindent 4 }}
+{{- end }}
+

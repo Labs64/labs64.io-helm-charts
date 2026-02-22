@@ -15,7 +15,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 ## Source Code
 
 * <https://github.com/Labs64/labs64.io-helm-charts>
-* <https://github.com/Labs64/labs64.io-api-gateway/tree/master/traefik-authproxy>
+* <https://github.com/Labs64/labs64.io-gateway/tree/master/traefik-authproxy>
 
 ## Requirements
 

@@ -57,6 +57,8 @@ generate-schema:
     helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
     helm schema -input charts/checkout/values.yaml -output charts/checkout/values.schema.json
     helm schema -input charts/checkout-ui/values.yaml -output charts/checkout-ui/values.schema.json
+    helm schema -input charts/payment-gateway/values.yaml -output charts/payment-gateway/values.schema.json
+    helm schema -input charts/customer-portal-ui/values.yaml -output charts/customer-portal-ui/values.schema.json
 
 # install Labs64.IO :: API Gateway
 labs64io-traefik-authproxy-install:
@@ -119,12 +121,36 @@ labs64io-checkout-ui-install:
 labs64io-checkout-ui-uninstall:
     helm uninstall labs64io-checkout-ui --namespace {{NAMESPACE_LABS64IO}}
 
+# install Labs64.IO :: Payment Gateway
+labs64io-payment-gateway-install:
+    helm dependencies update ./charts/payment-gateway
+    helm upgrade --install labs64io-payment-gateway ./charts/payment-gateway \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/payment-gateway/values.yaml \
+      -f ./overrides/payment-gateway/values.{{ENV}}.yaml
+
+# uninstall Labs64.IO :: Payment Gateway
+labs64io-payment-gateway-uninstall:
+    helm uninstall labs64io-payment-gateway --namespace {{NAMESPACE_LABS64IO}}
+
+# install Labs64.IO :: Customer Portal UI
+labs64io-customer-portal-ui-install:
+    helm dependencies update ./charts/customer-portal-ui
+    helm upgrade --install labs64io-customer-portal-ui ./charts/customer-portal-ui \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/customer-portal-ui/values.yaml \
+      -f ./overrides/customer-portal-ui/values.{{ENV}}.yaml
+
+# uninstall Labs64.IO :: Customer Portal UI
+labs64io-customer-portal-ui-uninstall:
+    helm uninstall labs64io-customer-portal-ui --namespace {{NAMESPACE_LABS64IO}}
+
 
 # install Labs64.IO :: all components
-labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install labs64io-checkout-ui-install
+labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install labs64io-checkout-ui-install labs64io-payment-gateway-install labs64io-customer-portal-ui-install
 
 # uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-checkout-ui-uninstall
+labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-checkout-ui-uninstall labs64io-payment-gateway-uninstall labs64io-customer-portal-ui-uninstall
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-app-ext
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+data:
+  application.yaml: |-
+{{ tpl (toYaml .Values.applicationYaml) $  | indent 4 }}
+

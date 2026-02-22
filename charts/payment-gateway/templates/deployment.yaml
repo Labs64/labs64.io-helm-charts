@@ -57,6 +57,8 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
+            - name: SPRING_CONFIG_IMPORT
+              value: "optional:file:/opt/application-config/application.yaml"
           {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -66,21 +68,15 @@ spec:
             - secretRef:
                 name: {{ include "chart-libs.fullname" . }}
           volumeMounts:
-          {{- if .Values.application.runtimeEnv.enabled }}
-            - name: runtime-env
-              mountPath: {{ .Values.application.runtimeEnv.path }}
-              subPath: env.json
-          {{- end }}
+            - name: config-additional-location
+              mountPath: /opt/application-config
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-      {{- if .Values.application.runtimeEnv.enabled }}
-        - name: runtime-env
+        - name: config-additional-location
           configMap:
-            name: {{ include "chart-libs.fullname" . }}-runtime-env
-            optional: {{ not .Values.application.runtimeEnv.strict }}
-      {{- end }}
+            name: {{ include "chart-libs.fullname" . }}-app-ext
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -96,3 +92,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+

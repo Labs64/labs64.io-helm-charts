@@ -1,13 +1,9 @@
-# Default values for checkout-ui.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
 # -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: labs64/checkout-ui
+  repository: labs64/payment-gateway
   # -- This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
@@ -15,7 +11,6 @@ image:
 
 # -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
-
 # -- This is to override the chart name.
 nameOverride: ""
 fullnameOverride: ""
@@ -23,7 +18,7 @@ fullnameOverride: ""
 # -- This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
   # -- Specifies whether a service account should be created
-  create: false
+  create: true
   # -- Automatically mount a ServiceAccount's API credentials?
   automount: true
   # -- Annotations to add to the service account
@@ -48,7 +43,7 @@ podAnnotations: {}
 podLabels: {}
 
 podSecurityContext: {}
-# fsGroup: 2000
+  # fsGroup: 2000
 
 securityContext: {}
   # capabilities:
@@ -56,14 +51,14 @@ securityContext: {}
   #   - ALL
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
-# runAsUser: 1000
+  # runAsUser: 1000
 
 # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
   # -- This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
-  port: 80
+  port: 8080
 
 # -- This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -71,7 +66,7 @@ ingress:
   className: "nginx"
   annotations: {}
     # kubernetes.io/ingress.class: nginx
-  # kubernetes.io/tls-acme: "true"
+    # kubernetes.io/tls-acme: "true"
   hosts:
     - host: localhost
       paths:
@@ -94,29 +89,19 @@ ingressroute:
     - websecure
 
 resources:
-  # limits:
+  #limits:
   #  cpu: 200m
   #  memory: 512Mi
   requests:
     cpu: 100m
     memory: 512Mi
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-#   memory: 128Mi
 
-# -- This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+# -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
-    path: /
-    port: 80
-  initialDelaySeconds: 10
+    path: /actuator/health/liveness
+    port: 8080
+  initialDelaySeconds: 30
   periodSeconds: 10
   failureThreshold: 3
   timeoutSeconds: 2
@@ -124,9 +109,9 @@ livenessProbe:
 # -- This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 readinessProbe:
   httpGet:
-    path: /
-    port: 80
-  initialDelaySeconds: 5
+    path: /actuator/health/readiness
+    port: 8080
+  initialDelaySeconds: 10
   periodSeconds: 5
   failureThreshold: 3
   timeoutSeconds: 2
@@ -137,6 +122,7 @@ autoscaling:
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
 
 # -- Additional volumes on the output Deployment definition.
 volumes: []
@@ -163,15 +149,37 @@ env: []
 secrets:
   data: {}
 
-application:
-  runtimeEnv:
-    # -- Enable loading a runtime config file (env.json).
-    enabled: true
-    # -- Strict mode: if true, the container must not start when env.json is missing/invalid (e.g., ConfigMap not mounted).
-    strict: true
-    # -- Absolute path in the container where env.json is mounted and served from (must match Nginx/Ingress config).
-    path: /usr/share/nginx/html/config/env.json
-    # -- Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).
-    env:
-      # -- Primary API base URL — replace <HOST> with your domain/host.
-      VITE_API_URL: https://<HOST>/api/v1/checkout
+# -- Additional application properties
+applicationYaml:
+  # -- Spring configuration
+  spring:
+    # -- RabbitMQ connection params
+    rabbitmq:
+      # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
+      host: rabbitmq.default.svc.cluster.local
+      # -- RabbitMQ port; default: 5672
+      port: 5672
+      # -- RabbitMQ username
+      username: <TODO>
+      # -- RabbitMQ password
+      password: <TODO>
+
+    # -- PostgreSQL connection params
+    datasource:
+      # -- JDBC connection URL to PostgreSQL
+      url: jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/payment_gateway
+      # -- PostgreSQL username
+      username: <TODO>
+      # -- PostgreSQL password
+      password: <TODO>
+
+    # -- Redis connection params
+    data:
+      redis:
+        # -- Redis host; default: redis-master.<namespace>.svc.cluster.local
+        host: redis-master.default.svc.cluster.local
+        # -- Redis port; default: 6379
+        port: 6379
+        # -- Redis password
+        password: <TODO>
+

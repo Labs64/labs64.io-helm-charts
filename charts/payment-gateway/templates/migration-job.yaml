@@ -1,0 +1,59 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-migrate
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: ensure-db
+          image: postgres:18
+          env:
+            - name: PGPASSWORD
+              value: {{ .Values.applicationYaml.spring.datasource.password | quote }}
+          command: ["sh","-c"]
+          args:
+            - |
+              DB_HOST=$(echo {{ .Values.applicationYaml.spring.datasource.url }} | sed -E 's|jdbc:postgresql://([^:/]+):?.*|\1|')
+              DB_USER={{ .Values.applicationYaml.spring.datasource.username }}
+              psql -h $DB_HOST -U $DB_USER -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='payment_gateway'" | grep -q 1 || \
+              psql -h $DB_HOST -U $DB_USER -d postgres -c "CREATE DATABASE payment_gateway;"
+
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          env:
+            - name: SPRING_FLYWAY_ENABLED
+              value: "true"
+            - name: SPRING_FLYWAY_BASELINE_ON_MIGRATE
+              value: "true"
+            - name: SPRING_FLYWAY_CREATE_SCHEMAS
+              value: "true"
+            - name: SPRING_MAIN_WEB_APPLICATION_TYPE
+              value: "none"
+            - name: SPRING_MAIN_LAZY_INITIALIZATION
+              value: "true"
+            - name: SPRING_AUTOCONFIGURE_EXCLUDE
+              value: >
+                org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration,
+                org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration,
+                org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration,
+                org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "validate"
+            - name: SPRING_DATASOURCE_URL
+              value: {{ .Values.applicationYaml.spring.datasource.url | quote }}
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.applicationYaml.spring.datasource.username | quote }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: {{ .Values.applicationYaml.spring.datasource.password | quote }}
+
+          terminationMessagePolicy: FallbackToLogsOnError
+
