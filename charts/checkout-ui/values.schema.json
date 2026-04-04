@@ -1,282 +1,637 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "properties": {
-        "affinity": {
-            "properties": {},
-            "type": "object"
-        },
-        "application": {
-            "properties": {
-                "runtimeEnv": {
-                    "properties": {
-                        "enabled": {
-                            "type": "boolean"
-                        },
-                        "env": {
-                            "properties": {
-                                "VITE_API_URL": {
-                                    "type": "string"
-                                }
-                            },
-                            "type": "object"
-                        },
-                        "path": {
-                            "type": "string"
-                        },
-                        "strict": {
-                            "type": "boolean"
-                        }
-                    },
-                    "type": "object"
-                }
-            },
-            "type": "object"
-        },
-        "autoscaling": {
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "maxReplicas": {
-                    "type": "integer"
-                },
-                "minReplicas": {
-                    "type": "integer"
-                },
-                "targetCPUUtilizationPercentage": {
-                    "type": "integer"
-                }
-            },
-            "type": "object"
-        },
-        "env": {
-            "type": "array"
-        },
-        "fullnameOverride": {
-            "type": "string"
-        },
-        "image": {
-            "properties": {
-                "pullPolicy": {
-                    "type": "string"
-                },
-                "repository": {
-                    "type": "string"
-                },
-                "tag": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "imagePullSecrets": {
-            "type": "array"
-        },
-        "ingress": {
-            "properties": {
-                "annotations": {
-                    "properties": {},
-                    "type": "object"
-                },
-                "className": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "hosts": {
-                    "items": {
-                        "properties": {
-                            "host": {
-                                "type": "string"
-                            },
-                            "paths": {
-                                "items": {
-                                    "properties": {
-                                        "path": {
-                                            "type": "string"
-                                        },
-                                        "pathType": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                },
-                                "type": "array"
-                            }
-                        },
-                        "type": "object"
-                    },
-                    "type": "array"
-                },
-                "tls": {
-                    "type": "array"
-                }
-            },
-            "type": "object"
-        },
-        "ingressroute": {
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "entryPoints": {
-                    "items": {
-                        "type": "string"
-                    },
-                    "type": "array"
-                },
-                "host": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "livenessProbe": {
-            "properties": {
-                "failureThreshold": {
-                    "type": "integer"
-                },
-                "httpGet": {
-                    "properties": {
-                        "path": {
-                            "type": "string"
-                        },
-                        "port": {
-                            "type": "integer"
-                        }
-                    },
-                    "type": "object"
-                },
-                "initialDelaySeconds": {
-                    "type": "integer"
-                },
-                "periodSeconds": {
-                    "type": "integer"
-                },
-                "timeoutSeconds": {
-                    "type": "integer"
-                }
-            },
-            "type": "object"
-        },
-        "nameOverride": {
-            "type": "string"
-        },
-        "nodeSelector": {
-            "properties": {},
-            "type": "object"
-        },
-        "podAnnotations": {
-            "properties": {},
-            "type": "object"
-        },
-        "podLabels": {
-            "properties": {},
-            "type": "object"
-        },
-        "podSecurityContext": {
-            "properties": {},
-            "type": "object"
-        },
-        "rbac": {
-            "properties": {
-                "create": {
-                    "type": "boolean"
-                },
-                "rules": {
-                    "type": "array"
-                }
-            },
-            "type": "object"
-        },
-        "readinessProbe": {
-            "properties": {
-                "failureThreshold": {
-                    "type": "integer"
-                },
-                "httpGet": {
-                    "properties": {
-                        "path": {
-                            "type": "string"
-                        },
-                        "port": {
-                            "type": "integer"
-                        }
-                    },
-                    "type": "object"
-                },
-                "initialDelaySeconds": {
-                    "type": "integer"
-                },
-                "periodSeconds": {
-                    "type": "integer"
-                },
-                "timeoutSeconds": {
-                    "type": "integer"
-                }
-            },
-            "type": "object"
-        },
-        "replicaCount": {
-            "type": "integer"
-        },
-        "resources": {
-            "properties": {
-                "requests": {
-                    "properties": {
-                        "cpu": {
-                            "type": "string"
-                        },
-                        "memory": {
-                            "type": "string"
-                        }
-                    },
-                    "type": "object"
-                }
-            },
-            "type": "object"
-        },
-        "secrets": {
-            "properties": {
-                "data": {
-                    "properties": {},
-                    "type": "object"
-                }
-            },
-            "type": "object"
-        },
-        "securityContext": {
-            "properties": {},
-            "type": "object"
-        },
-        "serviceAccount": {
-            "properties": {
-                "annotations": {
-                    "properties": {},
-                    "type": "object"
-                },
-                "automount": {
-                    "type": "boolean"
-                },
-                "create": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "tolerations": {
-            "type": "array"
-        },
-        "volumeMounts": {
-            "type": "array"
-        },
-        "volumes": {
-            "type": "array"
-        }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "affinity": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "affinity",
+      "type": "object"
     },
-    "type": "object"
+    "application": {
+      "additionalProperties": false,
+      "properties": {
+        "runtimeEnv": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable loading a runtime config file (env.json).",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "env": {
+              "additionalProperties": false,
+              "description": "Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).",
+              "properties": {
+                "VITE_API_URL": {
+                  "default": "https://\u003cHOST\u003e/api/v1/checkout",
+                  "description": "Primary API base URL — replace \u003cHOST\u003e with your domain/host.",
+                  "title": "VITE_API_URL",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "VITE_API_URL"
+              ],
+              "title": "env",
+              "type": "object"
+            },
+            "path": {
+              "default": "/usr/share/nginx/html/config/env.json",
+              "description": "Absolute path in the container where env.json is mounted and served from (must match Nginx/Ingress config).",
+              "title": "path",
+              "type": "string"
+            },
+            "strict": {
+              "default": true,
+              "description": "Strict mode: if true, the container must not start when env.json is missing/invalid (e.g., ConfigMap not mounted).",
+              "title": "strict",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "strict",
+            "path",
+            "env"
+          ],
+          "title": "runtimeEnv",
+          "type": "object"
+        }
+      },
+      "required": [
+        "runtimeEnv"
+      ],
+      "title": "application",
+      "type": "object"
+    },
+    "autoscaling": {
+      "additionalProperties": false,
+      "description": "This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "maxReplicas": {
+          "default": 3,
+          "title": "maxReplicas",
+          "type": "integer"
+        },
+        "minReplicas": {
+          "default": 1,
+          "title": "minReplicas",
+          "type": "integer"
+        },
+        "targetCPUUtilizationPercentage": {
+          "default": 80,
+          "title": "targetCPUUtilizationPercentage",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minReplicas",
+        "maxReplicas",
+        "targetCPUUtilizationPercentage"
+      ],
+      "title": "autoscaling",
+      "type": "object"
+    },
+    "env": {
+      "items": {
+        "required": []
+      },
+      "title": "env",
+      "type": "array"
+    },
+    "fullnameOverride": {
+      "default": "",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "This sets the pull policy for images.",
+          "title": "pullPolicy",
+          "type": "string"
+        },
+        "repository": {
+          "default": "labs64/checkout-ui",
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "description": "Overrides the image tag whose default is the chart appVersion.",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "pullPolicy",
+        "tag"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "description": "This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/",
+      "items": {
+        "required": []
+      },
+      "title": "imagePullSecrets",
+      "type": "array"
+    },
+    "ingress": {
+      "additionalProperties": false,
+      "description": "This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/",
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "className": {
+          "default": "nginx",
+          "title": "className",
+          "type": "string"
+        },
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "hosts": {
+          "description": "kubernetes.io/ingress.class: nginx\nkubernetes.io/tls-acme: \"true\"",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "host": {
+                    "default": "localhost",
+                    "title": "host",
+                    "type": "string"
+                  },
+                  "paths": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "path": {
+                              "default": "/",
+                              "title": "path",
+                              "type": "string"
+                            },
+                            "pathType": {
+                              "default": "Prefix",
+                              "title": "pathType",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "path",
+                            "pathType"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "paths",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "host",
+                  "paths"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "hosts",
+          "type": "array"
+        },
+        "tls": {
+          "items": {
+            "required": []
+          },
+          "title": "tls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "className",
+        "annotations",
+        "hosts",
+        "tls"
+      ],
+      "title": "ingress",
+      "type": "object"
+    },
+    "ingressroute": {
+      "additionalProperties": false,
+      "description": "IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "This sets whether the IngressRoute is enabled or not",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "entryPoints": {
+          "description": "Entry points for the IngressRoute",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "entryPoints",
+          "type": "array"
+        },
+        "host": {
+          "default": "localhost",
+          "description": "Host for the IngressRoute",
+          "title": "host",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "host",
+        "entryPoints"
+      ],
+      "title": "ingressroute",
+      "type": "object"
+    },
+    "livenessProbe": {
+      "additionalProperties": false,
+      "description": "This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "properties": {
+        "failureThreshold": {
+          "default": 3,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 80,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "default": 10,
+          "title": "initialDelaySeconds",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "default": 10,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "initialDelaySeconds",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "livenessProbe",
+      "type": "object"
+    },
+    "nameOverride": {
+      "default": "",
+      "description": "This is to override the chart name.",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "podAnnotations": {
+      "additionalProperties": false,
+      "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+      "required": [],
+      "title": "podAnnotations",
+      "type": "object"
+    },
+    "podLabels": {
+      "additionalProperties": false,
+      "description": "This is for setting Kubernetes Labels to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+      "required": [],
+      "title": "podLabels",
+      "type": "object"
+    },
+    "podSecurityContext": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "podSecurityContext",
+      "type": "object"
+    },
+    "rbac": {
+      "additionalProperties": false,
+      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
+      "properties": {
+        "create": {
+          "default": false,
+          "title": "create",
+          "type": "boolean"
+        },
+        "rules": {
+          "items": {
+            "required": []
+          },
+          "title": "rules",
+          "type": "array"
+        }
+      },
+      "required": [
+        "create",
+        "rules"
+      ],
+      "title": "rbac",
+      "type": "object"
+    },
+    "readinessProbe": {
+      "additionalProperties": false,
+      "description": "This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "properties": {
+        "failureThreshold": {
+          "default": 3,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 80,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "default": 5,
+          "title": "initialDelaySeconds",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "default": 5,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "initialDelaySeconds",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "readinessProbe",
+      "type": "object"
+    },
+    "replicaCount": {
+      "default": 1,
+      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/",
+      "title": "replicaCount",
+      "type": "integer"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "properties": {
+        "requests": {
+          "additionalProperties": false,
+          "description": "limits:\n cpu: 200m\n memory: 512Mi",
+          "properties": {
+            "cpu": {
+              "default": "100m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "512Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "requests",
+          "type": "object"
+        }
+      },
+      "required": [
+        "requests"
+      ],
+      "title": "resources",
+      "type": "object"
+    },
+    "secrets": {
+      "additionalProperties": false,
+      "description": "Secret data to be used as environment variables",
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "data",
+          "type": "object"
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "title": "secrets",
+      "type": "object"
+    },
+    "securityContext": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "securityContext",
+      "type": "object"
+    },
+    "service": {
+      "additionalProperties": false,
+      "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
+      "properties": {
+        "port": {
+          "default": 80,
+          "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports",
+          "title": "port",
+          "type": "integer"
+        },
+        "type": {
+          "default": "ClusterIP",
+          "description": "This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types",
+          "title": "type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "port"
+      ],
+      "title": "service",
+      "type": "object"
+    },
+    "serviceAccount": {
+      "additionalProperties": false,
+      "description": "This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/",
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations to add to the service account",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "automount": {
+          "default": true,
+          "description": "Automatically mount a ServiceAccount's API credentials?",
+          "title": "automount",
+          "type": "boolean"
+        },
+        "create": {
+          "default": false,
+          "description": "Specifies whether a service account should be created",
+          "title": "create",
+          "type": "boolean"
+        },
+        "name": {
+          "default": "",
+          "description": "The name of the service account to use.\nIf not set and create is true, a name is generated using the fullname template",
+          "title": "name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "create",
+        "automount",
+        "annotations",
+        "name"
+      ],
+      "title": "serviceAccount",
+      "type": "object"
+    },
+    "tolerations": {
+      "items": {
+        "required": []
+      },
+      "title": "tolerations",
+      "type": "array"
+    },
+    "volumeMounts": {
+      "description": "Additional volumeMounts on the output Deployment definition.",
+      "items": {
+        "required": []
+      },
+      "title": "volumeMounts",
+      "type": "array"
+    },
+    "volumes": {
+      "description": "Additional volumes on the output Deployment definition.",
+      "items": {
+        "required": []
+      },
+      "title": "volumes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "replicaCount",
+    "image",
+    "imagePullSecrets",
+    "nameOverride",
+    "fullnameOverride",
+    "serviceAccount",
+    "rbac",
+    "podAnnotations",
+    "podLabels",
+    "podSecurityContext",
+    "securityContext",
+    "service",
+    "ingress",
+    "ingressroute",
+    "resources",
+    "livenessProbe",
+    "readinessProbe",
+    "autoscaling",
+    "volumes",
+    "volumeMounts",
+    "nodeSelector",
+    "tolerations",
+    "affinity",
+    "env",
+    "secrets",
+    "application"
+  ],
+  "type": "object"
 }

@@ -8,9 +8,67 @@
       "title": "affinity",
       "type": "object"
     },
+    "application": {
+      "additionalProperties": false,
+      "properties": {
+        "runtimeEnv": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable loading a runtime config file (env.json).",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "env": {
+              "additionalProperties": false,
+              "description": "Key-value pairs written into env.json.",
+              "properties": {
+                "VITE_API_URL": {
+                  "default": "https://\u003cHOST\u003e/api/v1/customer-portal",
+                  "description": "Primary API base URL — replace \u003cHOST\u003e with your domain/host.",
+                  "title": "VITE_API_URL",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "VITE_API_URL"
+              ],
+              "title": "env",
+              "type": "object"
+            },
+            "path": {
+              "default": "/usr/share/nginx/html/config/env.json",
+              "description": "Absolute path in the container where env.json is mounted and served from.",
+              "title": "path",
+              "type": "string"
+            },
+            "strict": {
+              "default": true,
+              "description": "Strict mode: if true, the container must not start when env.json is missing/invalid.",
+              "title": "strict",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "strict",
+            "path",
+            "env"
+          ],
+          "title": "runtimeEnv",
+          "type": "object"
+        }
+      },
+      "required": [
+        "runtimeEnv"
+      ],
+      "title": "application",
+      "type": "object"
+    },
     "autoscaling": {
       "additionalProperties": false,
-      "description": "This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/",
+      "description": "This section is for setting up autoscaling",
       "properties": {
         "enabled": {
           "default": false,
@@ -44,88 +102,6 @@
     },
     "env": {
       "items": {
-        "anyOf": [
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "OIDC_DISCOVERY_URL",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "OIDC_AUDIENCE",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "account",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "ROLE_MAPPING_FILE",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "/opt/application-config/role_mapping.yaml",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "LOG_LEVEL",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "INFO",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          }
-        ],
         "required": []
       },
       "title": "env",
@@ -153,7 +129,7 @@
           "type": "string"
         },
         "repository": {
-          "default": "labs64/traefik-authproxy",
+          "default": "labs64/customer-portal-ui",
           "title": "repository",
           "type": "string"
         },
@@ -201,7 +177,6 @@
           "type": "boolean"
         },
         "hosts": {
-          "description": "kubernetes.io/ingress.class: nginx\nkubernetes.io/tls-acme: \"true\"",
           "items": {
             "anyOf": [
               {
@@ -315,7 +290,7 @@
     },
     "livenessProbe": {
       "additionalProperties": false,
-      "description": "This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "description": "This is to setup the liveness probes",
       "properties": {
         "failureThreshold": {
           "default": 3,
@@ -326,12 +301,12 @@
           "additionalProperties": false,
           "properties": {
             "path": {
-              "default": "/docs",
+              "default": "/",
               "title": "path",
               "type": "string"
             },
             "port": {
-              "default": 8081,
+              "default": 80,
               "title": "port",
               "type": "integer"
             }
@@ -344,7 +319,7 @@
           "type": "object"
         },
         "initialDelaySeconds": {
-          "default": 30,
+          "default": 10,
           "title": "initialDelaySeconds",
           "type": "integer"
         },
@@ -383,14 +358,14 @@
     },
     "podAnnotations": {
       "additionalProperties": false,
-      "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+      "description": "This is for setting Kubernetes Annotations to a Pod.",
       "required": [],
       "title": "podAnnotations",
       "type": "object"
     },
     "podLabels": {
       "additionalProperties": false,
-      "description": "This is for setting Kubernetes Labels to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+      "description": "This is for setting Kubernetes Labels to a Pod.",
       "required": [],
       "title": "podLabels",
       "type": "object"
@@ -427,7 +402,7 @@
     },
     "readinessProbe": {
       "additionalProperties": false,
-      "description": "This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "description": "This is to setup the readiness probes",
       "properties": {
         "failureThreshold": {
           "default": 3,
@@ -438,12 +413,12 @@
           "additionalProperties": false,
           "properties": {
             "path": {
-              "default": "/docs",
+              "default": "/",
               "title": "path",
               "type": "string"
             },
             "port": {
-              "default": 8081,
+              "default": 80,
               "title": "port",
               "type": "integer"
             }
@@ -456,7 +431,7 @@
           "type": "object"
         },
         "initialDelaySeconds": {
-          "default": 10,
+          "default": 5,
           "title": "initialDelaySeconds",
           "type": "integer"
         },
@@ -492,7 +467,6 @@
       "properties": {
         "requests": {
           "additionalProperties": false,
-          "description": "limits:\n cpu: 200m\n memory: 512Mi",
           "properties": {
             "cpu": {
               "default": "100m",
@@ -500,7 +474,7 @@
               "type": "string"
             },
             "memory": {
-              "default": "512Mi",
+              "default": "128Mi",
               "title": "memory",
               "type": "string"
             }
@@ -519,71 +493,21 @@
       "title": "resources",
       "type": "object"
     },
-    "roleMapping": {
+    "secrets": {
       "additionalProperties": false,
-      "description": "Role mappings for the auth proxy.",
+      "description": "Secret data to be used as environment variables",
       "properties": {
-        "/actuator": {
-          "items": {
-            "required": []
-          },
-          "title": "/actuator",
-          "type": "array"
-        },
-        "/auth": {
-          "description": "public paths",
-          "items": {
-            "required": []
-          },
-          "title": "/auth",
-          "type": "array"
-        },
-        "/docs": {
-          "items": {
-            "required": []
-          },
-          "title": "/docs",
-          "type": "array"
-        },
-        "/health": {
-          "items": {
-            "required": []
-          },
-          "title": "/health",
-          "type": "array"
-        },
-        "/public": {
-          "items": {
-            "required": []
-          },
-          "title": "/public",
-          "type": "array"
-        },
-        "/swagger-ui": {
-          "items": {
-            "required": []
-          },
-          "title": "/swagger-ui",
-          "type": "array"
-        },
-        "/v3/api-docs": {
-          "items": {
-            "required": []
-          },
-          "title": "/v3/api-docs",
-          "type": "array"
+        "data": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "data",
+          "type": "object"
         }
       },
       "required": [
-        "/auth",
-        "/public",
-        "/docs",
-        "/swagger-ui",
-        "/v3/api-docs",
-        "/health",
-        "/actuator"
+        "data"
       ],
-      "title": "roleMapping",
+      "title": "secrets",
       "type": "object"
     },
     "securityContext": {
@@ -597,14 +521,14 @@
       "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
       "properties": {
         "port": {
-          "default": 8081,
-          "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports",
+          "default": 80,
+          "description": "This sets the ports",
           "title": "port",
           "type": "integer"
         },
         "type": {
           "default": "ClusterIP",
-          "description": "This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types",
+          "description": "This sets the service type",
           "title": "type",
           "type": "string"
         }
@@ -634,7 +558,7 @@
           "type": "boolean"
         },
         "create": {
-          "default": true,
+          "default": false,
           "description": "Specifies whether a service account should be created",
           "title": "create",
           "type": "boolean"
@@ -704,7 +628,8 @@
     "tolerations",
     "affinity",
     "env",
-    "roleMapping"
+    "secrets",
+    "application"
   ],
   "type": "object"
 }

@@ -46,19 +46,22 @@ repo-search: repo-update
 
 ## Labs64.IO Components ##
 
-# Generate Helm chart docu
+# Install required Helm plugins
+helm-tools:
+    @helm plugin install --verify=false https://github.com/dadav/helm-schema 2>/dev/null || true
+    @echo "Installed Helm plugins:"
+    @helm plugin list
+
+# Generate Helm chart documentation (README.md) for all charts
 generate-docu:
-    docker run --rm --volume "$(pwd):/helm-docs" -u $(id -u) jnorwood/helm-docs:latest
+    docker run --rm --volume "$(pwd):/helm-docs" --user "$(id -u):$(id -g)" jnorwood/helm-docs:latest --chart-search-root ./charts --log-level warning
 
 # Generate Helm values schema
-generate-schema:
-    helm schema -input charts/gateway/values.yaml -output charts/gateway/values.schema.json
-    helm schema -input charts/traefik-authproxy/values.yaml -output charts/traefik-authproxy/values.schema.json
-    helm schema -input charts/auditflow/values.yaml -output charts/auditflow/values.schema.json
-    helm schema -input charts/checkout/values.yaml -output charts/checkout/values.schema.json
-    helm schema -input charts/checkout-ui/values.yaml -output charts/checkout-ui/values.schema.json
-    helm schema -input charts/payment-gateway/values.yaml -output charts/payment-gateway/values.schema.json
-    helm schema -input charts/customer-portal-ui/values.yaml -output charts/customer-portal-ui/values.schema.json
+generate-schema: helm-tools
+    helm schema --chart-search-root ./charts --no-dependencies --append-newline
+
+# Generate all — Helm charts docs and schema
+generate-all: generate-docu generate-schema
 
 # install Labs64.IO :: API Gateway
 labs64io-traefik-authproxy-install:

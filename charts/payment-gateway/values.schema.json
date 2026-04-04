@@ -8,6 +8,140 @@
       "title": "affinity",
       "type": "object"
     },
+    "applicationYaml": {
+      "additionalProperties": false,
+      "description": "Additional application properties",
+      "properties": {
+        "spring": {
+          "additionalProperties": false,
+          "description": "Spring configuration",
+          "properties": {
+            "data": {
+              "additionalProperties": false,
+              "description": "Redis connection params",
+              "properties": {
+                "redis": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "host": {
+                      "default": "redis-master.default.svc.cluster.local",
+                      "description": "Redis host; default: redis-master.\u003cnamespace\u003e.svc.cluster.local",
+                      "title": "host",
+                      "type": "string"
+                    },
+                    "password": {
+                      "default": "\u003cTODO\u003e",
+                      "description": "Redis password",
+                      "title": "password",
+                      "type": "string"
+                    },
+                    "port": {
+                      "default": 6379,
+                      "description": "Redis port; default: 6379",
+                      "title": "port",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "host",
+                    "port",
+                    "password"
+                  ],
+                  "title": "redis",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "redis"
+              ],
+              "title": "data",
+              "type": "object"
+            },
+            "datasource": {
+              "additionalProperties": false,
+              "description": "PostgreSQL connection params",
+              "properties": {
+                "password": {
+                  "default": "\u003cTODO\u003e",
+                  "description": "PostgreSQL password",
+                  "title": "password",
+                  "type": "string"
+                },
+                "url": {
+                  "default": "jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/payment_gateway",
+                  "description": "JDBC connection URL to PostgreSQL",
+                  "title": "url",
+                  "type": "string"
+                },
+                "username": {
+                  "default": "\u003cTODO\u003e",
+                  "description": "PostgreSQL username",
+                  "title": "username",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url",
+                "username",
+                "password"
+              ],
+              "title": "datasource",
+              "type": "object"
+            },
+            "rabbitmq": {
+              "additionalProperties": false,
+              "description": "RabbitMQ connection params",
+              "properties": {
+                "host": {
+                  "default": "rabbitmq.default.svc.cluster.local",
+                  "description": "RabbitMQ host name; default: rabbitmq.\u003cnamespace\u003e.svc.cluster.local",
+                  "title": "host",
+                  "type": "string"
+                },
+                "password": {
+                  "default": "\u003cTODO\u003e",
+                  "description": "RabbitMQ password",
+                  "title": "password",
+                  "type": "string"
+                },
+                "port": {
+                  "default": 5672,
+                  "description": "RabbitMQ port; default: 5672",
+                  "title": "port",
+                  "type": "integer"
+                },
+                "username": {
+                  "default": "\u003cTODO\u003e",
+                  "description": "RabbitMQ username",
+                  "title": "username",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host",
+                "port",
+                "username",
+                "password"
+              ],
+              "title": "rabbitmq",
+              "type": "object"
+            }
+          },
+          "required": [
+            "rabbitmq",
+            "datasource",
+            "data"
+          ],
+          "title": "spring",
+          "type": "object"
+        }
+      },
+      "required": [
+        "spring"
+      ],
+      "title": "applicationYaml",
+      "type": "object"
+    },
     "autoscaling": {
       "additionalProperties": false,
       "description": "This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/",
@@ -44,88 +178,6 @@
     },
     "env": {
       "items": {
-        "anyOf": [
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "OIDC_DISCOVERY_URL",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "OIDC_AUDIENCE",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "account",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "ROLE_MAPPING_FILE",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "/opt/application-config/role_mapping.yaml",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "LOG_LEVEL",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "INFO",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          }
-        ],
         "required": []
       },
       "title": "env",
@@ -153,7 +205,7 @@
           "type": "string"
         },
         "repository": {
-          "default": "labs64/traefik-authproxy",
+          "default": "labs64/payment-gateway",
           "title": "repository",
           "type": "string"
         },
@@ -326,12 +378,12 @@
           "additionalProperties": false,
           "properties": {
             "path": {
-              "default": "/docs",
+              "default": "/actuator/health/liveness",
               "title": "path",
               "type": "string"
             },
             "port": {
-              "default": 8081,
+              "default": 8080,
               "title": "port",
               "type": "integer"
             }
@@ -438,12 +490,12 @@
           "additionalProperties": false,
           "properties": {
             "path": {
-              "default": "/docs",
+              "default": "/actuator/health/readiness",
               "title": "path",
               "type": "string"
             },
             "port": {
-              "default": 8081,
+              "default": 8080,
               "title": "port",
               "type": "integer"
             }
@@ -519,71 +571,21 @@
       "title": "resources",
       "type": "object"
     },
-    "roleMapping": {
+    "secrets": {
       "additionalProperties": false,
-      "description": "Role mappings for the auth proxy.",
+      "description": "Secret data to be used as environment variables",
       "properties": {
-        "/actuator": {
-          "items": {
-            "required": []
-          },
-          "title": "/actuator",
-          "type": "array"
-        },
-        "/auth": {
-          "description": "public paths",
-          "items": {
-            "required": []
-          },
-          "title": "/auth",
-          "type": "array"
-        },
-        "/docs": {
-          "items": {
-            "required": []
-          },
-          "title": "/docs",
-          "type": "array"
-        },
-        "/health": {
-          "items": {
-            "required": []
-          },
-          "title": "/health",
-          "type": "array"
-        },
-        "/public": {
-          "items": {
-            "required": []
-          },
-          "title": "/public",
-          "type": "array"
-        },
-        "/swagger-ui": {
-          "items": {
-            "required": []
-          },
-          "title": "/swagger-ui",
-          "type": "array"
-        },
-        "/v3/api-docs": {
-          "items": {
-            "required": []
-          },
-          "title": "/v3/api-docs",
-          "type": "array"
+        "data": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "data",
+          "type": "object"
         }
       },
       "required": [
-        "/auth",
-        "/public",
-        "/docs",
-        "/swagger-ui",
-        "/v3/api-docs",
-        "/health",
-        "/actuator"
+        "data"
       ],
-      "title": "roleMapping",
+      "title": "secrets",
       "type": "object"
     },
     "securityContext": {
@@ -597,7 +599,7 @@
       "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
       "properties": {
         "port": {
-          "default": 8081,
+          "default": 8080,
           "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports",
           "title": "port",
           "type": "integer"
@@ -704,7 +706,8 @@
     "tolerations",
     "affinity",
     "env",
-    "roleMapping"
+    "secrets",
+    "applicationYaml"
   ],
   "type": "object"
 }
