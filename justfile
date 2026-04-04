@@ -4,6 +4,7 @@ NAMESPACE_INGRESS := "ingress-nginx"
 NAMESPACE_KUBE_SYSTEM := "kube-system"
 NAMESPACE_MONITORING := "monitoring"
 NAMESPACE_TOOLS := "tools"
+HELM_DOCS_VERSION := "v1.14.2"
 
 ## Useful Commands ##
 
@@ -22,7 +23,6 @@ kubectl-pods:
 # show persistent volumes and claims in all namespaces
 kubectl-pv:
     kubectl get pv,pvc --all-namespaces -o wide
-
 
 # add external helm repositories
 repo-add:
@@ -54,11 +54,19 @@ helm-tools:
 
 # Generate Helm chart documentation (README.md) for all charts
 generate-docu:
-    docker run --rm --volume "$(pwd):/helm-docs" --user "$(id -u):$(id -g)" jnorwood/helm-docs:latest --chart-search-root ./charts --log-level warning
+    docker run --rm \
+        --volume "$(pwd):/helm-docs" \
+        --user "$(id -u):$(id -g)" \
+        jnorwood/helm-docs:{{ HELM_DOCS_VERSION }} \
+        --chart-search-root ./charts \
+        --log-level warning
 
-# Generate Helm values schema
+# Generate Helm values schema (values.schema.json) for all charts
 generate-schema: helm-tools
-    helm schema --chart-search-root ./charts --no-dependencies --append-newline
+    helm schema \
+        --chart-search-root ./charts \
+        --no-dependencies \
+        --append-newline
 
 # Generate all — Helm charts docs and schema
 generate-all: generate-docu generate-schema
@@ -75,7 +83,7 @@ labs64io-traefik-authproxy-install:
 labs64io-traefik-authproxy-uninstall:
     helm uninstall labs64io-traefik-authproxy --namespace {{NAMESPACE_LABS64IO}}
 
-# install Swagger UI
+# install Labs64.IO :: Swagger UI / Gateway
 labs64io-gateway-install:
     helm dependencies update ./charts/gateway
     helm upgrade --install labs64io-gateway ./charts/gateway \
@@ -83,7 +91,7 @@ labs64io-gateway-install:
       -f ./charts/gateway/values.yaml \
       -f ./overrides/gateway/values.{{ENV}}.yaml
 
-# uninstall Swagger UI
+# uninstall Labs64.IO :: Swagger UI / Gateway
 labs64io-gateway-uninstall:
     helm uninstall labs64io-gateway --namespace {{NAMESPACE_LABS64IO}}
 
@@ -112,7 +120,7 @@ labs64io-checkout-install:
 labs64io-checkout-uninstall:
     helm uninstall labs64io-checkout --namespace {{NAMESPACE_LABS64IO}}
 
-# install Labs64.IO :: Checkout  UI
+# install Labs64.IO :: Checkout UI
 labs64io-checkout-ui-install:
     helm dependencies update ./charts/checkout-ui
     helm upgrade --install labs64io-checkout-ui ./charts/checkout-ui \
@@ -120,7 +128,7 @@ labs64io-checkout-ui-install:
       -f ./charts/checkout-ui/values.yaml \
       -f ./overrides/checkout-ui/values.{{ENV}}.yaml
 
-# uninstall Labs64.IO :: Checkout
+# uninstall Labs64.IO :: Checkout UI
 labs64io-checkout-ui-uninstall:
     helm uninstall labs64io-checkout-ui --namespace {{NAMESPACE_LABS64IO}}
 
@@ -148,7 +156,6 @@ labs64io-customer-portal-ui-install:
 labs64io-customer-portal-ui-uninstall:
     helm uninstall labs64io-customer-portal-ui --namespace {{NAMESPACE_LABS64IO}}
 
-
 # install Labs64.IO :: all components
 labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install labs64io-checkout-ui-install labs64io-payment-gateway-install labs64io-customer-portal-ui-install
 
@@ -157,7 +164,7 @@ labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-un
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
-    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED'
+    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
 
 # Labs64.IO :: Documentation
 labs64io-documentation:
@@ -170,7 +177,10 @@ labs64io-documentation:
 metrics-server-install: repo-update
     helm search repo metrics-server/metrics-server
     helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
-    helm upgrade --install metrics-server metrics-server/metrics-server -f overrides/metrics-server/values.{{ENV}}.yaml --namespace {{NAMESPACE_KUBE_SYSTEM}} --set args="{--kubelet-insecure-tls}"
+    helm upgrade --install metrics-server metrics-server/metrics-server \
+      -f overrides/metrics-server/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_KUBE_SYSTEM}} \
+      --set args="{--kubelet-insecure-tls}"
 
 # uninstall Metrics Server
 metrics-server-uninstall:
@@ -194,17 +204,16 @@ traefik-dashboard:
 # uninstall Traefik
 traefik-uninstall:
     helm uninstall traefik --namespace {{NAMESPACE_TOOLS}} || true
-    helm uninstall traefik-crds –namespace {{NAMESPACE_TOOLS}} || true
-    #kubectl delete crd $(kubectl get crd | grep traefik | awk '{print $1}')
+    helm uninstall traefik-crds --namespace {{NAMESPACE_TOOLS}} || true
 
 # install RabbitMQ
 rabbitmq-install: repo-update
     helm search repo bitnami/rabbitmq
     helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
     helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    echo "Username      : labs64"
-    echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
-    echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
+    @echo "Username      : labs64"
+    @echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
+    @echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
 
 # uninstall RabbitMQ
 rabbitmq-uninstall:
@@ -217,9 +226,9 @@ postgresql-install: repo-update
     helm upgrade --install postgresql bitnami/postgresql \
       -f overrides/postgresql/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
-    echo "postgres password : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgres-password}" | base64 -d 2>/dev/null || kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgresql-password}" | base64 -d)"
-    echo "user password     : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || true)"
+    @echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
+    @echo "postgres password : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgres-password}" | base64 -d 2>/dev/null || kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgresql-password}" | base64 -d)"
+    @echo "user password     : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || true)"
 
 # uninstall PostgreSQL
 postgresql-uninstall:
@@ -255,8 +264,12 @@ opentelemetry-install: repo-update
     helm search repo open-telemetry
     helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
     helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
-    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator -f overrides/opentelemetry/values-operator.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
-    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector -f overrides/opentelemetry/values-collector.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
+    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
+      -f overrides/opentelemetry/values-operator.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
+    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector \
+      -f overrides/opentelemetry/values-collector.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
 
 # uninstall Open Telemetry
 opentelemetry-uninstall:
@@ -267,38 +280,44 @@ opentelemetry-uninstall:
 prometheus-install: repo-update
     helm search repo prometheus-community
     helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
-    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack -f overrides/prometheus/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+      -f overrides/prometheus/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
 
 # uninstall Prometheus
 prometheus-uninstall:
     helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}}
 
-# install tempo
+# install Tempo
 tempo-install: repo-update
     helm search repo grafana/tempo
     helm show values grafana/tempo > overrides/tempo/values.orig.yaml
-    helm upgrade --install tempo grafana/tempo -f overrides/tempo/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helm upgrade --install tempo grafana/tempo \
+      -f overrides/tempo/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
-# uninstall tempo
+# uninstall Tempo
 tempo-uninstall:
     helm uninstall tempo --namespace {{NAMESPACE_MONITORING}}
 
-# install grafana
+# install Grafana
 grafana-install: repo-update
     helm search repo grafana/grafana
     helm show values grafana/grafana > overrides/grafana/values.orig.yaml
-    helm upgrade --install grafana grafana/grafana -f overrides/grafana/values.{{ENV}}.yaml --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
-    echo "Username: admin"
-    echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+    helm upgrade --install grafana grafana/grafana \
+      -f overrides/grafana/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    @echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
+    @echo "Username: admin"
+    @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
-# retrieve grafana password
+# retrieve Grafana password
 grafana-password:
-    echo "Username: admin"
-    echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+    @echo "Username: admin"
+    @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
-# uninstall grafana
+# uninstall Grafana
 grafana-uninstall:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
 
@@ -309,7 +328,9 @@ grafana-uninstall:
 ingress-install: repo-update
     helm search repo ingress-nginx/ingress-nginx
     helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
-    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx -f overrides/ingress-nginx/values.{{ENV}}.yaml --namespace {{NAMESPACE_INGRESS}} --create-namespace
+    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+      -f overrides/ingress-nginx/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_INGRESS}} --create-namespace
 
 # uninstall Ingress controller
 ingress-uninstall:
