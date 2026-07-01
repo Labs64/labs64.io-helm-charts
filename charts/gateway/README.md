@@ -28,17 +28,21 @@ Labs64.IO :: API Gateway
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
+| chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
+| global | object | `{"domain":"localhost"}` | Global values shared across Labs64.IO charts |
+| global.domain | string | `"localhost"` | Base domain; the gateway is exposed as gateway.<domain> |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"swaggerapi/swagger-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ingress | object | `{"annotations":{},"className":"nginx","enabled":false,"hosts":[{"host":"localhost","paths":[{"path":"/","pathType":"Prefix"}]}],"tls":[]}` | This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/ |
-| ingressroute | object | `{"enabled":true,"entryPoints":["web","websecure"],"host":"gateway.localhost","routes":[]}` | IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/ |
+| ingressroute | object | `{"enabled":true,"entryPoints":["web","websecure"],"host":"gateway.localhost","middlewares":[],"routes":[]}` | IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/ |
 | ingressroute.enabled | bool | `true` | This sets whether the IngressRoute is enabled or not |
 | ingressroute.entryPoints | list | `["web","websecure"]` | Entry points for the IngressRoute |
-| ingressroute.host | string | `"gateway.localhost"` | Host for the IngressRoute |
+| ingressroute.host | string | `"gateway.localhost"` | DEPRECATED: the host is derived as gateway.<global.domain>; this value is ignored |
+| ingressroute.middlewares | list | `[]` | Middlewares owned by this chart (rendered by templates/middleware.yaml) @schema type: array @schema |
 | ingressroute.routes | list | `[]` | IngressRoute routes definitions |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |

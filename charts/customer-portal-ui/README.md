@@ -34,8 +34,16 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | application.runtimeEnv.path | string | `"/usr/share/nginx/html/config/env.json"` | Absolute path in the container where env.json is mounted and served from. |
 | application.runtimeEnv.strict | bool | `true` | Strict mode: if true, the container must not start when env.json is missing/invalid. |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling |
+| chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
+| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"/customer-portal","routes":[{"path":"","port":80,"roles":["admin-role","default-roles-labs64io"]}],"sharedMiddlewares":{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
+| gateway.entryPoints | list | `["web","websecure"]` | Traefik entry points |
+| gateway.prefix | string | `"/customer-portal"` | External path prefix; customer-portal-ui serves under /customer-portal |
+| gateway.routes | list | `[{"path":"","port":80,"roles":["admin-role","default-roles-labs64io"]}]` | Routes exposed by this module |
+| gateway.routes[0] | object | `{"path":"","port":80,"roles":["admin-role","default-roles-labs64io"]}` | Customer Portal UI (protected) |
+| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}` | Names of the shared middlewares provided by the gateway-common chart |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/customer-portal-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
@@ -47,8 +55,12 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | ingressroute.host | string | `"localhost"` | Host for the IngressRoute |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":80},"initialDelaySeconds":10,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes |
 | nameOverride | string | `""` | This is to override the chart name. |
+| networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
+| networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. |
+| podDisruptionBudget | object | `{"enabled":false,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. |
 | podSecurityContext | object | `{}` |  |
 | rbac.create | bool | `false` |  |
