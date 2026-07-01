@@ -8,7 +8,7 @@ spec:
     {{- toYaml .Values.ingressroute.entryPoints | nindent 4 }}
   routes:
     {{- range $route := .Values.ingressroute.routes }}
-    - match: Host(`{{ $.Values.ingressroute.host }}`) && PathPrefix(`{{ $route.path }}`)
+    - match: Host(`{{ include "chart-libs.gatewayHost" $ }}`) && PathPrefix(`{{ $route.path }}`)
       kind: Rule
       services:
         - name: {{ $route.service.name }}

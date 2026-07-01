@@ -1,3 +1,8 @@
+# -- Global values shared across Labs64.IO charts
+global:
+  # -- Base domain; the gateway is exposed as gateway.<domain>
+  domain: localhost
+
 # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
@@ -81,7 +86,7 @@ ingress:
 ingressroute:
   # -- This sets whether the IngressRoute is enabled or not
   enabled: true
-  # -- Host for the IngressRoute
+  # -- DEPRECATED: the host is derived as gateway.<global.domain>; this value is ignored
   host: gateway.localhost
   # -- Entry points for the IngressRoute
   entryPoints:
@@ -95,16 +100,17 @@ ingressroute:
   #      port: 8080
   #    middleware:
   #      name: <gateway-service-name>-path-stripper
-  # -- Middleware configuration for the IngressRoute
-  #middlewareSpec:
-  # -- Middleware name suffix
-  #name: "path-stripper"
-  # -- Middleware specification
-  #spec:
-  #  stripPrefix:
-  #    prefixes:
-  #      - /<prefix1>
-  #      - /<prefix2>
+  # -- Middlewares owned by this chart (rendered by templates/middleware.yaml)
+  # @schema
+  # type: array
+  # @schema
+  middlewares: []
+  #  - name: path-stripper
+  #    spec:
+  #      stripPrefix:
+  #        prefixes:
+  #          - /<prefix1>
+  #          - /<prefix2>
 
 resources:
   #limits:
