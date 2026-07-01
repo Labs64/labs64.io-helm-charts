@@ -173,3 +173,10 @@ roleMapping:
   #  - <role-name-2>
   #/<path-2>:
   #  - <role-name-2>
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}

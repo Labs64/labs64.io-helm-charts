@@ -34,3 +34,10 @@ securityHeaders:
   forceSTSHeader: true
   stsSeconds: 31536000
   stsIncludeSubdomains: true
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}

@@ -42,6 +42,13 @@
       "title": "autoscaling",
       "type": "object"
     },
+    "chart-libs": {
+      "additionalProperties": true,
+      "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
+      "required": [],
+      "title": "chart-libs",
+      "type": "object"
+    },
     "env": {
       "items": {
         "anyOf": [
