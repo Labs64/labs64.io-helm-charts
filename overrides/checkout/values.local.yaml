@@ -26,3 +26,9 @@ applicationYaml:
       username: labs64
       # -- PostgreSQL password
       password: labs64pw
+
+gateway:
+  enabled: true
+
+networkPolicy:
+  enabled: true

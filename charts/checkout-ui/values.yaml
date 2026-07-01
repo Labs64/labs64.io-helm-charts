@@ -175,3 +175,47 @@ application:
     env:
       # -- Primary API base URL — replace <HOST> with your domain/host.
       VITE_API_URL: https://<HOST>/api/v1/checkout
+
+# -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
+gateway:
+  # -- Publish this module's routes on the Traefik gateway
+  enabled: false
+  # -- External path prefix; checkout-ui serves under /checkout
+  prefix: "/checkout"
+  # -- Traefik entry points
+  entryPoints:
+    - web
+    - websecure
+  # -- Names of the shared middlewares provided by the gateway-common chart
+  sharedMiddlewares:
+    auth: gateway-common-auth
+    rateLimit: gateway-common-ratelimit
+    securityHeaders: gateway-common-security-headers
+  # -- Routes exposed by this module
+  routes:
+    # -- Checkout UI (protected)
+    - path: ""
+      port: 80
+      roles:
+        - admin-role
+        - ecommerce-role
+        - default-roles-labs64io
+# -- PodDisruptionBudget (rendered by chart-libs.pdb)
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# -- NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)
+networkPolicy:
+  enabled: false
+  # -- Namespace where Traefik runs
+  gatewayNamespace: tools
+  # -- Additional raw ingress rules
+  extraIngress: []
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}

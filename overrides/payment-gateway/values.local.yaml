@@ -36,3 +36,9 @@ applicationYaml:
         port: 6379
         # -- Redis password
         password: labs64pw
+
+gateway:
+  enabled: true
+
+networkPolicy:
+  enabled: true

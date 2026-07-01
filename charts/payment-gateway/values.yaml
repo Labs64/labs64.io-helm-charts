@@ -183,3 +183,52 @@ applicationYaml:
         # -- Redis password
         password: <TODO>
 
+
+# -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
+gateway:
+  # -- Publish this module's routes on the Traefik gateway
+  enabled: false
+  # -- External path prefix; defaults to /<chart-name>
+  prefix: ""
+  # -- Traefik entry points
+  entryPoints:
+    - web
+    - websecure
+  # -- Names of the shared middlewares provided by the gateway-common chart
+  sharedMiddlewares:
+    auth: gateway-common-auth
+    rateLimit: gateway-common-ratelimit
+    securityHeaders: gateway-common-security-headers
+  # -- Routes exposed by this module
+  routes:
+    # -- Payment Gateway API (protected)
+    - path: /api
+      port: 8080
+      roles:
+        - admin-role
+        - ecommerce-role
+        - default-roles-labs64io
+    # -- OpenAPI docs (public, prefix stripped before forwarding)
+    - path: /v3/api-docs
+      port: 8080
+      public: true
+      stripPrefix: true
+# -- PodDisruptionBudget (rendered by chart-libs.pdb)
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# -- NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)
+networkPolicy:
+  enabled: false
+  # -- Namespace where Traefik runs
+  gatewayNamespace: tools
+  # -- Additional raw ingress rules
+  extraIngress: []
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}
