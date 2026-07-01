@@ -1,0 +1,36 @@
+# -- Fixed resource-name prefix so module charts can reference middlewares by a stable name
+fullnameOverride: gateway-common
+
+# -- This is to override the chart name.
+nameOverride: ""
+
+# -- ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy)
+authProxy:
+  # -- Cluster-internal address of the traefik-authproxy /auth endpoint
+  address: http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth
+  # -- Trust X-Forwarded-* headers from the proxy
+  trustForwardHeader: true
+  # -- Identity headers copied from the authproxy response onto the upstream request
+  authResponseHeaders:
+    - X-Auth-User
+    - X-Auth-Roles
+
+# -- Rate limit middleware configuration
+rateLimit:
+  # -- Average requests per second
+  average: 100
+  # -- Burst size
+  burst: 50
+  # -- Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent
+  perUser: true
+
+# -- Security headers middleware configuration
+securityHeaders:
+  frameDeny: true
+  contentTypeNosniff: true
+  browserXssFilter: true
+  referrerPolicy: "strict-origin-when-cross-origin"
+  contentSecurityPolicy: "default-src 'self'; script-src 'self'; object-src 'none'"
+  forceSTSHeader: true
+  stsSeconds: 31536000
+  stsIncludeSubdomains: true

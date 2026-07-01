@@ -1,0 +1,37 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-auth
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+spec:
+  forwardAuth:
+    address: {{ .Values.authProxy.address | quote }}
+    trustForwardHeader: {{ .Values.authProxy.trustForwardHeader }}
+    authResponseHeaders:
+      {{- toYaml .Values.authProxy.authResponseHeaders | nindent 6 }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-ratelimit
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+spec:
+  rateLimit:
+    average: {{ .Values.rateLimit.average }}
+    burst: {{ .Values.rateLimit.burst }}
+    {{- if .Values.rateLimit.perUser }}
+    sourceCriterion:
+      requestHeaderName: X-Auth-User
+    {{- end }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-security-headers
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+spec:
+  headers:
+    {{- toYaml .Values.securityHeaders | nindent 4 }}
