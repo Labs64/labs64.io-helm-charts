@@ -348,8 +348,29 @@
       "type": "object"
     },
     "global": {
-      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
-      "required": [],
+      "additionalProperties": true,
+      "description": "Global values shared across Labs64.IO charts and Bitnami subcharts",
+      "properties": {
+        "security": {
+          "additionalProperties": false,
+          "properties": {
+            "allowInsecureImages": {
+              "default": true,
+              "description": "Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard)",
+              "title": "allowInsecureImages",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowInsecureImages"
+          ],
+          "title": "security",
+          "type": "object"
+        }
+      },
+      "required": [
+        "security"
+      ],
       "title": "global",
       "type": "object"
     },
@@ -701,6 +722,22 @@
           "default": false,
           "title": "enabled",
           "type": "boolean"
+        },
+        "image": {
+          "additionalProperties": true,
+          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
+          "properties": {
+            "repository": {
+              "default": "bitnamilegacy/postgresql",
+              "title": "repository",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository"
+          ],
+          "title": "image",
+          "type": "object"
         }
       },
       "required": [
@@ -738,6 +775,22 @@
           "default": false,
           "title": "enabled",
           "type": "boolean"
+        },
+        "image": {
+          "additionalProperties": true,
+          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
+          "properties": {
+            "repository": {
+              "default": "bitnamilegacy/rabbitmq",
+              "title": "repository",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository"
+          ],
+          "title": "image",
+          "type": "object"
         }
       },
       "required": [
@@ -854,6 +907,22 @@
           "default": false,
           "title": "enabled",
           "type": "boolean"
+        },
+        "image": {
+          "additionalProperties": true,
+          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
+          "properties": {
+            "repository": {
+              "default": "bitnamilegacy/redis",
+              "title": "repository",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository"
+          ],
+          "title": "image",
+          "type": "object"
         }
       },
       "required": [

@@ -1,3 +1,13 @@
+# -- Global values shared across Labs64.IO charts and Bitnami subcharts
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+global:
+  security:
+    # -- Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard)
+    allowInsecureImages: true
+
 # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
@@ -157,6 +167,13 @@ secrets:
 # @schema
 rabbitmq:
   enabled: false
+  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    repository: bitnamilegacy/rabbitmq
   # @schema
   # type: object
   # additionalProperties: true
@@ -173,6 +190,13 @@ rabbitmq:
 # @schema
 postgresql:
   enabled: false
+  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    repository: bitnamilegacy/postgresql
   # @schema
   # type: object
   # additionalProperties: true
