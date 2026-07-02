@@ -7,8 +7,8 @@
       "description": "ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy)",
       "properties": {
         "address": {
-          "default": "http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth",
-          "description": "Cluster-internal address of the traefik-authproxy /auth endpoint",
+          "default": "",
+          "description": "Full URL override for the traefik-authproxy /auth endpoint; when empty the address is derived as http://\u003cserviceName\u003e.\u003crelease-namespace\u003e.svc.cluster.local:\u003cport\u003e/auth",
           "title": "address",
           "type": "string"
         },
@@ -28,6 +28,18 @@
           "title": "authResponseHeaders",
           "type": "array"
         },
+        "port": {
+          "default": 8081,
+          "description": "Service port of the traefik-authproxy release",
+          "title": "port",
+          "type": "integer"
+        },
+        "serviceName": {
+          "default": "labs64io-traefik-authproxy",
+          "description": "Service name of the traefik-authproxy release",
+          "title": "serviceName",
+          "type": "string"
+        },
         "trustForwardHeader": {
           "default": true,
           "description": "Trust X-Forwarded-* headers from the proxy",
@@ -37,6 +49,8 @@
       },
       "required": [
         "address",
+        "serviceName",
+        "port",
         "trustForwardHeader",
         "authResponseHeaders"
       ],
