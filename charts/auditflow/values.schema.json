@@ -985,18 +985,15 @@
     },
     "secrets": {
       "additionalProperties": false,
-      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply broker credentials here, e.g.\n  SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD.\nWhen rabbitmq.enabled=true the chart adds these keys automatically from rabbitmq.auth.\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
+      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply broker credentials here, e.g.\n  SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD.\nWhen rabbitmq.enabled=true the chart adds these keys automatically from rabbitmq.auth.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
       "properties": {
         "data": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "required": [],
-          "title": "data",
           "type": "object"
         }
       },
-      "required": [
-        "data"
-      ],
+      "required": [],
       "title": "secrets",
       "type": "object"
     },
@@ -1292,7 +1289,6 @@
     "tolerations",
     "affinity",
     "env",
-    "secrets",
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",

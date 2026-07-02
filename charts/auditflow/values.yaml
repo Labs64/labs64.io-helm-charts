@@ -216,7 +216,15 @@ env: []
 # External installs supply broker credentials here, e.g.
 #   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD.
 # When rabbitmq.enabled=true the chart adds these keys automatically from rabbitmq.auth.
+# Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).
 # Note: the Secret is hook-managed (pre-install) and survives helm uninstall.
+# @schema
+# type: object
+# properties:
+#   data:
+#     type: object
+#     additionalProperties: true
+# @schema
 secrets:
   data: {}
 
