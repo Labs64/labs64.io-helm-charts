@@ -21,19 +21,19 @@
               "description": "PostgreSQL connection params",
               "properties": {
                 "password": {
-                  "default": "\u003cTODO\u003e",
+                  "default": "{{ ternary .Values.postgresql.auth.password \"\u003cTODO\u003e\" .Values.postgresql.enabled }}",
                   "description": "PostgreSQL password",
                   "title": "password",
                   "type": "string"
                 },
                 "url": {
-                  "default": "jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/checkout",
-                  "description": "JDBC connection URL to PostgreSQL",
+                  "default": "{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}",
+                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL",
                   "title": "url",
                   "type": "string"
                 },
                 "username": {
-                  "default": "\u003cTODO\u003e",
+                  "default": "{{ ternary .Values.postgresql.auth.username \"\u003cTODO\u003e\" .Values.postgresql.enabled }}",
                   "description": "PostgreSQL username",
                   "title": "username",
                   "type": "string"
@@ -52,13 +52,13 @@
               "description": "RabbitMQ connection params",
               "properties": {
                 "host": {
-                  "default": "rabbitmq.default.svc.cluster.local",
-                  "description": "RabbitMQ host name; default: rabbitmq.\u003cnamespace\u003e.svc.cluster.local",
+                  "default": "{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}",
+                  "description": "RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host",
                   "title": "host",
                   "type": "string"
                 },
                 "password": {
-                  "default": "\u003cTODO\u003e",
+                  "default": "{{ ternary .Values.rabbitmq.auth.password \"\u003cTODO\u003e\" .Values.rabbitmq.enabled }}",
                   "description": "RabbitMQ password",
                   "title": "password",
                   "type": "string"
@@ -70,7 +70,7 @@
                   "type": "integer"
                 },
                 "username": {
-                  "default": "\u003cTODO\u003e",
+                  "default": "{{ ternary .Values.rabbitmq.auth.username \"\u003cTODO\u003e\" .Values.rabbitmq.enabled }}",
                   "description": "RabbitMQ username",
                   "title": "username",
                   "type": "string"
@@ -624,6 +624,86 @@
       "title": "podSecurityContext",
       "type": "object"
     },
+    "postgresql": {
+      "additionalProperties": true,
+      "description": "Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own database instead.",
+      "properties": {
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "database": {
+              "default": "checkout",
+              "title": "database",
+              "type": "string"
+            },
+            "password": {
+              "default": "labs64-local",
+              "title": "password",
+              "type": "string"
+            },
+            "username": {
+              "default": "labs64",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "username",
+            "password",
+            "database"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "postgresql",
+      "type": "object"
+    },
+    "rabbitmq": {
+      "additionalProperties": true,
+      "description": "Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own broker instead.",
+      "properties": {
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "password": {
+              "default": "labs64-local",
+              "title": "password",
+              "type": "string"
+            },
+            "username": {
+              "default": "labs64",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "username",
+            "password"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "rabbitmq",
+      "type": "object"
+    },
     "rbac": {
       "additionalProperties": false,
       "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
@@ -828,6 +908,29 @@
       "title": "serviceAccount",
       "type": "object"
     },
+    "tests": {
+      "additionalProperties": false,
+      "description": "helm test hook (rendered by chart-libs.test-connection)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "healthPath": {
+          "default": "/actuator/health",
+          "description": "Health endpoint probed by `helm test`",
+          "title": "healthPath",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "healthPath"
+      ],
+      "title": "tests",
+      "type": "object"
+    },
     "tolerations": {
       "items": {
         "required": []
@@ -881,7 +984,8 @@
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",
-    "networkPolicy"
+    "networkPolicy",
+    "tests"
   ],
   "type": "object"
 }
