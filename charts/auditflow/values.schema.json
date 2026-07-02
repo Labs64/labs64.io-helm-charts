@@ -102,30 +102,16 @@
                   "title": "host",
                   "type": "string"
                 },
-                "password": {
-                  "default": "{{ ternary .Values.rabbitmq.auth.password \"\u003cTODO\u003e\" .Values.rabbitmq.enabled }}",
-                  "description": "RabbitMQ password",
-                  "title": "password",
-                  "type": "string"
-                },
                 "port": {
                   "default": 5672,
                   "description": "RabbitMQ port; default: 5672",
                   "title": "port",
                   "type": "integer"
-                },
-                "username": {
-                  "default": "{{ ternary .Values.rabbitmq.auth.username \"\u003cTODO\u003e\" .Values.rabbitmq.enabled }}",
-                  "description": "RabbitMQ username",
-                  "title": "username",
-                  "type": "string"
                 }
               },
               "required": [
                 "host",
-                "port",
-                "username",
-                "password"
+                "port"
               ],
               "title": "rabbitmq",
               "type": "object"
@@ -999,7 +985,7 @@
     },
     "secrets": {
       "additionalProperties": false,
-      "description": "Secret data to be used as environment variables",
+      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply broker credentials here, e.g.\n  SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD.\nWhen rabbitmq.enabled=true the chart adds these keys automatically from rabbitmq.auth.\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
       "properties": {
         "data": {
           "additionalProperties": false,

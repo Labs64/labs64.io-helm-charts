@@ -212,7 +212,11 @@ env: []
 #  - name: SPRING_PROFILES_ACTIVE
 #    value: "production"
 
-# -- Secret data to be used as environment variables
+# -- Secret data to be used as environment variables (delivered via envFrom).
+# External installs supply broker credentials here, e.g.
+#   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD.
+# When rabbitmq.enabled=true the chart adds these keys automatically from rabbitmq.auth.
+# Note: the Secret is hook-managed (pre-install) and survives helm uninstall.
 secrets:
   data: {}
 
@@ -286,10 +290,6 @@ applicationYaml:
       host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
       # -- RabbitMQ port; default: 5672
       port: 5672
-      # -- RabbitMQ username
-      username: '{{ ternary .Values.rabbitmq.auth.username "<TODO>" .Values.rabbitmq.enabled }}'
-      # -- RabbitMQ password
-      password: '{{ ternary .Values.rabbitmq.auth.password "<TODO>" .Values.rabbitmq.enabled }}'
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
