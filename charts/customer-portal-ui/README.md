@@ -79,6 +79,8 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `false` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| tests | object | `{"enabled":true,"healthPath":"/"}` | helm test hook (rendered by chart-libs.test-connection) |
+| tests.healthPath | string | `"/"` | Health endpoint probed by `helm test` |
 | tolerations | list | `[]` |  |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |

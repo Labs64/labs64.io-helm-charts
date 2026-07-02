@@ -22,27 +22,30 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | Repository | Name | Version |
 |------------|------|---------|
 | file://../chart-libs | chart-libs | 0.0.1 |
+| https://charts.bitnami.com/bitnami | postgresql | ^16.0.0 |
+| https://charts.bitnami.com/bitnami | rabbitmq | ^16.0.0 |
+| https://charts.bitnami.com/bitnami | redis | ^20.0.0 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"spring":{"data":{"redis":{"host":"redis-master.default.svc.cluster.local","password":"<TODO>","port":6379}},"datasource":{"password":"<TODO>","url":"jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/payment_gateway","username":"<TODO>"},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}}` | Additional application properties |
-| applicationYaml.spring | object | `{"data":{"redis":{"host":"redis-master.default.svc.cluster.local","password":"<TODO>","port":6379}},"datasource":{"password":"<TODO>","url":"jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/payment_gateway","username":"<TODO>"},"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
-| applicationYaml.spring.data | object | `{"redis":{"host":"redis-master.default.svc.cluster.local","password":"<TODO>","port":6379}}` | Redis connection params |
-| applicationYaml.spring.data.redis.host | string | `"redis-master.default.svc.cluster.local"` | Redis host; default: redis-master.<namespace>.svc.cluster.local |
-| applicationYaml.spring.data.redis.password | string | `"<TODO>"` | Redis password |
+| applicationYaml | object | `{"spring":{"data":{"redis":{"host":"{{ ternary (printf \"%s-redis-master\" .Release.Name) \"redis-master.tools.svc.cluster.local\" .Values.redis.enabled }}","password":"{{ ternary .Values.redis.auth.password \"<TODO>\" .Values.redis.enabled }}","port":6379}},"datasource":{"password":"{{ ternary .Values.postgresql.auth.password \"<TODO>\" .Values.postgresql.enabled }}","url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/payment_gateway\" .Values.postgresql.enabled }}","username":"{{ ternary .Values.postgresql.auth.username \"<TODO>\" .Values.postgresql.enabled }}"},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","password":"{{ ternary .Values.rabbitmq.auth.password \"<TODO>\" .Values.rabbitmq.enabled }}","port":5672,"username":"{{ ternary .Values.rabbitmq.auth.username \"<TODO>\" .Values.rabbitmq.enabled }}"}}}` | Additional application properties |
+| applicationYaml.spring | object | `{"data":{"redis":{"host":"{{ ternary (printf \"%s-redis-master\" .Release.Name) \"redis-master.tools.svc.cluster.local\" .Values.redis.enabled }}","password":"{{ ternary .Values.redis.auth.password \"<TODO>\" .Values.redis.enabled }}","port":6379}},"datasource":{"password":"{{ ternary .Values.postgresql.auth.password \"<TODO>\" .Values.postgresql.enabled }}","url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/payment_gateway\" .Values.postgresql.enabled }}","username":"{{ ternary .Values.postgresql.auth.username \"<TODO>\" .Values.postgresql.enabled }}"},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","password":"{{ ternary .Values.rabbitmq.auth.password \"<TODO>\" .Values.rabbitmq.enabled }}","port":5672,"username":"{{ ternary .Values.rabbitmq.auth.username \"<TODO>\" .Values.rabbitmq.enabled }}"}}` | Spring configuration |
+| applicationYaml.spring.data | object | `{"redis":{"host":"{{ ternary (printf \"%s-redis-master\" .Release.Name) \"redis-master.tools.svc.cluster.local\" .Values.redis.enabled }}","password":"{{ ternary .Values.redis.auth.password \"<TODO>\" .Values.redis.enabled }}","port":6379}}` | Redis connection params |
+| applicationYaml.spring.data.redis.host | string | `"{{ ternary (printf \"%s-redis-master\" .Release.Name) \"redis-master.tools.svc.cluster.local\" .Values.redis.enabled }}"` | Redis host; resolves to the bundled subchart when redis.enabled, else set your Redis host |
+| applicationYaml.spring.data.redis.password | string | `"{{ ternary .Values.redis.auth.password \"<TODO>\" .Values.redis.enabled }}"` | Redis password |
 | applicationYaml.spring.data.redis.port | int | `6379` | Redis port; default: 6379 |
-| applicationYaml.spring.datasource | object | `{"password":"<TODO>","url":"jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/payment_gateway","username":"<TODO>"}` | PostgreSQL connection params |
-| applicationYaml.spring.datasource.password | string | `"<TODO>"` | PostgreSQL password |
-| applicationYaml.spring.datasource.url | string | `"jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/payment_gateway"` | JDBC connection URL to PostgreSQL |
-| applicationYaml.spring.datasource.username | string | `"<TODO>"` | PostgreSQL username |
-| applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
-| applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
-| applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |
+| applicationYaml.spring.datasource | object | `{"password":"{{ ternary .Values.postgresql.auth.password \"<TODO>\" .Values.postgresql.enabled }}","url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/payment_gateway\" .Values.postgresql.enabled }}","username":"{{ ternary .Values.postgresql.auth.username \"<TODO>\" .Values.postgresql.enabled }}"}` | PostgreSQL connection params |
+| applicationYaml.spring.datasource.password | string | `"{{ ternary .Values.postgresql.auth.password \"<TODO>\" .Values.postgresql.enabled }}"` | PostgreSQL password |
+| applicationYaml.spring.datasource.url | string | `"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/payment_gateway\" .Values.postgresql.enabled }}"` | JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL |
+| applicationYaml.spring.datasource.username | string | `"{{ ternary .Values.postgresql.auth.username \"<TODO>\" .Values.postgresql.enabled }}"` | PostgreSQL username |
+| applicationYaml.spring.rabbitmq | object | `{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","password":"{{ ternary .Values.rabbitmq.auth.password \"<TODO>\" .Values.rabbitmq.enabled }}","port":5672,"username":"{{ ternary .Values.rabbitmq.auth.username \"<TODO>\" .Values.rabbitmq.enabled }}"}` | RabbitMQ connection params |
+| applicationYaml.spring.rabbitmq.host | string | `"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}"` | RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host |
+| applicationYaml.spring.rabbitmq.password | string | `"{{ ternary .Values.rabbitmq.auth.password \"<TODO>\" .Values.rabbitmq.enabled }}"` | RabbitMQ password |
 | applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
-| applicationYaml.spring.rabbitmq.username | string | `"<TODO>"` | RabbitMQ username |
+| applicationYaml.spring.rabbitmq.username | string | `"{{ ternary .Values.rabbitmq.auth.username \"<TODO>\" .Values.rabbitmq.enabled }}"` | RabbitMQ username |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` |  |
@@ -74,9 +77,12 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | podDisruptionBudget | object | `{"enabled":false,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
+| postgresql | object | `{"auth":{"database":"payment_gateway","password":"labs64-local","username":"labs64"},"enabled":false}` | Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own database instead. @schema type: object additionalProperties: true @schema |
+| rabbitmq | object | `{"auth":{"password":"labs64-local","username":"labs64"},"enabled":false}` | Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead. @schema type: object additionalProperties: true @schema |
 | rbac.create | bool | `false` |  |
 | rbac.rules | list | `[]` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
+| redis | object | `{"architecture":"standalone","auth":{"password":"labs64-local"},"enabled":false}` | Optional bundled Redis (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own Redis instead. @schema type: object additionalProperties: true @schema |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
@@ -90,6 +96,8 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| tests | object | `{"enabled":true,"healthPath":"/actuator/health"}` | helm test hook (rendered by chart-libs.test-connection) |
+| tests.healthPath | string | `"/actuator/health"` | Health endpoint probed by `helm test` |
 | tolerations | list | `[]` |  |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |

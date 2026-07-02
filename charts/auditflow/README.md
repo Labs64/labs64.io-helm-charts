@@ -22,24 +22,25 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | Repository | Name | Version |
 |------------|------|---------|
 | file://../chart-libs | chart-libs | 0.0.1 |
+| https://charts.bitnami.com/bitnami | rabbitmq | ^16.0.0 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
-| applicationYaml | object | `{"pipelines":[],"sink":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8082"},"service":{"name":"auditflow-sink","namespace":"default"}},"spring":{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
+| applicationYaml | object | `{"pipelines":[],"sink":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8082"},"service":{"name":"auditflow-sink","namespace":"default"}},"spring":{"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","password":"{{ ternary .Values.rabbitmq.auth.password \"<TODO>\" .Values.rabbitmq.enabled }}","port":5672,"username":"{{ ternary .Values.rabbitmq.auth.username \"<TODO>\" .Values.rabbitmq.enabled }}"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
 | applicationYaml.pipelines | list | `[]` | AuditFlow pipelines configuration |
 | applicationYaml.sink | object | `{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8082"},"service":{"name":"auditflow-sink","namespace":"default"}}` | Sink configuration |
 | applicationYaml.sink.discovery | object | `{"mode":"local"}` | Discovery mode; "local" or "kubernetes" |
 | applicationYaml.sink.local | object | `{"url":"http://localhost:8082"}` | Local URL for the sink service |
 | applicationYaml.sink.service | object | `{"name":"auditflow-sink","namespace":"default"}` | Service name and namespace for the sink |
-| applicationYaml.spring | object | `{"rabbitmq":{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}}` | Spring configuration |
-| applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.default.svc.cluster.local","password":"<TODO>","port":5672,"username":"<TODO>"}` | RabbitMQ connection params |
-| applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.default.svc.cluster.local"` | RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local |
-| applicationYaml.spring.rabbitmq.password | string | `"<TODO>"` | RabbitMQ password |
+| applicationYaml.spring | object | `{"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","password":"{{ ternary .Values.rabbitmq.auth.password \"<TODO>\" .Values.rabbitmq.enabled }}","port":5672,"username":"{{ ternary .Values.rabbitmq.auth.username \"<TODO>\" .Values.rabbitmq.enabled }}"}}` | Spring configuration |
+| applicationYaml.spring.rabbitmq | object | `{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","password":"{{ ternary .Values.rabbitmq.auth.password \"<TODO>\" .Values.rabbitmq.enabled }}","port":5672,"username":"{{ ternary .Values.rabbitmq.auth.username \"<TODO>\" .Values.rabbitmq.enabled }}"}` | RabbitMQ connection params |
+| applicationYaml.spring.rabbitmq.host | string | `"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}"` | RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host |
+| applicationYaml.spring.rabbitmq.password | string | `"{{ ternary .Values.rabbitmq.auth.password \"<TODO>\" .Values.rabbitmq.enabled }}"` | RabbitMQ password |
 | applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
-| applicationYaml.spring.rabbitmq.username | string | `"<TODO>"` | RabbitMQ username |
+| applicationYaml.spring.rabbitmq.username | string | `"{{ ternary .Values.rabbitmq.auth.username \"<TODO>\" .Values.rabbitmq.enabled }}"` | RabbitMQ username |
 | applicationYaml.transformer | object | `{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}` | Transformer configuration |
 | applicationYaml.transformer.discovery | object | `{"mode":"local"}` | Discovery mode; "local" or "kubernetes" |
 | applicationYaml.transformer.local | object | `{"url":"http://localhost:8081"}` | Local URL for the transformer service |
@@ -79,6 +80,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | podSecurityContext.runAsNonRoot | bool | `true` |  |
 | podSecurityContext.runAsUser | int | `1064` |  |
 | podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| rabbitmq | object | `{"auth":{"password":"labs64-local","username":"labs64"},"enabled":false}` | Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead. @schema type: object additionalProperties: true @schema |
 | rbac.create | bool | `false` |  |
 | rbac.rules | list | `[]` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
@@ -101,6 +103,8 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | sink.image.tag | string | `""` |  |
 | sink.service | object | `{"port":8082}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | sink.service.port | int | `8082` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
+| tests | object | `{"enabled":true,"healthPath":"/actuator/health"}` | helm test hook (rendered by chart-libs.test-connection) |
+| tests.healthPath | string | `"/actuator/health"` | Health endpoint probed by `helm test` |
 | tolerations | list | `[]` | Tolerations for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | transformer.image.pullPolicy | string | `"IfNotPresent"` |  |
 | transformer.image.repository | string | `"labs64/auditflow-transformer"` |  |
