@@ -268,6 +268,23 @@ keycloak-uninstall:
     kubectl --namespace {{NAMESPACE_TOOLS}} delete -f overrides/keycloak/keycloak-ingressroute.yaml
     helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
 
+# install mock OIDC provider (DEV ONLY - M2M tokens for local testing)
+mock-oidc-install:
+    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
+
+# uninstall mock OIDC provider
+mock-oidc-uninstall:
+    kubectl delete -f overrides/mock-oidc/mock-oidc.yaml
+
+# generate an M2M JWT from the mock OIDC provider (scope: admin|auditflow|ecommerce)
+test-generate-jwt-token-mock scope="admin":
+    curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+      -H 'Content-Type: application/x-www-form-urlencoded' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id=local-test' \
+      --data-urlencode 'client_secret=local-test' \
+      --data-urlencode 'scope={{scope}}'
+
 
 ## Monitoring Tools ##
 
