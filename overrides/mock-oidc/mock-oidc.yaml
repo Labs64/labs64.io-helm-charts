@@ -6,6 +6,8 @@ kind: ConfigMap
 metadata:
   name: mock-oidc-config
   namespace: tools
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
 data:
   config.json: |
     {
@@ -34,6 +36,14 @@ data:
             },
             {
               "requestParam": "scope",
+              "match": "no-access",
+              "claims": {
+                "aud": ["account"],
+                "realm_access": { "roles": ["no-access-role"] }
+              }
+            },
+            {
+              "requestParam": "scope",
               "match": "*",
               "claims": {
                 "aud": ["account"],
@@ -52,6 +62,8 @@ metadata:
   namespace: tools
   labels:
     app.kubernetes.io/name: mock-oidc
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
 spec:
   replicas: 1
   selector:
@@ -90,6 +102,8 @@ kind: Service
 metadata:
   name: mock-oidc
   namespace: tools
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
 spec:
   selector:
     app.kubernetes.io/name: mock-oidc
@@ -102,6 +116,8 @@ kind: IngressRoute
 metadata:
   name: mock-oidc
   namespace: tools
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
 spec:
   entryPoints:
     - web
