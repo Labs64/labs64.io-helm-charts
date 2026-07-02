@@ -206,6 +206,22 @@ env: []
 secrets:
   data: {}
 
+# -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
+# Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead.
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+rabbitmq:
+  enabled: false
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    username: labs64
+    password: labs64-local
+
 # -- Additional application properties
 applicationYaml:
   # -- Transformer configuration
@@ -249,14 +265,14 @@ applicationYaml:
   spring:
     # -- RabbitMQ connection params
     rabbitmq:
-      # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
-      host: rabbitmq.default.svc.cluster.local
+      # -- RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host
+      host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
       # -- RabbitMQ port; default: 5672
       port: 5672
       # -- RabbitMQ username
-      username: <TODO>
+      username: '{{ ternary .Values.rabbitmq.auth.username "<TODO>" .Values.rabbitmq.enabled }}'
       # -- RabbitMQ password
-      password: <TODO>
+      password: '{{ ternary .Values.rabbitmq.auth.password "<TODO>" .Values.rabbitmq.enabled }}'
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
@@ -306,3 +322,9 @@ networkPolicy:
 # additionalProperties: true
 # @schema
 chart-libs: {}
+
+# -- helm test hook (rendered by chart-libs.test-connection)
+tests:
+  enabled: true
+  # -- Health endpoint probed by `helm test`
+  healthPath: /actuator/health

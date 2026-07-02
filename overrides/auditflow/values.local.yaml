@@ -132,15 +132,11 @@ applicationYaml:
           username: "1314691"
           password: "${GRAFANA_PASSWORD}"
 
-  spring:
-    rabbitmq:
-      host: rabbitmq.tools.svc.cluster.local
-      port: 5672
-      username: labs64
-      password: "${RABBITMQ_PASSWORD}"
-
 gateway:
   enabled: true
 
 networkPolicy:
+  enabled: true
+
+rabbitmq:
   enabled: true
