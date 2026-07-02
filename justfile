@@ -285,6 +285,22 @@ test-generate-jwt-token-mock scope="admin":
       --data-urlencode 'client_secret=local-test' \
       --data-urlencode 'scope={{scope}}'
 
+# end-to-end auth smoke test through Traefik (requires: traefik, gateway-common, traefik-authproxy, auditflow, mock-oidc)
+labs64io-e2e-auth:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
+      --data-urlencode 'scope=admin' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+    no_token=$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api')
+    with_token=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${TOKEN}" 'http://gateway.localhost/auditflow/api')
+    echo "no token   -> ${no_token} (expected 401)"
+    echo "with token -> ${with_token} (expected not 401/403)"
+    [ "${no_token}" = "401" ] || { echo "FAIL: expected 401 without token"; exit 1; }
+    case "${with_token}" in 401|403) echo "FAIL: token rejected"; exit 1;; esac
+    echo "e2e auth: OK"
+
 
 ## Monitoring Tools ##
 
