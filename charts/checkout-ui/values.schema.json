@@ -762,6 +762,29 @@
       "title": "serviceAccount",
       "type": "object"
     },
+    "tests": {
+      "additionalProperties": false,
+      "description": "helm test hook (rendered by chart-libs.test-connection)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "healthPath": {
+          "default": "/",
+          "description": "Health endpoint probed by `helm test`",
+          "title": "healthPath",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "healthPath"
+      ],
+      "title": "tests",
+      "type": "object"
+    },
     "tolerations": {
       "items": {
         "required": []
@@ -815,7 +838,8 @@
     "application",
     "gateway",
     "podDisruptionBudget",
-    "networkPolicy"
+    "networkPolicy",
+    "tests"
   ],
   "type": "object"
 }
