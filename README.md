@@ -64,6 +64,45 @@ Local testing: `just mock-oidc-install` (dev-only M2M tokens),
 `just labs64io-<module>-install`, `helm test labs64io-<module> -n labs64io`,
 `just labs64io-e2e-auth`.
 
+### Provisioning profiles
+
+| Profile | File | Use case |
+|---|---|---|
+| shared local | `overrides/<module>/values.local.yaml` | dev cluster with the shared toolset (`just local-up`) |
+| standalone | `overrides/<module>/values.standalone.yaml` | single-module eval with bundled infra (`just labs64io-standalone-install <module>`) |
+| BYO / production | `overrides/<module>/values.prod-example.yaml` | copy & adapt: your infrastructure, credentials via `secrets.data` (ESO recommended) |
+
+### Capability requirements (bring-your-own infrastructure)
+
+Modules need capabilities, not specific tools:
+
+| Module | Needs |
+|---|---|
+| auditflow | AMQP 0-9-1 broker |
+| checkout | AMQP 0-9-1 broker; PostgreSQL (db `checkout`, login with CREATE DATABASE for first install) |
+| payment-gateway | AMQP 0-9-1 broker; PostgreSQL (db `payment_gateway`); Redis |
+| gateway stack | any OIDC provider supporting client_credentials; role claims are configurable via `TOKEN_ROLES_CLAIM_PATHS` (default: Keycloak `realm_access.roles`) |
+
+Reference versions (tested in CI via the bundled subcharts): RabbitMQ chart 16.0.14,
+PostgreSQL chart 16.7.27, Redis chart 20.13.4 (images `bitnamilegacy/*`). Same-major
+versions of your own services are expected to work.
+
+### Preflight: verify your infrastructure first
+
+    helm install preflight ./charts/preflight -n labs64io --create-namespace \
+      -f my-endpoints.yaml
+    kubectl wait --for=condition=complete job/preflight -n labs64io --timeout=120s \
+      || kubectl logs job/preflight -n labs64io --all-containers
+
+Each enabled check (broker TCP, PostgreSQL login, Redis PING, OIDC token grant)
+runs as one container; the Job succeeds only if all pass.
+
+### Local cluster
+
+    just local-up        # k3d cluster + pinned toolset + all modules
+    just local-up-full   # + monitoring stack
+    just local-down
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Labs64/labs64.io-helm-charts&type=Date)](https://www.star-history.com/#Labs64/labs64.io-helm-charts&Date)
