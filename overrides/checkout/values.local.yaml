@@ -1,5 +1,5 @@
 image:
-  repository: checkout
+  repository: localhost:5005/checkout
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -13,4 +13,4 @@ rabbitmq:
   enabled: true
 
 postgresql:
-  enabled: true
+  enabled: false

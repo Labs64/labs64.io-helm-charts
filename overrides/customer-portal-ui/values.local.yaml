@@ -1,5 +1,5 @@
 image:
-  repository: customer-portal-ui
+  repository: localhost:5005/customer-portal-ui
   tag: latest
   pullPolicy: IfNotPresent
 

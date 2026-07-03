@@ -1,6 +1,5 @@
 ENV := "local"
 NAMESPACE_LABS64IO := "labs64io"
-NAMESPACE_INGRESS := "ingress-nginx"
 NAMESPACE_KUBE_SYSTEM := "kube-system"
 NAMESPACE_MONITORING := "monitoring"
 NAMESPACE_TOOLS := "tools"
@@ -9,21 +8,15 @@ TRAEFIK_CHART_VERSION := "41.0.1"
 TRAEFIK_CRDS_CHART_VERSION := "1.18.0"
 METRICS_SERVER_CHART_VERSION := "3.13.1"
 RABBITMQ_CHART_VERSION := "16.0.14"
-POSTGRESQL_CHART_VERSION := "16.7.27"
-REDIS_CHART_VERSION := "20.13.4"
-KEYCLOAK_CHART_VERSION := "25.2.0"
+POSTGRESQL_CHART_VERSION := "18.7.11"
+REDIS_CHART_VERSION := "27.0.13"
 OTEL_OPERATOR_CHART_VERSION := "0.118.0"
 OTEL_COLLECTOR_CHART_VERSION := "0.162.0"
 PROMETHEUS_STACK_CHART_VERSION := "87.5.1"
 TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
-INGRESS_NGINX_CHART_VERSION := "4.15.1"
 
 ## Useful Commands ##
-
-# setup docker registry (precondition; NOT needed with `just local-up` - the k3d cluster creates its own registry on the same port 5005)
-docker-registry-install:
-    docker run -d -p 5005:5000 --restart=always --name registry registry:2
 
 # show helm releases
 helm-ls:
@@ -40,7 +33,6 @@ kubectl-pv:
 # add external helm repositories
 repo-add:
     helm repo add labs64io-pub https://labs64.github.io/labs64.io-helm-charts
-    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
     helm repo add traefik https://traefik.github.io/charts
     helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
     helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -83,6 +75,40 @@ generate-schema: helm-tools
 
 # Generate all — Helm charts docs and schema
 generate-all: generate-docu generate-schema
+
+# Build and push all module images to local registry (localhost:5005)
+build-images:
+	@echo "=== Building auditflow images ==="
+	cd ../labs64.io-auditflow/auditflow-be && mvn -B clean package -DskipTests -q && \
+	docker build -t localhost:5005/auditflow:latest . && \
+	cd ../auditflow-transformer && \
+	docker build -t localhost:5005/auditflow-transformer:latest . && \
+	cd ../auditflow-sink && \
+	docker build -t localhost:5005/auditflow-sink:latest .
+	docker push localhost:5005/auditflow:latest
+	docker push localhost:5005/auditflow-transformer:latest
+	docker push localhost:5005/auditflow-sink:latest
+	@echo "=== Building checkout images ==="
+	cd ../labs64.io-checkout/checkout-be && mvn -B clean package -DskipTests -q && \
+	docker build -t localhost:5005/checkout:latest . && \
+	cd ../checkout-fe && \
+	docker build -t localhost:5005/checkout-ui:latest .
+	docker push localhost:5005/checkout:latest
+	docker push localhost:5005/checkout-ui:latest
+	@echo "=== Building payment-gateway image ==="
+	cd ../labs64.io-payment-gateway/payment-gateway-be && mvn -B clean package -DskipTests -q && \
+	docker build -t localhost:5005/payment-gateway:latest .
+	docker push localhost:5005/payment-gateway:latest
+	@echo "=== Building traefik-authproxy image ==="
+	cd ../labs64.io-gateway/traefik-authproxy && \
+	docker build -t localhost:5005/traefik-authproxy:latest .
+	docker push localhost:5005/traefik-authproxy:latest
+	@echo "=== Building customer-portal-ui image ==="
+	cd ../labs64.io-customer-portal/customer-portal-fe && \
+	docker build -t localhost:5005/customer-portal-ui:latest .
+	docker push localhost:5005/customer-portal-ui:latest
+	@echo "=== All images built and pushed ==="
+	@curl -s http://localhost:5005/v2/_catalog
 
 # install Labs64.IO :: API Gateway
 labs64io-traefik-authproxy-install:
@@ -212,6 +238,9 @@ local-up:
     just repo-update
     just traefik-install
     just mock-oidc-install
+    just rabbitmq-install
+    just postgresql-install
+    just redis-install
     just labs64io-all-install
     @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
 
@@ -252,7 +281,8 @@ traefik-install: repo-update
     helm search repo traefik/traefik
     helm show values traefik/traefik > overrides/traefik/values.orig.yaml
     helm show values traefik/traefik-crds > overrides/traefik/values-crds.orig.yaml
-    helm upgrade --install traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    kubectl create namespace {{NAMESPACE_TOOLS}} --dry-run=client -o yaml | kubectl apply -f -
+    helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
     helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
 
 # Traefik Dashboard
@@ -264,18 +294,21 @@ traefik-uninstall:
     helm uninstall traefik --namespace {{NAMESPACE_TOOLS}} || true
     helm uninstall traefik-crds --namespace {{NAMESPACE_TOOLS}} || true
 
-# install RabbitMQ
+# install RabbitMQ (Bitnami images removed from Docker Hub — using official image)
 rabbitmq-install: repo-update
-    helm search repo bitnami/rabbitmq
-    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq --version {{RABBITMQ_CHART_VERSION}} -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    @echo "Username      : labs64"
-    @echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
-    @echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
+	@echo "Installing RabbitMQ (official image — Bitnami images no longer available)..."
+	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq.yaml
+	@echo "Waiting for RabbitMQ to be ready..."
+	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
+	@echo "Username      : labs64"
+	@echo "Password      : labs64pw"
 
 # uninstall RabbitMQ
 rabbitmq-uninstall:
-    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
+	kubectl delete statefulset rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete service rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete secret rabbitmq-secret --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
 
 # install PostgreSQL
 postgresql-install: repo-update
@@ -302,18 +335,6 @@ redis-install: repo-update
 # uninstall Redis
 redis-uninstall:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
-
-# install Keycloak
-keycloak-install: repo-update
-    helm search repo bitnami/keycloak
-    helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
-    helm upgrade --install keycloak bitnami/keycloak --version {{KEYCLOAK_CHART_VERSION}} -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    kubectl --namespace {{NAMESPACE_TOOLS}} apply -f overrides/keycloak/keycloak-ingressroute.yaml
-
-# uninstall Keycloak
-keycloak-uninstall:
-    kubectl --namespace {{NAMESPACE_TOOLS}} delete -f overrides/keycloak/keycloak-ingressroute.yaml
-    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
 
 # install mock OIDC provider (DEV ONLY - M2M tokens for local testing)
 mock-oidc-install:
@@ -426,17 +447,4 @@ grafana-uninstall:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
 
 
-## Other/Backup Tools ##
 
-# install Ingress controller
-ingress-install: repo-update
-    helm search repo ingress-nginx/ingress-nginx
-    helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
-    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
-      --version {{INGRESS_NGINX_CHART_VERSION}} \
-      -f overrides/ingress-nginx/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_INGRESS}} --create-namespace
-
-# uninstall Ingress controller
-ingress-uninstall:
-    helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}

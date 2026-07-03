@@ -3,7 +3,7 @@ image:
   tag: latest
 
 env:
-  # mock-oauth2-server (just mock-oidc-install); switch back to Keycloak for prod-parity testing
+  # mock-oauth2-server (just mock-oidc-install)
   - name: OIDC_DISCOVERY_URL
     value: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
   - name: OIDC_AUDIENCE

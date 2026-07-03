@@ -1,5 +1,5 @@
 image:
-  repository: payment-gateway
+  repository: localhost:5005/payment-gateway
   tag: latest
   pullPolicy: IfNotPresent
 
