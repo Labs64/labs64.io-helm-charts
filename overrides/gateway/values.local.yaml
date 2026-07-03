@@ -33,5 +33,3 @@ swaggerUI:
       name: Payment Gateway API
     - url: http://gateway.{{ .Values.global.domain }}/customer-portal/v3/api-docs
       name: Customer Portal API
-    - url: http://gateway.{{ .Values.global.domain }}/netlicensing/v3/api-docs
-      name: NetLicensing API
