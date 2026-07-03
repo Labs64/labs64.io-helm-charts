@@ -394,6 +394,34 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/gateway-0.0.1/gateway-0.0.1.tgz
     version: 0.0.1
+  gateway-common:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-07-03T17:10:31.758779697Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.0.1
+    description: 'Labs64.IO :: Gateway Common - shared Traefik middlewares (auth,
+      rate limiting, security headers)'
+    digest: cbb4b283d874bf5b4003b5d120b4b5c5b9b178103e460e895ef4630e34b4dd21
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - gateway
+    - traefik
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: gateway-common
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/gateway-common-0.0.1/gateway-common-0.0.1.tgz
+    version: 0.0.1
   payment-gateway:
   - apiVersion: v2
     appVersion: 0.0.1
@@ -550,4 +578,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/traefik-authproxy-0.0.1/traefik-authproxy-0.0.1.tgz
     version: 0.0.1
-generated: "2026-02-22T07:39:08.760966687Z"
+generated: "2026-07-03T17:10:32.151845291Z"
