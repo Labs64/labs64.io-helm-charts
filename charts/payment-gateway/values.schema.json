@@ -29,12 +29,6 @@
                       "title": "host",
                       "type": "string"
                     },
-                    "password": {
-                      "default": "{{ ternary .Values.redis.auth.password \"\u003cTODO\u003e\" .Values.redis.enabled }}",
-                      "description": "Redis password",
-                      "title": "password",
-                      "type": "string"
-                    },
                     "port": {
                       "default": 6379,
                       "description": "Redis port; default: 6379",
@@ -44,8 +38,7 @@
                   },
                   "required": [
                     "host",
-                    "port",
-                    "password"
+                    "port"
                   ],
                   "title": "redis",
                   "type": "object"
@@ -61,29 +54,15 @@
               "additionalProperties": false,
               "description": "PostgreSQL connection params",
               "properties": {
-                "password": {
-                  "default": "{{ ternary .Values.postgresql.auth.password \"\u003cTODO\u003e\" .Values.postgresql.enabled }}",
-                  "description": "PostgreSQL password",
-                  "title": "password",
-                  "type": "string"
-                },
                 "url": {
                   "default": "{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/payment_gateway\" .Values.postgresql.enabled }}",
                   "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL",
                   "title": "url",
                   "type": "string"
-                },
-                "username": {
-                  "default": "{{ ternary .Values.postgresql.auth.username \"\u003cTODO\u003e\" .Values.postgresql.enabled }}",
-                  "description": "PostgreSQL username",
-                  "title": "username",
-                  "type": "string"
                 }
               },
               "required": [
-                "url",
-                "username",
-                "password"
+                "url"
               ],
               "title": "datasource",
               "type": "object"
@@ -98,30 +77,16 @@
                   "title": "host",
                   "type": "string"
                 },
-                "password": {
-                  "default": "{{ ternary .Values.rabbitmq.auth.password \"\u003cTODO\u003e\" .Values.rabbitmq.enabled }}",
-                  "description": "RabbitMQ password",
-                  "title": "password",
-                  "type": "string"
-                },
                 "port": {
                   "default": 5672,
                   "description": "RabbitMQ port; default: 5672",
                   "title": "port",
                   "type": "integer"
-                },
-                "username": {
-                  "default": "{{ ternary .Values.rabbitmq.auth.username \"\u003cTODO\u003e\" .Values.rabbitmq.enabled }}",
-                  "description": "RabbitMQ username",
-                  "title": "username",
-                  "type": "string"
                 }
               },
               "required": [
                 "host",
-                "port",
-                "username",
-                "password"
+                "port"
               ],
               "title": "rabbitmq",
               "type": "object"
@@ -972,18 +937,15 @@
     },
     "secrets": {
       "additionalProperties": false,
-      "description": "Secret data to be used as environment variables",
+      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply broker/database/cache credentials here, e.g.\n  SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.\nWhen rabbitmq.enabled=true / postgresql.enabled=true / redis.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth / redis.auth.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
       "properties": {
         "data": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "required": [],
-          "title": "data",
           "type": "object"
         }
       },
-      "required": [
-        "data"
-      ],
+      "required": [],
       "title": "secrets",
       "type": "object"
     },
@@ -1128,7 +1090,6 @@
     "tolerations",
     "affinity",
     "env",
-    "secrets",
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",

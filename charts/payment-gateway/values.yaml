@@ -155,7 +155,19 @@ affinity: {}
 
 env: []
 
-# -- Secret data to be used as environment variables
+# -- Secret data to be used as environment variables (delivered via envFrom).
+# External installs supply broker/database/cache credentials here, e.g.
+#   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.
+# When rabbitmq.enabled=true / postgresql.enabled=true / redis.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth / redis.auth.
+# Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).
+# Note: the Secret is hook-managed (pre-install) and survives helm uninstall.
+# @schema
+# type: object
+# properties:
+#   data:
+#     type: object
+#     additionalProperties: true
+# @schema
 secrets:
   data: {}
 
@@ -239,19 +251,11 @@ applicationYaml:
       host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
       # -- RabbitMQ port; default: 5672
       port: 5672
-      # -- RabbitMQ username
-      username: '{{ ternary .Values.rabbitmq.auth.username "<TODO>" .Values.rabbitmq.enabled }}'
-      # -- RabbitMQ password
-      password: '{{ ternary .Values.rabbitmq.auth.password "<TODO>" .Values.rabbitmq.enabled }}'
 
     # -- PostgreSQL connection params
     datasource:
       # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
       url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/payment_gateway" .Values.postgresql.enabled }}'
-      # -- PostgreSQL username
-      username: '{{ ternary .Values.postgresql.auth.username "<TODO>" .Values.postgresql.enabled }}'
-      # -- PostgreSQL password
-      password: '{{ ternary .Values.postgresql.auth.password "<TODO>" .Values.postgresql.enabled }}'
 
     # -- Redis connection params
     data:
@@ -260,8 +264,6 @@ applicationYaml:
         host: '{{ ternary (printf "%s-redis-master" .Release.Name) "redis-master.tools.svc.cluster.local" .Values.redis.enabled }}'
         # -- Redis port; default: 6379
         port: 6379
-        # -- Redis password
-        password: '{{ ternary .Values.redis.auth.password "<TODO>" .Values.redis.enabled }}'
 
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
