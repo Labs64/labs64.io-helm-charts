@@ -204,6 +204,30 @@ labs64io-documentation:
     open "http://gateway.localhost/swagger-ui/"
 
 
+## Local Cluster ##
+
+# create the local k3d cluster + registry, install toolset and all Labs64.IO components
+local-up:
+    k3d cluster create --config k3d/labs64io.yaml || echo "cluster exists - continuing"
+    just repo-update
+    just traefik-install
+    just mock-oidc-install
+    just labs64io-all-install
+    @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
+
+# delete the local k3d cluster (and its registry)
+local-down:
+    k3d cluster delete labs64io
+
+# local-up plus the monitoring stack
+local-up-full: local-up
+    just metrics-server-install
+    just opentelemetry-install
+    just prometheus-install
+    just tempo-install
+    just grafana-install
+
+
 ## Kubernetes Components ##
 
 # install Metrics Server
