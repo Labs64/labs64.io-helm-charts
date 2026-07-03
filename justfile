@@ -21,7 +21,7 @@ INGRESS_NGINX_CHART_VERSION := "4.15.1"
 
 ## Useful Commands ##
 
-# setup docker registry (precondition)
+# setup docker registry (precondition; NOT needed with `just local-up` - the k3d cluster creates its own registry on the same port 5005)
 docker-registry-install:
     docker run -d -p 5005:5000 --restart=always --name registry registry:2
 
