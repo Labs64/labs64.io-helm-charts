@@ -53,6 +53,7 @@ graph TB
             rabbitmq["RabbitMQ<br/>(Message Broker)"]:::tools
             postgres["PostgreSQL<br/>(Database)"]:::tools
             redis["Redis<br/>(Cache)"]:::tools
+            mock_oidc["Mock OIDC Provider<br/>(DEV only)"]:::tools
             
             subgraph Observability["Observability Stack (optional)"]
                 otel["OpenTelemetry<br/>Collector"]:::obs
@@ -65,7 +66,6 @@ graph TB
 
         %% Labs64io Namespace
         subgraph ns_labs64io["Namespace: labs64io (Labs64 Modules)"]
-            mock_oidc["Mock OIDC Provider"]:::labs64
             
             subgraph Gateway["Gateway & Auth"]
                 gateway["gateway<br/>(Swagger UI)"]:::labs64
@@ -126,9 +126,10 @@ graph TB
     pg_be -->|Publishes Events| rabbitmq
     
     audit_be -->|Publishes Audits| rabbitmq
-    rabbitmq -->|Consumes| audit_transformer
-    audit_transformer -->|Publishes Transformed| rabbitmq
-    rabbitmq -->|Consumes| audit_sink
+    rabbitmq -->|Consumes| audit_be
+    audit_be -->|"Transform (HTTP, per pipeline)"| audit_transformer
+    audit_be -->|"Sink (HTTP, per pipeline)"| audit_sink
+    audit_be -->|Idempotency| redis
     
     %% Telemetry
     ns_labs64io -.->|OTLP Logs/Traces| otel

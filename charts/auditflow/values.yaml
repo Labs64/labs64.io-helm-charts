@@ -278,17 +278,19 @@ applicationYaml:
       name: auditflow-sink
       namespace: default
 
-  # -- AuditFlow pipelines configuration
-  pipelines: []
-  #  - name: 'logs'
-  #    enabled: true
-  #    transformer:
-  #      name: 'zero'
-  #    sink:
-  #      name: 'logging_sink'
-  #      properties:
-  #        log-level: "DEBUG"
-  #        format: "json"
+  # -- AuditFlow application properties (bound by @ConfigurationProperties(prefix = "auditflow"))
+  auditflow:
+    # -- AuditFlow pipelines configuration
+    pipelines: []
+    #  - name: 'logs'
+    #    enabled: true
+    #    transformer:
+    #      name: 'zero'
+    #    sink:
+    #      name: 'logging_sink'
+    #      properties:
+    #        log-level: "DEBUG"
+    #        format: "json"
 
   # -- Spring configuration
   spring:
@@ -298,6 +300,13 @@ applicationYaml:
       host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
       # -- RabbitMQ port; default: 5672
       port: 5672
+    # -- Redis connection params (backing store for the idempotency/dedup service; auditflow.idempotency.store=redis)
+    data:
+      redis:
+        # -- Redis host; defaults to the shared tools Redis. Override for your own Redis in non-local installs.
+        host: redis-master.tools.svc.cluster.local
+        # -- Redis port; default: 6379
+        port: 6379
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:

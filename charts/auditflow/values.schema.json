@@ -13,13 +13,24 @@
       "additionalProperties": false,
       "description": "Additional application properties",
       "properties": {
-        "pipelines": {
-          "description": "AuditFlow pipelines configuration",
-          "items": {
-            "required": []
+        "auditflow": {
+          "additionalProperties": false,
+          "description": "AuditFlow application properties (bound by",
+          "properties": {
+            "pipelines": {
+              "description": "AuditFlow pipelines configuration",
+              "items": {
+                "required": []
+              },
+              "title": "pipelines",
+              "type": "array"
+            }
           },
-          "title": "pipelines",
-          "type": "array"
+          "required": [
+            "pipelines"
+          ],
+          "title": "auditflow",
+          "type": "object"
         },
         "sink": {
           "additionalProperties": false,
@@ -92,6 +103,40 @@
           "additionalProperties": false,
           "description": "Spring configuration",
           "properties": {
+            "data": {
+              "additionalProperties": false,
+              "description": "Redis connection params (backing store for the idempotency/dedup service; auditflow.idempotency.store=redis)",
+              "properties": {
+                "redis": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "host": {
+                      "default": "redis-master.tools.svc.cluster.local",
+                      "description": "Redis host; defaults to the shared tools Redis. Override for your own Redis in non-local installs.",
+                      "title": "host",
+                      "type": "string"
+                    },
+                    "port": {
+                      "default": 6379,
+                      "description": "Redis port; default: 6379",
+                      "title": "port",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "host",
+                    "port"
+                  ],
+                  "title": "redis",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "redis"
+              ],
+              "title": "data",
+              "type": "object"
+            },
             "rabbitmq": {
               "additionalProperties": false,
               "description": "RabbitMQ connection params",
@@ -118,7 +163,8 @@
             }
           },
           "required": [
-            "rabbitmq"
+            "rabbitmq",
+            "data"
           ],
           "title": "spring",
           "type": "object"
@@ -194,7 +240,7 @@
       "required": [
         "transformer",
         "sink",
-        "pipelines",
+        "auditflow",
         "spring"
       ],
       "title": "applicationYaml",
