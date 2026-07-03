@@ -7,16 +7,6 @@ stringData:
   RABBITMQ_DEFAULT_USER: "labs64"
   RABBITMQ_DEFAULT_PASS: "labs64-local"
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: rabbitmq-data
-spec:
-  accessModes: [ReadWriteOnce]
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -51,11 +41,13 @@ spec:
             command: ["rabbitmq-diagnostics", "check_port_connectivity"]
           initialDelaySeconds: 30
           periodSeconds: 10
+          timeoutSeconds: 10
         livenessProbe:
           exec:
             command: ["rabbitmq-diagnostics", "status"]
           initialDelaySeconds: 60
           periodSeconds: 30
+          timeoutSeconds: 10
   volumeClaimTemplates:
   - metadata:
       name: rabbitmq-data

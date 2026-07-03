@@ -99,9 +99,9 @@ ingressroute:
     - websecure
 
 resources:
-  #limits:
-  #  cpu: 200m
-  #  memory: 512Mi
+  limits:
+    cpu: 500m
+    memory: 1Gi
   requests:
     cpu: 100m
     memory: 512Mi

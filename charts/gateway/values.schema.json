@@ -504,6 +504,27 @@
     "resources": {
       "additionalProperties": false,
       "properties": {
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "500m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "1Gi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
+          "type": "object"
+        },
         "requests": {
           "additionalProperties": false,
           "description": "limits:\n cpu: 200m\n memory: 512Mi",

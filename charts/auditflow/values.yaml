@@ -228,6 +228,14 @@ env: []
 secrets:
   data: {}
 
+# -- OpenTelemetry export toggle. When disabled (default), the OTLP exporter
+# endpoints are not configured, preventing connection-refused spam when no
+# collector is running. The OtelLogbackInstaller (guardrail) is never removed.
+otel:
+  export:
+    # -- Enable OTLP metrics/logs export to a collector
+    enabled: false
+
 # -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead.
 # @schema

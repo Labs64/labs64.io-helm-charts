@@ -135,4 +135,21 @@ Return the proper image name
 {{- end -}}
 {{- end -}}
 
+{{/*
+Default resource limits for module charts.
+Baseline = AuditFlow's audited values. Charts override via .Values.resources.
+Usage: {{ include "chart-libs.defaultResources" . }}
+*/}}
+{{- define "chart-libs.defaultResources" -}}
+{{- if not .Values.resources }}
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+{{- end -}}
+{{- end -}}
+
 

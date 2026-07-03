@@ -842,6 +842,33 @@
       "title": "podSecurityContext",
       "type": "object"
     },
+    "otel": {
+      "additionalProperties": false,
+      "description": "OpenTelemetry export toggle. When disabled (default), OTLP exporter endpoints are not configured.",
+      "properties": {
+        "export": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable OTLP metrics/logs export to a collector",
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "export",
+          "type": "object"
+        }
+      },
+      "required": [
+        "export"
+      ],
+      "title": "otel",
+      "type": "object"
+    },
     "rabbitmq": {
       "additionalProperties": true,
       "description": "Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own broker instead.",

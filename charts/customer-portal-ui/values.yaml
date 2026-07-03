@@ -77,8 +77,11 @@ ingressroute:
     - websecure
 
 resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
   requests:
-    cpu: 100m
+    cpu: 50m
     memory: 128Mi
 
 # -- This is to setup the liveness probes

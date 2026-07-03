@@ -52,9 +52,11 @@ spec:
           readinessProbe:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.resources }}
+          {{- if .Values.resources }}
           resources:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- else }}
+          {{- include "chart-libs.defaultResources" . | nindent 10 }}
           {{- end }}
           env:
             - name: SPRING_CONFIG_IMPORT

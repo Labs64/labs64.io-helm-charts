@@ -13,8 +13,9 @@ spec:
       {{- include "chart-libs.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-app-ext.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -60,6 +61,10 @@ spec:
           env:
             - name: SPRING_CONFIG_IMPORT
               value: "optional:file:/opt/application-config/application.yaml"
+          {{- if .Values.otel.export.enabled }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector:4318"
+          {{- end }}
           {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -94,20 +99,22 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-          {{- with .Values.transformer.livenessProbe }}
           livenessProbe:
             httpGet:
-              path: /docs
-              port: {{ .Values.transformer.service.port }}
-            {{- toYaml (omit . "httpGet") | nindent 12 }}
-          {{- end }}
-          {{- with .Values.transformer.readinessProbe }}
+              path: /registry
+              port: http-trn
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 2
           readinessProbe:
             httpGet:
-              path: /docs
-              port: {{ .Values.transformer.service.port }}
-            {{- toYaml (omit . "httpGet") | nindent 12 }}
-          {{- end }}
+              path: /registry
+              port: http-trn
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+            timeoutSeconds: 2
         {{- end }}
         {{- if eq .Values.applicationYaml.sink.discovery.mode "local" }}
         # AuditFlow Sink Sidecar Container
@@ -119,7 +126,7 @@ spec:
           image: "{{ .Values.sink.image.repository }}:{{ .Values.sink.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.sink.image.pullPolicy }}
           ports:
-            - name: http-trn
+            - name: http-snk
               containerPort: {{ .Values.sink.service.port }}
               protocol: TCP
           env:
@@ -129,20 +136,22 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-          {{- with .Values.sink.livenessProbe }}
           livenessProbe:
             httpGet:
-              path: /docs
-              port: {{ .Values.sink.service.port }}
-            {{- toYaml (omit . "httpGet") | nindent 12 }}
-          {{- end }}
-          {{- with .Values.sink.readinessProbe }}
+              path: /registry
+              port: http-snk
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 2
           readinessProbe:
             httpGet:
-              path: /docs
-              port: {{ .Values.sink.service.port }}
-            {{- toYaml (omit . "httpGet") | nindent 12 }}
-          {{- end }}
+              path: /registry
+              port: http-snk
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+            timeoutSeconds: 2
         {{- end }}
       volumes:
         - name: config-additional-location

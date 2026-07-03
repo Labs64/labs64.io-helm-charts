@@ -1,0 +1,64 @@
+name: Labs64.IO - Lint Charts
+
+on:
+  pull_request:
+    paths:
+      - 'charts/**'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4.3.0
+        with:
+          version: '3.17.0'
+
+      - name: Lint and validate charts
+        run: |
+          set -euo pipefail
+          FAILED=0
+          for chart_dir in charts/*/; do
+            chart_name=$(basename "$chart_dir")
+            # Skip non-chart directories
+            if [ ! -f "$chart_dir/Chart.yaml" ]; then
+              continue
+            fi
+            echo "=== Linting: $chart_name ==="
+
+            # helm lint
+            if ! helm lint "$chart_dir"; then
+              echo "FAIL: helm lint $chart_name"
+              FAILED=1
+            fi
+
+            # helm template (syntax + render check)
+            if ! helm template "test-$chart_name" "$chart_dir" > /dev/null 2>&1; then
+              echo "FAIL: helm template $chart_name"
+              helm template "test-$chart_name" "$chart_dir" 2>&1 | tail -5
+              FAILED=1
+            fi
+
+            # Schema validation (if schema exists)
+            if [ -f "$chart_dir/values.schema.json" ]; then
+              if ! helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" > /dev/null 2>&1; then
+                echo "FAIL: schema validation $chart_name"
+                helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" 2>&1 | tail -5
+                FAILED=1
+              fi
+            fi
+
+            echo "PASS: $chart_name"
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "Some charts failed linting. See errors above."
+            exit 1
+          fi
+
+          echo ""
+          echo "All charts passed."

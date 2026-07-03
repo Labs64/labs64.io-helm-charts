@@ -64,8 +64,9 @@ applicationYaml:
           properties:
             log-level: "DEBUG"
             format: "json"
+      # Cloud pipelines disabled locally — placeholder creds cause perpetual DLQ growth
       - name: 'aws_s3'
-        enabled: true
+        enabled: false
         transformer:
           name: 'zero'
         sink:
@@ -80,7 +81,7 @@ applicationYaml:
             partition-format: "year=%Y/month=%m/day=%d/"
             file-format: "json"
       - name: 'aws_cloudwatch'
-        enabled: true
+        enabled: false
         condition:
           match: 'any'  # 'all' (AND) or 'any' (OR)
           rules:
@@ -100,7 +101,7 @@ applicationYaml:
             create-log-group: "true"
             create-log-stream: "true"
       - name: 'webhook_site'
-        enabled: true
+        enabled: false
         condition:
           match: 'all'  # 'all' (AND) or 'any' (OR)
           rules:
@@ -122,7 +123,7 @@ applicationYaml:
             verify-ssl: true
             retry-count: 3
       - name: 'loki'
-        enabled: true
+        enabled: false
         transformer:
           name: 'audit_loki'
         sink:
@@ -139,5 +140,6 @@ gateway:
 networkPolicy:
   enabled: true
 
+# Use shared tools/rabbitmq instead of bundled broker
 rabbitmq:
-  enabled: true
+  enabled: false

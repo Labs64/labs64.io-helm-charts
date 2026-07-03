@@ -165,7 +165,8 @@ labs64io-checkout-install:
     helm upgrade --install labs64io-checkout ./charts/checkout \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/checkout/values.yaml \
-      -f ./overrides/checkout/values.{{ENV}}.yaml
+      -f ./overrides/checkout/values.{{ENV}}.yaml \
+      -f ./overrides/checkout/values.secrets.{{ENV}}.yaml
 
 # uninstall Labs64.IO :: Checkout
 labs64io-checkout-uninstall:
@@ -189,7 +190,8 @@ labs64io-payment-gateway-install:
     helm upgrade --install labs64io-payment-gateway ./charts/payment-gateway \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/payment-gateway/values.yaml \
-      -f ./overrides/payment-gateway/values.{{ENV}}.yaml
+      -f ./overrides/payment-gateway/values.{{ENV}}.yaml \
+      -f ./overrides/payment-gateway/values.secrets.{{ENV}}.yaml
 
 # uninstall Labs64.IO :: Payment Gateway
 labs64io-payment-gateway-uninstall:
@@ -301,7 +303,7 @@ rabbitmq-install: repo-update
 	@echo "Waiting for RabbitMQ to be ready..."
 	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
 	@echo "Username      : labs64"
-	@echo "Password      : labs64pw"
+	@echo "Password      : labs64-local"
 
 # uninstall RabbitMQ
 rabbitmq-uninstall:

@@ -1,0 +1,4 @@
+mirrors:
+  "localhost:5005":
+    endpoint:
+      - "http://k3d-labs64io-registry:5000"

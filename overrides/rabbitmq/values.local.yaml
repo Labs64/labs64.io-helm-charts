@@ -2,7 +2,7 @@ replicaCount: 2
 
 auth:
   username: labs64
-  password: labs64pw
+  password: labs64-local
 
 persistence:
   enabled: true

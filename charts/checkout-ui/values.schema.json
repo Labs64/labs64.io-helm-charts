@@ -25,8 +25,8 @@
               "description": "Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).",
               "properties": {
                 "VITE_API_URL": {
-                  "default": "https://\u003cHOST\u003e/api/v1/checkout",
-                  "description": "Primary API base URL — replace \u003cHOST\u003e with your domain/host.",
+                  "default": "https://<HOST>/api/v1/checkout",
+                  "description": "Primary API base URL \u2014 replace <HOST> with your domain/host.",
                   "title": "VITE_API_URL",
                   "type": "string"
                 }
@@ -667,6 +667,27 @@
             "memory"
           ],
           "title": "requests",
+          "type": "object"
+        },
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "500m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "1Gi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
           "type": "object"
         }
       },

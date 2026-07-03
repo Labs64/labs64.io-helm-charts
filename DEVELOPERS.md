@@ -160,7 +160,13 @@ All Labs64.IO modules must be built as Docker images and pushed to the local reg
 
 ### Build all images
 
+Before building images, you must ensure the local Docker registry (`localhost:5005`) is running. It is created automatically when you create the k3d cluster.
+
 ```bash
+# 1. Create the cluster (and registry)
+k3d cluster create --config k3d/labs64io.yaml
+
+# 2. Build and push all images
 # From labs64.io-helm-charts/
 just build-images
 ```
@@ -215,7 +221,12 @@ just local-up
 
 This creates a k3d cluster, installs Traefik, the mock OIDC provider, all necessary infrastructure (RabbitMQ, PostgreSQL, Redis), and deploys all Labs64.IO modules. Takes ~5-10 minutes depending on your internet speed.
 
-**Important:** Before running `just local-up`, you must build and push all module images to the local registry. See [Building module images](#building-module-images) below.
+**Important:** Before running `just local-up`, you must create the cluster and push all module images to the local registry.
+```bash
+k3d cluster create --config k3d/labs64io.yaml
+just build-images
+just local-up
+```
 
 When it finishes:
 
@@ -298,12 +309,20 @@ Wait for all pods:
 kubectl get pods -n tools
 ```
 
-### 6. Install Labs64.IO modules
+### 6. Build and Install Labs64.IO modules
 
-**All at once:**
+**Build images (Required if not available in localhost:5005):**
 ```bash
-# This is automatically run by `just local-up`
-just labs64io-all-install
+just build-images
+```
+
+**Note on Secrets:**
+Before installing the modules, make sure you have the required secrets configured. If the pods fail with `secret not found`, you may need to provide the appropriate values in `labs64.io-helm-charts/overrides/<module>/values.secrets.local.yaml`. These files are ignored by git but injected during the local helm upgrade.
+
+**Install all at once:**
+```bash
+# This will start everything locally
+just local-up
 ```
 
 **Or one at a time:**

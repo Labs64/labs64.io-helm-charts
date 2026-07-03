@@ -20,6 +20,11 @@ registries:
     name: labs64io-registry
     host: "0.0.0.0"
     hostPort: "5005"
+  config: |
+    mirrors:
+      "localhost:5005":
+        endpoint:
+          - "http://labs64io-registry:5000"
 options:
   k3s:
     extraArgs:

@@ -8,16 +8,18 @@ Chart:        {{ .Chart.Name }}-{{ .Chart.Version }}
 App Version:  {{ .Chart.AppVersion }}
 
 {{- if .Values.applicationYaml }}
-{{- if .Values.applicationYaml.pipelines }}
-{{- if gt (len .Values.applicationYaml.pipelines) 0 }}
+{{- if .Values.applicationYaml.auditflow }}
+{{- if .Values.applicationYaml.auditflow.pipelines }}
+{{- if gt (len .Values.applicationYaml.auditflow.pipelines) 0 }}
 
-📊 Configured Pipelines ({{ len .Values.applicationYaml.pipelines }}):
-{{- range .Values.applicationYaml.pipelines }}
+📊 Configured Pipelines ({{ len .Values.applicationYaml.auditflow.pipelines }}):
+{{- range .Values.applicationYaml.auditflow.pipelines }}
   - {{ .name }} ({{ if .enabled }}✓ enabled{{ else }}✗ disabled{{ end }})
 {{- end }}
 {{- else }}
 
 ⚠️  No pipelines configured. Events will be published but not processed.
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
