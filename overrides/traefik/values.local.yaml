@@ -13,7 +13,7 @@ providers:
 #    web:
 #      namespacePolicy: All
 
-logs:
-  general:
-    #format: json
-    level: "TRACE"
+# logs:
+#   general:
+#     #format: json
+#     level: "TRACE"

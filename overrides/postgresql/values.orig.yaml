@@ -15,7 +15,7 @@ global:
   ##
   imagePullSecrets: []
   ## @param global.defaultStorageClass Global default StorageClass for Persistent Volume(s)
-## @param global.storageClass DEPRECATED: use global.defaultStorageClass instead
+  ## @param global.storageClass DEPRECATED: use global.defaultStorageClass instead
   ##
   defaultStorageClass: ""
   storageClass: ""
@@ -34,6 +34,7 @@ global:
     ## @param global.postgresql.auth.secretKeys.adminPasswordKey Name of key in existing secret to use for PostgreSQL credentials (overrides `auth.secretKeys.adminPasswordKey`). Only used when `global.postgresql.auth.existingSecret` is set.
     ## @param global.postgresql.auth.secretKeys.userPasswordKey Name of key in existing secret to use for PostgreSQL credentials (overrides `auth.secretKeys.userPasswordKey`). Only used when `global.postgresql.auth.existingSecret` is set.
     ## @param global.postgresql.auth.secretKeys.replicationPasswordKey Name of key in existing secret to use for PostgreSQL credentials (overrides `auth.secretKeys.replicationPasswordKey`). Only used when `global.postgresql.auth.existingSecret` is set.
+    ## @param global.postgresql.auth.secretKeys.metricsPasswordKey Name of key in existing secret to use for PostgreSQL credentials (overrides `auth.secretKeys.metricsPasswordKey`). Only used when `global.postgresql.auth.existingSecret` is set.
     ##
     fullnameOverride: ""
     auth:
@@ -46,6 +47,7 @@ global:
         adminPasswordKey: ""
         userPasswordKey: ""
         replicationPasswordKey: ""
+        metricsPasswordKey: ""
     ## @param global.postgresql.service.ports.postgresql PostgreSQL service port (overrides `service.ports.postgresql`)
     ##
     service:
@@ -60,7 +62,7 @@ global:
       ## @param global.compatibility.openshift.adaptSecurityContext Adapt the securityContext sections of the deployment to make them compatible with Openshift restricted-v2 SCC: remove runAsUser, runAsGroup and fsGroup and let the platform use their allowed default IDs. Possible values: auto (apply if the detected running cluster is Openshift), force (perform the adaptation always), disabled (do not perform adaptation)
       ##
       adaptSecurityContext: auto
-  ## @param global.defaultFips Default value for the FIPS configuration (allowed values: '', restricted, relaxed, off). Can be overriden by the 'fips' object
+  ## @param global.defaultFips Default value for the FIPS configuration (allowed values: '', restricted, relaxed, off). Can be overridden by the 'fips' object
   ##  Configure FIPS mode: '', 'restricted', 'relaxed', 'off'
   ##
   defaultFips: restricted
@@ -169,17 +171,25 @@ auth:
   ## @param auth.replicationPassword Password for the replication user. Ignored if `auth.existingSecret` is provided
   ##
   replicationPassword: ""
+  ## @param auth.metricsUsername Name of the metrics user used by postgresql exporter
+  ##
+  metricsUsername: ""
+  ## @param auth.metricsPassword Password for the metrics user used by postgresql exporter. Ignored if `auth.existingSecret` is provided
+  ##
+  metricsPassword: ""
   ## @param auth.existingSecret Name of existing secret to use for PostgreSQL credentials. `auth.postgresPassword`, `auth.password`, and `auth.replicationPassword` will be ignored and picked up from this secret. The secret might also contains the key `ldap-password` if LDAP is enabled. `ldap.bind_password` will be ignored and picked from this secret in this case.
   ##
   existingSecret: ""
   ## @param auth.secretKeys.adminPasswordKey Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.
   ## @param auth.secretKeys.userPasswordKey Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.
   ## @param auth.secretKeys.replicationPasswordKey Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.
+  ## @param auth.secretKeys.metricsPasswordKey Name of key in existing secret to use for PostgreSQL credentials. Only used when `auth.existingSecret` is set.
   ##
   secretKeys:
     adminPasswordKey: postgres-password
     userPasswordKey: password
     replicationPasswordKey: replication-password
+    metricsPasswordKey: metrics-password
   ## @param auth.usePasswordFiles Mount credentials as a files instead of using an environment variable
   ##
   usePasswordFiles: true
@@ -311,6 +321,11 @@ tls:
   ## @param tls.crlFilename File containing a Certificate Revocation List
   ##
   crlFilename: ""
+  ## @param tls.sslMode SSL mode to use when connecting to PostgreSQL. Applied to backup CronJob and password-update Job.
+  ## Accepted values: disable, allow, prefer, require, verify-ca, verify-full
+  ## ref: https://www.postgresql.org/docs/current/libpq-ssl.html
+  ##
+  sslMode: "verify-ca"
 ## @section PostgreSQL Primary parameters
 ##
 primary:
@@ -373,8 +388,15 @@ primary:
     ##
     user: ""
     ## @param primary.initdb.password Specify the PostgreSQL password to execute the initdb scripts
+    ## The password is stored in a Kubernetes Secret and injected via secretKeyRef rather than as a plaintext env value.
     ##
     password: ""
+    ## @param primary.initdb.existingSecret Name of an existing Secret containing the initdb password. The key must be specified via existingSecretKey.
+    ##
+    existingSecret: ""
+    ## @param primary.initdb.existingSecretKey Key in the existing Secret containing the initdb password.
+    ##
+    existingSecretKey: "initdb-password"
   ## Pre-init configuration
   ## ref: https://github.com/bitnami/containers/tree/main/bitnami/postgresql/#on-container-start
   preInitDb:
@@ -615,6 +637,10 @@ primary:
   ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
   ##
   schedulerName: ""
+  ## @param primary.runtimeClassName Name of the runtime class to be used by pod(s)
+  ## ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
+  ##
+  runtimeClassName: ""
   ## @param primary.terminationGracePeriodSeconds Seconds PostgreSQL primary pod needs to terminate gracefully
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods
   ##
@@ -723,6 +749,9 @@ primary:
   ## PostgreSQL Primary service configuration
   ##
   service:
+    ## @param primary.service.enabled Enable/disable the PostgreSQL primary service
+    ##
+    enabled: true
     ## @param primary.service.type Kubernetes Service type
     ##
     type: ClusterIP
@@ -1076,6 +1105,10 @@ readReplicas:
   ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
   ##
   schedulerName: ""
+  ## @param readReplicas.runtimeClassName Name of the runtime class to be used by pod(s)
+  ## ref: https://kubernetes.io/docs/concepts/containers/runtime-class/
+  ##
+  runtimeClassName: ""
   ## @param readReplicas.terminationGracePeriodSeconds Seconds PostgreSQL read only pod needs to terminate gracefully
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods
   ##
@@ -1334,6 +1367,9 @@ backup:
     ttlSecondsAfterFinished: ""
     ## @param backup.cronjob.restartPolicy Set the cronjob parameter restartPolicy
     restartPolicy: OnFailure
+    ## @param backup.cronjob.podLabels Additional pod labels for backup cronjob pods
+    ##
+    podLabels: {}
     ## @param backup.cronjob.podSecurityContext.enabled Enable PodSecurityContext for CronJob/Backup
     ## @param backup.cronjob.podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
     ## @param backup.cronjob.podSecurityContext.sysctls Set kernel settings using the sysctl interface
