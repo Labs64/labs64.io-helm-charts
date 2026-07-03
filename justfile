@@ -5,6 +5,19 @@ NAMESPACE_KUBE_SYSTEM := "kube-system"
 NAMESPACE_MONITORING := "monitoring"
 NAMESPACE_TOOLS := "tools"
 HELM_DOCS_VERSION := "v1.14.2"
+TRAEFIK_CHART_VERSION := "41.0.1"
+TRAEFIK_CRDS_CHART_VERSION := "1.18.0"
+METRICS_SERVER_CHART_VERSION := "3.13.1"
+RABBITMQ_CHART_VERSION := "16.0.14"
+POSTGRESQL_CHART_VERSION := "16.7.27"
+REDIS_CHART_VERSION := "20.13.4"
+KEYCLOAK_CHART_VERSION := "25.2.0"
+OTEL_OPERATOR_CHART_VERSION := "0.118.0"
+OTEL_COLLECTOR_CHART_VERSION := "0.162.0"
+PROMETHEUS_STACK_CHART_VERSION := "87.5.1"
+TEMPO_CHART_VERSION := "1.24.4"
+GRAFANA_CHART_VERSION := "10.5.15"
+INGRESS_NGINX_CHART_VERSION := "4.15.1"
 
 ## Useful Commands ##
 
@@ -190,6 +203,7 @@ metrics-server-install: repo-update
     helm search repo metrics-server/metrics-server
     helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
     helm upgrade --install metrics-server metrics-server/metrics-server \
+      --version {{METRICS_SERVER_CHART_VERSION}} \
       -f overrides/metrics-server/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_KUBE_SYSTEM}} \
       --set args="{--kubelet-insecure-tls}"
@@ -206,8 +220,8 @@ traefik-install: repo-update
     helm search repo traefik/traefik
     helm show values traefik/traefik > overrides/traefik/values.orig.yaml
     helm show values traefik/traefik-crds > overrides/traefik/values-crds.orig.yaml
-    helm upgrade --install traefik-crds traefik/traefik-crds --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
+    helm upgrade --install traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
 
 # Traefik Dashboard
 traefik-dashboard:
@@ -222,7 +236,7 @@ traefik-uninstall:
 rabbitmq-install: repo-update
     helm search repo bitnami/rabbitmq
     helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install rabbitmq bitnami/rabbitmq --version {{RABBITMQ_CHART_VERSION}} -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
     @echo "Username      : labs64"
     @echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
     @echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
@@ -236,6 +250,7 @@ postgresql-install: repo-update
     helm search repo bitnami/postgresql
     helm show values bitnami/postgresql > overrides/postgresql/values.orig.yaml
     helm upgrade --install postgresql bitnami/postgresql \
+      --version {{POSTGRESQL_CHART_VERSION}} \
       -f overrides/postgresql/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_TOOLS}} --create-namespace
     @echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
@@ -250,7 +265,7 @@ postgresql-uninstall:
 redis-install: repo-update
     helm search repo bitnami/redis
     helm show values bitnami/redis > overrides/redis/values.orig.yaml
-    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install redis bitnami/redis --version {{REDIS_CHART_VERSION}} -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
 
 # uninstall Redis
 redis-uninstall:
@@ -260,7 +275,7 @@ redis-uninstall:
 keycloak-install: repo-update
     helm search repo bitnami/keycloak
     helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
-    helm upgrade --install keycloak bitnami/keycloak -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install keycloak bitnami/keycloak --version {{KEYCLOAK_CHART_VERSION}} -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
     kubectl --namespace {{NAMESPACE_TOOLS}} apply -f overrides/keycloak/keycloak-ingressroute.yaml
 
 # uninstall Keycloak
@@ -317,9 +332,11 @@ opentelemetry-install: repo-update
     helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
     helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
     helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
+      --version {{OTEL_OPERATOR_CHART_VERSION}} \
       -f overrides/opentelemetry/values-operator.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
     helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector \
+      --version {{OTEL_COLLECTOR_CHART_VERSION}} \
       -f overrides/opentelemetry/values-collector.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
 
@@ -333,6 +350,7 @@ prometheus-install: repo-update
     helm search repo prometheus-community
     helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
     helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+      --version {{PROMETHEUS_STACK_CHART_VERSION}} \
       -f overrides/prometheus/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
@@ -346,6 +364,7 @@ tempo-install: repo-update
     helm search repo grafana/tempo
     helm show values grafana/tempo > overrides/tempo/values.orig.yaml
     helm upgrade --install tempo grafana/tempo \
+      --version {{TEMPO_CHART_VERSION}} \
       -f overrides/tempo/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
@@ -358,6 +377,7 @@ grafana-install: repo-update
     helm search repo grafana/grafana
     helm show values grafana/grafana > overrides/grafana/values.orig.yaml
     helm upgrade --install grafana grafana/grafana \
+      --version {{GRAFANA_CHART_VERSION}} \
       -f overrides/grafana/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
     @echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
@@ -381,6 +401,7 @@ ingress-install: repo-update
     helm search repo ingress-nginx/ingress-nginx
     helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
     helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+      --version {{INGRESS_NGINX_CHART_VERSION}} \
       -f overrides/ingress-nginx/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_INGRESS}} --create-namespace
 
