@@ -320,11 +320,17 @@
                     },
                     "title": "roles",
                     "type": "array"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
                   }
                 },
                 "required": [
                   "path",
                   "port",
+                  "stripPrefix",
                   "roles"
                 ],
                 "type": "object"

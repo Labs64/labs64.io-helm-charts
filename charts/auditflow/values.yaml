@@ -316,9 +316,10 @@ gateway:
     securityHeaders: gateway-common-security-headers
   # -- Routes exposed by this module
   routes:
-    # -- AuditFlow API (protected)
+    # -- AuditFlow API (protected, prefix stripped before forwarding)
     - path: /api
       port: 8080
+      stripPrefix: true
       roles:
         - admin-role
         - auditflow-role

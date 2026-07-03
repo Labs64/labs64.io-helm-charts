@@ -47,12 +47,12 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` | Environment variables to add to the container |
 | fullnameOverride | string | `""` |  |
-| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"","routes":[{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"]},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"","routes":[{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"],"stripPrefix":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
 | gateway.entryPoints | list | `["web","websecure"]` | Traefik entry points |
 | gateway.prefix | string | `""` | External path prefix; defaults to /<chart-name> |
-| gateway.routes | list | `[{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"]},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
-| gateway.routes[0] | object | `{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"]}` | AuditFlow API (protected) |
+| gateway.routes | list | `[{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"],"stripPrefix":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
+| gateway.routes[0] | object | `{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"],"stripPrefix":true}` | AuditFlow API (protected, prefix stripped before forwarding) |
 | gateway.routes[1] | object | `{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}` | OpenAPI docs (public, prefix stripped before forwarding) |
 | gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}` | Names of the shared middlewares provided by the gateway-common chart |
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |

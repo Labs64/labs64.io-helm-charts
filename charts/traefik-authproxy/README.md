@@ -35,7 +35,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | env[2] | object | `{"name":"ROLE_MAPPING_FILE","value":"/opt/application-config/role_mapping.yaml"}` | Path to the role mapping file for the auth proxy. |
 | env[3] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
 | env[4] | object | `{"name":"ROLE_MAPPING_DIR","value":"/opt/role-mappings"}` | Directory with per-module role-mapping fragments (populated by the k8s-sidecar) |
-| env[5] | object | `{"name":"TOKEN_ROLES_CLAIM_PATHS","value":"realm_access.roles,resource_access.{audience}.roles"}` | Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE. Default: realm_access.roles,resource_access.{audience}.roles (Keycloak / mock-oauth2-server compatible). |
+| env[5] | object | `{"name":"TOKEN_ROLES_CLAIM_PATHS","value":"realm_access.roles,resource_access.{audience}.roles"}` | Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE. Default: realm_access.roles,resource_access.{audience}.roles. |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
@@ -65,7 +65,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | resources.requests.memory | string | `"512Mi"` |  |
 | roleMapping | object | `{"/actuator":[],"/auth":[],"/docs":[],"/health":[],"/public":[],"/swagger-ui":[],"/v3/api-docs":[]}` | Role mappings for the auth proxy. |
 | roleMapping./auth | list | `[]` | public paths |
-| roleMappingSidecar | object | `{"enabled":true,"folder":"/opt/role-mappings","image":{"pullPolicy":"IfNotPresent","repository":"kiwigrid/k8s-sidecar","tag":"1.30.0"},"label":"labs64.io/role-mapping","labelValue":"true","resources":{"limits":{"cpu":"50m","memory":"64Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}` | Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true) |
+| roleMappingSidecar | object | `{"enabled":true,"folder":"/opt/role-mappings","image":{"pullPolicy":"IfNotPresent","repository":"kiwigrid/k8s-sidecar","tag":"1.30.0"},"label":"labs64.io/role-mapping","labelValue":"true","resources":{"limits":{"cpu":"50m","memory":"128Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}` | Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true) |
 | roleMappingSidecar.folder | string | `"/opt/role-mappings"` | Directory (shared emptyDir) the fragments are written to |
 | roleMappingSidecar.label | string | `"labs64.io/role-mapping"` | ConfigMap label to watch |
 | securityContext | object | `{}` |  |

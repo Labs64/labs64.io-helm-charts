@@ -18,6 +18,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | `charts/preflight/` | Infrastructure readiness checks |
 | `charts/chart-libs/` | Shared Helm library (all charts depend on this) |
 | `overrides/` | Per-module values files for different profiles |
+| `DEVELOPERS.md` | Local development setup guide with architecture diagram |
 
 ## Critical guardrails
 

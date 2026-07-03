@@ -5,7 +5,7 @@ metadata:
 type: Opaque
 stringData:
   RABBITMQ_DEFAULT_USER: "labs64"
-  RABBITMQ_DEFAULT_PASS: "labs64pw"
+  RABBITMQ_DEFAULT_PASS: "labs64-local"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

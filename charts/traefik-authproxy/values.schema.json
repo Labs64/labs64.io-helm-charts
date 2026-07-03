@@ -775,7 +775,7 @@
                   "type": "string"
                 },
                 "memory": {
-                  "default": "64Mi",
+                  "default": "128Mi",
                   "title": "memory",
                   "type": "string"
                 }
