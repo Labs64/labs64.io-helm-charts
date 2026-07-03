@@ -187,6 +187,14 @@ labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-common
 # uninstall Labs64.IO :: all components
 labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-common-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-checkout-ui-uninstall labs64io-payment-gateway-uninstall labs64io-customer-portal-ui-uninstall
 
+# install a single Labs64.IO module standalone (bundled infra, no gateway stack)
+labs64io-standalone-install module:
+    helm dependencies update ./charts/{{module}}
+    helm upgrade --install labs64io-{{module}} ./charts/{{module}} \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/{{module}}/values.yaml \
+      -f ./overrides/{{module}}/values.standalone.yaml
+
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
     kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true

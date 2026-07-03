@@ -1,0 +1,10 @@
+# Standalone/eval profile: bundled infra, no gateway stack required.
+# Install: helm upgrade --install my-payment-gateway ./charts/payment-gateway -f ./charts/payment-gateway/values.yaml -f ./overrides/payment-gateway/values.standalone.yaml
+rabbitmq:
+  enabled: true
+
+postgresql:
+  enabled: true
+
+redis:
+  enabled: true
