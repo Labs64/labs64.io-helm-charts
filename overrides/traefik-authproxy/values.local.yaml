@@ -15,9 +15,14 @@ env:
   - name: LOG_LEVEL
     value: DEBUG
 
-# -- authproxy/system public paths only; module paths are provided by
-# per-module ConfigMap fragments (label labs64.io/role-mapping=true)
+# -- public paths (empty list = no auth required)
+# -- protected paths (list of roles = user must have at least one)
 roleMapping:
+  # system paths
   /auth: []
   /health: []
   /docs: []
+  /public: []
+  /swagger-ui: []
+  /v3/api-docs: []
+  /actuator: []

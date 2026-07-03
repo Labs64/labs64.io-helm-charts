@@ -22,7 +22,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | Repository | Name | Version |
 |------------|------|---------|
 | file://../chart-libs | chart-libs | 0.0.1 |
-| https://charts.bitnami.com/bitnami | postgresql | ^16.0.0 |
+| https://charts.bitnami.com/bitnami | postgresql | ^18.0.0 |
 | https://charts.bitnami.com/bitnami | rabbitmq | ^16.0.0 |
 
 ## Values
@@ -30,10 +30,10 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
-| applicationYaml | object | `{"spring":{"datasource":{"url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}"},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}}}` | Additional application properties |
-| applicationYaml.spring | object | `{"datasource":{"url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}"},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}}` | Spring configuration |
-| applicationYaml.spring.datasource | object | `{"url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}"}` | PostgreSQL connection params |
-| applicationYaml.spring.datasource.url | string | `"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}"` | JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL |
+| applicationYaml | object | `{"spring":{"datasource":{"url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}"},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}}}` | Additional application properties |
+| applicationYaml.spring | object | `{"datasource":{"url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}"},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}}` | Spring configuration |
+| applicationYaml.spring.datasource | object | `{"url":"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}"}` | PostgreSQL connection params |
+| applicationYaml.spring.datasource.url | string | `"{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}"` | JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL |
 | applicationYaml.spring.rabbitmq | object | `{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}` | RabbitMQ connection params |
 | applicationYaml.spring.rabbitmq.host | string | `"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}"` | RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host |
 | applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |

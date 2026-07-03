@@ -232,7 +232,7 @@ applicationYaml:
     # -- PostgreSQL connection params
     datasource:
       # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
-      url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/checkout" .Values.postgresql.enabled }}'
+      url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout" .Values.postgresql.enabled }}'
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
   # -- Publish this module's routes on the Traefik gateway

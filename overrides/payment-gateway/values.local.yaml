@@ -10,10 +10,10 @@ networkPolicy:
   enabled: true
 
 rabbitmq:
-  enabled: true
+  enabled: false
 
 postgresql:
-  enabled: true
+  enabled: false
 
 redis:
-  enabled: true
+  enabled: false

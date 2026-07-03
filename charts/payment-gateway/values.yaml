@@ -255,7 +255,7 @@ applicationYaml:
     # -- PostgreSQL connection params
     datasource:
       # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
-      url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql-primary.tools.svc.cluster.local:5432/payment_gateway" .Values.postgresql.enabled }}'
+      url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway" .Values.postgresql.enabled }}'
 
     # -- Redis connection params
     data:
