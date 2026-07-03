@@ -1,0 +1,35 @@
+# -- Connectivity checks to run; enable only what your modules need.
+checks:
+  # -- AMQP broker reachability (TCP connect)
+  rabbitmq:
+    enabled: false
+    host: rabbitmq.infra.example.com
+    port: 5672
+  # -- PostgreSQL connectivity and login (SELECT 1)
+  postgresql:
+    enabled: false
+    host: postgres.infra.example.com
+    port: 5432
+    database: postgres
+    username: ""
+    password: ""
+  # -- Redis connectivity (PING)
+  redis:
+    enabled: false
+    host: redis.infra.example.com
+    port: 6379
+    password: ""
+  # -- OIDC discovery + client_credentials token grant
+  oidc:
+    enabled: false
+    discoveryUrl: https://idp.example.com/realms/example/.well-known/openid-configuration
+    clientId: ""
+    clientSecret: ""
+    scope: ""
+
+# -- Images used by the check containers
+images:
+  busybox: busybox:1.36
+  postgresql: bitnamilegacy/postgresql:17.6.0-debian-12-r4
+  redis: bitnamilegacy/redis:7.4.3-debian-12-r0
+  curl: curlimages/curl:8.10.1
