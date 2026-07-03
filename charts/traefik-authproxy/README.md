@@ -29,10 +29,12 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
+| chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env[0] | object | `{"name":"OIDC_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | Keycloak discovery URL for the auth proxy. |
 | env[1] | object | `{"name":"OIDC_AUDIENCE","value":"account"}` | Audience for the auth proxy. |
 | env[2] | object | `{"name":"ROLE_MAPPING_FILE","value":"/opt/application-config/role_mapping.yaml"}` | Path to the role mapping file for the auth proxy. |
 | env[3] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
+| env[4] | object | `{"name":"ROLE_MAPPING_DIR","value":"/opt/role-mappings"}` | Directory with per-module role-mapping fragments (populated by the k8s-sidecar) |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
@@ -47,16 +49,24 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | nameOverride | string | `""` | This is to override the chart name. |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
+| podDisruptionBudget | object | `{"enabled":true,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
-| rbac.create | bool | `false` |  |
-| rbac.rules | list | `[]` |  |
+| rbac.create | bool | `true` |  |
+| rbac.rules[0].apiGroups[0] | string | `""` |  |
+| rbac.rules[0].resources[0] | string | `"configmaps"` |  |
+| rbac.rules[0].verbs[0] | string | `"get"` |  |
+| rbac.rules[0].verbs[1] | string | `"list"` |  |
+| rbac.rules[0].verbs[2] | string | `"watch"` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/docs","port":8081},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
-| replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
+| replicaCount | int | `2` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ The authproxy sits on the hot path of every protected request - keep at least 2 replicas. |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
 | roleMapping | object | `{"/actuator":[],"/auth":[],"/docs":[],"/health":[],"/public":[],"/swagger-ui":[],"/v3/api-docs":[]}` | Role mappings for the auth proxy. |
 | roleMapping./auth | list | `[]` | public paths |
+| roleMappingSidecar | object | `{"enabled":true,"folder":"/opt/role-mappings","image":{"pullPolicy":"IfNotPresent","repository":"kiwigrid/k8s-sidecar","tag":"1.30.0"},"label":"labs64.io/role-mapping","labelValue":"true","resources":{"limits":{"cpu":"50m","memory":"64Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}` | Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true) |
+| roleMappingSidecar.folder | string | `"/opt/role-mappings"` | Directory (shared emptyDir) the fragments are written to |
+| roleMappingSidecar.label | string | `"labs64.io/role-mapping"` | ConfigMap label to watch |
 | securityContext | object | `{}` |  |
 | service | object | `{"port":8081,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8081` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |

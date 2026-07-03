@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "authProxy": {
+      "additionalProperties": false,
+      "description": "ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy)",
+      "properties": {
+        "address": {
+          "default": "http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth",
+          "description": "Cluster-internal address of the traefik-authproxy /auth endpoint",
+          "title": "address",
+          "type": "string"
+        },
+        "authResponseHeaders": {
+          "description": "Identity headers copied from the authproxy response onto the upstream request",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "authResponseHeaders",
+          "type": "array"
+        },
+        "trustForwardHeader": {
+          "default": true,
+          "description": "Trust X-Forwarded-* headers from the proxy",
+          "title": "trustForwardHeader",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "address",
+        "trustForwardHeader",
+        "authResponseHeaders"
+      ],
+      "title": "authProxy",
+      "type": "object"
+    },
+    "chart-libs": {
+      "additionalProperties": true,
+      "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
+      "required": [],
+      "title": "chart-libs",
+      "type": "object"
+    },
+    "fullnameOverride": {
+      "default": "gateway-common",
+      "description": "Fixed resource-name prefix so module charts can reference middlewares by a stable name",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "nameOverride": {
+      "default": "",
+      "description": "This is to override the chart name.",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "rateLimit": {
+      "additionalProperties": false,
+      "description": "Rate limit middleware configuration",
+      "properties": {
+        "average": {
+          "default": 100,
+          "description": "Average requests per second",
+          "title": "average",
+          "type": "integer"
+        },
+        "burst": {
+          "default": 50,
+          "description": "Burst size",
+          "title": "burst",
+          "type": "integer"
+        },
+        "perUser": {
+          "default": true,
+          "description": "Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent",
+          "title": "perUser",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "average",
+        "burst",
+        "perUser"
+      ],
+      "title": "rateLimit",
+      "type": "object"
+    },
+    "securityHeaders": {
+      "additionalProperties": false,
+      "description": "Security headers middleware configuration",
+      "properties": {
+        "browserXssFilter": {
+          "default": true,
+          "title": "browserXssFilter",
+          "type": "boolean"
+        },
+        "contentSecurityPolicy": {
+          "default": "default-src 'self'; script-src 'self'; object-src 'none'",
+          "title": "contentSecurityPolicy",
+          "type": "string"
+        },
+        "contentTypeNosniff": {
+          "default": true,
+          "title": "contentTypeNosniff",
+          "type": "boolean"
+        },
+        "forceSTSHeader": {
+          "default": true,
+          "title": "forceSTSHeader",
+          "type": "boolean"
+        },
+        "frameDeny": {
+          "default": true,
+          "title": "frameDeny",
+          "type": "boolean"
+        },
+        "referrerPolicy": {
+          "default": "strict-origin-when-cross-origin",
+          "title": "referrerPolicy",
+          "type": "string"
+        },
+        "stsIncludeSubdomains": {
+          "default": true,
+          "title": "stsIncludeSubdomains",
+          "type": "boolean"
+        },
+        "stsSeconds": {
+          "default": 31536000,
+          "title": "stsSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "frameDeny",
+        "contentTypeNosniff",
+        "browserXssFilter",
+        "referrerPolicy",
+        "contentSecurityPolicy",
+        "forceSTSHeader",
+        "stsSeconds",
+        "stsIncludeSubdomains"
+      ],
+      "title": "securityHeaders",
+      "type": "object"
+    }
+  },
+  "required": [
+    "fullnameOverride",
+    "nameOverride",
+    "authProxy",
+    "rateLimit",
+    "securityHeaders"
+  ],
+  "type": "object"
+}

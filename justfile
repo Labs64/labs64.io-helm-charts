@@ -95,6 +95,18 @@ labs64io-gateway-install:
 labs64io-gateway-uninstall:
     helm uninstall labs64io-gateway --namespace {{NAMESPACE_LABS64IO}}
 
+# install Labs64.IO :: Gateway Common (shared Traefik middlewares)
+labs64io-gateway-common-install:
+    helm dependencies update ./charts/gateway-common
+    helm upgrade --install labs64io-gateway-common ./charts/gateway-common \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/gateway-common/values.yaml \
+      -f ./overrides/gateway-common/values.{{ENV}}.yaml
+
+# uninstall Labs64.IO :: Gateway Common
+labs64io-gateway-common-uninstall:
+    helm uninstall labs64io-gateway-common --namespace {{NAMESPACE_LABS64IO}}
+
 # install Labs64.IO :: AuditFlow
 labs64io-auditflow-install:
     helm dependencies update ./charts/auditflow
@@ -157,10 +169,10 @@ labs64io-customer-portal-ui-uninstall:
     helm uninstall labs64io-customer-portal-ui --namespace {{NAMESPACE_LABS64IO}}
 
 # install Labs64.IO :: all components
-labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install labs64io-checkout-ui-install labs64io-payment-gateway-install labs64io-customer-portal-ui-install
+labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-common-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install labs64io-checkout-ui-install labs64io-payment-gateway-install labs64io-customer-portal-ui-install
 
 # uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-checkout-ui-uninstall labs64io-payment-gateway-uninstall labs64io-customer-portal-ui-uninstall
+labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-common-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-checkout-ui-uninstall labs64io-payment-gateway-uninstall labs64io-customer-portal-ui-uninstall
 
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:

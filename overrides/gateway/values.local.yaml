@@ -1,6 +1,9 @@
+global:
+  domain: localhost
+
 ingressroute:
 
-  # -- Define IngressRoute(s) for labs64io-gateway
+  # -- Define IngressRoute(s) for labs64io-gateway (module routes are owned by the module charts)
   routes:
     # -- Map Swagger UI to the root path (public — no auth required)
     - path: /swagger-ui
@@ -10,129 +13,25 @@ ingressroute:
       middlewares:
         - name: strip-prefix-middleware
 
-    # -- Map AuditFlow API (protected — requires auth + rate limit)
-    - path: /auditflow/api
-      service:
-        name: labs64io-auditflow
-        port: 8080
-      middlewares:
-        - name: auth-middleware
-        - name: ratelimit-middleware
-
-    # -- Map AuditFlow API docs (public — no auth required)
-    - path: /auditflow/v3/api-docs
-      service:
-        name: labs64io-auditflow
-        port: 8080
-      middlewares:
-        - name: strip-prefix-middleware
-
-    # -- Map Checkout API (protected — requires auth + rate limit)
-    - path: /checkout/api
-      service:
-        name: labs64io-checkout
-        port: 8080
-      middlewares:
-        - name: auth-middleware
-        - name: ratelimit-middleware
-
-    # -- Map Checkout UI (protected — requires auth)
-    - path: /checkout
-      service:
-        name: labs64io-checkout-ui
-        port: 80
-      middlewares:
-        - name: auth-middleware
-        - name: ratelimit-middleware
-
-    # -- Map Checkout API docs (public — no auth required)
-    - path: /checkout/v3/api-docs
-      service:
-        name: labs64io-checkout
-        port: 8080
-      middlewares:
-        - name: strip-prefix-middleware
-
-    # -- Map Payment Gateway API (protected — requires auth + rate limit)
-    - path: /payment-gateway/api
-      service:
-        name: labs64io-payment-gateway
-        port: 8080
-      middlewares:
-        - name: auth-middleware
-        - name: ratelimit-middleware
-
-    # -- Map Payment Gateway API docs (public — no auth required)
-    - path: /payment-gateway/v3/api-docs
-      service:
-        name: labs64io-payment-gateway
-        port: 8080
-      middlewares:
-        - name: strip-prefix-middleware
-
-    # -- Map Customer Portal UI (protected — requires auth)
-    - path: /customer-portal
-      service:
-        name: labs64io-customer-portal-ui
-        port: 80
-      middlewares:
-        - name: auth-middleware
-        - name: ratelimit-middleware
-
-  # -- Standard Middlewares for labs64io-gateway
+  # -- Middlewares owned by the gateway chart itself
   middlewares:
-    # -- Strip Prefix Middleware
+    # -- Strip Prefix Middleware (swagger-ui only)
     - name: strip-prefix-middleware
       spec:
         stripPrefix:
           prefixes:
             - /swagger-ui
-            - /auditflow
-            - /checkout
-            - /payment-gateway
-            - /customer-portal
-            - /netlicensing
 
-    # -- Auth Middleware (ForwardAuth to traefik-authproxy for OIDC/JWT validation)
-    - name: auth-middleware
-      spec:
-        forwardAuth:
-          address: "http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth"
-          trustForwardHeader: true
-          authResponseHeaders:
-            - "X-User-Id"
-            - "X-Roles"
-
-    # -- Rate Limit Middleware
-    - name: ratelimit-middleware
-      spec:
-        rateLimit:
-          average: 100
-          burst: 50
-
-    # -- Security Headers Middleware
-    - name: security-headers-middleware
-      spec:
-        headers:
-          frameDeny: true
-          contentTypeNosniff: true
-          browserXssFilter: true
-          referrerPolicy: "strict-origin-when-cross-origin"
-          contentSecurityPolicy: "default-src 'self'; script-src 'self'; object-src 'none'"
-          forceSTSHeader: true
-          stsSeconds: 31536000
-          stsIncludeSubdomains: true
-
-# -- Swagger UI Configuration
+# -- Swagger UI Configuration (urls templated via global.domain)
 swaggerUI:
   urls:
-    - url: http://gateway.localhost/auditflow/v3/api-docs
+    - url: http://gateway.{{ .Values.global.domain }}/auditflow/v3/api-docs
       name: AuditFlow API
-    - url: http://gateway.localhost/checkout/v3/api-docs
+    - url: http://gateway.{{ .Values.global.domain }}/checkout/v3/api-docs
       name: Checkout API
-    - url: http://gateway.localhost/payment-gateway/v3/api-docs
+    - url: http://gateway.{{ .Values.global.domain }}/payment-gateway/v3/api-docs
       name: Payment Gateway API
-    - url: http://gateway.localhost/customer-portal/v3/api-docs
+    - url: http://gateway.{{ .Values.global.domain }}/customer-portal/v3/api-docs
       name: Customer Portal API
-    - url: http://gateway.localhost/netlicensing/v3/api-docs
+    - url: http://gateway.{{ .Values.global.domain }}/netlicensing/v3/api-docs
       name: NetLicensing API

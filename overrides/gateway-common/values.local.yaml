@@ -1,0 +1,4 @@
+# Local development overrides for gateway-common
+rateLimit:
+  average: 100
+  burst: 50

@@ -1,5 +1,6 @@
 # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+# The authproxy sits on the hot path of every protected request - keep at least 2 replicas.
+replicaCount: 2
 
 # -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
@@ -28,12 +29,13 @@ serviceAccount:
   name: ""
 
 # RBAC configuration (create RBAC resources: Role, RoleBinding)
+# The role-mapping sidecar needs to watch ConfigMaps in the release namespace.
 rbac:
-  create: false
-  rules: []
-    #- apiGroups: [""]
-    #  resources: ["pods"]
-  #  verbs: ["get", "list", "watch"]
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      verbs: ["get", "list", "watch"]
 
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
@@ -156,6 +158,9 @@ env:
   # -- Log level for the auth proxy.
   - name: LOG_LEVEL
     value: INFO
+  # -- Directory with per-module role-mapping fragments (populated by the k8s-sidecar)
+  - name: ROLE_MAPPING_DIR
+    value: /opt/role-mappings
 
 # -- Role mappings for the auth proxy.
 roleMapping:
@@ -173,3 +178,35 @@ roleMapping:
   #  - <role-name-2>
   #/<path-2>:
   #  - <role-name-2>
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}
+
+# -- Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true)
+roleMappingSidecar:
+  enabled: true
+  image:
+    repository: kiwigrid/k8s-sidecar
+    tag: "1.30.0"
+    pullPolicy: IfNotPresent
+  # -- Directory (shared emptyDir) the fragments are written to
+  folder: /opt/role-mappings
+  # -- ConfigMap label to watch
+  label: labs64.io/role-mapping
+  labelValue: "true"
+  resources:
+    requests:
+      cpu: 10m
+      memory: 32Mi
+    limits:
+      cpu: 50m
+      memory: 64Mi
+
+# -- PodDisruptionBudget (rendered by chart-libs.pdb)
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

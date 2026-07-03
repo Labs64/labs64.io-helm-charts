@@ -45,8 +45,17 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | applicationYaml.transformer.local | object | `{"url":"http://localhost:8081"}` | Local URL for the transformer service |
 | applicationYaml.transformer.service | object | `{"name":"auditflow-transformer","namespace":"default"}` | Service name and namespace for the transformer |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
+| chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` | Environment variables to add to the container |
 | fullnameOverride | string | `""` |  |
+| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"","routes":[{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"]},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
+| gateway.entryPoints | list | `["web","websecure"]` | Traefik entry points |
+| gateway.prefix | string | `""` | External path prefix; defaults to /<chart-name> |
+| gateway.routes | list | `[{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"]},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
+| gateway.routes[0] | object | `{"path":"/api","port":8080,"roles":["admin-role","auditflow-role","default-roles-labs64io"]}` | AuditFlow API (protected) |
+| gateway.routes[1] | object | `{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}` | OpenAPI docs (public, prefix stripped before forwarding) |
+| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}` | Names of the shared middlewares provided by the gateway-common chart |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/auditflow","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
@@ -58,8 +67,12 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | ingressroute.host | string | `"localhost"` | Host for the IngressRoute |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/liveness","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
+| networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
+| networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | nodeSelector | object | `{}` | Node labels for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
+| podDisruptionBudget | object | `{"enabled":false,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext.fsGroup | int | `1064` |  |
 | podSecurityContext.runAsGroup | int | `1064` |  |

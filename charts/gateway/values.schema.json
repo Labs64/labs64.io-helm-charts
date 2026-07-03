@@ -42,6 +42,13 @@
       "title": "autoscaling",
       "type": "object"
     },
+    "chart-libs": {
+      "additionalProperties": true,
+      "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
+      "required": [],
+      "title": "chart-libs",
+      "type": "object"
+    },
     "env": {
       "items": {
         "required": []
@@ -55,8 +62,19 @@
       "type": "string"
     },
     "global": {
-      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
-      "required": [],
+      "additionalProperties": false,
+      "description": "Global values shared across Labs64.IO charts",
+      "properties": {
+        "domain": {
+          "default": "localhost",
+          "description": "Base domain; the gateway is exposed as gateway.\u003cdomain\u003e",
+          "title": "domain",
+          "type": "string"
+        }
+      },
+      "required": [
+        "domain"
+      ],
       "title": "global",
       "type": "object"
     },
@@ -218,9 +236,17 @@
         },
         "host": {
           "default": "gateway.localhost",
-          "description": "Host for the IngressRoute",
+          "description": "DEPRECATED: the host is derived as gateway.\u003cglobal.domain\u003e; this value is ignored",
           "title": "host",
           "type": "string"
+        },
+        "middlewares": {
+          "description": " - path: /\u003cservicename\u003e/v3/api-docs\n   service:\n     name: \u003cservice-name\u003e\n     port: 8080\n   middleware:\n     name: \u003cgateway-service-name\u003e-path-stripper\nMiddlewares owned by this chart (rendered by templates/middleware.yaml)",
+          "items": {
+            "required": []
+          },
+          "title": "middlewares",
+          "type": "array"
         },
         "routes": {
           "description": "IngressRoute routes definitions",
@@ -634,6 +660,7 @@
     }
   },
   "required": [
+    "global",
     "replicaCount",
     "image",
     "imagePullSecrets",

@@ -138,3 +138,9 @@ applicationYaml:
       port: 5672
       username: labs64
       password: "${RABBITMQ_PASSWORD}"
+
+gateway:
+  enabled: true
+
+networkPolicy:
+  enabled: true

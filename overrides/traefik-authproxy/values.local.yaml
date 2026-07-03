@@ -9,20 +9,14 @@ env:
     value: account
   - name: ROLE_MAPPING_FILE
     value: /opt/application-config/role_mapping.yaml
+  - name: ROLE_MAPPING_DIR
+    value: /opt/role-mappings
   - name: LOG_LEVEL
     value: DEBUG
 
+# -- authproxy/system public paths only; module paths are provided by
+# per-module ConfigMap fragments (label labs64.io/role-mapping=true)
 roleMapping:
-  /auditflow/v3/api-docs: []
-  /checkout/v3/api-docs: []
-
-  /api/v1/admin:
-    - admin-role
-  /api/v1/auditflow:
-    - admin-role
-    - auditflow-role
-    - default-roles-labs64io
-  /api/v1/checkout:
-    - admin-role
-    - ecommerce-role
-    - default-roles-labs64io
+  /auth: []
+  /health: []
+  /docs: []

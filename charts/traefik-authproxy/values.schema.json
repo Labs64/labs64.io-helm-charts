@@ -42,6 +42,13 @@
       "title": "autoscaling",
       "type": "object"
     },
+    "chart-libs": {
+      "additionalProperties": true,
+      "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
+      "required": [],
+      "title": "chart-libs",
+      "type": "object"
+    },
     "env": {
       "items": {
         "anyOf": [
@@ -115,6 +122,26 @@
               },
               "value": {
                 "default": "INFO",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "ROLE_MAPPING_DIR",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "/opt/role-mappings",
                 "title": "value",
                 "type": "string"
               }
@@ -388,6 +415,28 @@
       "title": "podAnnotations",
       "type": "object"
     },
+    "podDisruptionBudget": {
+      "additionalProperties": false,
+      "description": "PodDisruptionBudget (rendered by chart-libs.pdb)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "minAvailable": {
+          "default": 1,
+          "title": "minAvailable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minAvailable"
+      ],
+      "title": "podDisruptionBudget",
+      "type": "object"
+    },
     "podLabels": {
       "additionalProperties": false,
       "description": "This is for setting Kubernetes Labels to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
@@ -403,15 +452,70 @@
     },
     "rbac": {
       "additionalProperties": false,
-      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
+      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)\nThe role-mapping sidecar needs to watch ConfigMaps in the release namespace.",
       "properties": {
         "create": {
-          "default": false,
+          "default": true,
           "title": "create",
           "type": "boolean"
         },
         "rules": {
           "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "apiGroups": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "apiGroups",
+                    "type": "array"
+                  },
+                  "resources": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "resources",
+                    "type": "array"
+                  },
+                  "verbs": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "verbs",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "apiGroups",
+                  "resources",
+                  "verbs"
+                ],
+                "type": "object"
+              }
+            ],
             "required": []
           },
           "title": "rules",
@@ -482,8 +586,8 @@
       "type": "object"
     },
     "replicaCount": {
-      "default": 1,
-      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/",
+      "default": 2,
+      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/\nThe authproxy sits on the hot path of every protected request - keep at least 2 replicas.",
       "title": "replicaCount",
       "type": "integer"
     },
@@ -584,6 +688,124 @@
         "/actuator"
       ],
       "title": "roleMapping",
+      "type": "object"
+    },
+    "roleMappingSidecar": {
+      "additionalProperties": false,
+      "description": "Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "folder": {
+          "default": "/opt/role-mappings",
+          "description": "Directory (shared emptyDir) the fragments are written to",
+          "title": "folder",
+          "type": "string"
+        },
+        "image": {
+          "additionalProperties": false,
+          "properties": {
+            "pullPolicy": {
+              "default": "IfNotPresent",
+              "title": "pullPolicy",
+              "type": "string"
+            },
+            "repository": {
+              "default": "kiwigrid/k8s-sidecar",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "1.30.0",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "tag",
+            "pullPolicy"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "label": {
+          "default": "labs64.io/role-mapping",
+          "description": "ConfigMap label to watch",
+          "title": "label",
+          "type": "string"
+        },
+        "labelValue": {
+          "default": "true",
+          "title": "labelValue",
+          "type": "string"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "50m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "64Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "10m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "32Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "requests",
+            "limits"
+          ],
+          "title": "resources",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "image",
+        "folder",
+        "label",
+        "labelValue",
+        "resources"
+      ],
+      "title": "roleMappingSidecar",
       "type": "object"
     },
     "securityContext": {
@@ -704,7 +926,9 @@
     "tolerations",
     "affinity",
     "env",
-    "roleMapping"
+    "roleMapping",
+    "roleMappingSidecar",
+    "podDisruptionBudget"
   ],
   "type": "object"
 }

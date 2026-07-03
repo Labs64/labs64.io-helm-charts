@@ -176,6 +176,13 @@
       "title": "autoscaling",
       "type": "object"
     },
+    "chart-libs": {
+      "additionalProperties": true,
+      "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
+      "required": [],
+      "title": "chart-libs",
+      "type": "object"
+    },
     "env": {
       "items": {
         "required": []
@@ -187,6 +194,158 @@
       "default": "",
       "title": "fullnameOverride",
       "type": "string"
+    },
+    "gateway": {
+      "additionalProperties": false,
+      "description": "Gateway routes published by this module (rendered by chart-libs.gateway-routes)",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Publish this module's routes on the Traefik gateway",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "entryPoints": {
+          "description": "Traefik entry points",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "entryPoints",
+          "type": "array"
+        },
+        "prefix": {
+          "default": "",
+          "description": "External path prefix; defaults to /\u003cchart-name\u003e",
+          "title": "prefix",
+          "type": "string"
+        },
+        "routes": {
+          "description": "Routes exposed by this module",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/api",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "roles": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "roles",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "roles"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/v3/api-docs",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "public": {
+                    "default": true,
+                    "title": "public",
+                    "type": "boolean"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "public",
+                  "stripPrefix"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "routes",
+          "type": "array"
+        },
+        "sharedMiddlewares": {
+          "additionalProperties": false,
+          "description": "Names of the shared middlewares provided by the gateway-common chart",
+          "properties": {
+            "auth": {
+              "default": "gateway-common-auth",
+              "title": "auth",
+              "type": "string"
+            },
+            "rateLimit": {
+              "default": "gateway-common-ratelimit",
+              "title": "rateLimit",
+              "type": "string"
+            },
+            "securityHeaders": {
+              "default": "gateway-common-security-headers",
+              "title": "securityHeaders",
+              "type": "string"
+            }
+          },
+          "required": [
+            "auth",
+            "rateLimit",
+            "securityHeaders"
+          ],
+          "title": "sharedMiddlewares",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "prefix",
+        "entryPoints",
+        "sharedMiddlewares",
+        "routes"
+      ],
+      "title": "gateway",
+      "type": "object"
     },
     "global": {
       "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
@@ -427,6 +586,38 @@
       "title": "nameOverride",
       "type": "string"
     },
+    "networkPolicy": {
+      "additionalProperties": false,
+      "description": "NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "extraIngress": {
+          "description": "Additional raw ingress rules",
+          "items": {
+            "required": []
+          },
+          "title": "extraIngress",
+          "type": "array"
+        },
+        "gatewayNamespace": {
+          "default": "tools",
+          "description": "Namespace where Traefik runs",
+          "title": "gatewayNamespace",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "gatewayNamespace",
+        "extraIngress"
+      ],
+      "title": "networkPolicy",
+      "type": "object"
+    },
     "nodeSelector": {
       "additionalProperties": false,
       "required": [],
@@ -438,6 +629,28 @@
       "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
       "required": [],
       "title": "podAnnotations",
+      "type": "object"
+    },
+    "podDisruptionBudget": {
+      "additionalProperties": false,
+      "description": "PodDisruptionBudget (rendered by chart-libs.pdb)",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "minAvailable": {
+          "default": 1,
+          "title": "minAvailable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minAvailable"
+      ],
+      "title": "podDisruptionBudget",
       "type": "object"
     },
     "podLabels": {
@@ -707,7 +920,10 @@
     "affinity",
     "env",
     "secrets",
-    "applicationYaml"
+    "applicationYaml",
+    "gateway",
+    "podDisruptionBudget",
+    "networkPolicy"
   ],
   "type": "object"
 }

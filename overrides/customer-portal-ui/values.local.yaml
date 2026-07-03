@@ -13,3 +13,9 @@ application:
     env:
       # Primary API base URL
       VITE_API_URL: http://localhost:8010
+
+gateway:
+  enabled: true
+
+networkPolicy:
+  enabled: true
