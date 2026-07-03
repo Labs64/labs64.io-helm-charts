@@ -161,6 +161,10 @@ env:
   # -- Directory with per-module role-mapping fragments (populated by the k8s-sidecar)
   - name: ROLE_MAPPING_DIR
     value: /opt/role-mappings
+  # -- Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE.
+  # Default matches Keycloak (realm_access.roles,resource_access.{audience}.roles); for scope-based IdPs use e.g. "scp".
+  - name: TOKEN_ROLES_CLAIM_PATHS
+    value: "realm_access.roles,resource_access.{audience}.roles"
 
 # -- Role mappings for the auth proxy.
 roleMapping:

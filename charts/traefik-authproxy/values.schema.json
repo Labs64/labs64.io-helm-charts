@@ -151,6 +151,26 @@
               "value"
             ],
             "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "TOKEN_ROLES_CLAIM_PATHS",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "realm_access.roles,resource_access.{audience}.roles",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
           }
         ],
         "required": []
