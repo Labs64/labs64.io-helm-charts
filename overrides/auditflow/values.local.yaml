@@ -53,94 +53,91 @@ applicationYaml:
       name: auditflow-sink
       namespace: default
 
-  pipelines:
-    - name: 'logs'
-      enabled: true
-      transformer:
-        name: 'zero'
-      sink:
-        name: 'logging_sink'
-        properties:
-          log-level: "DEBUG"
-          format: "json"
-    - name: 'aws_s3'
-      enabled: true
-      transformer:
-        name: 'zero'
-      sink:
-        name: 'aws_s3_sink'
-        properties:
-          access-key-id: "${AWS_ACCESS_KEY_ID}"
-          secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
-          region: "us-east-1"
-          bucket: "labs64-io-dev-01"
-          compress: "false"
-          partition-by-date: "true"
-          partition-format: "year=%Y/month=%m/day=%d/"
-          file-format: "json"
-    - name: 'aws_cloudwatch'
-      enabled: true
-      condition:
-        match: 'any'  # 'all' (AND) or 'any' (OR)
-        rules:
-          - field: 'extra.action_status'
-            operator: 'in'
-            value: 'PENDING,FAILURE,WARN,ERROR'
-      transformer:
-        name: 'zero'
-      sink:
-        name: 'aws_cloudwatch_sink'
-        properties:
-          access-key-id: "${AWS_ACCESS_KEY_ID}"
-          secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
-          region: "us-east-1"
-          log-group: "/labs64-io/auditflow/api.call"
-          log-stream: "fedcba98-7654-3210-fedc-ba9876543210"
-          create-log-group: "true"
-          create-log-stream: "true"
-    - name: 'webhook_site'
-      enabled: true
-      condition:
-        match: 'all'  # 'all' (AND) or 'any' (OR)
-        rules:
-          - field: 'eventType'
-            operator: 'eq'
-            value: 'api.call'
-          - field: 'sourceSystem'
-            operator: 'startsWith'
-            value: 'netlicensing'
-      transformer:
-        name: 'zero'
-      sink:
-        name: 'webhook_sink'
-        properties:
-          webhook-url: 'https://webhook.site/491e9858-1660-4cd6-8fb8-b2c4cfa637e0'
-          method: 'POST'
-          content-type: 'application/json'
-          timeout: 30
-          verify-ssl: true
-          retry-count: 3
-    - name: 'loki'
-      enabled: true
-      transformer:
-        name: 'audit_loki'
-      sink:
-        name: 'loki_sink'
-        properties:
-          service-url: "https://logs-prod-012.grafana.net"
-          service-path: "/loki/api/v1/push"
-          username: "1314691"
-          password: "${GRAFANA_PASSWORD}"
-
-  spring:
-    rabbitmq:
-      host: rabbitmq.tools.svc.cluster.local
-      port: 5672
-      username: labs64
-      password: "${RABBITMQ_PASSWORD}"
+  auditflow:
+    pipelines:
+      - name: 'logs'
+        enabled: true
+        transformer:
+          name: 'zero'
+        sink:
+          name: 'logging_sink'
+          properties:
+            log-level: "DEBUG"
+            format: "json"
+      - name: 'aws_s3'
+        enabled: true
+        transformer:
+          name: 'zero'
+        sink:
+          name: 'aws_s3_sink'
+          properties:
+            access-key-id: "${AWS_ACCESS_KEY_ID}"
+            secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
+            region: "us-east-1"
+            bucket: "labs64-io-dev-01"
+            compress: "false"
+            partition-by-date: "true"
+            partition-format: "year=%Y/month=%m/day=%d/"
+            file-format: "json"
+      - name: 'aws_cloudwatch'
+        enabled: true
+        condition:
+          match: 'any'  # 'all' (AND) or 'any' (OR)
+          rules:
+            - field: 'extra.action_status'
+              operator: 'in'
+              value: 'PENDING,FAILURE,WARN,ERROR'
+        transformer:
+          name: 'zero'
+        sink:
+          name: 'aws_cloudwatch_sink'
+          properties:
+            access-key-id: "${AWS_ACCESS_KEY_ID}"
+            secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
+            region: "us-east-1"
+            log-group: "/labs64-io/auditflow/api.call"
+            log-stream: "fedcba98-7654-3210-fedc-ba9876543210"
+            create-log-group: "true"
+            create-log-stream: "true"
+      - name: 'webhook_site'
+        enabled: true
+        condition:
+          match: 'all'  # 'all' (AND) or 'any' (OR)
+          rules:
+            - field: 'eventType'
+              operator: 'eq'
+              value: 'api.call'
+            - field: 'sourceSystem'
+              operator: 'startsWith'
+              value: 'netlicensing'
+        transformer:
+          name: 'zero'
+        sink:
+          name: 'webhook_sink'
+          properties:
+            webhook-url: 'https://webhook.site/491e9858-1660-4cd6-8fb8-b2c4cfa637e0'
+            method: 'POST'
+            content-type: 'application/json'
+            timeout: 30
+            verify-ssl: true
+            retry-count: 3
+      - name: 'loki'
+        enabled: true
+        transformer:
+          name: 'audit_loki'
+        sink:
+          name: 'loki_sink'
+          properties:
+            service-url: "https://logs-prod-012.grafana.net"
+            service-path: "/loki/api/v1/push"
+            username: "1314691"
+            password: "${GRAFANA_PASSWORD}"
 
 gateway:
   enabled: true
 
 networkPolicy:
+  enabled: true
+
+rabbitmq:
   enabled: true

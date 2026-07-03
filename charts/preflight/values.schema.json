@@ -1,0 +1,213 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "checks": {
+      "additionalProperties": false,
+      "description": "Connectivity checks to run; enable only what your modules need.",
+      "properties": {
+        "oidc": {
+          "additionalProperties": false,
+          "description": "OIDC discovery + client_credentials token grant",
+          "properties": {
+            "clientId": {
+              "default": "",
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "discoveryUrl": {
+              "default": "https://idp.example.com/realms/example/.well-known/openid-configuration",
+              "title": "discoveryUrl",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "scope": {
+              "default": "",
+              "title": "scope",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "discoveryUrl",
+            "clientId",
+            "clientSecret",
+            "scope"
+          ],
+          "title": "oidc",
+          "type": "object"
+        },
+        "postgresql": {
+          "additionalProperties": false,
+          "description": "PostgreSQL connectivity and login (SELECT 1)",
+          "properties": {
+            "database": {
+              "default": "postgres",
+              "title": "database",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "host": {
+              "default": "postgres.infra.example.com",
+              "title": "host",
+              "type": "string"
+            },
+            "password": {
+              "default": "",
+              "title": "password",
+              "type": "string"
+            },
+            "port": {
+              "default": 5432,
+              "title": "port",
+              "type": "integer"
+            },
+            "username": {
+              "default": "",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "host",
+            "port",
+            "database",
+            "username",
+            "password"
+          ],
+          "title": "postgresql",
+          "type": "object"
+        },
+        "rabbitmq": {
+          "additionalProperties": false,
+          "description": "AMQP broker reachability (TCP connect)",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "host": {
+              "default": "rabbitmq.infra.example.com",
+              "title": "host",
+              "type": "string"
+            },
+            "port": {
+              "default": 5672,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "host",
+            "port"
+          ],
+          "title": "rabbitmq",
+          "type": "object"
+        },
+        "redis": {
+          "additionalProperties": false,
+          "description": "Redis connectivity (PING)",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "host": {
+              "default": "redis.infra.example.com",
+              "title": "host",
+              "type": "string"
+            },
+            "password": {
+              "default": "",
+              "title": "password",
+              "type": "string"
+            },
+            "port": {
+              "default": 6379,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "host",
+            "port",
+            "password"
+          ],
+          "title": "redis",
+          "type": "object"
+        }
+      },
+      "required": [
+        "rabbitmq",
+        "postgresql",
+        "redis",
+        "oidc"
+      ],
+      "title": "checks",
+      "type": "object"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "images": {
+      "additionalProperties": false,
+      "description": "Images used by the check containers",
+      "properties": {
+        "busybox": {
+          "default": "busybox:1.36",
+          "title": "busybox",
+          "type": "string"
+        },
+        "curl": {
+          "default": "curlimages/curl:8.10.1",
+          "title": "curl",
+          "type": "string"
+        },
+        "postgresql": {
+          "default": "bitnamilegacy/postgresql:17.6.0-debian-12-r4",
+          "title": "postgresql",
+          "type": "string"
+        },
+        "redis": {
+          "default": "bitnamilegacy/redis:7.4.3-debian-12-r0",
+          "title": "redis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "busybox",
+        "postgresql",
+        "redis",
+        "curl"
+      ],
+      "title": "images",
+      "type": "object"
+    }
+  },
+  "required": [
+    "checks",
+    "images"
+  ],
+  "type": "object"
+}

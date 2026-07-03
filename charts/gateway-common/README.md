@@ -26,9 +26,11 @@ Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, s
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| authProxy | object | `{"address":"http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth","authResponseHeaders":["X-Auth-User","X-Auth-Roles"],"trustForwardHeader":true}` | ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy) |
-| authProxy.address | string | `"http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth"` | Cluster-internal address of the traefik-authproxy /auth endpoint |
+| authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Roles"],"port":8081,"serviceName":"labs64io-traefik-authproxy","trustForwardHeader":true}` | ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy) |
+| authProxy.address | string | `""` | Full URL override for the traefik-authproxy /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth |
 | authProxy.authResponseHeaders | list | `["X-Auth-User","X-Auth-Roles"]` | Identity headers copied from the authproxy response onto the upstream request |
+| authProxy.port | int | `8081` | Service port of the traefik-authproxy release |
+| authProxy.serviceName | string | `"labs64io-traefik-authproxy"` | Service name of the traefik-authproxy release |
 | authProxy.trustForwardHeader | bool | `true` | Trust X-Forwarded-* headers from the proxy |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | fullnameOverride | string | `"gateway-common"` | Fixed resource-name prefix so module charts can reference middlewares by a stable name |

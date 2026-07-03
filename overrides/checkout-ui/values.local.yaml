@@ -1,5 +1,5 @@
 image:
-  repository: checkout-ui
+  repository: localhost:5005/checkout-ui
   tag: latest
   pullPolicy: IfNotPresent
 

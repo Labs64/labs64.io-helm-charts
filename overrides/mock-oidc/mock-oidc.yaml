@@ -1,0 +1,129 @@
+# DEV ONLY: mock OIDC provider for local M2M testing.
+# Issues signed JWTs with Keycloak-shaped realm_access.roles claims for ANY
+# client_credentials request. Never deploy outside local environments.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-oidc-config
+  namespace: tools
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
+data:
+  config.json: |
+    {
+      "interactiveLogin": false,
+      "httpServer": "NettyWrapper",
+      "tokenCallbacks": [
+        {
+          "issuerId": "labs64io",
+          "tokenExpiry": 3600,
+          "requestMappings": [
+            {
+              "requestParam": "scope",
+              "match": "auditflow",
+              "claims": {
+                "aud": ["account"],
+                "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "ecommerce",
+              "claims": {
+                "aud": ["account"],
+                "realm_access": { "roles": ["ecommerce-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "no-access",
+              "claims": {
+                "aud": ["account"],
+                "realm_access": { "roles": ["no-access-role"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "*",
+              "claims": {
+                "aud": ["account"],
+                "realm_access": { "roles": ["admin-role", "default-roles-labs64io"] }
+              }
+            }
+          ]
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-oidc
+  namespace: tools
+  labels:
+    app.kubernetes.io/name: mock-oidc
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mock-oidc
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mock-oidc
+    spec:
+      containers:
+        - name: mock-oauth2-server
+          image: ghcr.io/navikt/mock-oauth2-server:2.1.10
+          ports:
+            - containerPort: 8080
+          env:
+            - name: JSON_CONFIG_PATH
+              value: /config/config.json
+          volumeMounts:
+            - name: config
+              mountPath: /config
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+      volumes:
+        - name: config
+          configMap:
+            name: mock-oidc-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-oidc
+  namespace: tools
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
+spec:
+  selector:
+    app.kubernetes.io/name: mock-oidc
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: mock-oidc
+  namespace: tools
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`mock-oidc.localhost`)
+      kind: Rule
+      services:
+        - name: mock-oidc
+          port: 8080

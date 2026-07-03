@@ -30,11 +30,12 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | affinity | object | `{}` |  |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
-| env[0] | object | `{"name":"OIDC_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | Keycloak discovery URL for the auth proxy. |
+| env[0] | object | `{"name":"OIDC_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | OIDC discovery URL. Override per environment:   production: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration   local dev:  http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration |
 | env[1] | object | `{"name":"OIDC_AUDIENCE","value":"account"}` | Audience for the auth proxy. |
 | env[2] | object | `{"name":"ROLE_MAPPING_FILE","value":"/opt/application-config/role_mapping.yaml"}` | Path to the role mapping file for the auth proxy. |
 | env[3] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
 | env[4] | object | `{"name":"ROLE_MAPPING_DIR","value":"/opt/role-mappings"}` | Directory with per-module role-mapping fragments (populated by the k8s-sidecar) |
+| env[5] | object | `{"name":"TOKEN_ROLES_CLAIM_PATHS","value":"realm_access.roles,resource_access.{audience}.roles"}` | Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE. Default: realm_access.roles,resource_access.{audience}.roles. |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
@@ -64,7 +65,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | resources.requests.memory | string | `"512Mi"` |  |
 | roleMapping | object | `{"/actuator":[],"/auth":[],"/docs":[],"/health":[],"/public":[],"/swagger-ui":[],"/v3/api-docs":[]}` | Role mappings for the auth proxy. |
 | roleMapping./auth | list | `[]` | public paths |
-| roleMappingSidecar | object | `{"enabled":true,"folder":"/opt/role-mappings","image":{"pullPolicy":"IfNotPresent","repository":"kiwigrid/k8s-sidecar","tag":"1.30.0"},"label":"labs64.io/role-mapping","labelValue":"true","resources":{"limits":{"cpu":"50m","memory":"64Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}` | Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true) |
+| roleMappingSidecar | object | `{"enabled":true,"folder":"/opt/role-mappings","image":{"pullPolicy":"IfNotPresent","repository":"kiwigrid/k8s-sidecar","tag":"1.30.0"},"label":"labs64.io/role-mapping","labelValue":"true","resources":{"limits":{"cpu":"50m","memory":"128Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}` | Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true) |
 | roleMappingSidecar.folder | string | `"/opt/role-mappings"` | Directory (shared emptyDir) the fragments are written to |
 | roleMappingSidecar.label | string | `"labs64.io/role-mapping"` | ConfigMap label to watch |
 | securityContext | object | `{}` |  |

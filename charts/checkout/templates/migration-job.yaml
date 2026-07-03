@@ -16,12 +16,19 @@ spec:
           image: postgres:18
           env:
             - name: PGPASSWORD
-              value: {{ .Values.applicationYaml.spring.datasource.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chart-libs.fullname" . }}
+                  key: SPRING_DATASOURCE_PASSWORD
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chart-libs.fullname" . }}
+                  key: SPRING_DATASOURCE_USERNAME
           command: ["sh","-c"]
           args:
             - |
-              DB_HOST=$(echo {{ .Values.applicationYaml.spring.datasource.url }} | sed -E 's|jdbc:postgresql://([^:/]+):?.*|\1|')
-              DB_USER={{ .Values.applicationYaml.spring.datasource.username }}
+              DB_HOST=$(echo {{ tpl .Values.applicationYaml.spring.datasource.url $ }} | sed -E 's|jdbc:postgresql://([^:/]+):?.*|\1|')
               psql -h $DB_HOST -U $DB_USER -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='checkout'" | grep -q 1 || \
               psql -h $DB_HOST -U $DB_USER -d postgres -c "CREATE DATABASE checkout;"
 
@@ -49,10 +56,16 @@ spec:
             - name: SPRING_JPA_HIBERNATE_DDL_AUTO
               value: "validate"
             - name: SPRING_DATASOURCE_URL
-              value: {{ .Values.applicationYaml.spring.datasource.url | quote }}
+              value: {{ tpl .Values.applicationYaml.spring.datasource.url $ | quote }}
             - name: SPRING_DATASOURCE_USERNAME
-              value: {{ .Values.applicationYaml.spring.datasource.username | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chart-libs.fullname" . }}
+                  key: SPRING_DATASOURCE_USERNAME
             - name: SPRING_DATASOURCE_PASSWORD
-              value: {{ .Values.applicationYaml.spring.datasource.password | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chart-libs.fullname" . }}
+                  key: SPRING_DATASOURCE_PASSWORD
 
           terminationMessagePolicy: FallbackToLogsOnError

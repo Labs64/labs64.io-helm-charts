@@ -1,3 +1,13 @@
+# -- Global values shared across Labs64.IO charts and Bitnami subcharts
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+global:
+  security:
+    # -- Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard)
+    allowInsecureImages: true
+
 # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
@@ -202,9 +212,44 @@ env: []
 #  - name: SPRING_PROFILES_ACTIVE
 #    value: "production"
 
-# -- Secret data to be used as environment variables
+# -- Secret data to be used as environment variables (delivered via envFrom).
+# External installs supply broker credentials here, e.g.
+#   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD.
+# When rabbitmq.enabled=true the chart adds these keys automatically from rabbitmq.auth.
+# Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).
+# Note: the Secret is hook-managed (pre-install) and survives helm uninstall.
+# @schema
+# type: object
+# properties:
+#   data:
+#     type: object
+#     additionalProperties: true
+# @schema
 secrets:
   data: {}
+
+# -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
+# Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead.
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+rabbitmq:
+  enabled: false
+  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    repository: bitnamilegacy/rabbitmq
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    username: labs64
+    password: labs64-local
 
 # -- Additional application properties
 applicationYaml:
@@ -233,30 +278,35 @@ applicationYaml:
       name: auditflow-sink
       namespace: default
 
-  # -- AuditFlow pipelines configuration
-  pipelines: []
-  #  - name: 'logs'
-  #    enabled: true
-  #    transformer:
-  #      name: 'zero'
-  #    sink:
-  #      name: 'logging_sink'
-  #      properties:
-  #        log-level: "DEBUG"
-  #        format: "json"
+  # -- AuditFlow application properties (bound by @ConfigurationProperties(prefix = "auditflow"))
+  auditflow:
+    # -- AuditFlow pipelines configuration
+    pipelines: []
+    #  - name: 'logs'
+    #    enabled: true
+    #    transformer:
+    #      name: 'zero'
+    #    sink:
+    #      name: 'logging_sink'
+    #      properties:
+    #        log-level: "DEBUG"
+    #        format: "json"
 
   # -- Spring configuration
   spring:
     # -- RabbitMQ connection params
     rabbitmq:
-      # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
-      host: rabbitmq.default.svc.cluster.local
+      # -- RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host
+      host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
       # -- RabbitMQ port; default: 5672
       port: 5672
-      # -- RabbitMQ username
-      username: <TODO>
-      # -- RabbitMQ password
-      password: <TODO>
+    # -- Redis connection params (backing store for the idempotency/dedup service; auditflow.idempotency.store=redis)
+    data:
+      redis:
+        # -- Redis host; defaults to the shared tools Redis. Override for your own Redis in non-local installs.
+        host: redis-master.tools.svc.cluster.local
+        # -- Redis port; default: 6379
+        port: 6379
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
@@ -275,9 +325,10 @@ gateway:
     securityHeaders: gateway-common-security-headers
   # -- Routes exposed by this module
   routes:
-    # -- AuditFlow API (protected)
+    # -- AuditFlow API (protected, prefix stripped before forwarding)
     - path: /api
       port: 8080
+      stripPrefix: true
       roles:
         - admin-role
         - auditflow-role
@@ -306,3 +357,9 @@ networkPolicy:
 # additionalProperties: true
 # @schema
 chart-libs: {}
+
+# -- helm test hook (rendered by chart-libs.test-connection)
+tests:
+  enabled: true
+  # -- Health endpoint probed by `helm test`
+  healthPath: /actuator/health

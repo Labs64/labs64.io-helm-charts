@@ -1,0 +1,28 @@
+# k3d cluster for Labs64.IO local development.
+# Creates a local registry on localhost:5005 (matches the justfile docker recipes)
+# and maps 80/443 so *.localhost hosts resolve to Traefik.
+# k3s' embedded Traefik is disabled - the toolset installs its own pinned Traefik.
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: labs64io
+servers: 1
+agents: 0
+ports:
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  - port: 443:443
+    nodeFilters:
+      - loadbalancer
+registries:
+  create:
+    name: labs64io-registry
+    host: "0.0.0.0"
+    hostPort: "5005"
+options:
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*

@@ -20,29 +20,15 @@
               "additionalProperties": false,
               "description": "PostgreSQL connection params",
               "properties": {
-                "password": {
-                  "default": "\u003cTODO\u003e",
-                  "description": "PostgreSQL password",
-                  "title": "password",
-                  "type": "string"
-                },
                 "url": {
-                  "default": "jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/checkout",
-                  "description": "JDBC connection URL to PostgreSQL",
+                  "default": "{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}",
+                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL",
                   "title": "url",
-                  "type": "string"
-                },
-                "username": {
-                  "default": "\u003cTODO\u003e",
-                  "description": "PostgreSQL username",
-                  "title": "username",
                   "type": "string"
                 }
               },
               "required": [
-                "url",
-                "username",
-                "password"
+                "url"
               ],
               "title": "datasource",
               "type": "object"
@@ -52,15 +38,9 @@
               "description": "RabbitMQ connection params",
               "properties": {
                 "host": {
-                  "default": "rabbitmq.default.svc.cluster.local",
-                  "description": "RabbitMQ host name; default: rabbitmq.\u003cnamespace\u003e.svc.cluster.local",
+                  "default": "{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}",
+                  "description": "RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host",
                   "title": "host",
-                  "type": "string"
-                },
-                "password": {
-                  "default": "\u003cTODO\u003e",
-                  "description": "RabbitMQ password",
-                  "title": "password",
                   "type": "string"
                 },
                 "port": {
@@ -68,19 +48,11 @@
                   "description": "RabbitMQ port; default: 5672",
                   "title": "port",
                   "type": "integer"
-                },
-                "username": {
-                  "default": "\u003cTODO\u003e",
-                  "description": "RabbitMQ username",
-                  "title": "username",
-                  "type": "string"
                 }
               },
               "required": [
                 "host",
-                "port",
-                "username",
-                "password"
+                "port"
               ],
               "title": "rabbitmq",
               "type": "object"
@@ -219,11 +191,17 @@
                     },
                     "title": "roles",
                     "type": "array"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
                   }
                 },
                 "required": [
                   "path",
                   "port",
+                  "stripPrefix",
                   "roles"
                 ],
                 "type": "object"
@@ -306,8 +284,29 @@
       "type": "object"
     },
     "global": {
-      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
-      "required": [],
+      "additionalProperties": true,
+      "description": "Global values shared across Labs64.IO charts and Bitnami subcharts",
+      "properties": {
+        "security": {
+          "additionalProperties": false,
+          "properties": {
+            "allowInsecureImages": {
+              "default": true,
+              "description": "Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard)",
+              "title": "allowInsecureImages",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowInsecureImages"
+          ],
+          "title": "security",
+          "type": "object"
+        }
+      },
+      "required": [
+        "security"
+      ],
       "title": "global",
       "type": "object"
     },
@@ -624,6 +623,118 @@
       "title": "podSecurityContext",
       "type": "object"
     },
+    "postgresql": {
+      "additionalProperties": true,
+      "description": "Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own database instead.",
+      "properties": {
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "database": {
+              "default": "checkout",
+              "title": "database",
+              "type": "string"
+            },
+            "password": {
+              "default": "labs64-local",
+              "title": "password",
+              "type": "string"
+            },
+            "username": {
+              "default": "labs64",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "username",
+            "password",
+            "database"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "image": {
+          "additionalProperties": true,
+          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
+          "properties": {
+            "repository": {
+              "default": "bitnamilegacy/postgresql",
+              "title": "repository",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository"
+          ],
+          "title": "image",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "postgresql",
+      "type": "object"
+    },
+    "rabbitmq": {
+      "additionalProperties": true,
+      "description": "Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own broker instead.",
+      "properties": {
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "password": {
+              "default": "labs64-local",
+              "title": "password",
+              "type": "string"
+            },
+            "username": {
+              "default": "labs64",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "username",
+            "password"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "image": {
+          "additionalProperties": true,
+          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
+          "properties": {
+            "repository": {
+              "default": "bitnamilegacy/rabbitmq",
+              "title": "repository",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository"
+          ],
+          "title": "image",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "rabbitmq",
+      "type": "object"
+    },
     "rbac": {
       "additionalProperties": false,
       "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
@@ -744,18 +855,15 @@
     },
     "secrets": {
       "additionalProperties": false,
-      "description": "Secret data to be used as environment variables",
+      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply broker/database credentials here, e.g.\n  SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD.\nWhen rabbitmq.enabled=true / postgresql.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
       "properties": {
         "data": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "required": [],
-          "title": "data",
           "type": "object"
         }
       },
-      "required": [
-        "data"
-      ],
+      "required": [],
       "title": "secrets",
       "type": "object"
     },
@@ -828,6 +936,29 @@
       "title": "serviceAccount",
       "type": "object"
     },
+    "tests": {
+      "additionalProperties": false,
+      "description": "helm test hook (rendered by chart-libs.test-connection)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "healthPath": {
+          "default": "/actuator/health",
+          "description": "Health endpoint probed by `helm test`",
+          "title": "healthPath",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "healthPath"
+      ],
+      "title": "tests",
+      "type": "object"
+    },
     "tolerations": {
       "items": {
         "required": []
@@ -877,11 +1008,11 @@
     "tolerations",
     "affinity",
     "env",
-    "secrets",
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",
-    "networkPolicy"
+    "networkPolicy",
+    "tests"
   ],
   "type": "object"
 }

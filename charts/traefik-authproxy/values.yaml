@@ -146,7 +146,9 @@ tolerations: []
 affinity: {}
 
 env:
-  # -- Keycloak discovery URL for the auth proxy.
+  # -- OIDC discovery URL. Override per environment:
+  #   production: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  #   local dev:  http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
   - name: OIDC_DISCOVERY_URL
     value: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
   # -- Audience for the auth proxy.
@@ -161,6 +163,10 @@ env:
   # -- Directory with per-module role-mapping fragments (populated by the k8s-sidecar)
   - name: ROLE_MAPPING_DIR
     value: /opt/role-mappings
+  # -- Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE.
+  # Default: realm_access.roles,resource_access.{audience}.roles.
+  - name: TOKEN_ROLES_CLAIM_PATHS
+    value: "realm_access.roles,resource_access.{audience}.roles"
 
 # -- Role mappings for the auth proxy.
 roleMapping:
@@ -204,7 +210,7 @@ roleMappingSidecar:
       memory: 32Mi
     limits:
       cpu: 50m
-      memory: 64Mi
+      memory: 128Mi
 
 # -- PodDisruptionBudget (rendered by chart-libs.pdb)
 podDisruptionBudget:

@@ -1,3 +1,13 @@
+# -- Global values shared across Labs64.IO charts and Bitnami subcharts
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+global:
+  security:
+    # -- Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard)
+    allowInsecureImages: true
+
 # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
 replicaCount: 1
 
@@ -145,9 +155,91 @@ affinity: {}
 
 env: []
 
-# -- Secret data to be used as environment variables
+# -- Secret data to be used as environment variables (delivered via envFrom).
+# External installs supply broker/database/cache credentials here, e.g.
+#   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.
+# When rabbitmq.enabled=true / postgresql.enabled=true / redis.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth / redis.auth.
+# Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).
+# Note: the Secret is hook-managed (pre-install) and survives helm uninstall.
+# @schema
+# type: object
+# properties:
+#   data:
+#     type: object
+#     additionalProperties: true
+# @schema
 secrets:
   data: {}
+
+# -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
+# Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead.
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+rabbitmq:
+  enabled: false
+  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    repository: bitnamilegacy/rabbitmq
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    username: labs64
+    password: labs64-local
+
+# -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
+# Dev-grade credentials - NOT for production; point applicationYaml at your own database instead.
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+postgresql:
+  enabled: false
+  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    repository: bitnamilegacy/postgresql
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    username: labs64
+    password: labs64-local
+    database: payment_gateway
+
+# -- Optional bundled Redis (Bitnami subchart) for standalone/local installs.
+# Dev-grade credentials - NOT for production; point applicationYaml at your own Redis instead.
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+redis:
+  enabled: false
+  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    repository: bitnamilegacy/redis
+  architecture: standalone
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    password: labs64-local
 
 # -- Additional application properties
 applicationYaml:
@@ -155,33 +247,23 @@ applicationYaml:
   spring:
     # -- RabbitMQ connection params
     rabbitmq:
-      # -- RabbitMQ host name; default: rabbitmq.<namespace>.svc.cluster.local
-      host: rabbitmq.default.svc.cluster.local
+      # -- RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host
+      host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
       # -- RabbitMQ port; default: 5672
       port: 5672
-      # -- RabbitMQ username
-      username: <TODO>
-      # -- RabbitMQ password
-      password: <TODO>
 
     # -- PostgreSQL connection params
     datasource:
-      # -- JDBC connection URL to PostgreSQL
-      url: jdbc:postgresql://postgresql-primary.default.svc.cluster.local:5432/payment_gateway
-      # -- PostgreSQL username
-      username: <TODO>
-      # -- PostgreSQL password
-      password: <TODO>
+      # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
+      url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway" .Values.postgresql.enabled }}'
 
     # -- Redis connection params
     data:
       redis:
-        # -- Redis host; default: redis-master.<namespace>.svc.cluster.local
-        host: redis-master.default.svc.cluster.local
+        # -- Redis host; resolves to the bundled subchart when redis.enabled, else set your Redis host
+        host: '{{ ternary (printf "%s-redis-master" .Release.Name) "redis-master.tools.svc.cluster.local" .Values.redis.enabled }}'
         # -- Redis port; default: 6379
         port: 6379
-        # -- Redis password
-        password: <TODO>
 
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
@@ -201,9 +283,10 @@ gateway:
     securityHeaders: gateway-common-security-headers
   # -- Routes exposed by this module
   routes:
-    # -- Payment Gateway API (protected)
+    # -- Payment Gateway API (protected, prefix stripped before forwarding)
     - path: /api
       port: 8080
+      stripPrefix: true
       roles:
         - admin-role
         - ecommerce-role
@@ -232,3 +315,9 @@ networkPolicy:
 # additionalProperties: true
 # @schema
 chart-libs: {}
+
+# -- helm test hook (rendered by chart-libs.test-connection)
+tests:
+  enabled: true
+  # -- Health endpoint probed by `helm test`
+  healthPath: /actuator/health

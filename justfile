@@ -1,16 +1,22 @@
 ENV := "local"
 NAMESPACE_LABS64IO := "labs64io"
-NAMESPACE_INGRESS := "ingress-nginx"
 NAMESPACE_KUBE_SYSTEM := "kube-system"
 NAMESPACE_MONITORING := "monitoring"
 NAMESPACE_TOOLS := "tools"
 HELM_DOCS_VERSION := "v1.14.2"
+TRAEFIK_CHART_VERSION := "41.0.1"
+TRAEFIK_CRDS_CHART_VERSION := "1.18.0"
+METRICS_SERVER_CHART_VERSION := "3.13.1"
+RABBITMQ_CHART_VERSION := "16.0.14"
+POSTGRESQL_CHART_VERSION := "18.7.11"
+REDIS_CHART_VERSION := "27.0.13"
+OTEL_OPERATOR_CHART_VERSION := "0.118.0"
+OTEL_COLLECTOR_CHART_VERSION := "0.162.0"
+PROMETHEUS_STACK_CHART_VERSION := "87.5.1"
+TEMPO_CHART_VERSION := "1.24.4"
+GRAFANA_CHART_VERSION := "10.5.15"
 
 ## Useful Commands ##
-
-# setup docker registry (precondition)
-docker-registry-install:
-    docker run -d -p 5005:5000 --restart=always --name registry registry:2
 
 # show helm releases
 helm-ls:
@@ -27,7 +33,6 @@ kubectl-pv:
 # add external helm repositories
 repo-add:
     helm repo add labs64io-pub https://labs64.github.io/labs64.io-helm-charts
-    helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
     helm repo add traefik https://traefik.github.io/charts
     helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
     helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -70,6 +75,40 @@ generate-schema: helm-tools
 
 # Generate all — Helm charts docs and schema
 generate-all: generate-docu generate-schema
+
+# Build and push all module images to local registry (localhost:5005)
+build-images:
+	@echo "=== Building auditflow images ==="
+	cd ../labs64.io-auditflow/auditflow-be && mvn -B clean package -DskipTests -q && \
+	docker build -t localhost:5005/auditflow:latest . && \
+	cd ../auditflow-transformer && \
+	docker build -t localhost:5005/auditflow-transformer:latest . && \
+	cd ../auditflow-sink && \
+	docker build -t localhost:5005/auditflow-sink:latest .
+	docker push localhost:5005/auditflow:latest
+	docker push localhost:5005/auditflow-transformer:latest
+	docker push localhost:5005/auditflow-sink:latest
+	@echo "=== Building checkout images ==="
+	cd ../labs64.io-checkout/checkout-be && mvn -B clean package -DskipTests -q && \
+	docker build -t localhost:5005/checkout:latest . && \
+	cd ../checkout-fe && \
+	docker build -t localhost:5005/checkout-ui:latest .
+	docker push localhost:5005/checkout:latest
+	docker push localhost:5005/checkout-ui:latest
+	@echo "=== Building payment-gateway image ==="
+	cd ../labs64.io-payment-gateway/payment-gateway-be && mvn -B clean package -DskipTests -q && \
+	docker build -t localhost:5005/payment-gateway:latest .
+	docker push localhost:5005/payment-gateway:latest
+	@echo "=== Building traefik-authproxy image ==="
+	cd ../labs64.io-gateway/traefik-authproxy && \
+	docker build -t localhost:5005/traefik-authproxy:latest .
+	docker push localhost:5005/traefik-authproxy:latest
+	@echo "=== Building customer-portal-ui image ==="
+	cd ../labs64.io-customer-portal/customer-portal-fe && \
+	docker build -t localhost:5005/customer-portal-ui:latest .
+	docker push localhost:5005/customer-portal-ui:latest
+	@echo "=== All images built and pushed ==="
+	@curl -s http://localhost:5005/v2/_catalog
 
 # install Labs64.IO :: API Gateway
 labs64io-traefik-authproxy-install:
@@ -174,6 +213,14 @@ labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-common
 # uninstall Labs64.IO :: all components
 labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-common-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-checkout-ui-uninstall labs64io-payment-gateway-uninstall labs64io-customer-portal-ui-uninstall
 
+# install a single Labs64.IO module standalone (bundled infra, no gateway stack)
+labs64io-standalone-install module:
+    helm dependencies update ./charts/{{module}}
+    helm upgrade --install labs64io-{{module}} ./charts/{{module}} \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/{{module}}/values.yaml \
+      -f ./overrides/{{module}}/values.standalone.yaml
+
 # show errors in Labs64.IO kubectl logs
 labs64io-show-errors:
     kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
@@ -183,6 +230,33 @@ labs64io-documentation:
     open "http://gateway.localhost/swagger-ui/"
 
 
+## Local Cluster ##
+
+# create the local k3d cluster + registry, install toolset and all Labs64.IO components
+local-up:
+    k3d cluster create --config k3d/labs64io.yaml || echo "cluster exists - continuing"
+    just repo-update
+    just traefik-install
+    just mock-oidc-install
+    just rabbitmq-install
+    just postgresql-install
+    just redis-install
+    just labs64io-all-install
+    @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
+
+# delete the local k3d cluster (and its registry)
+local-down:
+    k3d cluster delete labs64io
+
+# local-up plus the monitoring stack
+local-up-full: local-up
+    just metrics-server-install
+    just opentelemetry-install
+    just prometheus-install
+    just tempo-install
+    just grafana-install
+
+
 ## Kubernetes Components ##
 
 # install Metrics Server
@@ -190,6 +264,7 @@ metrics-server-install: repo-update
     helm search repo metrics-server/metrics-server
     helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
     helm upgrade --install metrics-server metrics-server/metrics-server \
+      --version {{METRICS_SERVER_CHART_VERSION}} \
       -f overrides/metrics-server/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_KUBE_SYSTEM}} \
       --set args="{--kubelet-insecure-tls}"
@@ -206,8 +281,9 @@ traefik-install: repo-update
     helm search repo traefik/traefik
     helm show values traefik/traefik > overrides/traefik/values.orig.yaml
     helm show values traefik/traefik-crds > overrides/traefik/values-crds.orig.yaml
-    helm upgrade --install traefik-crds traefik/traefik-crds --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    helm upgrade --install traefik traefik/traefik -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
+    kubectl create namespace {{NAMESPACE_TOOLS}} --dry-run=client -o yaml | kubectl apply -f -
+    helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
+    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
 
 # Traefik Dashboard
 traefik-dashboard:
@@ -218,24 +294,28 @@ traefik-uninstall:
     helm uninstall traefik --namespace {{NAMESPACE_TOOLS}} || true
     helm uninstall traefik-crds --namespace {{NAMESPACE_TOOLS}} || true
 
-# install RabbitMQ
+# install RabbitMQ (Bitnami images removed from Docker Hub — using official image)
 rabbitmq-install: repo-update
-    helm search repo bitnami/rabbitmq
-    helm show values bitnami/rabbitmq > overrides/rabbitmq/values.orig.yaml
-    helm upgrade --install rabbitmq bitnami/rabbitmq -f overrides/rabbitmq/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    @echo "Username      : labs64"
-    @echo "Password      : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-password}" | base64 -d)"
-    @echo "ErLang Cookie : $(kubectl get secret --namespace tools rabbitmq -o jsonpath="{.data.rabbitmq-erlang-cookie}" | base64 -d)"
+	@echo "Installing RabbitMQ (official image — Bitnami images no longer available)..."
+	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq.yaml
+	@echo "Waiting for RabbitMQ to be ready..."
+	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
+	@echo "Username      : labs64"
+	@echo "Password      : labs64pw"
 
 # uninstall RabbitMQ
 rabbitmq-uninstall:
-    helm uninstall rabbitmq --namespace {{NAMESPACE_TOOLS}}
+	kubectl delete statefulset rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete service rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete secret rabbitmq-secret --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
 
 # install PostgreSQL
 postgresql-install: repo-update
     helm search repo bitnami/postgresql
     helm show values bitnami/postgresql > overrides/postgresql/values.orig.yaml
     helm upgrade --install postgresql bitnami/postgresql \
+      --version {{POSTGRESQL_CHART_VERSION}} \
       -f overrides/postgresql/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_TOOLS}} --create-namespace
     @echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
@@ -250,23 +330,51 @@ postgresql-uninstall:
 redis-install: repo-update
     helm search repo bitnami/redis
     helm show values bitnami/redis > overrides/redis/values.orig.yaml
-    helm upgrade --install redis bitnami/redis -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install redis bitnami/redis --version {{REDIS_CHART_VERSION}} -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
 
 # uninstall Redis
 redis-uninstall:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
 
-# install Keycloak
-keycloak-install: repo-update
-    helm search repo bitnami/keycloak
-    helm show values bitnami/keycloak > overrides/keycloak/values.orig.yaml
-    helm upgrade --install keycloak bitnami/keycloak -f overrides/keycloak/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    kubectl --namespace {{NAMESPACE_TOOLS}} apply -f overrides/keycloak/keycloak-ingressroute.yaml
+# install mock OIDC provider (DEV ONLY - M2M tokens for local testing)
+mock-oidc-install:
+    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
 
-# uninstall Keycloak
-keycloak-uninstall:
-    kubectl --namespace {{NAMESPACE_TOOLS}} delete -f overrides/keycloak/keycloak-ingressroute.yaml
-    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}}
+# uninstall mock OIDC provider
+mock-oidc-uninstall:
+    kubectl delete -f overrides/mock-oidc/mock-oidc.yaml
+
+# generate an M2M JWT from the mock OIDC provider (scope: admin|auditflow|ecommerce)
+test-generate-jwt-token-mock scope="admin":
+    curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+      -H 'Content-Type: application/x-www-form-urlencoded' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id=local-test' \
+      --data-urlencode 'client_secret=local-test' \
+      --data-urlencode 'scope={{scope}}'
+
+# end-to-end auth smoke test through Traefik (requires: traefik, gateway-common, traefik-authproxy, auditflow, mock-oidc)
+labs64io-e2e-auth:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
+      --data-urlencode 'scope=admin' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+    no_token=$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api')
+    with_token=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${TOKEN}" 'http://gateway.localhost/auditflow/api')
+    BAD_TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
+      --data-urlencode 'scope=no-access' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+    wrong_scope=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${BAD_TOKEN}" 'http://gateway.localhost/auditflow/api')
+    echo "no token   -> ${no_token} (expected 401)"
+    echo "with token -> ${with_token} (expected not 401/403)"
+    echo "wrong scope -> ${wrong_scope} (expected 403)"
+    [ "${no_token}" = "401" ] || { echo "FAIL: expected 401 without token"; exit 1; }
+    case "${with_token}" in 401|403) echo "FAIL: token rejected"; exit 1;; esac
+    [ "${wrong_scope}" = "403" ] || { echo "FAIL: expected 403 for wrong-scope token"; exit 1; }
+    echo "e2e auth: OK"
 
 
 ## Monitoring Tools ##
@@ -277,9 +385,11 @@ opentelemetry-install: repo-update
     helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
     helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
     helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
+      --version {{OTEL_OPERATOR_CHART_VERSION}} \
       -f overrides/opentelemetry/values-operator.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
     helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector \
+      --version {{OTEL_COLLECTOR_CHART_VERSION}} \
       -f overrides/opentelemetry/values-collector.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
 
@@ -293,6 +403,7 @@ prometheus-install: repo-update
     helm search repo prometheus-community
     helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
     helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+      --version {{PROMETHEUS_STACK_CHART_VERSION}} \
       -f overrides/prometheus/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
     kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
@@ -306,6 +417,7 @@ tempo-install: repo-update
     helm search repo grafana/tempo
     helm show values grafana/tempo > overrides/tempo/values.orig.yaml
     helm upgrade --install tempo grafana/tempo \
+      --version {{TEMPO_CHART_VERSION}} \
       -f overrides/tempo/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
@@ -318,6 +430,7 @@ grafana-install: repo-update
     helm search repo grafana/grafana
     helm show values grafana/grafana > overrides/grafana/values.orig.yaml
     helm upgrade --install grafana grafana/grafana \
+      --version {{GRAFANA_CHART_VERSION}} \
       -f overrides/grafana/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
     @echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
@@ -334,16 +447,4 @@ grafana-uninstall:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
 
 
-## Other/Backup Tools ##
 
-# install Ingress controller
-ingress-install: repo-update
-    helm search repo ingress-nginx/ingress-nginx
-    helm show values ingress-nginx/ingress-nginx > overrides/ingress-nginx/values.orig.yaml
-    helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
-      -f overrides/ingress-nginx/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_INGRESS}} --create-namespace
-
-# uninstall Ingress controller
-ingress-uninstall:
-    helm uninstall ingress-nginx --namespace {{NAMESPACE_INGRESS}}

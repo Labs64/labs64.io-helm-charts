@@ -21,3 +21,11 @@ dependencies:
   - name: chart-libs
     version: 0.0.1
     repository: file://../chart-libs
+  - name: rabbitmq
+    version: "^16.0.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: rabbitmq.enabled
+  - name: postgresql
+    version: "^18.0.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled

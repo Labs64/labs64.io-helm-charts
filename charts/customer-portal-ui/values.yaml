@@ -176,6 +176,12 @@ networkPolicy:
   # -- Additional raw ingress rules
   extraIngress: []
 
+# -- helm test hook (rendered by chart-libs.test-connection)
+tests:
+  enabled: true
+  # -- Health endpoint probed by `helm test`
+  healthPath: /
+
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema
 # type: object

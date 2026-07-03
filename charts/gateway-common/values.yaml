@@ -6,8 +6,12 @@ nameOverride: ""
 
 # -- ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy)
 authProxy:
-  # -- Cluster-internal address of the traefik-authproxy /auth endpoint
-  address: http://labs64io-traefik-authproxy.labs64io.svc.cluster.local:8081/auth
+  # -- Full URL override for the traefik-authproxy /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth
+  address: ""
+  # -- Service name of the traefik-authproxy release
+  serviceName: labs64io-traefik-authproxy
+  # -- Service port of the traefik-authproxy release
+  port: 8081
   # -- Trust X-Forwarded-* headers from the proxy
   trustForwardHeader: true
   # -- Identity headers copied from the authproxy response onto the upstream request

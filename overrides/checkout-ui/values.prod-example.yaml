@@ -1,0 +1,15 @@
+# PRODUCTION EXAMPLE (BYO infrastructure) - copy and adapt; do not use as-is.
+# Bundled deps stay off; point applicationYaml at your infrastructure and
+# deliver credentials via secrets.data (preferably sourced through
+# External Secrets Operator or your secret-management tooling).
+global:
+  domain: example.com
+
+gateway:
+  enabled: true
+
+networkPolicy:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: true

@@ -3,8 +3,9 @@ image:
   tag: latest
 
 env:
+  # mock-oauth2-server (just mock-oidc-install)
   - name: OIDC_DISCOVERY_URL
-    value: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+    value: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
   - name: OIDC_AUDIENCE
     value: account
   - name: ROLE_MAPPING_FILE
@@ -14,9 +15,14 @@ env:
   - name: LOG_LEVEL
     value: DEBUG
 
-# -- authproxy/system public paths only; module paths are provided by
-# per-module ConfigMap fragments (label labs64.io/role-mapping=true)
+# -- public paths (empty list = no auth required)
+# -- protected paths (list of roles = user must have at least one)
 roleMapping:
+  # system paths
   /auth: []
   /health: []
   /docs: []
+  /public: []
+  /swagger-ui: []
+  /v3/api-docs: []
+  /actuator: []

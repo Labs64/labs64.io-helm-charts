@@ -1,15 +1,17 @@
-.idea
-.vscode
-*.iml
-.project
-.classpath
-.history
-.settings
-.deploy
-.DS_Store
-charts/**/charts
+# --- Helm ---
+charts/**/charts/
+*.tgz
 values.secrets.*.yaml
 .cr-*
 /ct_*
-*.jar
-*.tgz
+
+# --- IDE / OS ---
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+.DS_Store
+.deploy
+.history

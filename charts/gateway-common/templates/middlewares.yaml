@@ -6,7 +6,7 @@ metadata:
     {{- include "chart-libs.labels" . | nindent 4 }}
 spec:
   forwardAuth:
-    address: {{ .Values.authProxy.address | quote }}
+    address: {{ .Values.authProxy.address | default (printf "http://%s.%s.svc.cluster.local:%v/auth" .Values.authProxy.serviceName .Release.Namespace .Values.authProxy.port) | quote }}
     trustForwardHeader: {{ .Values.authProxy.trustForwardHeader }}
     authResponseHeaders:
       {{- toYaml .Values.authProxy.authResponseHeaders | nindent 6 }}

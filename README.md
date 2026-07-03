@@ -39,6 +39,70 @@ To uninstall the chart:
 helm uninstall my-<chart-name>
 ```
 
+## Building-Box: cherry-pick your modules
+
+Every module chart is standalone - install only what you need. Bundled infra
+(`<dep>.enabled: true`) is for evaluation/local use; production installs point
+`applicationYaml` at your own infrastructure.
+
+| Module | Purpose | Infra (optional bundled) | Gateway routes (opt-in) | Install |
+|---|---|---|---|---|
+| auditflow | Audit logging | RabbitMQ | `/auditflow/api` (protected), `/auditflow/v3/api-docs` (public) | `helm install my-auditflow labs64io-pub/auditflow` |
+| checkout | Checkout API | RabbitMQ, PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public) | `helm install my-checkout labs64io-pub/checkout` |
+| checkout-ui | Checkout UI | - | `/checkout` (protected) | `helm install my-checkout-ui labs64io-pub/checkout-ui` |
+| payment-gateway | Payments API | RabbitMQ, PostgreSQL, Redis | `/payment-gateway/api` (protected), `/payment-gateway/v3/api-docs` (public) | `helm install my-payments labs64io-pub/payment-gateway` |
+| customer-portal-ui | Customer portal | - | `/customer-portal` (protected) | `helm install my-portal labs64io-pub/customer-portal-ui` |
+| gateway-common | Shared Traefik middlewares (auth, rate limit, headers) | - | n/a | `helm install gateway-common labs64io-pub/gateway-common` |
+| traefik-authproxy | ForwardAuth OIDC/JWT verifier | - | n/a | `helm install authproxy labs64io-pub/traefik-authproxy` |
+| gateway | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install gateway labs64io-pub/gateway` |
+
+Gateway integration (`gateway.enabled: true`) requires Traefik v3 CRDs plus the
+`gateway-common` and `traefik-authproxy` charts; without them, use the standard
+`ingress.enabled` with any ingress controller.
+
+Local testing: `just mock-oidc-install` (dev-only M2M tokens),
+`just labs64io-<module>-install`, `helm test labs64io-<module> -n labs64io`,
+`just labs64io-e2e-auth`.
+
+### Provisioning profiles
+
+| Profile | File | Use case |
+|---|---|---|
+| shared local | `overrides/<module>/values.local.yaml` | dev cluster with the shared toolset (`just local-up`) |
+| standalone | `overrides/<module>/values.standalone.yaml` | single-module eval with bundled infra (`just labs64io-standalone-install <module>`) |
+| BYO / production | `overrides/<module>/values.prod-example.yaml` | copy & adapt: your infrastructure, credentials via `secrets.data` (ESO recommended) |
+
+### Capability requirements (bring-your-own infrastructure)
+
+Modules need capabilities, not specific tools:
+
+| Module | Needs |
+|---|---|
+| auditflow | AMQP 0-9-1 broker |
+| checkout | AMQP 0-9-1 broker; PostgreSQL (db `checkout`, login with CREATE DATABASE for first install) |
+| payment-gateway | AMQP 0-9-1 broker; PostgreSQL (db `payment_gateway`); Redis |
+| gateway stack | any OIDC provider supporting client_credentials; role claims are configurable via `TOKEN_ROLES_CLAIM_PATHS` (default: `realm_access.roles`) |
+
+Reference versions (tested in CI via the bundled subcharts): RabbitMQ chart 16.0.14,
+PostgreSQL chart 18.7.11, Redis chart 27.0.13. For local development, images must be
+built and pushed to the local registry (`localhost:5005`) — see DEVELOPERS.md.
+
+### Preflight: verify your infrastructure first
+
+    helm install preflight ./charts/preflight -n labs64io --create-namespace \
+      -f my-endpoints.yaml
+    kubectl wait --for=condition=complete job/preflight -n labs64io --timeout=120s \
+      || kubectl logs job/preflight -n labs64io --all-containers
+
+Each enabled check (broker TCP, PostgreSQL login, Redis PING, OIDC token grant)
+runs as one container; the Job succeeds only if all pass.
+
+### Local cluster
+
+    just local-up        # k3d cluster + pinned toolset + all modules
+    just local-up-full   # + monitoring stack
+    just local-down
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Labs64/labs64.io-helm-charts&type=Date)](https://www.star-history.com/#Labs64/labs64.io-helm-charts&Date)

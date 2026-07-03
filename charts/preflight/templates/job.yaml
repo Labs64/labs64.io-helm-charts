@@ -1,0 +1,75 @@
+{{- if or .Values.checks.rabbitmq.enabled .Values.checks.postgresql.enabled .Values.checks.redis.enabled .Values.checks.oidc.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: preflight
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: "Labs64.IO"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        {{- with .Values.checks.rabbitmq }}
+        {{- if .enabled }}
+        - name: check-rabbitmq
+          image: {{ $.Values.images.busybox }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "preflight: AMQP TCP connect {{ .host }}:{{ .port }}"
+              nc -z -w 5 {{ .host }} {{ .port }} && echo "preflight: rabbitmq OK"
+        {{- end }}
+        {{- end }}
+        {{- with .Values.checks.postgresql }}
+        {{- if .enabled }}
+        - name: check-postgresql
+          image: {{ $.Values.images.postgresql }}
+          env:
+            - name: PGPASSWORD
+              value: {{ .password | quote }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "preflight: PostgreSQL login {{ .host }}:{{ .port }}/{{ .database }}"
+              psql -h {{ .host }} -p {{ .port }} -U {{ .username }} -d {{ .database }} -tc "SELECT 1" && echo "preflight: postgresql OK"
+        {{- end }}
+        {{- end }}
+        {{- with .Values.checks.redis }}
+        {{- if .enabled }}
+        - name: check-redis
+          image: {{ $.Values.images.redis }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "preflight: Redis PING {{ .host }}:{{ .port }}"
+              redis-cli -h {{ .host }} -p {{ .port }} {{- if .password }} -a {{ .password | quote }} {{- end }} ping | grep -q PONG && echo "preflight: redis OK"
+        {{- end }}
+        {{- end }}
+        {{- with .Values.checks.oidc }}
+        {{- if .enabled }}
+        - name: check-oidc
+          image: {{ $.Values.images.curl }}
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -e
+              echo "preflight: OIDC discovery {{ .discoveryUrl }}"
+              TOKEN_ENDPOINT=$(curl -sSf "{{ .discoveryUrl }}" | sed -n 's/.*"token_endpoint" *: *"\([^"]*\)".*/\1/p')
+              test -n "$TOKEN_ENDPOINT" || { echo "preflight: FAIL - no token_endpoint in discovery"; exit 1; }
+              echo "preflight: client_credentials grant at $TOKEN_ENDPOINT"
+              RESPONSE=$(curl -sSf -X POST "$TOKEN_ENDPOINT" \
+                --data-urlencode "grant_type=client_credentials" \
+                --data-urlencode "client_id={{ .clientId }}" \
+                --data-urlencode "client_secret={{ .clientSecret }}" \
+                {{- if .scope }}
+                --data-urlencode "scope={{ .scope }}" \
+                {{- end }}
+                )
+              echo "$RESPONSE" | grep -q '"access_token"' && echo "preflight: oidc OK" || { echo "preflight: FAIL - no access_token"; exit 1; }
+        {{- end }}
+        {{- end }}
+{{- end }}
