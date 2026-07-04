@@ -527,7 +527,6 @@
         },
         "requests": {
           "additionalProperties": false,
-          "description": "limits:\n cpu: 200m\n memory: 512Mi",
           "properties": {
             "cpu": {
               "default": "100m",
@@ -549,6 +548,7 @@
         }
       },
       "required": [
+        "limits",
         "requests"
       ],
       "title": "resources",

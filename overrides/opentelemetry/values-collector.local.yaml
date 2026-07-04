@@ -107,6 +107,6 @@ config:
         processors: [batch/traces, memory_limiter]
         exporters: [otlp/tempo]
       logs:
-        receivers: [filelog]
+        receivers: [filelog, otlp]
         processors: [batch]
         exporters: [otlphttp/victorialogs]

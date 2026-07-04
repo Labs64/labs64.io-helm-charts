@@ -188,7 +188,7 @@
         },
         "prefix": {
           "default": "",
-          "description": "External path prefix; defaults to /<chart-name>",
+          "description": "External path prefix; defaults to /\u003cchart-name\u003e",
           "title": "prefix",
           "type": "string"
         },
@@ -912,28 +912,6 @@
     "resources": {
       "additionalProperties": false,
       "properties": {
-        "requests": {
-          "additionalProperties": false,
-          "description": "limits:\n cpu: 200m\n memory: 512Mi",
-          "properties": {
-            "cpu": {
-              "default": "100m",
-              "title": "cpu",
-              "type": "string"
-            },
-            "memory": {
-              "default": "512Mi",
-              "title": "memory",
-              "type": "string"
-            }
-          },
-          "required": [
-            "cpu",
-            "memory"
-          ],
-          "title": "requests",
-          "type": "object"
-        },
         "limits": {
           "additionalProperties": false,
           "properties": {
@@ -954,9 +932,31 @@
           ],
           "title": "limits",
           "type": "object"
+        },
+        "requests": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "100m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "512Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "requests",
+          "type": "object"
         }
       },
       "required": [
+        "limits",
         "requests"
       ],
       "title": "resources",

@@ -20,7 +20,7 @@ Labs64.IO :: API Gateway
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.1 |
+| file://../chart-libs | chart-libs | 0.0.2 |
 
 ## Values
 
@@ -60,6 +60,8 @@ Labs64.IO :: API Gateway
 | rbac.rules[0].verbs[2] | string | `"watch"` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
+| resources.limits.cpu | string | `"500m"` |  |
+| resources.limits.memory | string | `"1Gi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
 | securityContext | object | `{}` |  |

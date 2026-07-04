@@ -15,6 +15,11 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap-app-ext.yaml") . | sha256sum }}
+      {{- if .Values.observability.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.service.port | quote }}
+        prometheus.io/path: /actuator/prometheus
+      {{- end }}
       {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -61,9 +66,20 @@ spec:
           env:
             - name: SPRING_CONFIG_IMPORT
               value: "optional:file:/opt/application-config/application.yaml"
-          {{- if .Values.otel.export.enabled }}
+          {{- if .Values.observability.enabled }}
+            # Activates the OTel Java Agent bundled in the image (do not also set
+            # JAVA_TOOL_OPTIONS via .Values.env when observability is enabled).
+            - name: JAVA_TOOL_OPTIONS
+              value: "-javaagent:/otel/opentelemetry-javaagent.jar"
+            - name: OTEL_SERVICE_NAME
+              value: {{ include "chart-libs.fullname" . }}
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://otel-collector:4318"
+              value: {{ .Values.observability.otlpEndpoint | quote }}
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "http/protobuf"
+            # Java metrics flow via the Prometheus pod-annotation scrape (Micrometer names)
+            - name: OTEL_METRICS_EXPORTER
+              value: "none"
           {{- end }}
           {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
@@ -99,6 +115,22 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+          {{- if $.Values.observability.enabled }}
+            - name: OTEL_SERVICE_NAME
+              value: "auditflow-transformer"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ $.Values.observability.otlpEndpoint | quote }}
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "http/protobuf"
+            - name: OTEL_PYTHON_LOG_CORRELATION
+              value: "true"
+            - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+              value: "true"
+            - name: OTEL_LOGS_EXPORTER
+              value: "otlp"
+            - name: OTEL_METRICS_EXPORTER
+              value: "otlp"
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /registry
@@ -136,6 +168,22 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+          {{- if $.Values.observability.enabled }}
+            - name: OTEL_SERVICE_NAME
+              value: "auditflow-sink"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ $.Values.observability.otlpEndpoint | quote }}
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: "http/protobuf"
+            - name: OTEL_PYTHON_LOG_CORRELATION
+              value: "true"
+            - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+              value: "true"
+            - name: OTEL_LOGS_EXPORTER
+              value: "otlp"
+            - name: OTEL_METRICS_EXPORTER
+              value: "otlp"
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /registry

@@ -21,7 +21,7 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.1 |
+| file://../chart-libs | chart-libs | 0.0.2 |
 
 ## Values
 
@@ -67,8 +67,10 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 | rbac.rules | list | `[]` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":80},"initialDelaySeconds":5,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
-| resources.requests.cpu | string | `"100m"` |  |
-| resources.requests.memory | string | `"512Mi"` |  |
+| resources.limits.cpu | string | `"200m"` |  |
+| resources.limits.memory | string | `"256Mi"` |  |
+| resources.requests.cpu | string | `"50m"` |  |
+| resources.requests.memory | string | `"128Mi"` |  |
 | secrets | object | `{"data":{}}` | Secret data to be used as environment variables |
 | securityContext | object | `{}` |  |
 | service | object | `{"port":80,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |

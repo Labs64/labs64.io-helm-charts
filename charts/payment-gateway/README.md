@@ -21,7 +21,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.1 |
+| file://../chart-libs | chart-libs | 0.0.2 |
 | https://charts.bitnami.com/bitnami | postgresql | ^16.0.0 |
 | https://charts.bitnami.com/bitnami | rabbitmq | ^16.0.0 |
 | https://charts.bitnami.com/bitnami | redis | ^20.0.0 |
@@ -84,6 +84,8 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | redis | object | `{"architecture":"standalone","auth":{"password":"labs64pw"},"enabled":false,"image":{"repository":"bitnamilegacy/redis"}}` | Optional bundled Redis (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own Redis instead. @schema type: object additionalProperties: true @schema |
 | redis.image | object | `{"repository":"bitnamilegacy/redis"}` | docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag @schema type: object additionalProperties: true @schema |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
+| resources.limits.cpu | string | `"500m"` |  |
+| resources.limits.memory | string | `"1Gi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
 | secrets | object | `{"data":{}}` | Secret data to be used as environment variables (delivered via envFrom). External installs supply broker/database/cache credentials here, e.g.   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD. When rabbitmq.enabled=true / postgresql.enabled=true / redis.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth / redis.auth. Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed). Note: the Secret is hook-managed (pre-install) and survives helm uninstall. @schema type: object properties:   data:     type: object     additionalProperties: true @schema |

@@ -25,8 +25,8 @@
               "description": "Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).",
               "properties": {
                 "VITE_API_URL": {
-                  "default": "https://<HOST>/api/v1/checkout",
-                  "description": "Primary API base URL \u2014 replace <HOST> with your domain/host.",
+                  "default": "https://\u003cHOST\u003e/api/v1/checkout",
+                  "description": "Primary API base URL — replace \u003cHOST\u003e with your domain/host.",
                   "title": "VITE_API_URL",
                   "type": "string"
                 }
@@ -647,38 +647,16 @@
     "resources": {
       "additionalProperties": false,
       "properties": {
-        "requests": {
-          "additionalProperties": false,
-          "description": "limits:\n cpu: 200m\n memory: 512Mi",
-          "properties": {
-            "cpu": {
-              "default": "100m",
-              "title": "cpu",
-              "type": "string"
-            },
-            "memory": {
-              "default": "512Mi",
-              "title": "memory",
-              "type": "string"
-            }
-          },
-          "required": [
-            "cpu",
-            "memory"
-          ],
-          "title": "requests",
-          "type": "object"
-        },
         "limits": {
           "additionalProperties": false,
           "properties": {
             "cpu": {
-              "default": "500m",
+              "default": "200m",
               "title": "cpu",
               "type": "string"
             },
             "memory": {
-              "default": "1Gi",
+              "default": "256Mi",
               "title": "memory",
               "type": "string"
             }
@@ -689,9 +667,31 @@
           ],
           "title": "limits",
           "type": "object"
+        },
+        "requests": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "50m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "128Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "requests",
+          "type": "object"
         }
       },
       "required": [
+        "limits",
         "requests"
       ],
       "title": "resources",
