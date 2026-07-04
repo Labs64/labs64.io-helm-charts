@@ -20,7 +20,7 @@ Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, s
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.1 |
+| file://../chart-libs | chart-libs | 0.0.2 |
 
 ## Values
 

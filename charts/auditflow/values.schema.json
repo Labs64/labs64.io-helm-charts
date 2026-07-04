@@ -757,6 +757,30 @@
       "title": "nodeSelector",
       "type": "object"
     },
+    "observability": {
+      "additionalProperties": false,
+      "description": "Observability is an infrastructure concern: the same images run with or without it.\nWhen enabled, the backend's bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and\nthe Python sidecars start under opentelemetry-instrument (triggered by the OTLP endpoint env).\nJava metrics stay on Micrometer via /actuator/prometheus (prometheus.io/* pod annotations\nare added automatically when enabled).",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable runtime instrumentation (traces + logs OTLP, Prometheus-annotation metrics scrape)",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "otlpEndpoint": {
+          "default": "http://otel-collector:4318",
+          "description": "OTLP endpoint of the OpenTelemetry Collector",
+          "title": "otlpEndpoint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "otlpEndpoint"
+      ],
+      "title": "observability",
+      "type": "object"
+    },
     "podAnnotations": {
       "additionalProperties": false,
       "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
@@ -840,33 +864,6 @@
         "seccompProfile"
       ],
       "title": "podSecurityContext",
-      "type": "object"
-    },
-    "otel": {
-      "additionalProperties": false,
-      "description": "OpenTelemetry export toggle. When disabled (default), OTLP exporter endpoints are not configured.",
-      "properties": {
-        "export": {
-          "additionalProperties": false,
-          "properties": {
-            "enabled": {
-              "default": false,
-              "description": "Enable OTLP metrics/logs export to a collector",
-              "title": "enabled",
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "enabled"
-          ],
-          "title": "export",
-          "type": "object"
-        }
-      },
-      "required": [
-        "export"
-      ],
-      "title": "otel",
       "type": "object"
     },
     "rabbitmq": {
@@ -1368,6 +1365,7 @@
     "tolerations",
     "affinity",
     "env",
+    "observability",
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",

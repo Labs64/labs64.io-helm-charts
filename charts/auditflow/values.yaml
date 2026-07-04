@@ -228,13 +228,16 @@ env: []
 secrets:
   data: {}
 
-# -- OpenTelemetry export toggle. When disabled (default), the OTLP exporter
-# endpoints are not configured, preventing connection-refused spam when no
-# collector is running. The OtelLogbackInstaller (guardrail) is never removed.
-otel:
-  export:
-    # -- Enable OTLP metrics/logs export to a collector
-    enabled: false
+# -- Observability is an infrastructure concern: the same images run with or without it.
+# When enabled, the backend's bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and
+# the Python sidecars start under opentelemetry-instrument (triggered by the OTLP endpoint env).
+# Java metrics stay on Micrometer via /actuator/prometheus (prometheus.io/* pod annotations
+# are added automatically when enabled).
+observability:
+  # -- Enable runtime instrumentation (traces + logs OTLP, Prometheus-annotation metrics scrape)
+  enabled: false
+  # -- OTLP endpoint of the OpenTelemetry Collector
+  otlpEndpoint: "http://otel-collector:4318"
 
 # -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead.

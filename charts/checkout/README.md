@@ -21,7 +21,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.1 |
+| file://../chart-libs | chart-libs | 0.0.2 |
 | https://charts.bitnami.com/bitnami | postgresql | ^18.0.0 |
 | https://charts.bitnami.com/bitnami | rabbitmq | ^16.0.0 |
 
@@ -78,6 +78,8 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | rbac.rules | list | `[]` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
+| resources.limits.cpu | string | `"500m"` |  |
+| resources.limits.memory | string | `"1Gi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
 | secrets | object | `{"data":{}}` | Secret data to be used as environment variables (delivered via envFrom). External installs supply broker/database credentials here, e.g.   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD. When rabbitmq.enabled=true / postgresql.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth. Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed). Note: the Secret is hook-managed (pre-install) and survives helm uninstall. @schema type: object properties:   data:     type: object     additionalProperties: true @schema |

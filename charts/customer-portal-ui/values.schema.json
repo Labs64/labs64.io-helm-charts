@@ -25,8 +25,8 @@
               "description": "Key-value pairs written into env.json.",
               "properties": {
                 "VITE_API_URL": {
-                  "default": "https://<HOST>/api/v1/customer-portal",
-                  "description": "Primary API base URL \u2014 replace <HOST> with your domain/host.",
+                  "default": "https://\u003cHOST\u003e/api/v1/customer-portal",
+                  "description": "Primary API base URL — replace \u003cHOST\u003e with your domain/host.",
                   "title": "VITE_API_URL",
                   "type": "string"
                 }
@@ -643,11 +643,32 @@
     "resources": {
       "additionalProperties": false,
       "properties": {
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "200m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "256Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
+          "type": "object"
+        },
         "requests": {
           "additionalProperties": false,
           "properties": {
             "cpu": {
-              "default": "100m",
+              "default": "50m",
               "title": "cpu",
               "type": "string"
             },
@@ -663,30 +684,10 @@
           ],
           "title": "requests",
           "type": "object"
-        },
-        "limits": {
-          "additionalProperties": false,
-          "properties": {
-            "cpu": {
-              "default": "500m",
-              "title": "cpu",
-              "type": "string"
-            },
-            "memory": {
-              "default": "1Gi",
-              "title": "memory",
-              "type": "string"
-            }
-          },
-          "required": [
-            "cpu",
-            "memory"
-          ],
-          "title": "limits",
-          "type": "object"
         }
       },
       "required": [
+        "limits",
         "requests"
       ],
       "title": "resources",

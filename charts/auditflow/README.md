@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
@@ -21,7 +21,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.1 |
+| file://../chart-libs | chart-libs | 0.0.2 |
 | https://charts.bitnami.com/bitnami | rabbitmq | ^16.0.0 |
 
 ## Values
@@ -29,13 +29,17 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
-| applicationYaml | object | `{"pipelines":[],"sink":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8082"},"service":{"name":"auditflow-sink","namespace":"default"}},"spring":{"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
-| applicationYaml.pipelines | list | `[]` | AuditFlow pipelines configuration |
+| applicationYaml | object | `{"auditflow":{"pipelines":[]},"sink":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8082"},"service":{"name":"auditflow-sink","namespace":"default"}},"spring":{"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
+| applicationYaml.auditflow | object | `{"pipelines":[]}` | AuditFlow application properties (bound by @ConfigurationProperties(prefix = "auditflow")) |
+| applicationYaml.auditflow.pipelines | list | `[]` | AuditFlow pipelines configuration |
 | applicationYaml.sink | object | `{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8082"},"service":{"name":"auditflow-sink","namespace":"default"}}` | Sink configuration |
 | applicationYaml.sink.discovery | object | `{"mode":"local"}` | Discovery mode; "local" or "kubernetes" |
 | applicationYaml.sink.local | object | `{"url":"http://localhost:8082"}` | Local URL for the sink service |
 | applicationYaml.sink.service | object | `{"name":"auditflow-sink","namespace":"default"}` | Service name and namespace for the sink |
-| applicationYaml.spring | object | `{"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}}` | Spring configuration |
+| applicationYaml.spring | object | `{"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}}` | Spring configuration |
+| applicationYaml.spring.data | object | `{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}}` | Redis connection params (backing store for the idempotency/dedup service; auditflow.idempotency.store=redis) |
+| applicationYaml.spring.data.redis.host | string | `"redis-master.tools.svc.cluster.local"` | Redis host; defaults to the shared tools Redis. Override for your own Redis in non-local installs. |
+| applicationYaml.spring.data.redis.port | int | `6379` | Redis port; default: 6379 |
 | applicationYaml.spring.rabbitmq | object | `{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}` | RabbitMQ connection params |
 | applicationYaml.spring.rabbitmq.host | string | `"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}"` | RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host |
 | applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
@@ -72,6 +76,9 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | nodeSelector | object | `{}` | Node labels for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
+| observability | object | `{"enabled":false,"otlpEndpoint":"http://otel-collector:4318"}` | Observability is an infrastructure concern: the same images run with or without it. When enabled, the backend's bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and the Python sidecars start under opentelemetry-instrument (triggered by the OTLP endpoint env). Java metrics stay on Micrometer via /actuator/prometheus (prometheus.io/* pod annotations are added automatically when enabled). |
+| observability.enabled | bool | `false` | Enable runtime instrumentation (traces + logs OTLP, Prometheus-annotation metrics scrape) |
+| observability.otlpEndpoint | string | `"http://otel-collector:4318"` | OTLP endpoint of the OpenTelemetry Collector |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podDisruptionBudget | object | `{"enabled":false,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
