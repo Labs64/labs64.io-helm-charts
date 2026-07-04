@@ -11,5 +11,5 @@ sasl:
   client:
     users:
       - labs64
-    passwords: "labs64-local"
+    passwords: "labs64pw"
   existingSecret: ""

@@ -192,7 +192,7 @@ rabbitmq:
   # @schema
   auth:
     username: labs64
-    password: labs64-local
+    password: labs64pw
 
 # -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for production; point applicationYaml at your own database instead.
@@ -215,7 +215,7 @@ postgresql:
   # @schema
   auth:
     username: labs64
-    password: labs64-local
+    password: labs64pw
     database: checkout
 
 # -- Additional application properties

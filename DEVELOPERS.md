@@ -566,7 +566,7 @@ Common causes:
 ### RabbitMQ connection refused
 
 - Check RabbitMQ is running: `kubectl get pods -n tools -l app=rabbitmq`
-- Verify credentials match chart defaults (username: `labs64`, password: `labs64-local`)
+- Verify credentials match chart defaults (username: `labs64`, password: `labs64pw`)
 - Check service secrets: `kubectl get secret -n labs64io`
 
 ### Port 80/443 already in use

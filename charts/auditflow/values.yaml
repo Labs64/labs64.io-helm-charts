@@ -257,7 +257,7 @@ rabbitmq:
   # @schema
   auth:
     username: labs64
-    password: labs64-local
+    password: labs64pw
 
 # -- Additional application properties
 applicationYaml:

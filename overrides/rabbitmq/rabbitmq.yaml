@@ -5,7 +5,7 @@ metadata:
 type: Opaque
 stringData:
   RABBITMQ_DEFAULT_USER: "labs64"
-  RABBITMQ_DEFAULT_PASS: "labs64-local"
+  RABBITMQ_DEFAULT_PASS: "labs64pw"
 ---
 apiVersion: apps/v1
 kind: StatefulSet

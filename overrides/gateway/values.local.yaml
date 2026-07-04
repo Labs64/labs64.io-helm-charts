@@ -11,12 +11,12 @@ ingressroute:
         name: labs64io-gateway
         port: 8080
       middlewares:
-        - name: strip-prefix-middleware
+        - name: strip-prefix
 
   # -- Middlewares owned by the gateway chart itself
   middlewares:
     # -- Strip Prefix Middleware (swagger-ui only)
-    - name: strip-prefix-middleware
+    - name: strip-prefix
       spec:
         stripPrefix:
           prefixes:

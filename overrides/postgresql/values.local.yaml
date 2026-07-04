@@ -1,7 +1,7 @@
 auth:
   postgresPassword: postgres
   username: labs64
-  password: labs64-local
+  password: labs64pw
 
 primary:
   persistence:

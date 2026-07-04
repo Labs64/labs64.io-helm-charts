@@ -80,7 +80,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | podSecurityContext.runAsNonRoot | bool | `true` |  |
 | podSecurityContext.runAsUser | int | `1064` |  |
 | podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| rabbitmq | object | `{"auth":{"password":"labs64-local","username":"labs64"},"enabled":false,"image":{"repository":"bitnamilegacy/rabbitmq"}}` | Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead. @schema type: object additionalProperties: true @schema |
+| rabbitmq | object | `{"auth":{"password":"labs64pw","username":"labs64"},"enabled":false,"image":{"repository":"bitnamilegacy/rabbitmq"}}` | Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead. @schema type: object additionalProperties: true @schema |
 | rabbitmq.image | object | `{"repository":"bitnamilegacy/rabbitmq"}` | docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag @schema type: object additionalProperties: true @schema |
 | rbac.create | bool | `false` |  |
 | rbac.rules | list | `[]` |  |

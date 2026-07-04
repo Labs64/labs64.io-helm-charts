@@ -303,7 +303,7 @@ rabbitmq-install: repo-update
 	@echo "Waiting for RabbitMQ to be ready..."
 	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
 	@echo "Username      : labs64"
-	@echo "Password      : labs64-local"
+	@echo "Password      : labs64pw"
 
 # uninstall RabbitMQ
 rabbitmq-uninstall:

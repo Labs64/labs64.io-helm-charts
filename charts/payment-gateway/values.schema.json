@@ -671,7 +671,7 @@
               "type": "string"
             },
             "password": {
-              "default": "labs64-local",
+              "default": "labs64pw",
               "title": "password",
               "type": "string"
             },
@@ -725,7 +725,7 @@
           "additionalProperties": true,
           "properties": {
             "password": {
-              "default": "labs64-local",
+              "default": "labs64pw",
               "title": "password",
               "type": "string"
             },
@@ -863,7 +863,7 @@
           "additionalProperties": true,
           "properties": {
             "password": {
-              "default": "labs64-local",
+              "default": "labs64pw",
               "title": "password",
               "type": "string"
             }
