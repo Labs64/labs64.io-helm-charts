@@ -103,6 +103,17 @@ runs as one container; the Job succeeds only if all pass.
     just local-up-full   # + monitoring stack
     just local-down
 
+## Observability
+
+Observability across the ecosystem is **infrastructure-owned**: services ship no OpenTelemetry
+SDK, instrumentation is injected at runtime (OTel Java Agent / `opentelemetry-instrument`), and
+the whole stack is toggled per deployment with `observability.enabled` — the same image runs with
+it on or off. Signals flow through an OpenTelemetry Collector to Tempo (traces), VictoriaLogs
+(logs), and Prometheus (metrics), unified in Grafana.
+
+See **[OBSERVABILITY.md](OBSERVABILITY.md)** for the full model, the env-variable contract, and
+how to make a new module observable.
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Labs64/labs64.io-helm-charts&type=Date)](https://www.star-history.com/#Labs64/labs64.io-helm-charts&Date)

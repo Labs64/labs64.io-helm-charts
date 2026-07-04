@@ -19,12 +19,14 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | `charts/chart-libs/` | Shared Helm library (all charts depend on this) |
 | `overrides/` | Per-module values files for different profiles |
 | `DEVELOPERS.md` | Local development setup guide with architecture diagram |
+| `OBSERVABILITY.md` | Canonical observability model for the whole ecosystem (infrastructure-owned instrumentation) |
 
 ## Critical guardrails
 
 1. **Chart versions must match** between `Chart.yaml` and ArgoCD ApplicationSet pin.
 2. **All module charts depend on `chart-libs`** — do not break this dependency.
 3. **Credentials are Kubernetes Secrets** — never ConfigMaps for sensitive data.
+4. **Observability is infrastructure-owned** — toggle it via `observability.enabled` (env/annotation injection only); never add OTel SDK deps to services. See [`OBSERVABILITY.md`](OBSERVABILITY.md).
 
 ## Provisioning profiles
 
@@ -53,3 +55,4 @@ just generate-all            # regenerate chart README + values.schema.json
 | Default values | `charts/<module>/values.yaml` |
 | Local dev overrides | `overrides/<module>/values.local.yaml` |
 | Pinned chart versions | `justfile` (version variables at top) |
+| Observability wiring / collector pipelines | `OBSERVABILITY.md` + `overrides/opentelemetry/` |

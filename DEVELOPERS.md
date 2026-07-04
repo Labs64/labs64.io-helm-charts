@@ -58,7 +58,7 @@ graph TB
             subgraph Observability["Observability Stack (optional)"]
                 otel["OpenTelemetry<br/>Collector"]:::obs
                 tempo["Tempo<br/>(Traces)"]:::obs
-                loki["Loki<br/>(Logs)"]:::obs
+                vlogs["VictoriaLogs<br/>(Logs)"]:::obs
                 prom["Prometheus<br/>(Metrics)"]:::obs
                 grafana["Grafana<br/>(Dashboards)"]:::obs
             end
@@ -134,9 +134,13 @@ graph TB
     %% Telemetry
     ns_labs64io -.->|OTLP Logs/Traces| otel
     otel -.-> tempo
-    otel -.-> loki
+    otel -.-> vlogs
     prom -.->|Scrapes| ns_labs64io
 ```
+
+> **Observability model:** instrumentation is infrastructure-owned and injected at runtime — the
+> same images run with it on or off, toggled by `observability.enabled`. See
+> [OBSERVABILITY.md](OBSERVABILITY.md) for the full concept, signal flow, and env-variable contract.
 
 ### Key Configuration Artifacts
 
