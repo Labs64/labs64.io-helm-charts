@@ -8,8 +8,7 @@
 > so the *same image* runs identically with observability on or off.
 
 This document is the canonical description of the observability model for **every** module in
-the Labs64.IO Ecosystem (Java/Spring Boot, Python/FastAPI, Vue). It is the reference that
-per-module charts, compose overlays, and RFC 03 (`labs64.io-docs-internal`) all conform to.
+the Labs64.IO Ecosystem (Java/Spring Boot, Python/FastAPI, Vue).
 
 ---
 
@@ -96,7 +95,7 @@ It does **not** export metrics — see §5.
 
 > Chosen over the OTel Operator's admission-webhook injection because the agent is one mechanism
 > that works identically in Docker Compose **and** Kubernetes, needs no init container or webhook,
-> and pins the version per image. (Full alternatives comparison: RFC 03.)
+> and pins the version per image.
 
 ### Python services (FastAPI)
 
@@ -251,10 +250,6 @@ The pattern is uniform across services. To make a module observable:
 5. **Verify both modes:** the same image must start cleanly with observability off (no exporter
    spam) and, with it on, produce a distributed trace, correlated logs, and scraped metrics.
 
-**AuditFlow is the reference implementation.** The full migration guide (dependency inventory,
-step-by-step removal of in-app SDK coupling, validation checklist) lives in **RFC 03** in
-`labs64.io-docs-internal`.
-
 ---
 
 ## 9. Guardrails — what NOT to do
@@ -273,7 +268,6 @@ step-by-step removal of in-app SDK coupling, validation checklist) lives in **RF
 
 ## References
 
-- **RFC 03 — Observability Modernization** — `labs64.io-docs-internal/rfc/` (design record, alternatives, migration guide)
 - **Collector pipelines** — `overrides/opentelemetry/values-collector.local.yaml`
 - **Grafana / Tempo / Prometheus overrides** — `overrides/{grafana,tempo,prometheus}/values.local.yaml`
 - **AuditFlow chart (reference wiring)** — `charts/auditflow/` (`observability.*` values, `templates/deployment.yaml`)
