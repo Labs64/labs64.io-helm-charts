@@ -31,3 +31,6 @@ options:
       - arg: --disable=traefik
         nodeFilters:
           - server:*
+      - arg: --tls-san=host.docker.internal
+        nodeFilters:
+          - server:*

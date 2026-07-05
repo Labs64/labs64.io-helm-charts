@@ -26,7 +26,10 @@ default:
 
 # start local k3d cluster + registry, install toolset and all Labs64.IO components
 up: generate-secrets
-    k3d cluster create --config k3d/labs64io.yaml || echo "cluster exists - continuing"
+    k3d cluster create --config k3d/labs64io.yaml || true
+    k3d kubeconfig merge -d labs64io
+    if [ -f /.dockerenv ]; then sed -i 's/server: https:\/\/0.0.0.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
+    if [ -f /.dockerenv ]; then sed -i 's/server: https:\/\/127.0.0.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
     just repo-update
     just install-tools
     just install-all-apps
@@ -34,7 +37,10 @@ up: generate-secrets
 
 # create the local k3d cluster + registry only
 cluster-create:
-    k3d cluster create --config k3d/labs64io.yaml || echo "cluster exists - continuing"
+    k3d cluster create --config k3d/labs64io.yaml || true
+    k3d kubeconfig merge -d labs64io
+    if [ -f /.dockerenv ]; then sed -i 's/server: https:\/\/0.0.0.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
+    if [ -f /.dockerenv ]; then sed -i 's/server: https:\/\/127.0.0.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
 
 # delete the local k3d cluster (and its registry)
 down:
