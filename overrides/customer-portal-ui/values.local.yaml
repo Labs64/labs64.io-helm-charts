@@ -1,7 +1,7 @@
 image:
   repository: localhost:5005/customer-portal-ui
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 application:
   runtimeEnv:

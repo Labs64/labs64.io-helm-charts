@@ -1,7 +1,7 @@
 image:
   repository: localhost:5005/checkout-ui
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 application:
   runtimeEnv:
