@@ -326,13 +326,13 @@ status:
     @echo "\n=== Monitoring ==="
     @kubectl get pods,svc,ingress -n {{NAMESPACE_MONITORING}}
 
-# watch cluster status live
-watch:
-    watch -n 2 "kubectl get pods,svc,ingress -n {{NAMESPACE_LABS64IO}} && echo '\n=== Tools ===\n' && kubectl get pods,svc -n {{NAMESPACE_TOOLS}}"
-
 # show logs for a specific application in real-time
 logs app:
     kubectl logs -f -n {{NAMESPACE_LABS64IO}} -l app.kubernetes.io/name={{app}}
+
+# show errors in Labs64.IO kubectl logs
+show-errors:
+    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
 
 # rollout restart a specific application
 restart app:
@@ -407,10 +407,6 @@ urls:
         print("\nToken-gated URLs (need a Bearer token — see: just generate-jwt <scope>):")
         for url in sorted(gated_urls):
             print(f"  {url}")
-
-# show errors in Labs64.IO kubectl logs
-show-errors:
-    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
 
 # end-to-end auth smoke test through Traefik
 e2e-auth-test:
