@@ -16,19 +16,270 @@ PROMETHEUS_STACK_CHART_VERSION := "87.5.1"
 TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
 
-## Useful Commands ##
+LABS64IO_APPS := "traefik-authproxy gateway-common gateway auditflow checkout checkout-ui payment-gateway customer-portal-ui"
 
-# show helm releases
-helm-ls:
-    helm ls --all-namespaces
+# List available commands
+default:
+    @just --list
 
-# show pods, services in all namespaces
-kubectl-pods:
-    kubectl get svc,pods --all-namespaces -o wide
+## 🚀 Getting Started (Cluster & Setup) ##
 
-# show persistent volumes and claims in all namespaces
-kubectl-pv:
-    kubectl get pv,pvc --all-namespaces -o wide
+# start local k3d cluster + registry, install toolset and all Labs64.IO components
+up: generate-secrets
+    k3d cluster create --config k3d/labs64io.yaml || echo "cluster exists - continuing"
+    just repo-update
+    just install-tools
+    just install-all-apps
+    @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
+
+# create the local k3d cluster + registry only
+cluster-create:
+    k3d cluster create --config k3d/labs64io.yaml || echo "cluster exists - continuing"
+
+# delete the local k3d cluster (and its registry)
+down:
+    k3d cluster delete labs64io
+
+# start local environment with monitoring stack
+up-full: up install-monitoring
+
+# automatically scaffold missing local secrets from their .example templates
+generate-secrets:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for dir in overrides/*/; do
+        if [ -f "${dir}values.secrets.local.yaml.example" ] && [ ! -f "${dir}values.secrets.local.yaml" ]; then
+            cp "${dir}values.secrets.local.yaml.example" "${dir}values.secrets.local.yaml"
+            echo "Generated ${dir}values.secrets.local.yaml"
+        fi
+    done
+
+
+## 📦 Labs64.IO Apps ##
+
+# Install all Labs64.IO apps
+install-all-apps:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for app in {{LABS64IO_APPS}}; do
+        just install-app "$app"
+    done
+
+# Uninstall all Labs64.IO apps
+uninstall-all-apps:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for app in {{LABS64IO_APPS}}; do
+        just uninstall-app "$app"
+    done
+
+# Install a specific Labs64.IO application
+install-app app:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Installing Labs64.IO App: {{app}} ==="
+    helm dependencies update ./charts/{{app}}
+    ARGS=(
+      "--namespace" "{{NAMESPACE_LABS64IO}}"
+      "--create-namespace"
+      "-f" "./charts/{{app}}/values.yaml"
+      "-f" "./overrides/{{app}}/values.{{ENV}}.yaml"
+    )
+    if [ -f "./overrides/{{app}}/values.secrets.{{ENV}}.yaml" ]; then
+      echo "Using secrets override: overrides/{{app}}/values.secrets.{{ENV}}.yaml"
+      ARGS+=("-f" "./overrides/{{app}}/values.secrets.{{ENV}}.yaml")
+    fi
+    helm upgrade --install labs64io-{{app}} ./charts/{{app}} "${ARGS[@]}"
+
+# Install a single Labs64.IO application standalone (bundled infra, no gateway stack)
+install-app-standalone app:
+    helm dependencies update ./charts/{{app}}
+    helm upgrade --install labs64io-{{app}} ./charts/{{app}} \
+      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
+      -f ./charts/{{app}}/values.yaml \
+      -f ./overrides/{{app}}/values.standalone.yaml
+
+# Uninstall a specific Labs64.IO application
+uninstall-app app:
+    helm uninstall labs64io-{{app}} --namespace {{NAMESPACE_LABS64IO}} || true
+
+
+## 🛠️ Core Tools ##
+
+# Install all core tools
+install-tools: install-tool-traefik install-tool-mock-oidc install-tool-rabbitmq install-tool-postgresql install-tool-redis
+
+# Uninstall all core tools
+uninstall-tools: uninstall-tool-traefik uninstall-tool-mock-oidc uninstall-tool-rabbitmq uninstall-tool-postgresql uninstall-tool-redis
+
+# install Traefik
+install-tool-traefik:
+    kubectl create namespace {{NAMESPACE_TOOLS}} --dry-run=client -o yaml | kubectl apply -f -
+    helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
+    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
+
+# uninstall Traefik
+uninstall-tool-traefik:
+    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}} || true
+    helm uninstall traefik-crds --namespace {{NAMESPACE_TOOLS}} || true
+
+# install RabbitMQ (official image)
+install-tool-rabbitmq:
+	@echo "Installing RabbitMQ (official image)..."
+	@[ -f overrides/rabbitmq/values.secrets.local.yaml ] || { echo "  No values.secrets.local.yaml — bootstrapping from template (local dev default)"; cp overrides/rabbitmq/values.secrets.local.yaml.example overrides/rabbitmq/values.secrets.local.yaml; }
+	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/values.secrets.local.yaml
+	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq.yaml
+	@echo "Waiting for RabbitMQ to be ready..."
+	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
+	@echo "Username      : labs64"
+	@echo "Credentials   : from overrides/rabbitmq/values.secrets.local.yaml (rabbitmq-secret)"
+
+# uninstall RabbitMQ
+uninstall-tool-rabbitmq:
+	kubectl delete statefulset rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete service rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete secret rabbitmq-secret --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+
+# install PostgreSQL
+install-tool-postgresql:
+    helm upgrade --install postgresql bitnami/postgresql \
+      --version {{POSTGRESQL_CHART_VERSION}} \
+      -f overrides/postgresql/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    @echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
+    @echo "postgres password : $$(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgres-password}" | base64 -d 2>/dev/null || kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgresql-password}" | base64 -d)"
+    @echo "user password     : $$(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || true)"
+
+# uninstall PostgreSQL
+uninstall-tool-postgresql:
+    helm uninstall postgresql --namespace {{NAMESPACE_TOOLS}} || true
+
+# install Redis
+install-tool-redis:
+    helm upgrade --install redis bitnami/redis --version {{REDIS_CHART_VERSION}} -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+
+# uninstall Redis
+uninstall-tool-redis:
+    helm uninstall redis --namespace {{NAMESPACE_TOOLS}} || true
+
+# install mock OIDC provider (DEV ONLY - M2M tokens for local testing)
+install-tool-mock-oidc:
+    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
+
+# uninstall mock OIDC provider
+uninstall-tool-mock-oidc:
+    kubectl delete -f overrides/mock-oidc/mock-oidc.yaml || true
+
+
+## 📊 Monitoring Tools ##
+
+# Install all monitoring tools
+install-monitoring: install-tool-metrics-server install-tool-opentelemetry install-tool-prometheus install-tool-tempo install-tool-grafana
+
+# Uninstall all monitoring tools
+uninstall-monitoring: uninstall-tool-grafana uninstall-tool-tempo uninstall-tool-prometheus uninstall-tool-opentelemetry uninstall-tool-metrics-server
+
+# install Metrics Server
+install-tool-metrics-server:
+    helm upgrade --install metrics-server metrics-server/metrics-server \
+      --version {{METRICS_SERVER_CHART_VERSION}} \
+      -f overrides/metrics-server/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_KUBE_SYSTEM}} \
+      --set args="{--kubelet-insecure-tls}"
+
+# uninstall Metrics Server
+uninstall-tool-metrics-server:
+    helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}} || true
+
+# install Open Telemetry
+install-tool-opentelemetry:
+    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
+      --version {{OTEL_OPERATOR_CHART_VERSION}} \
+      -f overrides/opentelemetry/values-operator.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
+    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector \
+      --version {{OTEL_COLLECTOR_CHART_VERSION}} \
+      -f overrides/opentelemetry/values-collector.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
+
+# uninstall Open Telemetry
+uninstall-tool-opentelemetry:
+    helm uninstall opentelemetry-operator --namespace {{NAMESPACE_MONITORING}} || true
+    helm uninstall opentelemetry-collector --namespace {{NAMESPACE_MONITORING}} || true
+
+# install Prometheus
+install-tool-prometheus:
+    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+      --version {{PROMETHEUS_STACK_CHART_VERSION}} \
+      -f overrides/prometheus/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
+
+# uninstall Prometheus
+uninstall-tool-prometheus:
+    helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}} || true
+
+# install Tempo
+install-tool-tempo:
+    helm upgrade --install tempo grafana/tempo \
+      --version {{TEMPO_CHART_VERSION}} \
+      -f overrides/tempo/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace
+
+# uninstall Tempo
+uninstall-tool-tempo:
+    helm uninstall tempo --namespace {{NAMESPACE_MONITORING}} || true
+
+# install Grafana
+install-tool-grafana:
+    helm upgrade --install grafana grafana/grafana \
+      --version {{GRAFANA_CHART_VERSION}} \
+      -f overrides/grafana/values.{{ENV}}.yaml \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    @echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
+    @just grafana-password
+
+# retrieve Grafana password
+grafana-password:
+    @echo "Username: admin"
+    @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+# uninstall Grafana
+uninstall-tool-grafana:
+    helm uninstall grafana --namespace {{NAMESPACE_MONITORING}} || true
+
+
+## 🏗️ Build & CodeGen ##
+
+# Build and push all module images to local registry (localhost:5005)
+build-images module="all":
+	./scripts/build-images.sh {{module}}
+
+# Install required Helm plugins
+helm-tools:
+    @helm plugin install --verify=false https://github.com/dadav/helm-schema 2>/dev/null || true
+    @echo "Installed Helm plugins:"
+    @helm plugin list
+
+# Generate Helm chart documentation (README.md) for all charts
+generate-docu:
+    docker run --rm \
+        --volume "$$(pwd):/helm-docs" \
+        --user "$$(id -u):$$(id -g)" \
+        jnorwood/helm-docs:{{ HELM_DOCS_VERSION }} \
+        --chart-search-root ./charts \
+        --log-level warning
+
+# Generate Helm values schema (values.schema.json) for all charts
+generate-schema: helm-tools
+    helm schema \
+        --chart-search-root ./charts \
+        --no-dependencies \
+        --append-newline
+
+# Generate all — Helm charts docs and schema
+generate-all: generate-docu generate-schema
 
 # add external helm repositories
 repo-add:
@@ -44,411 +295,89 @@ repo-add:
 repo-update: repo-add
     helm repo update
 
-# show repositories versions
-repo-search: repo-update
-    helm search repo
-
-
-## Labs64.IO Components ##
-
-# Install required Helm plugins
-helm-tools:
-    @helm plugin install --verify=false https://github.com/dadav/helm-schema 2>/dev/null || true
-    @echo "Installed Helm plugins:"
-    @helm plugin list
-
-# Generate Helm chart documentation (README.md) for all charts
-generate-docu:
-    docker run --rm \
-        --volume "$(pwd):/helm-docs" \
-        --user "$(id -u):$(id -g)" \
-        jnorwood/helm-docs:{{ HELM_DOCS_VERSION }} \
-        --chart-search-root ./charts \
-        --log-level warning
-
-# Generate Helm values schema (values.schema.json) for all charts
-generate-schema: helm-tools
-    helm schema \
-        --chart-search-root ./charts \
-        --no-dependencies \
-        --append-newline
-
-# Generate all — Helm charts docs and schema
-generate-all: generate-docu generate-schema
-
-# Build and push all module images to local registry (localhost:5005)
-build-images:
-	@echo "=== Building auditflow images ==="
-	cd ../labs64.io-auditflow/auditflow-be && mvn -B clean package -DskipTests -q && \
-	docker build -t localhost:5005/auditflow:latest . && \
-	cd ../auditflow-transformer && \
-	docker build -t localhost:5005/auditflow-transformer:latest . && \
-	cd ../auditflow-sink && \
-	docker build -t localhost:5005/auditflow-sink:latest .
-	docker push localhost:5005/auditflow:latest
-	docker push localhost:5005/auditflow-transformer:latest
-	docker push localhost:5005/auditflow-sink:latest
-	@echo "=== Building checkout images ==="
-	cd ../labs64.io-checkout/checkout-be && mvn -B clean package -DskipTests -q && \
-	docker build -t localhost:5005/checkout:latest . && \
-	cd ../checkout-fe && \
-	docker build -t localhost:5005/checkout-ui:latest .
-	docker push localhost:5005/checkout:latest
-	docker push localhost:5005/checkout-ui:latest
-	@echo "=== Building payment-gateway image ==="
-	cd ../labs64.io-payment-gateway/payment-gateway-be && mvn -B clean package -DskipTests -q && \
-	docker build -t localhost:5005/payment-gateway:latest .
-	docker push localhost:5005/payment-gateway:latest
-	@echo "=== Building traefik-authproxy image ==="
-	cd ../labs64.io-gateway/traefik-authproxy && \
-	docker build -t localhost:5005/traefik-authproxy:latest .
-	docker push localhost:5005/traefik-authproxy:latest
-	@echo "=== Building customer-portal-ui image ==="
-	cd ../labs64.io-customer-portal/customer-portal-fe && \
-	docker build -t localhost:5005/customer-portal-ui:latest .
-	docker push localhost:5005/customer-portal-ui:latest
-	@echo "=== All images built and pushed ==="
-	@curl -s http://localhost:5005/v2/_catalog
-
-# install Labs64.IO :: API Gateway
-labs64io-traefik-authproxy-install:
-    helm dependencies update ./charts/traefik-authproxy
-    helm upgrade --install labs64io-traefik-authproxy ./charts/traefik-authproxy \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/traefik-authproxy/values.yaml \
-      -f ./overrides/traefik-authproxy/values.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: API Gateway
-labs64io-traefik-authproxy-uninstall:
-    helm uninstall labs64io-traefik-authproxy --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: Swagger UI / Gateway
-labs64io-gateway-install:
-    helm dependencies update ./charts/gateway
-    helm upgrade --install labs64io-gateway ./charts/gateway \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/gateway/values.yaml \
-      -f ./overrides/gateway/values.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: Swagger UI / Gateway
-labs64io-gateway-uninstall:
-    helm uninstall labs64io-gateway --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: Gateway Common (shared Traefik middlewares)
-labs64io-gateway-common-install:
-    helm dependencies update ./charts/gateway-common
-    helm upgrade --install labs64io-gateway-common ./charts/gateway-common \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/gateway-common/values.yaml \
-      -f ./overrides/gateway-common/values.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: Gateway Common
-labs64io-gateway-common-uninstall:
-    helm uninstall labs64io-gateway-common --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: AuditFlow
-labs64io-auditflow-install:
-    helm dependencies update ./charts/auditflow
-    helm upgrade --install labs64io-auditflow ./charts/auditflow \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/auditflow/values.yaml \
-      -f ./overrides/auditflow/values.{{ENV}}.yaml \
-      -f ./overrides/auditflow/values.secrets.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: AuditFlow
-labs64io-auditflow-uninstall:
-    helm uninstall labs64io-auditflow --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: Checkout
-labs64io-checkout-install:
-    helm dependencies update ./charts/checkout
-    helm upgrade --install labs64io-checkout ./charts/checkout \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/checkout/values.yaml \
-      -f ./overrides/checkout/values.{{ENV}}.yaml \
-      -f ./overrides/checkout/values.secrets.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: Checkout
-labs64io-checkout-uninstall:
-    helm uninstall labs64io-checkout --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: Checkout UI
-labs64io-checkout-ui-install:
-    helm dependencies update ./charts/checkout-ui
-    helm upgrade --install labs64io-checkout-ui ./charts/checkout-ui \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/checkout-ui/values.yaml \
-      -f ./overrides/checkout-ui/values.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: Checkout UI
-labs64io-checkout-ui-uninstall:
-    helm uninstall labs64io-checkout-ui --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: Payment Gateway
-labs64io-payment-gateway-install:
-    helm dependencies update ./charts/payment-gateway
-    helm upgrade --install labs64io-payment-gateway ./charts/payment-gateway \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/payment-gateway/values.yaml \
-      -f ./overrides/payment-gateway/values.{{ENV}}.yaml \
-      -f ./overrides/payment-gateway/values.secrets.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: Payment Gateway
-labs64io-payment-gateway-uninstall:
-    helm uninstall labs64io-payment-gateway --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: Customer Portal UI
-labs64io-customer-portal-ui-install:
-    helm dependencies update ./charts/customer-portal-ui
-    helm upgrade --install labs64io-customer-portal-ui ./charts/customer-portal-ui \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/customer-portal-ui/values.yaml \
-      -f ./overrides/customer-portal-ui/values.{{ENV}}.yaml
-
-# uninstall Labs64.IO :: Customer Portal UI
-labs64io-customer-portal-ui-uninstall:
-    helm uninstall labs64io-customer-portal-ui --namespace {{NAMESPACE_LABS64IO}}
-
-# install Labs64.IO :: all components
-labs64io-all-install: labs64io-traefik-authproxy-install labs64io-gateway-common-install labs64io-gateway-install labs64io-auditflow-install labs64io-checkout-install labs64io-checkout-ui-install labs64io-payment-gateway-install labs64io-customer-portal-ui-install
-
-# uninstall Labs64.IO :: all components
-labs64io-all-uninstall: labs64io-traefik-authproxy-uninstall labs64io-gateway-common-uninstall labs64io-gateway-uninstall labs64io-auditflow-uninstall labs64io-checkout-uninstall labs64io-checkout-ui-uninstall labs64io-payment-gateway-uninstall labs64io-customer-portal-ui-uninstall
-
-# install a single Labs64.IO module standalone (bundled infra, no gateway stack)
-labs64io-standalone-install module:
-    helm dependencies update ./charts/{{module}}
-    helm upgrade --install labs64io-{{module}} ./charts/{{module}} \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/{{module}}/values.yaml \
-      -f ./overrides/{{module}}/values.standalone.yaml
-
-# show errors in Labs64.IO kubectl logs
-labs64io-show-errors:
-    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
-
-# Labs64.IO :: Documentation
-labs64io-documentation:
-    open "http://gateway.localhost/swagger-ui/"
-
-
-## Local Cluster ##
-
-# create the local k3d cluster + registry, install toolset and all Labs64.IO components
-local-up:
-    k3d cluster create --config k3d/labs64io.yaml || echo "cluster exists - continuing"
-    just repo-update
-    just traefik-install
-    just mock-oidc-install
-    just rabbitmq-install
-    just postgresql-install
-    just redis-install
-    just labs64io-all-install
-    @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
-
-# delete the local k3d cluster (and its registry)
-local-down:
-    k3d cluster delete labs64io
-
-# local-up plus the monitoring stack
-local-up-full: local-up
-    just metrics-server-install
-    just opentelemetry-install
-    just prometheus-install
-    just tempo-install
-    just grafana-install
-
-
-## Kubernetes Components ##
-
-# install Metrics Server
-metrics-server-install: repo-update
-    helm search repo metrics-server/metrics-server
-    helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
-    helm upgrade --install metrics-server metrics-server/metrics-server \
-      --version {{METRICS_SERVER_CHART_VERSION}} \
-      -f overrides/metrics-server/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_KUBE_SYSTEM}} \
-      --set args="{--kubelet-insecure-tls}"
-
-# uninstall Metrics Server
-metrics-server-uninstall:
-    helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}}
-
-
-## Tools ##
-
-# install Traefik
-traefik-install: repo-update
-    helm search repo traefik/traefik
+# scaffold helm values for tools (run this only if you need to update original values)
+scaffold-tool-values: repo-update
     helm show values traefik/traefik > overrides/traefik/values.orig.yaml
     helm show values traefik/traefik-crds > overrides/traefik/values-crds.orig.yaml
-    kubectl create namespace {{NAMESPACE_TOOLS}} --dry-run=client -o yaml | kubectl apply -f -
-    helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
-    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
+    helm show values bitnami/postgresql > overrides/postgresql/values.orig.yaml
+    helm show values bitnami/redis > overrides/redis/values.orig.yaml
+    helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
+    helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
+    helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
+    helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
+    helm show values grafana/tempo > overrides/tempo/values.orig.yaml
+    helm show values grafana/grafana > overrides/grafana/values.orig.yaml
+
+
+## 🔧 Utilities & Operations ##
+
+# show overall cluster status (pods, services, ingresses) across key namespaces
+status:
+    @echo "\n=== Labs64.IO Apps ==="
+    @kubectl get pods,svc,ingress -n {{NAMESPACE_LABS64IO}}
+    @echo "\n=== Tools ==="
+    @kubectl get pods,svc,ingress -n {{NAMESPACE_TOOLS}}
+    @echo "\n=== Monitoring ==="
+    @kubectl get pods,svc,ingress -n {{NAMESPACE_MONITORING}}
+
+# watch cluster status live
+watch:
+    watch -n 2 "kubectl get pods,svc,ingress -n {{NAMESPACE_LABS64IO}} && echo '\n=== Tools ===\n' && kubectl get pods,svc -n {{NAMESPACE_TOOLS}}"
+
+# show logs for a specific application in real-time
+logs app:
+    kubectl logs -f -n {{NAMESPACE_LABS64IO}} -l app.kubernetes.io/name={{app}}
+
+# rollout restart a specific application
+restart app:
+    kubectl rollout restart deployment labs64io-{{app}} -n {{NAMESPACE_LABS64IO}}
+
+# clean all PVCs in the cluster (use with caution!)
+clean-pvcs:
+    kubectl delete pvc --all -n {{NAMESPACE_LABS64IO}} || true
+    kubectl delete pvc --all -n {{NAMESPACE_TOOLS}} || true
+    kubectl delete pvc --all -n {{NAMESPACE_MONITORING}} || true
+
+# Labs64.IO :: Documentation
+docs:
+    open "http://gateway.localhost/swagger-ui/"
 
 # Traefik Dashboard
 traefik-dashboard:
     open "http://dashboard.localhost/dashboard/"
 
-# uninstall Traefik
-traefik-uninstall:
-    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}} || true
-    helm uninstall traefik-crds --namespace {{NAMESPACE_TOOLS}} || true
+# show errors in Labs64.IO kubectl logs
+show-errors:
+    kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
 
-# install RabbitMQ (Bitnami images removed from Docker Hub — using official image)
-rabbitmq-install: repo-update
-	@echo "Installing RabbitMQ (official image — Bitnami images no longer available)..."
-	@[ -f overrides/rabbitmq/values.secrets.local.yaml ] || { echo "  No values.secrets.local.yaml — bootstrapping from template (local dev default)"; cp overrides/rabbitmq/values.secrets.local.yaml.example overrides/rabbitmq/values.secrets.local.yaml; }
-	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/values.secrets.local.yaml
-	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq.yaml
-	@echo "Waiting for RabbitMQ to be ready..."
-	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
-	@echo "Username      : labs64"
-	@echo "Credentials   : from overrides/rabbitmq/values.secrets.local.yaml (rabbitmq-secret)"
-
-# uninstall RabbitMQ
-rabbitmq-uninstall:
-	kubectl delete statefulset rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-	kubectl delete service rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-	kubectl delete secret rabbitmq-secret --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-	kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-
-# install PostgreSQL
-postgresql-install: repo-update
-    helm search repo bitnami/postgresql
-    helm show values bitnami/postgresql > overrides/postgresql/values.orig.yaml
-    helm upgrade --install postgresql bitnami/postgresql \
-      --version {{POSTGRESQL_CHART_VERSION}} \
-      -f overrides/postgresql/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_TOOLS}} --create-namespace
-    @echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
-    @echo "postgres password : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgres-password}" | base64 -d 2>/dev/null || kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgresql-password}" | base64 -d)"
-    @echo "user password     : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || true)"
-
-# uninstall PostgreSQL
-postgresql-uninstall:
-    helm uninstall postgresql --namespace {{NAMESPACE_TOOLS}}
-
-# install Redis
-redis-install: repo-update
-    helm search repo bitnami/redis
-    helm show values bitnami/redis > overrides/redis/values.orig.yaml
-    helm upgrade --install redis bitnami/redis --version {{REDIS_CHART_VERSION}} -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
-
-# uninstall Redis
-redis-uninstall:
-    helm uninstall redis --namespace {{NAMESPACE_TOOLS}}
-
-# install mock OIDC provider (DEV ONLY - M2M tokens for local testing)
-mock-oidc-install:
-    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
-
-# uninstall mock OIDC provider
-mock-oidc-uninstall:
-    kubectl delete -f overrides/mock-oidc/mock-oidc.yaml
+# end-to-end auth smoke test through Traefik
+e2e-auth-test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    TOKEN=$$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
+      --data-urlencode 'scope=admin' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+    no_token=$$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api')
+    with_token=$$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $$TOKEN" 'http://gateway.localhost/auditflow/api')
+    BAD_TOKEN=$$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
+      --data-urlencode 'scope=no-access' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+    wrong_scope=$$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $$BAD_TOKEN" 'http://gateway.localhost/auditflow/api')
+    echo "no token   -> $$no_token (expected 401)"
+    echo "with token -> $$with_token (expected not 401/403)"
+    echo "wrong scope -> $$wrong_scope (expected 403)"
+    [ "$$no_token" = "401" ] || { echo "FAIL: expected 401 without token"; exit 1; }
+    case "$$with_token" in 401|403) echo "FAIL: token rejected"; exit 1;; esac
+    [ "$$wrong_scope" = "403" ] || { echo "FAIL: expected 403 for wrong-scope token"; exit 1; }
+    echo "e2e auth: OK"
 
 # generate an M2M JWT from the mock OIDC provider (scope: admin|auditflow|ecommerce)
-test-generate-jwt-token-mock scope="admin":
+generate-jwt scope="admin":
     curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
       -H 'Content-Type: application/x-www-form-urlencoded' \
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=local-test' \
       --data-urlencode 'client_secret=local-test' \
       --data-urlencode 'scope={{scope}}'
-
-# end-to-end auth smoke test through Traefik (requires: traefik, gateway-common, traefik-authproxy, auditflow, mock-oidc)
-labs64io-e2e-auth:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
-      --data-urlencode 'grant_type=client_credentials' \
-      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
-      --data-urlencode 'scope=admin' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
-    no_token=$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api')
-    with_token=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${TOKEN}" 'http://gateway.localhost/auditflow/api')
-    BAD_TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
-      --data-urlencode 'grant_type=client_credentials' \
-      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
-      --data-urlencode 'scope=no-access' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
-    wrong_scope=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${BAD_TOKEN}" 'http://gateway.localhost/auditflow/api')
-    echo "no token   -> ${no_token} (expected 401)"
-    echo "with token -> ${with_token} (expected not 401/403)"
-    echo "wrong scope -> ${wrong_scope} (expected 403)"
-    [ "${no_token}" = "401" ] || { echo "FAIL: expected 401 without token"; exit 1; }
-    case "${with_token}" in 401|403) echo "FAIL: token rejected"; exit 1;; esac
-    [ "${wrong_scope}" = "403" ] || { echo "FAIL: expected 403 for wrong-scope token"; exit 1; }
-    echo "e2e auth: OK"
-
-
-## Monitoring Tools ##
-
-# install Open Telemetry
-opentelemetry-install: repo-update
-    helm search repo open-telemetry
-    helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
-    helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
-    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
-      --version {{OTEL_OPERATOR_CHART_VERSION}} \
-      -f overrides/opentelemetry/values-operator.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
-    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector \
-      --version {{OTEL_COLLECTOR_CHART_VERSION}} \
-      -f overrides/opentelemetry/values-collector.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
-
-# uninstall Open Telemetry
-opentelemetry-uninstall:
-    helm uninstall opentelemetry-operator --namespace {{NAMESPACE_MONITORING}}
-    helm uninstall opentelemetry-collector --namespace {{NAMESPACE_MONITORING}}
-
-# install Prometheus
-prometheus-install: repo-update
-    helm search repo prometheus-community
-    helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
-    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-      --version {{PROMETHEUS_STACK_CHART_VERSION}} \
-      -f overrides/prometheus/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
-
-# uninstall Prometheus
-prometheus-uninstall:
-    helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}}
-
-# install Tempo
-tempo-install: repo-update
-    helm search repo grafana/tempo
-    helm show values grafana/tempo > overrides/tempo/values.orig.yaml
-    helm upgrade --install tempo grafana/tempo \
-      --version {{TEMPO_CHART_VERSION}} \
-      -f overrides/tempo/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall Tempo
-tempo-uninstall:
-    helm uninstall tempo --namespace {{NAMESPACE_MONITORING}}
-
-# install Grafana
-grafana-install: repo-update
-    helm search repo grafana/grafana
-    helm show values grafana/grafana > overrides/grafana/values.orig.yaml
-    helm upgrade --install grafana grafana/grafana \
-      --version {{GRAFANA_CHART_VERSION}} \
-      -f overrides/grafana/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    @echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
-    @echo "Username: admin"
-    @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-
-# retrieve Grafana password
-grafana-password:
-    @echo "Username: admin"
-    @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-
-# uninstall Grafana
-grafana-uninstall:
-    helm uninstall grafana --namespace {{NAMESPACE_MONITORING}}
-
-
-

@@ -220,16 +220,16 @@ curl -s http://localhost:5005/v2/_catalog
 From `labs64.io-helm-charts/`:
 
 ```bash
-just local-up
+just up
 ```
 
 This creates a k3d cluster, installs Traefik, the mock OIDC provider, all necessary infrastructure (RabbitMQ, PostgreSQL, Redis), and deploys all Labs64.IO modules. Takes ~5-10 minutes depending on your internet speed.
 
-**Important:** Before running `just local-up`, you must create the cluster and push all module images to the local registry.
+**Important:** Before running `just up`, you must create the cluster and push all module images to the local registry.
 ```bash
 k3d cluster create --config k3d/labs64io.yaml
 just build-images
-just local-up
+just up
 ```
 
 When it finishes:
@@ -274,7 +274,7 @@ This adds repositories for: traefik, bitnami (RabbitMQ, PostgreSQL, Redis), open
 ### 3. Install Traefik (ingress controller)
 
 ```bash
-just traefik-install
+just install-tool traefik
 ```
 
 Installs Traefik v3 with CRDs. Wait for pods to be ready:
@@ -285,7 +285,7 @@ kubectl get pods -n tools -l app.kubernetes.io/name=traefik
 ### 4. Install mock OIDC provider (for local dev)
 
 ```bash
-just mock-oidc-install
+just install-tool mock-oidc
 ```
 
 This deploys a lightweight OIDC provider that issues M2M (Machine-to-Machine) JWT tokens. **For local development only.**
@@ -299,13 +299,13 @@ kubectl get pods -n tools -l app=mock-oidc
 
 ```bash
 # RabbitMQ (message broker)
-just rabbitmq-install
+just install-tool rabbitmq
 
 # PostgreSQL (checkout + payment-gateway databases)
-just postgresql-install
+just install-tool postgresql
 
 # Redis (payment-gateway idempotency cache)
-just redis-install
+just install-tool redis
 ```
 
 Wait for all pods:
@@ -321,24 +321,28 @@ just build-images
 ```
 
 **Note on Secrets:**
-Before installing the modules, make sure you have the required secrets configured. If the pods fail with `secret not found`, you may need to provide the appropriate values in `labs64.io-helm-charts/overrides/<module>/values.secrets.local.yaml`. These files are ignored by git but injected during the local helm upgrade.
+Before installing the modules, make sure you have the required secrets configured. You can auto-generate the default local secrets from their `.example` templates by running:
+```bash
+just generate-secrets
+```
+This is done automatically when you run `just up`. These files are ignored by git but injected during the local helm upgrade.
 
 **Install all at once:**
 ```bash
 # This will start everything locally
-just local-up
+just up
 ```
 
 **Or one at a time:**
 ```bash
-just labs64io-traefik-authproxy-install   # auth proxy (required first)
-just labs64io-gateway-common-install      # shared Traefik middlewares
-just labs64io-gateway-install             # Swagger UI
-just labs64io-auditflow-install           # audit logging
-just labs64io-checkout-install            # checkout backend
-just labs64io-checkout-ui-install         # checkout frontend
-just labs64io-payment-gateway-install     # payment gateway
-just labs64io-customer-portal-ui-install  # customer portal frontend
+just install-app traefik-authproxy   # auth proxy (required first)
+just install-app gateway-common      # shared Traefik middlewares
+just install-app gateway             # Swagger UI
+just install-app auditflow           # audit logging
+just install-app checkout            # checkout backend
+just install-app checkout-ui         # checkout frontend
+just install-app payment-gateway     # payment gateway
+just install-app customer-portal-ui  # customer portal frontend
 ```
 
 Verify all pods:
@@ -444,7 +448,7 @@ curl -s http://gateway.localhost/payment-gateway/api/v1/payment-providers \
   -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
 ```
 
-### Check observability (if installed with `just local-up-full`)
+### Check observability (if installed with `just up-full`)
 
 ```bash
 # Grafana
@@ -464,7 +468,7 @@ kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 909
 
 ```bash
 # All modules
-just labs64io-show-errors
+just show-errors
 
 # Specific module
 kubectl logs -n labs64io -l app.kubernetes.io/name=checkout --tail=100
@@ -475,19 +479,19 @@ kubectl logs -n labs64io -l app.kubernetes.io/name=traefik-authproxy --tail=100
 ### Reinstall a single module
 
 ```bash
-just labs64io-checkout-install     # re-runs helm upgrade --install
+just install-app checkout     # re-runs helm upgrade --install
 ```
 
 ### Uninstall everything
 
 ```bash
-just labs64io-all-uninstall
-just traefik-uninstall
-just rabbitmq-uninstall
-just postgresql-uninstall
-just redis-uninstall
-just mock-oidc-uninstall
-just local-down                    # delete the k3d cluster
+just uninstall-all-apps
+just uninstall-tool-traefik
+just uninstall-tool-rabbitmq
+just uninstall-tool-postgresql
+just uninstall-tool-redis
+just uninstall-tool-mock-oidc
+just down                    # delete the k3d cluster
 ```
 
 ### Standalone module testing
@@ -495,7 +499,7 @@ just local-down                    # delete the k3d cluster
 To test a single module with its own bundled infrastructure (no shared cluster):
 
 ```bash
-just labs64io-standalone-install checkout
+just install-app-standalone checkout
 ```
 
 This installs checkout with its own RabbitMQ and PostgreSQL (bundled as subcharts).
@@ -581,5 +585,5 @@ Stop other web servers (Apache, nginx, etc.) or change the port mapping in `k3d/
 
 ```bash
 k3d cluster delete labs64io    # clean up partial creation
-just local-up                   # retry
+just up                        # retry
 ```
