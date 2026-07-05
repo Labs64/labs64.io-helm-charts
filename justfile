@@ -352,6 +352,62 @@ docs:
 traefik-dashboard:
     open "http://dashboard.localhost/dashboard/"
 
+# Discover every locally reachable Labs64.IO URL from live Traefik IngressRoutes and open the
+# public ones in the browser. Token-gated routes (behind gateway-common-auth) are only printed,
+# with a hint, since opening them without a Bearer token just shows a 401.
+urls:
+    #!/usr/bin/env python3
+    import json
+    import subprocess
+
+    def routes(ns):
+        out = subprocess.run(
+            ["kubectl", "get", "ingressroute", "-n", ns, "-o", "json"],
+            capture_output=True, text=True, check=True,
+        )
+        return json.loads(out.stdout)["items"]
+
+    open_urls, gated_urls = set(), set()
+
+    for ns in ("{{NAMESPACE_LABS64IO}}", "{{NAMESPACE_TOOLS}}"):
+        for item in routes(ns):
+            for route in item["spec"].get("routes", []):
+                match = route.get("match", "")
+                middlewares = {m.get("name", "") for m in route.get("middlewares", [])}
+                host, path = None, ""
+                for part in match.replace("&&", "||").split("||"):
+                    part = part.strip()
+                    if part.startswith("Host("):
+                        host = part.split("`")[1]
+                    elif part.startswith("PathPrefix("):
+                        path = part.split("`")[1]
+                if not host:
+                    continue
+                # Use the PathPrefix exactly as Traefik matches it — these are precise springdoc/
+                # API paths, not directories, and a fabricated trailing slash 404s/500s some of them
+                # (e.g. /auditflow/v3/api-docs works, /auditflow/v3/api-docs/ does not).
+                url = f"http://{host}{path}" if path else f"http://{host}/"
+                gated = any("auth" in mw for mw in middlewares)
+                (gated_urls if gated else open_urls).add(url)
+
+    # Always-on local infra not resolvable from IngressRoute alone: the Traefik dashboard route
+    # has no Host() match (any hostname reaching Traefik serves it), and the registry has no
+    # IngressRoute at all.
+    open_urls.discard("http://mock-oidc.localhost/")
+    open_urls.add("http://mock-oidc.localhost/.well-known/openid-configuration")
+    open_urls.add("http://dashboard.localhost/dashboard/")
+    open_urls.add("http://localhost:5005/v2/_catalog")  # Docker registry catalog
+
+    print("Opening public URLs:")
+    for url in sorted(open_urls):
+        print(f"  {url}")
+        subprocess.run(["open", url])
+
+    if gated_urls:
+        print("\nToken-gated URLs (need a Bearer token — see: just generate-jwt <scope>):")
+        for url in sorted(gated_urls):
+            print(f"  {url}")
+
 # show errors in Labs64.IO kubectl logs
 show-errors:
     kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
