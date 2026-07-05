@@ -33,6 +33,38 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.roleMappingSidecar.enabled }}
+      initContainers:
+        # One-shot fetch of the role-mapping ConfigMap fragments into the shared volume
+        # BEFORE the auth proxy starts, so it loads a complete mapping on first import.
+        # Without this, the main container can pass its readiness probe (which only hits
+        # the always-available /docs) and start receiving traffic before the live sidecar
+        # below has finished its first sync + POST /reload — causing transient fail-closed
+        # 403s on every rollout. The live sidecar still handles subsequent hot updates.
+        - name: role-mapping-init
+          image: "{{ .Values.roleMappingSidecar.image.repository }}:{{ .Values.roleMappingSidecar.image.tag }}"
+          imagePullPolicy: {{ .Values.roleMappingSidecar.image.pullPolicy }}
+          env:
+            - name: METHOD
+              value: LIST
+            - name: LABEL
+              value: {{ .Values.roleMappingSidecar.label | quote }}
+            - name: LABEL_VALUE
+              value: {{ .Values.roleMappingSidecar.labelValue | quote }}
+            - name: FOLDER
+              value: {{ .Values.roleMappingSidecar.folder | quote }}
+            - name: RESOURCE
+              value: configmap
+            - name: NAMESPACE
+              value: {{ .Release.Namespace | quote }}
+          {{- with .Values.roleMappingSidecar.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: role-mapping-fragments
+              mountPath: {{ .Values.roleMappingSidecar.folder }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}

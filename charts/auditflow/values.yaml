@@ -28,6 +28,14 @@ transformer:
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
     port: 8081
+  # -- Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service).
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
 
 sink:
   image:
@@ -38,6 +46,14 @@ sink:
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
     port: 8082
+  # -- Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service).
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
 
 # -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []

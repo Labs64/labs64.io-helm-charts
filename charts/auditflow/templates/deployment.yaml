@@ -112,6 +112,10 @@ spec:
             - name: http-trn
               containerPort: {{ .Values.transformer.service.port }}
               protocol: TCP
+          {{- with .Values.transformer.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             - name: APP_NAME
               value: "auditflow-transformer"
@@ -165,6 +169,10 @@ spec:
             - name: http-snk
               containerPort: {{ .Values.sink.service.port }}
               protocol: TCP
+          {{- with .Values.sink.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             - name: APP_NAME
               value: "auditflow-sink"

@@ -654,9 +654,29 @@
     "resources": {
       "additionalProperties": false,
       "properties": {
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "200m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "512Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
+          "type": "object"
+        },
         "requests": {
           "additionalProperties": false,
-          "description": "limits:\n cpu: 200m\n memory: 512Mi",
           "properties": {
             "cpu": {
               "default": "100m",
@@ -678,6 +698,7 @@
         }
       },
       "required": [
+        "limits",
         "requests"
       ],
       "title": "resources",
