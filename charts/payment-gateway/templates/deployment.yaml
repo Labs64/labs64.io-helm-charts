@@ -13,10 +13,11 @@ spec:
       {{- include "chart-libs.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        {{- include "chart-libs.observability.podAnnotations" . | nindent 8 }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "chart-libs.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -28,6 +29,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "chart-libs.serviceAccountName" . }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 45 }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -44,6 +46,8 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          {{- include "chart-libs.preStopDrain" . | nindent 10 }}
+          {{- include "chart-libs.startupProbe" . | nindent 10 }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -61,6 +65,8 @@ spec:
           env:
             - name: SPRING_CONFIG_IMPORT
               value: "optional:file:/opt/application-config/application.yaml"
+          {{- include "chart-libs.gracefulShutdown.springEnv" . | nindent 12 }}
+          {{- include "chart-libs.observability.javaEnv" . | nindent 12 }}
           {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}

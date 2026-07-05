@@ -164,7 +164,7 @@
                     "type": "string"
                   },
                   "port": {
-                    "default": 80,
+                    "default": 8080,
                     "title": "port",
                     "type": "integer"
                   },
@@ -209,6 +209,11 @@
               "title": "auth",
               "type": "string"
             },
+            "compress": {
+              "default": "gateway-common-compress",
+              "title": "compress",
+              "type": "string"
+            },
             "rateLimit": {
               "default": "gateway-common-ratelimit",
               "title": "rateLimit",
@@ -223,7 +228,8 @@
           "required": [
             "auth",
             "rateLimit",
-            "securityHeaders"
+            "securityHeaders",
+            "compress"
           ],
           "title": "sharedMiddlewares",
           "type": "object"
@@ -416,6 +422,22 @@
       "title": "ingressroute",
       "type": "object"
     },
+    "lifecycle": {
+      "additionalProperties": false,
+      "properties": {
+        "preStopDrainSeconds": {
+          "default": 5,
+          "description": "preStop sleep (seconds) so the gateway deregisters the pod before shutdown; 0 disables",
+          "title": "preStopDrainSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preStopDrainSeconds"
+      ],
+      "title": "lifecycle",
+      "type": "object"
+    },
     "livenessProbe": {
       "additionalProperties": false,
       "description": "This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
@@ -434,7 +456,7 @@
               "type": "string"
             },
             "port": {
-              "default": 80,
+              "default": 8080,
               "title": "port",
               "type": "integer"
             }
@@ -554,7 +576,51 @@
     },
     "podSecurityContext": {
       "additionalProperties": false,
-      "required": [],
+      "description": "Non-root pod security context. The image is nginx-unprivileged (UID 101), so the\nwhole pod runs unprivileged and listens on 8080.",
+      "properties": {
+        "fsGroup": {
+          "default": 101,
+          "title": "fsGroup",
+          "type": "integer"
+        },
+        "runAsGroup": {
+          "default": 101,
+          "title": "runAsGroup",
+          "type": "integer"
+        },
+        "runAsNonRoot": {
+          "default": true,
+          "title": "runAsNonRoot",
+          "type": "boolean"
+        },
+        "runAsUser": {
+          "default": 101,
+          "title": "runAsUser",
+          "type": "integer"
+        },
+        "seccompProfile": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "default": "RuntimeDefault",
+              "title": "type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "title": "seccompProfile",
+          "type": "object"
+        }
+      },
+      "required": [
+        "runAsNonRoot",
+        "runAsUser",
+        "runAsGroup",
+        "fsGroup",
+        "seccompProfile"
+      ],
       "title": "podSecurityContext",
       "type": "object"
     },
@@ -600,7 +666,7 @@
               "type": "string"
             },
             "port": {
-              "default": 80,
+              "default": 8080,
               "title": "port",
               "type": "integer"
             }
@@ -716,7 +782,45 @@
     },
     "securityContext": {
       "additionalProperties": false,
-      "required": [],
+      "properties": {
+        "allowPrivilegeEscalation": {
+          "default": false,
+          "title": "allowPrivilegeEscalation",
+          "type": "boolean"
+        },
+        "capabilities": {
+          "additionalProperties": false,
+          "properties": {
+            "drop": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "drop",
+              "type": "array"
+            }
+          },
+          "required": [
+            "drop"
+          ],
+          "title": "capabilities",
+          "type": "object"
+        },
+        "readOnlyRootFilesystem": {
+          "default": false,
+          "title": "readOnlyRootFilesystem",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "allowPrivilegeEscalation",
+        "capabilities",
+        "readOnlyRootFilesystem"
+      ],
       "title": "securityContext",
       "type": "object"
     },
@@ -725,8 +829,8 @@
       "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
       "properties": {
         "port": {
-          "default": 80,
-          "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports",
+          "default": 8080,
+          "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports\nNon-privileged port served by nginx-unprivileged.",
           "title": "port",
           "type": "integer"
         },
@@ -782,6 +886,62 @@
       ],
       "title": "serviceAccount",
       "type": "object"
+    },
+    "startupProbe": {
+      "additionalProperties": false,
+      "description": "Startup probe (rendered by chart-libs.startupProbe): nginx starts fast, but this\nkeeps rollout semantics uniform across the ecosystem.",
+      "properties": {
+        "failureThreshold": {
+          "default": 10,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8080,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 3,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "failureThreshold",
+        "periodSeconds",
+        "timeoutSeconds"
+      ],
+      "title": "startupProbe",
+      "type": "object"
+    },
+    "terminationGracePeriodSeconds": {
+      "default": 30,
+      "description": "Graceful shutdown: let Traefik/kube-proxy deregister the pod before nginx stops.",
+      "title": "terminationGracePeriodSeconds",
+      "type": "integer"
     },
     "tests": {
       "additionalProperties": false,
@@ -848,6 +1008,9 @@
     "resources",
     "livenessProbe",
     "readinessProbe",
+    "startupProbe",
+    "terminationGracePeriodSeconds",
+    "lifecycle",
     "autoscaling",
     "volumes",
     "volumeMounts",

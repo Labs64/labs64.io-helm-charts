@@ -126,6 +126,38 @@ readinessProbe:
   failureThreshold: 3
   timeoutSeconds: 2
 
+# -- Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts
+# (Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting
+# pod. Max boot budget = failureThreshold * periodSeconds.
+startupProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+  failureThreshold: 30
+  periodSeconds: 5
+  timeoutSeconds: 2
+
+# -- Graceful shutdown: drain in-flight requests on rolling updates / scale-in.
+# Keep terminationGracePeriodSeconds > lifecycle.preStopDrainSeconds + gracefulShutdown.timeout.
+terminationGracePeriodSeconds: 45
+gracefulShutdown:
+  # -- Max time Spring Boot waits for in-flight requests before forced shutdown
+  timeout: 30s
+lifecycle:
+  # -- preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables
+  preStopDrainSeconds: 5
+
+# -- Observability is infrastructure-owned: the same image runs with or without it.
+# When enabled, the bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and
+# Prometheus scrape annotations (Micrometer /actuator/prometheus) are added.
+observability:
+  # -- Enable runtime instrumentation (traces + logs via OTLP; metrics via Prometheus scrape)
+  enabled: false
+  # -- OTLP endpoint of the OpenTelemetry Collector
+  otlpEndpoint: "http://otel-collector:4318"
+  # -- Prometheus metrics path scraped from the pod
+  metricsPath: /actuator/prometheus
+
 # -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
   enabled: false
@@ -248,6 +280,7 @@ gateway:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
     securityHeaders: gateway-common-security-headers
+    compress: gateway-common-compress
   # -- Routes exposed by this module
   routes:
     # -- Checkout API (protected, prefix stripped before forwarding)

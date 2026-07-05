@@ -34,6 +34,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "chart-libs.serviceAccountName" . }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 45 }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -51,6 +52,8 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          {{- include "chart-libs.preStopDrain" . | nindent 10 }}
+          {{- include "chart-libs.startupProbe" . | nindent 10 }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -66,6 +69,7 @@ spec:
           env:
             - name: SPRING_CONFIG_IMPORT
               value: "optional:file:/opt/application-config/application.yaml"
+          {{- include "chart-libs.gracefulShutdown.springEnv" . | nindent 12 }}
           {{- if .Values.observability.enabled }}
             # Activates the OTel Java Agent bundled in the image (do not also set
             # JAVA_TOOL_OPTIONS via .Values.env when observability is enabled).

@@ -1,6 +1,6 @@
 # traefik-authproxy
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Traefik Auth (M2M) Middleware
 
@@ -21,7 +21,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.2 |
+| file://../chart-libs | chart-libs | 0.0.3 |
 
 ## Values
 
@@ -46,9 +46,13 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | ingressroute.enabled | bool | `false` | This sets whether the IngressRoute is enabled or not |
 | ingressroute.entryPoints | list | `["web","websecure"]` | Entry points for the IngressRoute |
 | ingressroute.host | string | `"localhost"` | Host for the IngressRoute |
+| lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/docs","port":8081},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
 | nodeSelector | object | `{}` |  |
+| observability | object | `{"enabled":false,"otlpEndpoint":"http://otel-collector:4318"}` | Observability is infrastructure-owned: the same image runs with or without it. When enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI (traces + correlated logs + metrics via OTLP). |
+| observability.enabled | bool | `false` | Enable runtime auto-instrumentation (traces + logs + metrics via OTLP) |
+| observability.otlpEndpoint | string | `"http://otel-collector:4318"` | OTLP endpoint of the OpenTelemetry Collector |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podDisruptionBudget | object | `{"enabled":true,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
@@ -77,6 +81,8 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| startupProbe | object | `{"failureThreshold":20,"httpGet":{"path":"/docs","port":8081},"periodSeconds":3,"timeoutSeconds":2}` | Startup probe (rendered by chart-libs.startupProbe): guards cold start so the liveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds. |
+| terminationGracePeriodSeconds | int | `45` | Graceful shutdown: drain on rolling updates / scale-in (uvicorn handles SIGTERM; preStop gives Traefik/kube-proxy time to deregister the pod first). |
 | tolerations | list | `[]` |  |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |

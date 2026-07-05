@@ -20,7 +20,7 @@ Labs64.IO :: API Gateway
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.2 |
+| file://../chart-libs | chart-libs | 0.0.3 |
 
 ## Values
 

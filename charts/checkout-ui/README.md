@@ -1,6 +1,6 @@
 # checkout-ui
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform, built with Vite and Vue 3. Provides a responsive and customizable user experience for digital commerce workflows.
 
@@ -21,7 +21,7 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.2 |
+| file://../chart-libs | chart-libs | 0.0.3 |
 
 ## Values
 
@@ -37,13 +37,13 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
-| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"/checkout","routes":[{"path":"","port":80,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}],"sharedMiddlewares":{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"/checkout","routes":[{"path":"","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
 | gateway.entryPoints | list | `["web","websecure"]` | Traefik entry points |
 | gateway.prefix | string | `"/checkout"` | External path prefix; checkout-ui serves under /checkout |
-| gateway.routes | list | `[{"path":"","port":80,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}]` | Routes exposed by this module |
-| gateway.routes[0] | object | `{"path":"","port":80,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}` | Checkout UI (protected) |
-| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}` | Names of the shared middlewares provided by the gateway-common chart |
+| gateway.routes | list | `[{"path":"","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}]` | Routes exposed by this module |
+| gateway.routes[0] | object | `{"path":"","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}` | Checkout UI (protected) |
+| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers"}` | Names of the shared middlewares provided by the gateway-common chart |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/checkout-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
@@ -53,7 +53,8 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 | ingressroute.enabled | bool | `false` | This sets whether the IngressRoute is enabled or not |
 | ingressroute.entryPoints | list | `["web","websecure"]` | Entry points for the IngressRoute |
 | ingressroute.host | string | `"localhost"` | Host for the IngressRoute |
-| livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":80},"initialDelaySeconds":10,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
+| lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so the gateway deregisters the pod before shutdown; 0 disables |
+| livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":10,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
 | networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
@@ -62,25 +63,29 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podDisruptionBudget | object | `{"enabled":false,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
-| podSecurityContext | object | `{}` |  |
+| podSecurityContext | object | `{"fsGroup":101,"runAsGroup":101,"runAsNonRoot":true,"runAsUser":101,"seccompProfile":{"type":"RuntimeDefault"}}` | Non-root pod security context. The image is nginx-unprivileged (UID 101), so the whole pod runs unprivileged and listens on 8080. |
 | rbac.create | bool | `false` |  |
 | rbac.rules | list | `[]` |  |
-| readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":80},"initialDelaySeconds":5,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
+| readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":5,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources.limits.cpu | string | `"200m"` |  |
 | resources.limits.memory | string | `"256Mi"` |  |
 | resources.requests.cpu | string | `"50m"` |  |
 | resources.requests.memory | string | `"128Mi"` |  |
 | secrets | object | `{"data":{}}` | Secret data to be used as environment variables |
-| securityContext | object | `{}` |  |
-| service | object | `{"port":80,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
-| service.port | int | `80` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
+| securityContext.allowPrivilegeEscalation | bool | `false` |  |
+| securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| securityContext.readOnlyRootFilesystem | bool | `false` |  |
+| service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
+| service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports Non-privileged port served by nginx-unprivileged. |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | serviceAccount | object | `{"annotations":{},"automount":true,"create":false,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `false` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
+| startupProbe | object | `{"failureThreshold":10,"httpGet":{"path":"/","port":8080},"periodSeconds":3,"timeoutSeconds":2}` | Startup probe (rendered by chart-libs.startupProbe): nginx starts fast, but this keeps rollout semantics uniform across the ecosystem. |
+| terminationGracePeriodSeconds | int | `30` | Graceful shutdown: let Traefik/kube-proxy deregister the pod before nginx stops. |
 | tests | object | `{"enabled":true,"healthPath":"/"}` | helm test hook (rendered by chart-libs.test-connection) |
 | tests.healthPath | string | `"/"` | Health endpoint probed by `helm test` |
 | tolerations | list | `[]` |  |

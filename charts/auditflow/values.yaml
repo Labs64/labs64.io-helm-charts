@@ -154,6 +154,27 @@ readinessProbe:
   failureThreshold: 3
   timeoutSeconds: 2
 
+# -- Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts
+# (Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting
+# pod. Max boot budget = failureThreshold * periodSeconds.
+startupProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+  failureThreshold: 30
+  periodSeconds: 5
+  timeoutSeconds: 2
+
+# -- Graceful shutdown: drain in-flight requests / message handlers on rolling
+# updates and scale-in. Keep terminationGracePeriodSeconds > preStop + gracefulShutdown.timeout.
+terminationGracePeriodSeconds: 45
+gracefulShutdown:
+  # -- Max time Spring Boot waits for in-flight work before forced shutdown
+  timeout: 30s
+lifecycle:
+  # -- preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables
+  preStopDrainSeconds: 5
+
 # -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
   enabled: false
@@ -334,6 +355,7 @@ gateway:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
     securityHeaders: gateway-common-security-headers
+    compress: gateway-common-compress
   # -- Routes exposed by this module
   routes:
     # -- AuditFlow API (protected, prefix stripped before forwarding)

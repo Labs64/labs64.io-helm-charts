@@ -428,6 +428,11 @@
               "title": "auth",
               "type": "string"
             },
+            "compress": {
+              "default": "gateway-common-compress",
+              "title": "compress",
+              "type": "string"
+            },
             "rateLimit": {
               "default": "gateway-common-ratelimit",
               "title": "rateLimit",
@@ -442,7 +447,8 @@
           "required": [
             "auth",
             "rateLimit",
-            "securityHeaders"
+            "securityHeaders",
+            "compress"
           ],
           "title": "sharedMiddlewares",
           "type": "object"
@@ -483,6 +489,22 @@
         "security"
       ],
       "title": "global",
+      "type": "object"
+    },
+    "gracefulShutdown": {
+      "additionalProperties": false,
+      "properties": {
+        "timeout": {
+          "default": "30s",
+          "description": "Max time Spring Boot waits for in-flight work before forced shutdown",
+          "title": "timeout",
+          "type": "string"
+        }
+      },
+      "required": [
+        "timeout"
+      ],
+      "title": "gracefulShutdown",
       "type": "object"
     },
     "image": {
@@ -654,6 +676,22 @@
         "entryPoints"
       ],
       "title": "ingressroute",
+      "type": "object"
+    },
+    "lifecycle": {
+      "additionalProperties": false,
+      "properties": {
+        "preStopDrainSeconds": {
+          "default": 5,
+          "description": "preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables",
+          "title": "preStopDrainSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preStopDrainSeconds"
+      ],
+      "title": "lifecycle",
       "type": "object"
     },
     "livenessProbe": {
@@ -1235,6 +1273,62 @@
       "title": "sink",
       "type": "object"
     },
+    "startupProbe": {
+      "additionalProperties": false,
+      "description": "Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts\n(Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting\npod. Max boot budget = failureThreshold * periodSeconds.",
+      "properties": {
+        "failureThreshold": {
+          "default": 30,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/actuator/health/liveness",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8080,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 5,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "failureThreshold",
+        "periodSeconds",
+        "timeoutSeconds"
+      ],
+      "title": "startupProbe",
+      "type": "object"
+    },
+    "terminationGracePeriodSeconds": {
+      "default": 45,
+      "description": "Graceful shutdown: drain in-flight requests / message handlers on rolling\nupdates and scale-in. Keep terminationGracePeriodSeconds \u003e preStop + gracefulShutdown.timeout.",
+      "title": "terminationGracePeriodSeconds",
+      "type": "integer"
+    },
     "tests": {
       "additionalProperties": false,
       "description": "helm test hook (rendered by chart-libs.test-connection)",
@@ -1358,6 +1452,10 @@
     "resources",
     "livenessProbe",
     "readinessProbe",
+    "startupProbe",
+    "terminationGracePeriodSeconds",
+    "gracefulShutdown",
+    "lifecycle",
     "autoscaling",
     "volumes",
     "volumeMounts",

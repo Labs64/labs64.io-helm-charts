@@ -64,6 +64,56 @@
       "title": "chart-libs",
       "type": "object"
     },
+    "compress": {
+      "additionalProperties": false,
+      "description": "Response-compression middleware (edge optimization for all modules routed through Traefik)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable the shared compress middleware",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "excludedContentTypes": {
+          "description": "Content types excluded from compression (already-compressed formats)",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "excludedContentTypes",
+          "type": "array"
+        },
+        "minResponseBodyBytes": {
+          "default": 1024,
+          "description": "Do not compress responses below this size (bytes)",
+          "title": "minResponseBodyBytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minResponseBodyBytes",
+        "excludedContentTypes"
+      ],
+      "title": "compress",
+      "type": "object"
+    },
     "fullnameOverride": {
       "default": "gateway-common",
       "description": "Fixed resource-name prefix so module charts can reference middlewares by a stable name",
@@ -177,6 +227,7 @@
     "nameOverride",
     "authProxy",
     "rateLimit",
+    "compress",
     "securityHeaders"
   ],
   "type": "object"

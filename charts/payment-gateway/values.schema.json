@@ -288,6 +288,11 @@
               "title": "auth",
               "type": "string"
             },
+            "compress": {
+              "default": "gateway-common-compress",
+              "title": "compress",
+              "type": "string"
+            },
             "rateLimit": {
               "default": "gateway-common-ratelimit",
               "title": "rateLimit",
@@ -302,7 +307,8 @@
           "required": [
             "auth",
             "rateLimit",
-            "securityHeaders"
+            "securityHeaders",
+            "compress"
           ],
           "title": "sharedMiddlewares",
           "type": "object"
@@ -343,6 +349,22 @@
         "security"
       ],
       "title": "global",
+      "type": "object"
+    },
+    "gracefulShutdown": {
+      "additionalProperties": false,
+      "properties": {
+        "timeout": {
+          "default": "30s",
+          "description": "Max time Spring Boot waits for in-flight requests before forced shutdown",
+          "title": "timeout",
+          "type": "string"
+        }
+      },
+      "required": [
+        "timeout"
+      ],
+      "title": "gracefulShutdown",
       "type": "object"
     },
     "image": {
@@ -516,6 +538,22 @@
       "title": "ingressroute",
       "type": "object"
     },
+    "lifecycle": {
+      "additionalProperties": false,
+      "properties": {
+        "preStopDrainSeconds": {
+          "default": 5,
+          "description": "preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables",
+          "title": "preStopDrainSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preStopDrainSeconds"
+      ],
+      "title": "lifecycle",
+      "type": "object"
+    },
     "livenessProbe": {
       "additionalProperties": false,
       "description": "This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
@@ -614,6 +652,37 @@
       "additionalProperties": false,
       "required": [],
       "title": "nodeSelector",
+      "type": "object"
+    },
+    "observability": {
+      "additionalProperties": false,
+      "description": "Observability is infrastructure-owned: the same image runs with or without it.\nWhen enabled, the bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and\nPrometheus scrape annotations (Micrometer /actuator/prometheus) are added.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable runtime instrumentation (traces + logs via OTLP; metrics via Prometheus scrape)",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "metricsPath": {
+          "default": "/actuator/prometheus",
+          "description": "Prometheus metrics path scraped from the pod",
+          "title": "metricsPath",
+          "type": "string"
+        },
+        "otlpEndpoint": {
+          "default": "http://otel-collector:4318",
+          "description": "OTLP endpoint of the OpenTelemetry Collector",
+          "title": "otlpEndpoint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "otlpEndpoint",
+        "metricsPath"
+      ],
+      "title": "observability",
       "type": "object"
     },
     "podAnnotations": {
@@ -1045,6 +1114,62 @@
       "title": "serviceAccount",
       "type": "object"
     },
+    "startupProbe": {
+      "additionalProperties": false,
+      "description": "Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts\n(Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting\npod. Max boot budget = failureThreshold * periodSeconds.",
+      "properties": {
+        "failureThreshold": {
+          "default": 30,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/actuator/health/liveness",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8080,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 5,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "failureThreshold",
+        "periodSeconds",
+        "timeoutSeconds"
+      ],
+      "title": "startupProbe",
+      "type": "object"
+    },
+    "terminationGracePeriodSeconds": {
+      "default": 45,
+      "description": "Graceful shutdown: drain in-flight requests on rolling updates / scale-in.\nKeep terminationGracePeriodSeconds \u003e lifecycle.preStopDrainSeconds + gracefulShutdown.timeout.",
+      "title": "terminationGracePeriodSeconds",
+      "type": "integer"
+    },
     "tests": {
       "additionalProperties": false,
       "description": "helm test hook (rendered by chart-libs.test-connection)",
@@ -1110,6 +1235,11 @@
     "resources",
     "livenessProbe",
     "readinessProbe",
+    "startupProbe",
+    "terminationGracePeriodSeconds",
+    "gracefulShutdown",
+    "lifecycle",
+    "observability",
     "autoscaling",
     "volumes",
     "volumeMounts",

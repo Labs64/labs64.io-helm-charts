@@ -118,6 +118,32 @@ readinessProbe:
   failureThreshold: 3
   timeoutSeconds: 2
 
+# -- Startup probe (rendered by chart-libs.startupProbe): guards cold start so the
+# liveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds.
+startupProbe:
+  httpGet:
+    path: /docs
+    port: 8081
+  failureThreshold: 20
+  periodSeconds: 3
+  timeoutSeconds: 2
+
+# -- Graceful shutdown: drain on rolling updates / scale-in (uvicorn handles SIGTERM;
+# preStop gives Traefik/kube-proxy time to deregister the pod first).
+terminationGracePeriodSeconds: 45
+lifecycle:
+  # -- preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables
+  preStopDrainSeconds: 5
+
+# -- Observability is infrastructure-owned: the same image runs with or without it.
+# When enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI
+# (traces + correlated logs + metrics via OTLP).
+observability:
+  # -- Enable runtime auto-instrumentation (traces + logs + metrics via OTLP)
+  enabled: false
+  # -- OTLP endpoint of the OpenTelemetry Collector
+  otlpEndpoint: "http://otel-collector:4318"
+
 # -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
   enabled: false

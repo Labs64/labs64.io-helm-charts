@@ -360,6 +360,22 @@
       "title": "ingressroute",
       "type": "object"
     },
+    "lifecycle": {
+      "additionalProperties": false,
+      "properties": {
+        "preStopDrainSeconds": {
+          "default": 5,
+          "description": "preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables",
+          "title": "preStopDrainSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preStopDrainSeconds"
+      ],
+      "title": "lifecycle",
+      "type": "object"
+    },
     "livenessProbe": {
       "additionalProperties": false,
       "description": "This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
@@ -426,6 +442,30 @@
       "additionalProperties": false,
       "required": [],
       "title": "nodeSelector",
+      "type": "object"
+    },
+    "observability": {
+      "additionalProperties": false,
+      "description": "Observability is infrastructure-owned: the same image runs with or without it.\nWhen enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI\n(traces + correlated logs + metrics via OTLP).",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable runtime auto-instrumentation (traces + logs + metrics via OTLP)",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "otlpEndpoint": {
+          "default": "http://otel-collector:4318",
+          "description": "OTLP endpoint of the OpenTelemetry Collector",
+          "title": "otlpEndpoint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "otlpEndpoint"
+      ],
+      "title": "observability",
       "type": "object"
     },
     "podAnnotations": {
@@ -897,6 +937,62 @@
       "title": "serviceAccount",
       "type": "object"
     },
+    "startupProbe": {
+      "additionalProperties": false,
+      "description": "Startup probe (rendered by chart-libs.startupProbe): guards cold start so the\nliveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds.",
+      "properties": {
+        "failureThreshold": {
+          "default": 20,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/docs",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8081,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 3,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "failureThreshold",
+        "periodSeconds",
+        "timeoutSeconds"
+      ],
+      "title": "startupProbe",
+      "type": "object"
+    },
+    "terminationGracePeriodSeconds": {
+      "default": 45,
+      "description": "Graceful shutdown: drain on rolling updates / scale-in (uvicorn handles SIGTERM;\npreStop gives Traefik/kube-proxy time to deregister the pod first).",
+      "title": "terminationGracePeriodSeconds",
+      "type": "integer"
+    },
     "tolerations": {
       "items": {
         "required": []
@@ -939,6 +1035,10 @@
     "resources",
     "livenessProbe",
     "readinessProbe",
+    "startupProbe",
+    "terminationGracePeriodSeconds",
+    "lifecycle",
+    "observability",
     "autoscaling",
     "volumes",
     "volumeMounts",

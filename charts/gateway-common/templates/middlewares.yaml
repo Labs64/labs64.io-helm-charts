@@ -35,3 +35,22 @@ metadata:
 spec:
   headers:
     {{- toYaml .Values.securityHeaders | nindent 4 }}
+{{- if .Values.compress.enabled }}
+---
+# Response compression at the edge — a safe, universal frontstore optimization for
+# all Labs64.IO modules routed through Traefik. Referenced by chart-libs.gateway-routes
+# when a module sets gateway.sharedMiddlewares.compress.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-compress
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+spec:
+  compress:
+    {{- with .Values.compress.excludedContentTypes }}
+    excludedContentTypes:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    minResponseBodyBytes: {{ .Values.compress.minResponseBodyBytes | default 1024 }}
+{{- end }}

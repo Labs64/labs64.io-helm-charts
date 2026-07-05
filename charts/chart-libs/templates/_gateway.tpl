@@ -48,6 +48,9 @@ spec:
         - name: {{ $mw.rateLimit }}
         {{- end }}
         - name: {{ $mw.securityHeaders }}
+        {{- if $mw.compress }}
+        - name: {{ $mw.compress }}
+        {{- end }}
         {{- if $route.stripPrefix }}
         - name: {{ $fullname }}-strip-prefix
         {{- end }}

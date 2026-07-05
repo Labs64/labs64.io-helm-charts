@@ -28,6 +28,20 @@ rateLimit:
   # -- Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent
   perUser: true
 
+# -- Response-compression middleware (edge optimization for all modules routed through Traefik)
+compress:
+  # -- Enable the shared compress middleware
+  enabled: true
+  # -- Do not compress responses below this size (bytes)
+  minResponseBodyBytes: 1024
+  # -- Content types excluded from compression (already-compressed formats)
+  excludedContentTypes:
+    - image/png
+    - image/jpeg
+    - image/gif
+    - image/webp
+    - application/grpc
+
 # -- Security headers middleware configuration
 securityHeaders:
   frameDeny: true

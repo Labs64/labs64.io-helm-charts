@@ -1,6 +1,6 @@
 # gateway-common
 
-![Version: 0.0.1](https://img.shields.io/badge/Version-0.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, security headers)
 
@@ -20,7 +20,7 @@ Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, s
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.2 |
+| file://../chart-libs | chart-libs | 0.0.3 |
 
 ## Values
 
@@ -33,6 +33,10 @@ Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, s
 | authProxy.serviceName | string | `"labs64io-traefik-authproxy"` | Service name of the traefik-authproxy release |
 | authProxy.trustForwardHeader | bool | `true` | Trust X-Forwarded-* headers from the proxy |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
+| compress | object | `{"enabled":true,"excludedContentTypes":["image/png","image/jpeg","image/gif","image/webp","application/grpc"],"minResponseBodyBytes":1024}` | Response-compression middleware (edge optimization for all modules routed through Traefik) |
+| compress.enabled | bool | `true` | Enable the shared compress middleware |
+| compress.excludedContentTypes | list | `["image/png","image/jpeg","image/gif","image/webp","application/grpc"]` | Content types excluded from compression (already-compressed formats) |
+| compress.minResponseBodyBytes | int | `1024` | Do not compress responses below this size (bytes) |
 | fullnameOverride | string | `"gateway-common"` | Fixed resource-name prefix so module charts can reference middlewares by a stable name |
 | nameOverride | string | `""` | This is to override the chart name. |
 | rateLimit | object | `{"average":100,"burst":50,"perUser":true}` | Rate limit middleware configuration |
