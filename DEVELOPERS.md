@@ -106,16 +106,14 @@ graph TB
 
     %% User Ingress Flow
     User((Developer)) -->|HTTP 80/443| traefik
-    traefik -->|Routes via IngressRoute| authproxy
+    traefik -.->|"ForwardAuth call (gateway-common middleware)"| authproxy
     authproxy -->|Validates JWT against| mock_oidc
-    authproxy -->|Forwards to| gateway_common
-    
-    gateway_common --> gateway
-    gateway_common --> audit_be
-    gateway_common --> checkout_be
-    gateway_common --> pg_be
-    gateway_common --> checkout_fe
-    gateway_common --> cp_fe
+    traefik -->|"Routes via IngressRoute, gateway-common middlewares applied in-chain"| gateway
+    traefik --> audit_be
+    traefik --> checkout_be
+    traefik --> pg_be
+    traefik --> checkout_fe
+    traefik --> cp_fe
     
     %% Internal Dependencies
     checkout_be -->|Persists Data| postgres
@@ -370,15 +368,15 @@ All API calls to protected endpoints require a Bearer token. Use the mock OIDC p
 
 ```bash
 # Generate a token with admin scope
-just test-generate-jwt-token-mock admin
+just generate-jwt admin
 
 # Generate a token with specific scope
-just test-generate-jwt-token-mock ecommerce
+just generate-jwt ecommerce
 ```
 
 Use the returned `access_token` in API calls:
 ```bash
-TOKEN=$(just test-generate-jwt-token-mock admin)
+TOKEN=$(just generate-jwt admin | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
 
 curl -H "Authorization: Bearer $TOKEN" \
   http://gateway.localhost/auditflow/api/v1/audit/publish \
@@ -393,7 +391,7 @@ curl -H "Authorization: Bearer $TOKEN" \
 Tests that authentication works through the full Traefik → auth-proxy → upstream path:
 
 ```bash
-just labs64io-e2e-auth
+just e2e-auth-test
 ```
 
 Expected output:
@@ -418,7 +416,7 @@ helm test labs64io-payment-gateway -n labs64io
 
 **AuditFlow — publish an audit event:**
 ```bash
-TOKEN=$(just test-generate-jwt-token-mock admin)
+TOKEN=$(just generate-jwt admin | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
 
 curl -s -X POST http://gateway.localhost/auditflow/api/v1/audit/publish \
   -H "Authorization: Bearer $TOKEN" \
@@ -434,7 +432,7 @@ curl -s -X POST http://gateway.localhost/auditflow/api/v1/audit/publish \
 
 **Checkout — list customers (expects empty list or existing data):**
 ```bash
-TOKEN=$(just test-generate-jwt-token-mock ecommerce)
+TOKEN=$(just generate-jwt ecommerce | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
 
 curl -s http://gateway.localhost/checkout/api/v1/customers \
   -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
@@ -442,7 +440,7 @@ curl -s http://gateway.localhost/checkout/api/v1/customers \
 
 **Payment Gateway — list payment providers:**
 ```bash
-TOKEN=$(just test-generate-jwt-token-mock ecommerce)
+TOKEN=$(just generate-jwt ecommerce | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
 
 curl -s http://gateway.localhost/payment-gateway/api/v1/payment-providers \
   -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
@@ -567,7 +565,7 @@ Common causes:
 
 ### 401/403 on API calls
 
-- Verify token: `just test-generate-jwt-token-mock admin`
+- Verify token: `just generate-jwt admin`
 - Check role mapping: `kubectl get configmap -n labs64io -l app=traefik-authproxy -o yaml`
 - Check auth-proxy logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=traefik-authproxy`
 

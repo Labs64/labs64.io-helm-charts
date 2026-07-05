@@ -1,6 +1,9 @@
 global:
   domain: localhost
 
+networkPolicy:
+  enabled: true
+
 ingressroute:
 
   # -- Define IngressRoute(s) for labs64io-gateway (module routes are owned by the module charts)

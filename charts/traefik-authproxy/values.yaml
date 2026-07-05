@@ -242,3 +242,11 @@ roleMappingSidecar:
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
+
+# -- NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)
+networkPolicy:
+  enabled: false
+  # -- Namespace where Traefik runs
+  gatewayNamespace: tools
+  # -- Additional raw ingress rules
+  extraIngress: []

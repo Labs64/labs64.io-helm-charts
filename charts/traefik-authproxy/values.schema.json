@@ -438,6 +438,38 @@
       "title": "nameOverride",
       "type": "string"
     },
+    "networkPolicy": {
+      "additionalProperties": false,
+      "description": "NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "extraIngress": {
+          "description": "Additional raw ingress rules",
+          "items": {
+            "required": []
+          },
+          "title": "extraIngress",
+          "type": "array"
+        },
+        "gatewayNamespace": {
+          "default": "tools",
+          "description": "Namespace where Traefik runs",
+          "title": "gatewayNamespace",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "gatewayNamespace",
+        "extraIngress"
+      ],
+      "title": "networkPolicy",
+      "type": "object"
+    },
     "nodeSelector": {
       "additionalProperties": false,
       "required": [],
@@ -1069,7 +1101,8 @@
     "env",
     "roleMapping",
     "roleMappingSidecar",
-    "podDisruptionBudget"
+    "podDisruptionBudget",
+    "networkPolicy"
   ],
   "type": "object"
 }

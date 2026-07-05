@@ -2,6 +2,9 @@ image:
   repository: localhost:5005/traefik-authproxy
   tag: latest
 
+networkPolicy:
+  enabled: true
+
 env:
   # mock-oauth2-server (just mock-oidc-install)
   - name: OIDC_DISCOVERY_URL

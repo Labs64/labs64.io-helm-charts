@@ -178,6 +178,14 @@ swaggerUI:
   # -- By default, Swagger UI attempts to validate specs against swagger.io’s online validator. You can use this parameter to set a different validator URL, for example for locally deployed validators. Setting it to either none, 127.0.0.1 or localhost will disable validation.
   validatorUrl: https://validator.swagger.io/validator
 
+# -- NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)
+networkPolicy:
+  enabled: false
+  # -- Namespace where Traefik runs
+  gatewayNamespace: tools
+  # -- Additional raw ingress rules
+  extraIngress: []
+
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema
 # type: object
