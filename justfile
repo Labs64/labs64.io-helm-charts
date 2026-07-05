@@ -360,23 +360,23 @@ show-errors:
 e2e-auth-test:
     #!/usr/bin/env bash
     set -euo pipefail
-    TOKEN=$$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+    TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
       --data-urlencode 'scope=admin' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
-    no_token=$$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api')
-    with_token=$$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $$TOKEN" 'http://gateway.localhost/auditflow/api')
-    BAD_TOKEN=$$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+    no_token=$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api')
+    with_token=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" 'http://gateway.localhost/auditflow/api')
+    BAD_TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
       --data-urlencode 'scope=no-access' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
-    wrong_scope=$$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $$BAD_TOKEN" 'http://gateway.localhost/auditflow/api')
-    echo "no token   -> $$no_token (expected 401)"
-    echo "with token -> $$with_token (expected not 401/403)"
-    echo "wrong scope -> $$wrong_scope (expected 403)"
-    [ "$$no_token" = "401" ] || { echo "FAIL: expected 401 without token"; exit 1; }
-    case "$$with_token" in 401|403) echo "FAIL: token rejected"; exit 1;; esac
-    [ "$$wrong_scope" = "403" ] || { echo "FAIL: expected 403 for wrong-scope token"; exit 1; }
+    wrong_scope=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $BAD_TOKEN" 'http://gateway.localhost/auditflow/api')
+    echo "no token   -> $no_token (expected 401)"
+    echo "with token -> $with_token (expected not 401/403)"
+    echo "wrong scope -> $wrong_scope (expected 403)"
+    [ "$no_token" = "401" ] || { echo "FAIL: expected 401 without token"; exit 1; }
+    case "$with_token" in 401|403) echo "FAIL: token rejected"; exit 1;; esac
+    [ "$wrong_scope" = "403" ] || { echo "FAIL: expected 403 for wrong-scope token"; exit 1; }
     echo "e2e auth: OK"
 
 # generate an M2M JWT from the mock OIDC provider (scope: admin|auditflow|ecommerce)
