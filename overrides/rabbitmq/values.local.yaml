@@ -1,9 +1,0 @@
-replicaCount: 2
-
-auth:
-  username: labs64
-  password: labs64pw
-
-persistence:
-  enabled: true
-  size: 1Gi

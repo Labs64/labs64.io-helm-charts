@@ -299,11 +299,13 @@ traefik-uninstall:
 # install RabbitMQ (Bitnami images removed from Docker Hub — using official image)
 rabbitmq-install: repo-update
 	@echo "Installing RabbitMQ (official image — Bitnami images no longer available)..."
+	@[ -f overrides/rabbitmq/values.secrets.local.yaml ] || { echo "  No values.secrets.local.yaml — bootstrapping from template (local dev default)"; cp overrides/rabbitmq/values.secrets.local.yaml.example overrides/rabbitmq/values.secrets.local.yaml; }
+	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/values.secrets.local.yaml
 	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq.yaml
 	@echo "Waiting for RabbitMQ to be ready..."
 	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
 	@echo "Username      : labs64"
-	@echo "Password      : labs64pw"
+	@echo "Credentials   : from overrides/rabbitmq/values.secrets.local.yaml (rabbitmq-secret)"
 
 # uninstall RabbitMQ
 rabbitmq-uninstall:
