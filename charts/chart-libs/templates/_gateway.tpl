@@ -22,10 +22,15 @@ Usage (wrapper template in the module chart):
 {{- $prefix := .Values.gateway.prefix | default (printf "/%s" .Chart.Name) -}}
 {{- $host := include "chart-libs.gatewayHost" . -}}
 {{- $mw := .Values.gateway.sharedMiddlewares -}}
-{{- $needsStrip := false -}}
+{{- /* Strip list order: full-path strips (stripPath) are added before the bare module prefix (stripPrefix). Traefik strips the first matching prefix. */ -}}
+{{- $stripPrefixes := list -}}
 {{- range .Values.gateway.routes -}}
-{{- if .stripPrefix -}}{{- $needsStrip = true -}}{{- end -}}
+{{- if .stripPath -}}{{- $stripPrefixes = append $stripPrefixes (printf "%s%s" $prefix .path) -}}{{- end -}}
 {{- end -}}
+{{- range .Values.gateway.routes -}}
+{{- if and .stripPrefix (not .stripPath) -}}{{- $stripPrefixes = append $stripPrefixes $prefix -}}{{- end -}}
+{{- end -}}
+{{- $stripPrefixes = $stripPrefixes | uniq -}}
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -43,6 +48,10 @@ spec:
         - name: {{ $route.service | default $fullname }}
           port: {{ $route.port }}
       middlewares:
+        {{- /* Always first: drop inbound X-Auth-* so clients can never smuggle
+               identity headers to backends (RFC-03 edge stripping) — public
+               routes included, where no ForwardAuth would overwrite them. */}}
+        - name: {{ $mw.stripAuthHeaders | default "gateway-common-strip-auth-headers" }}
         {{- if not $route.public }}
         - name: {{ $mw.auth }}
         - name: {{ $mw.rateLimit }}
@@ -51,11 +60,11 @@ spec:
         {{- if $mw.compress }}
         - name: {{ $mw.compress }}
         {{- end }}
-        {{- if $route.stripPrefix }}
+        {{- if or $route.stripPrefix $route.stripPath }}
         - name: {{ $fullname }}-strip-prefix
         {{- end }}
     {{- end }}
-{{- if $needsStrip }}
+{{- if $stripPrefixes }}
 ---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
@@ -66,7 +75,9 @@ metadata:
 spec:
   stripPrefix:
     prefixes:
-      - {{ $prefix }}
+      {{- range $stripPrefixes }}
+      - {{ . }}
+      {{- end }}
 {{- end }}
 ---
 apiVersion: v1

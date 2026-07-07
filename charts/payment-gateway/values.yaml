@@ -87,17 +87,6 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-# -- IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
-ingressroute:
-  # -- This sets whether the IngressRoute is enabled or not
-  enabled: false
-  # -- Host for the IngressRoute
-  host: localhost
-  # -- Entry points for the IngressRoute
-  entryPoints:
-    - web
-    - websecure
-
 resources:
   limits:
     cpu: 500m
@@ -314,18 +303,36 @@ gateway:
     rateLimit: gateway-common-ratelimit
     securityHeaders: gateway-common-security-headers
     compress: gateway-common-compress
+    stripAuthHeaders: gateway-common-strip-auth-headers
   # -- Routes exposed by this module
   routes:
-    # -- Payment Gateway API (protected, prefix stripped before forwarding)
-    - path: /api
+    # -- Payment Gateway API (protected; Traefik owns the /api/v1 version prefix and strips the full '<prefix>/api/v1' before forwarding — the backend is root-mapped)
+    - path: /api/v1
       port: 8080
-      stripPrefix: true
+      stripPath: true
       roles:
         - admin-role
         - ecommerce-role
         - default-roles-labs64io
     # -- OpenAPI docs (public, prefix stripped before forwarding)
     - path: /v3/api-docs
+      port: 8080
+      public: true
+      stripPrefix: true
+    # -- PSP webhooks + provider checkout return/cancel redirects (public — PSP
+    # servers and browsers cannot carry a JWT; authenticity is enforced by PSP
+    # signature checks and the backend's own public-path allowlist)
+    - path: /api/v1/providers
+      port: 8080
+      public: true
+      stripPrefix: true
+    # -- Checkout-session confirmation redirect target (public, same rationale)
+    - path: /api/v1/checkout-sessions
+      port: 8080
+      public: true
+      stripPrefix: true
+    # -- Payment definitions listing (public read-only catalog)
+    - path: /api/v1/payment-definitions
       port: 8080
       public: true
       stripPrefix: true

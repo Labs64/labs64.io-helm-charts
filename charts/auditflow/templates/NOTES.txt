@@ -33,12 +33,6 @@ App Version:  {{ .Chart.AppVersion }}
 📋 Logs:
    kubectl logs -l app.kubernetes.io/name={{ include "chart-libs.name" . }} -n {{ .Release.Namespace }} -f
 
-{{- if .Values.ingressroute.enabled }}
-
-🌐 IngressRoute:
-   Host: {{ .Values.ingressroute.host }}
-   Entry Points: {{ join ", " .Values.ingressroute.entryPoints }}
-{{- end }}
 
 {{- if .Values.ingress.enabled }}
 

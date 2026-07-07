@@ -416,13 +416,13 @@ e2e-auth-test:
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
       --data-urlencode 'scope=admin' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
-    no_token=$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api')
-    with_token=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" 'http://gateway.localhost/auditflow/api')
+    no_token=$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api/v1/audit/publish')
+    with_token=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" 'http://gateway.localhost/auditflow/api/v1/audit/publish')
     BAD_TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
       --data-urlencode 'scope=no-access' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
-    wrong_scope=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $BAD_TOKEN" 'http://gateway.localhost/auditflow/api')
+    wrong_scope=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $BAD_TOKEN" 'http://gateway.localhost/auditflow/api/v1/audit/publish')
     echo "no token   -> $no_token (expected 401)"
     echo "with token -> $with_token (expected not 401/403)"
     echo "wrong scope -> $wrong_scope (expected 403)"

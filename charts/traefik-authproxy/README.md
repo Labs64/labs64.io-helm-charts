@@ -1,6 +1,6 @@
 # traefik-authproxy
 
-![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Traefik Auth (M2M) Middleware
 
@@ -21,7 +21,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.3 |
+| file://../chart-libs | chart-libs | 0.0.4 |
 
 ## Values
 
@@ -36,6 +36,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | env[3] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
 | env[4] | object | `{"name":"ROLE_MAPPING_DIR","value":"/opt/role-mappings"}` | Directory with per-module role-mapping fragments (populated by the k8s-sidecar) |
 | env[5] | object | `{"name":"TOKEN_ROLES_CLAIM_PATHS","value":"realm_access.roles,resource_access.{audience}.roles"}` | Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE. Default: realm_access.roles,resource_access.{audience}.roles. |
+| env[6] | object | `{"name":"TOKEN_TENANT_CLAIM_PATH","value":"tenant"}` | Dot-path to the tenant claim for X-Auth-Tenant (RFC-03); "-" is emitted when absent. |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
@@ -49,6 +50,9 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/docs","port":8081},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
+| networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
+| networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | nodeSelector | object | `{}` |  |
 | observability | object | `{"enabled":false,"otlpEndpoint":"http://otel-collector:4318"}` | Observability is infrastructure-owned: the same image runs with or without it. When enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI (traces + correlated logs + metrics via OTLP). |
 | observability.enabled | bool | `false` | Enable runtime auto-instrumentation (traces + logs + metrics via OTLP) |
@@ -65,10 +69,11 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | rbac.rules[0].verbs[2] | string | `"watch"` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/docs","port":8081},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `2` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ The authproxy sits on the hot path of every protected request - keep at least 2 replicas. |
+| resources.limits.cpu | string | `"200m"` |  |
+| resources.limits.memory | string | `"512Mi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
-| roleMapping | object | `{"/actuator":[],"/auth":[],"/docs":[],"/health":[],"/public":[],"/swagger-ui":[],"/v3/api-docs":[]}` | Role mappings for the auth proxy. |
-| roleMapping./auth | list | `[]` | public paths |
+| roleMapping | object | `{}` | Static base role mappings (rarely needed). Real path→role mappings are owned by the module charts: each publishes a role-mapping ConfigMap fragment (label labs64.io/role-mapping=true, rendered by chart-libs.gateway-routes) that the sidecar merges on top of this base. Forwarded URIs are always module-prefixed (e.g. /checkout/api/v1), so entries here must be too — unprefixed paths like /v3/api-docs never match and are dead configuration. Paths with no roles, an empty list, or ["public"] are treated as public. @schema type: object additionalProperties: true @schema |
 | roleMappingSidecar | object | `{"enabled":true,"folder":"/opt/role-mappings","image":{"pullPolicy":"IfNotPresent","repository":"kiwigrid/k8s-sidecar","tag":"1.30.0"},"label":"labs64.io/role-mapping","labelValue":"true","resources":{"limits":{"cpu":"50m","memory":"128Mi"},"requests":{"cpu":"10m","memory":"32Mi"}}}` | Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true) |
 | roleMappingSidecar.folder | string | `"/opt/role-mappings"` | Directory (shared emptyDir) the fragments are written to |
 | roleMappingSidecar.label | string | `"labs64.io/role-mapping"` | ConfigMap label to watch |

@@ -17,15 +17,3 @@ env:
     value: /opt/role-mappings
   - name: LOG_LEVEL
     value: DEBUG
-
-# -- public paths (empty list = no auth required)
-# -- protected paths (list of roles = user must have at least one)
-roleMapping:
-  # system paths
-  /auth: []
-  /health: []
-  /docs: []
-  /public: []
-  /swagger-ui: []
-  /v3/api-docs: []
-  /actuator: []

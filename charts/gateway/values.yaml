@@ -86,8 +86,6 @@ ingress:
 ingressroute:
   # -- This sets whether the IngressRoute is enabled or not
   enabled: true
-  # -- DEPRECATED: the host is derived as gateway.<global.domain>; this value is ignored
-  host: gateway.localhost
   # -- Entry points for the IngressRoute
   entryPoints:
     - web

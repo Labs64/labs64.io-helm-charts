@@ -200,7 +200,7 @@
                 "additionalProperties": false,
                 "properties": {
                   "path": {
-                    "default": "/api",
+                    "default": "/api/v1",
                     "title": "path",
                     "type": "string"
                   },
@@ -227,16 +227,16 @@
                     "title": "roles",
                     "type": "array"
                   },
-                  "stripPrefix": {
+                  "stripPath": {
                     "default": true,
-                    "title": "stripPrefix",
+                    "title": "stripPath",
                     "type": "boolean"
                   }
                 },
                 "required": [
                   "path",
                   "port",
-                  "stripPrefix",
+                  "stripPath",
                   "roles"
                 ],
                 "type": "object"
@@ -246,6 +246,102 @@
                 "properties": {
                   "path": {
                     "default": "/v3/api-docs",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "public": {
+                    "default": true,
+                    "title": "public",
+                    "type": "boolean"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "public",
+                  "stripPrefix"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/api/v1/providers",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "public": {
+                    "default": true,
+                    "title": "public",
+                    "type": "boolean"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "public",
+                  "stripPrefix"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/api/v1/checkout-sessions",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "public": {
+                    "default": true,
+                    "title": "public",
+                    "type": "boolean"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "public",
+                  "stripPrefix"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/api/v1/payment-definitions",
                     "title": "path",
                     "type": "string"
                   },
@@ -302,13 +398,19 @@
               "default": "gateway-common-security-headers",
               "title": "securityHeaders",
               "type": "string"
+            },
+            "stripAuthHeaders": {
+              "default": "gateway-common-strip-auth-headers",
+              "title": "stripAuthHeaders",
+              "type": "string"
             }
           },
           "required": [
             "auth",
             "rateLimit",
             "securityHeaders",
-            "compress"
+            "compress",
+            "stripAuthHeaders"
           ],
           "title": "sharedMiddlewares",
           "type": "object"
@@ -495,47 +597,6 @@
         "tls"
       ],
       "title": "ingress",
-      "type": "object"
-    },
-    "ingressroute": {
-      "additionalProperties": false,
-      "description": "IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/",
-      "properties": {
-        "enabled": {
-          "default": false,
-          "description": "This sets whether the IngressRoute is enabled or not",
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "entryPoints": {
-          "description": "Entry points for the IngressRoute",
-          "items": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "string"
-              }
-            ],
-            "required": []
-          },
-          "title": "entryPoints",
-          "type": "array"
-        },
-        "host": {
-          "default": "localhost",
-          "description": "Host for the IngressRoute",
-          "title": "host",
-          "type": "string"
-        }
-      },
-      "required": [
-        "enabled",
-        "host",
-        "entryPoints"
-      ],
-      "title": "ingressroute",
       "type": "object"
     },
     "lifecycle": {
@@ -1231,7 +1292,6 @@
     "securityContext",
     "service",
     "ingress",
-    "ingressroute",
     "resources",
     "livenessProbe",
     "readinessProbe",

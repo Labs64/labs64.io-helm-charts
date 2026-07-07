@@ -89,17 +89,6 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-# -- IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
-ingressroute:
-  # -- This sets whether the IngressRoute is enabled or not
-  enabled: false
-  # -- Host for the IngressRoute
-  host: localhost
-  # -- Entry points for the IngressRoute
-  entryPoints:
-    - web
-    - websecure
-
 resources:
   limits:
     cpu: 200m
@@ -187,7 +176,7 @@ application:
     # -- Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).
     env:
       # -- Primary API base URL — replace <HOST> with your domain/host.
-      VITE_API_URL: https://<HOST>/api/v1/checkout
+      VITE_API_URL: https://<HOST>/checkout/api/v1
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
@@ -205,6 +194,7 @@ gateway:
     rateLimit: gateway-common-ratelimit
     securityHeaders: gateway-common-security-headers
     compress: gateway-common-compress
+    stripAuthHeaders: gateway-common-strip-auth-headers
   # -- Routes exposed by this module
   routes:
     # -- Checkout UI (protected)

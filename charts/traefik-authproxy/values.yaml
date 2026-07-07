@@ -193,23 +193,24 @@ env:
   # Default: realm_access.roles,resource_access.{audience}.roles.
   - name: TOKEN_ROLES_CLAIM_PATHS
     value: "realm_access.roles,resource_access.{audience}.roles"
+  # -- Dot-path to the tenant claim for X-Auth-Tenant (RFC-03); "-" is emitted when absent.
+  - name: TOKEN_TENANT_CLAIM_PATH
+    value: "tenant"
 
-# -- Role mappings for the auth proxy.
-roleMapping:
-  # -- public paths
-  /auth: []
-  /public: []
-  /docs: []
-  /swagger-ui: []
-  /v3/api-docs: []
-  /health: []
-  /actuator: []
-  # -- protected paths
-  #/<path-1>:
-  #  - <role-name-1>
-  #  - <role-name-2>
-  #/<path-2>:
-  #  - <role-name-2>
+# -- Static base role mappings (rarely needed). Real path→role mappings are
+# owned by the module charts: each publishes a role-mapping ConfigMap fragment
+# (label labs64.io/role-mapping=true, rendered by chart-libs.gateway-routes)
+# that the sidecar merges on top of this base. Forwarded URIs are always
+# module-prefixed (e.g. /checkout/api/v1), so entries here must be too —
+# unprefixed paths like /v3/api-docs never match and are dead configuration.
+# Paths with no roles, an empty list, or ["public"] are treated as public.
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+roleMapping: {}
+  # /custom/path:
+  #   - <role-name-1>
 
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema
