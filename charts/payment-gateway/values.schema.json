@@ -272,6 +272,102 @@
                   "stripPrefix"
                 ],
                 "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/api/v1/providers",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "public": {
+                    "default": true,
+                    "title": "public",
+                    "type": "boolean"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "public",
+                  "stripPrefix"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/api/v1/checkout-sessions",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "public": {
+                    "default": true,
+                    "title": "public",
+                    "type": "boolean"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "public",
+                  "stripPrefix"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/api/v1/payment-definitions",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "public": {
+                    "default": true,
+                    "title": "public",
+                    "type": "boolean"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "public",
+                  "stripPrefix"
+                ],
+                "type": "object"
               }
             ],
             "required": []

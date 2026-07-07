@@ -319,6 +319,23 @@ gateway:
       port: 8080
       public: true
       stripPrefix: true
+    # -- PSP webhooks + provider checkout return/cancel redirects (public — PSP
+    # servers and browsers cannot carry a JWT; authenticity is enforced by PSP
+    # signature checks and the backend's own public-path allowlist)
+    - path: /api/v1/providers
+      port: 8080
+      public: true
+      stripPrefix: true
+    # -- Checkout-session confirmation redirect target (public, same rationale)
+    - path: /api/v1/checkout-sessions
+      port: 8080
+      public: true
+      stripPrefix: true
+    # -- Payment definitions listing (public read-only catalog)
+    - path: /api/v1/payment-definitions
+      port: 8080
+      public: true
+      stripPrefix: true
 # -- PodDisruptionBudget (rendered by chart-libs.pdb)
 podDisruptionBudget:
   enabled: false
