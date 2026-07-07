@@ -22,8 +22,7 @@ Usage (wrapper template in the module chart):
 {{- $prefix := .Values.gateway.prefix | default (printf "/%s" .Chart.Name) -}}
 {{- $host := include "chart-libs.gatewayHost" . -}}
 {{- $mw := .Values.gateway.sharedMiddlewares -}}
-{{- /* Strip list is ordered longest-first: full-path strips (stripPath) before
-       the bare module prefix (stripPrefix); Traefik strips the first match. */ -}}
+{{- /* Strip list order: full-path strips (stripPath) are added before the bare module prefix (stripPrefix). Traefik strips the first matching prefix. */ -}}
 {{- $stripPrefixes := list -}}
 {{- range .Values.gateway.routes -}}
 {{- if .stripPath -}}{{- $stripPrefixes = append $stripPrefixes (printf "%s%s" $prefix .path) -}}{{- end -}}
