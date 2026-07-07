@@ -14,7 +14,7 @@ authProxy:
   port: 8081
   # -- Trust X-Forwarded-* headers from the proxy
   trustForwardHeader: true
-  # -- Identity headers copied from the authproxy response onto the upstream request (full RFC-03 contract — the authproxy emits every one on each 2xx, so client values can never pass through)
+  # -- Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through)
   authResponseHeaders:
     - X-Auth-User
     - X-Auth-Roles

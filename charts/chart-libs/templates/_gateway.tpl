@@ -49,7 +49,7 @@ spec:
           port: {{ $route.port }}
       middlewares:
         {{- /* Always first: drop inbound X-Auth-* so clients can never smuggle
-               identity headers to backends (RFC-03 edge stripping) — public
+               identity headers to backends — public
                routes included, where no ForwardAuth would overwrite them. */}}
         - name: {{ $mw.stripAuthHeaders | default "gateway-common-strip-auth-headers" }}
         {{- if not $route.public }}

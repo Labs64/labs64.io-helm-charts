@@ -28,7 +28,7 @@ Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, s
 |-----|------|---------|-------------|
 | authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Roles","X-Auth-Tenant","X-Request-ID"],"port":8081,"serviceName":"labs64io-traefik-authproxy","trustForwardHeader":true}` | ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy) |
 | authProxy.address | string | `""` | Full URL override for the traefik-authproxy /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth |
-| authProxy.authResponseHeaders | list | `["X-Auth-User","X-Auth-Roles","X-Auth-Tenant","X-Request-ID"]` | Identity headers copied from the authproxy response onto the upstream request (full RFC-03 contract — the authproxy emits every one on each 2xx, so client values can never pass through) |
+| authProxy.authResponseHeaders | list | `["X-Auth-User","X-Auth-Roles","X-Auth-Tenant","X-Request-ID"]` | Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through) |
 | authProxy.port | int | `8081` | Service port of the traefik-authproxy release |
 | authProxy.serviceName | string | `"labs64io-traefik-authproxy"` | Service name of the traefik-authproxy release |
 | authProxy.trustForwardHeader | bool | `true` | Trust X-Forwarded-* headers from the proxy |

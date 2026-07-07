@@ -13,7 +13,7 @@
           "type": "string"
         },
         "authResponseHeaders": {
-          "description": "Identity headers copied from the authproxy response onto the upstream request (full RFC-03 contract — the authproxy emits every one on each 2xx, so client values can never pass through)",
+          "description": "Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through)",
           "items": {
             "anyOf": [
               {

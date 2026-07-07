@@ -36,7 +36,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | env[3] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
 | env[4] | object | `{"name":"ROLE_MAPPING_DIR","value":"/opt/role-mappings"}` | Directory with per-module role-mapping fragments (populated by the k8s-sidecar) |
 | env[5] | object | `{"name":"TOKEN_ROLES_CLAIM_PATHS","value":"realm_access.roles,resource_access.{audience}.roles"}` | Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE. Default: realm_access.roles,resource_access.{audience}.roles. |
-| env[6] | object | `{"name":"TOKEN_TENANT_CLAIM_PATH","value":"tenant"}` | Dot-path to the tenant claim for X-Auth-Tenant (RFC-03); "-" is emitted when absent. |
+| env[6] | object | `{"name":"TOKEN_TENANT_CLAIM_PATH","value":"tenant"}` | Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent. |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |

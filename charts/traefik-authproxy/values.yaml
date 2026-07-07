@@ -193,7 +193,7 @@ env:
   # Default: realm_access.roles,resource_access.{audience}.roles.
   - name: TOKEN_ROLES_CLAIM_PATHS
     value: "realm_access.roles,resource_access.{audience}.roles"
-  # -- Dot-path to the tenant claim for X-Auth-Tenant (RFC-03); "-" is emitted when absent.
+  # -- Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
   - name: TOKEN_TENANT_CLAIM_PATH
     value: "tenant"
 
