@@ -234,12 +234,6 @@
           "title": "entryPoints",
           "type": "array"
         },
-        "host": {
-          "default": "gateway.localhost",
-          "description": "DEPRECATED: the host is derived as gateway.\u003cglobal.domain\u003e; this value is ignored",
-          "title": "host",
-          "type": "string"
-        },
         "middlewares": {
           "description": " - path: /\u003cservicename\u003e/v3/api-docs\n   service:\n     name: \u003cservice-name\u003e\n     port: 8080\n   middleware:\n     name: \u003cgateway-service-name\u003e-path-stripper\nMiddlewares owned by this chart (rendered by templates/middleware.yaml)",
           "items": {
@@ -259,7 +253,6 @@
       },
       "required": [
         "enabled",
-        "host",
         "entryPoints",
         "routes"
       ],

@@ -171,6 +171,26 @@
               "value"
             ],
             "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "TOKEN_TENANT_CLAIM_PATH",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "tenant",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
           }
         ],
         "required": []
@@ -737,69 +757,9 @@
       "type": "object"
     },
     "roleMapping": {
-      "additionalProperties": false,
-      "description": "Role mappings for the auth proxy.",
-      "properties": {
-        "/actuator": {
-          "items": {
-            "required": []
-          },
-          "title": "/actuator",
-          "type": "array"
-        },
-        "/auth": {
-          "description": "public paths",
-          "items": {
-            "required": []
-          },
-          "title": "/auth",
-          "type": "array"
-        },
-        "/docs": {
-          "items": {
-            "required": []
-          },
-          "title": "/docs",
-          "type": "array"
-        },
-        "/health": {
-          "items": {
-            "required": []
-          },
-          "title": "/health",
-          "type": "array"
-        },
-        "/public": {
-          "items": {
-            "required": []
-          },
-          "title": "/public",
-          "type": "array"
-        },
-        "/swagger-ui": {
-          "items": {
-            "required": []
-          },
-          "title": "/swagger-ui",
-          "type": "array"
-        },
-        "/v3/api-docs": {
-          "items": {
-            "required": []
-          },
-          "title": "/v3/api-docs",
-          "type": "array"
-        }
-      },
-      "required": [
-        "/auth",
-        "/public",
-        "/docs",
-        "/swagger-ui",
-        "/v3/api-docs",
-        "/health",
-        "/actuator"
-      ],
+      "additionalProperties": true,
+      "description": "Static base role mappings (rarely needed). Real path→role mappings are\nowned by the module charts: each publishes a role-mapping ConfigMap fragment\n(label labs64.io/role-mapping=true, rendered by chart-libs.gateway-routes)\nthat the sidecar merges on top of this base. Forwarded URIs are always\nmodule-prefixed (e.g. /checkout/api/v1), so entries here must be too —\nunprefixed paths like /v3/api-docs never match and are dead configuration.\nPaths with no roles, an empty list, or [\"public\"] are treated as public.",
+      "required": [],
       "title": "roleMapping",
       "type": "object"
     },
@@ -1099,7 +1059,6 @@
     "tolerations",
     "affinity",
     "env",
-    "roleMapping",
     "roleMappingSidecar",
     "podDisruptionBudget",
     "networkPolicy"

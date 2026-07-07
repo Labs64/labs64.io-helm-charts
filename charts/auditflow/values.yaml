@@ -129,17 +129,6 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-# -- IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
-ingressroute:
-  # -- This sets whether the IngressRoute is enabled or not
-  enabled: false
-  # -- Host for the IngressRoute
-  host: localhost
-  # -- Entry points for the IngressRoute
-  entryPoints:
-    - web
-    - websecure
-
 # -- Resource limits and requests for the container
 # For production, it's recommended to set both requests and limits
 resources:
@@ -372,12 +361,13 @@ gateway:
     rateLimit: gateway-common-ratelimit
     securityHeaders: gateway-common-security-headers
     compress: gateway-common-compress
+    stripAuthHeaders: gateway-common-strip-auth-headers
   # -- Routes exposed by this module
   routes:
-    # -- AuditFlow API (protected, prefix stripped before forwarding)
-    - path: /api
+    # -- AuditFlow API (protected; Traefik owns the /api/v1 version prefix and strips the full '<prefix>/api/v1' before forwarding — the backend is root-mapped)
+    - path: /api/v1
       port: 8080
-      stripPrefix: true
+      stripPath: true
       roles:
         - admin-role
         - auditflow-role

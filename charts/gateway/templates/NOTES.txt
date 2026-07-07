@@ -19,11 +19,11 @@ App Version:  {{ .Chart.AppVersion }}
 {{- if .Values.ingressroute.enabled }}
 
 🌐 IngressRoute:
-   Host: {{ .Values.ingressroute.host }}
+   Host: {{ include "chart-libs.gatewayHost" . }}
    Entry Points: {{ join ", " .Values.ingressroute.entryPoints }}
 
    Access your API Gateway at:
-   http://{{ .Values.ingressroute.host }}
+   http://{{ include "chart-libs.gatewayHost" . }}/swagger-ui/
 {{- end }}
 
 {{- if .Values.ingress.enabled }}

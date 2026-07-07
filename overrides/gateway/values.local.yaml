@@ -8,13 +8,20 @@ ingressroute:
 
   # -- Define IngressRoute(s) for labs64io-gateway (module routes are owned by the module charts)
   routes:
-    # -- Map Swagger UI to the root path (public — no auth required)
+    # -- Swagger UI served under /swagger-ui (public — no auth required)
     - path: /swagger-ui
       service:
         name: labs64io-gateway
         port: 8080
       middlewares:
         - name: strip-prefix
+    # -- Root path convenience redirect to the Swagger UI (Traefik prefers longer matches, so module routes always win over this catch-all)
+    - path: /
+      service:
+        name: labs64io-gateway
+        port: 8080
+      middlewares:
+        - name: root-redirect
 
   # -- Middlewares owned by the gateway chart itself
   middlewares:
@@ -24,6 +31,12 @@ ingressroute:
         stripPrefix:
           prefixes:
             - /swagger-ui
+    # -- Redirect the bare root URL to the Swagger UI
+    - name: root-redirect
+      spec:
+        redirectRegex:
+          regex: "^(https?://[^/]+)/$"
+          replacement: "${1}/swagger-ui/"
 
 # -- Swagger UI Configuration (urls templated via global.domain)
 swaggerUI:
@@ -34,5 +47,3 @@ swaggerUI:
       name: Checkout API
     - url: http://gateway.{{ .Values.global.domain }}/payment-gateway/v3/api-docs
       name: Payment Gateway API
-    - url: http://gateway.{{ .Values.global.domain }}/customer-portal/v3/api-docs
-      name: Customer Portal API
