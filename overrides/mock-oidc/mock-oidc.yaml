@@ -22,6 +22,8 @@ data:
               "requestParam": "scope",
               "match": "auditflow",
               "claims": {
+                "sub": "svc:auditflow-client",
+                "tenant": "t_mock",
                 "aud": ["account"],
                 "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
               }
@@ -30,6 +32,8 @@ data:
               "requestParam": "scope",
               "match": "ecommerce",
               "claims": {
+                "sub": "svc:ecommerce-client",
+                "tenant": "t_mock",
                 "aud": ["account"],
                 "realm_access": { "roles": ["ecommerce-role", "default-roles-labs64io"] }
               }
@@ -38,6 +42,7 @@ data:
               "requestParam": "scope",
               "match": "no-access",
               "claims": {
+                "sub": "svc:no-access-client",
                 "aud": ["account"],
                 "realm_access": { "roles": ["no-access-role"] }
               }
@@ -46,6 +51,8 @@ data:
               "requestParam": "scope",
               "match": "*",
               "claims": {
+                "sub": "svc:admin-client",
+                "tenant": "t_mock",
                 "aud": ["account"],
                 "realm_access": { "roles": ["admin-role", "default-roles-labs64io"] }
               }
