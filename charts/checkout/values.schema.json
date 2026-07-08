@@ -210,6 +210,51 @@
                 "additionalProperties": false,
                 "properties": {
                   "path": {
+                    "default": "/api/v1",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "roles": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "roles",
+                    "type": "array"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "stripPrefix",
+                  "roles"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
                     "default": "/v3/api-docs",
                     "title": "path",
                     "type": "string"

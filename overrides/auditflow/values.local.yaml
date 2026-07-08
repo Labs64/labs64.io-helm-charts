@@ -37,21 +37,21 @@ env:
 applicationYaml:
   transformer:
     discovery:
-      mode: local # "local" or "kubernetes"
+      mode: local # "local" or "kubernetes" — local is correct here: all 3 containers share one pod
     local:
       url: "http://localhost:8081"
     service:
       name: auditflow-transformer
-      namespace: default
+      namespace: labs64io
 
   sink:
     discovery:
-      mode: local # "local" or "kubernetes"
+      mode: local # "local" or "kubernetes" — local is correct here: all 3 containers share one pod
     local:
       url: "http://localhost:8082"
     service:
       name: auditflow-sink
-      namespace: default
+      namespace: labs64io
 
   auditflow:
     pipelines:

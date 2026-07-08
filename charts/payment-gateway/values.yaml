@@ -306,7 +306,7 @@ gateway:
     stripAuthHeaders: gateway-common-strip-auth-headers
   # -- Routes exposed by this module
   routes:
-    # -- Payment Gateway API (protected; Traefik owns the /api/v1 version prefix and strips the full '<prefix>/api/v1' before forwarding — the backend is root-mapped)
+    # -- Payment Gateway API (protected; strips '<prefix>/api/v1' — backend is root-mapped)
     - path: /api/v1
       port: 8080
       stripPath: true

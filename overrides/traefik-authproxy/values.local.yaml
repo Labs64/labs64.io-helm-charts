@@ -1,6 +1,7 @@
 image:
   repository: localhost:5005/traefik-authproxy
   tag: latest
+  pullPolicy: Always
 
 networkPolicy:
   enabled: true
@@ -17,3 +18,9 @@ env:
     value: /opt/role-mappings
   - name: LOG_LEVEL
     value: DEBUG
+  # Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE.
+  - name: TOKEN_ROLES_CLAIM_PATHS
+    value: "realm_access.roles,resource_access.{audience}.roles"
+  # Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
+  - name: TOKEN_TENANT_CLAIM_PATH
+    value: "tenant"

@@ -273,7 +273,7 @@ gateway:
     stripAuthHeaders: gateway-common-strip-auth-headers
   # -- Routes exposed by this module
   routes:
-    # -- Checkout API (protected; Traefik owns the /api/v1 version prefix and strips the full '<prefix>/api/v1' before forwarding — the backend is root-mapped)
+    # -- Checkout API (protected; strips '<prefix>/api/v1' — backend is root-mapped)
     - path: /api/v1
       port: 8080
       stripPath: true
