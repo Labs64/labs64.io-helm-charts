@@ -387,7 +387,15 @@ urls:
                 # API paths, not directories, and a fabricated trailing slash 404s/500s some of them
                 # (e.g. /auditflow/v3/api-docs works, /auditflow/v3/api-docs/ does not).
                 url = f"http://{host}{path}" if path else f"http://{host}/"
-                gated = any("auth" in mw for mw in middlewares)
+                # Swagger UI is the one exception: it is an app root served under a directory and
+                # only renders with a trailing slash (bare /swagger-ui returns a redirect/blank page).
+                if path.rstrip("/").endswith("swagger-ui"):
+                    url = url.rstrip("/") + "/"
+                # Gated == carries the ForwardAuth gate (gateway-common-auth). Match the gate by its
+                # "-auth" suffix, not a bare "auth" substring: every route — public ones included —
+                # also carries gateway-common-strip-auth-headers, which would otherwise mis-flag
+                # public routes (e.g. the /*/v3/api-docs endpoints) as token-gated.
+                gated = any(mw.endswith("-auth") for mw in middlewares)
                 (gated_urls if gated else open_urls).add(url)
 
     # Always-on local infra not resolvable from IngressRoute alone: the Traefik dashboard route
