@@ -286,7 +286,6 @@ applicationYaml:
         # -- Redis port; default: 6379
         port: 6379
 
-
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
   # -- Publish this module's routes on the Traefik gateway
@@ -336,6 +335,7 @@ gateway:
       port: 8080
       public: true
       stripPrefix: true
+
 # -- PodDisruptionBudget (rendered by chart-libs.pdb)
 podDisruptionBudget:
   enabled: false
