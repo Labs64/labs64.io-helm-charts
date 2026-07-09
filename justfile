@@ -121,17 +121,9 @@ uninstall-tools: uninstall-tool-traefik uninstall-tool-mock-oidc uninstall-tool-
 install-tool-traefik:
     #!/usr/bin/env bash
     set -euo pipefail
-    if helm upgrade --install traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} --create-namespace 2>/dev/null; then
-      EXTRA_ARGS=()
-    else
-      echo "traefik-crds chart failed (likely existing CRDs without Helm tracking) — adopting CRDs and skipping CRD install"
-      for crd in $(kubectl get crd -o name 2>/dev/null | grep traefik || true); do
-        kubectl annotate "$crd" meta.helm.sh/release-name=traefik meta.helm.sh/release-namespace={{NAMESPACE_TOOLS}} --overwrite 2>/dev/null || true
-        kubectl label "$crd" app.kubernetes.io/managed-by=Helm --overwrite 2>/dev/null || true
-      done
-      EXTRA_ARGS=(--skip-crds)
-    fi
-    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait "${EXTRA_ARGS[@]}"
+    echo "Installing Traefik CRDs..."
+    helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
+    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait --skip-crds
 
 # uninstall Traefik
 uninstall-tool-traefik:
