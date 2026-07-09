@@ -35,12 +35,15 @@ up: generate-secrets cluster-create
 cluster-create:
     k3d cluster create --config k3d/labs64io.yaml || true
     k3d kubeconfig merge -d labs64io
-    if [ -f /.dockerenv ]; then sed -i 's/server: https:\/\/0.0.0.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
-    if [ -f /.dockerenv ]; then sed -i 's/server: https:\/\/127.0.0.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
+    if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/0\.0\.0\.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
+    if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/127\.0\.0\.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
 
 # delete the local k3d cluster (and its registry)
 down:
     k3d cluster delete labs64io
+
+# reset the environment (uninstall all apps, monitoring, and tools) without destroying the cluster
+reset: uninstall-all-apps uninstall-monitoring uninstall-tools
 
 # start local environment with monitoring stack
 up-full: up install-monitoring
@@ -116,9 +119,19 @@ uninstall-tools: uninstall-tool-traefik uninstall-tool-mock-oidc uninstall-tool-
 
 # install Traefik
 install-tool-traefik:
-    kubectl create namespace {{NAMESPACE_TOOLS}} --dry-run=client -o yaml | kubectl apply -f -
-    helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
-    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --wait
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if helm upgrade --install traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} --create-namespace 2>/dev/null; then
+      EXTRA_ARGS=()
+    else
+      echo "traefik-crds chart failed (likely existing CRDs without Helm tracking) — adopting CRDs and skipping CRD install"
+      for crd in $(kubectl get crd -o name 2>/dev/null | grep traefik || true); do
+        kubectl annotate "$crd" meta.helm.sh/release-name=traefik meta.helm.sh/release-namespace={{NAMESPACE_TOOLS}} --overwrite 2>/dev/null || true
+        kubectl label "$crd" app.kubernetes.io/managed-by=Helm --overwrite 2>/dev/null || true
+      done
+      EXTRA_ARGS=(--skip-crds)
+    fi
+    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait "${EXTRA_ARGS[@]}"
 
 # uninstall Traefik
 uninstall-tool-traefik:
@@ -128,7 +141,6 @@ uninstall-tool-traefik:
 # install RabbitMQ (official image)
 install-tool-rabbitmq:
 	@echo "Installing RabbitMQ (official image)..."
-	@[ -f overrides/rabbitmq/values.secrets.local.yaml ] || { echo "  No values.secrets.local.yaml — bootstrapping from template (local dev default)"; cp overrides/rabbitmq/values.secrets.local.yaml.example overrides/rabbitmq/values.secrets.local.yaml; }
 	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/values.secrets.local.yaml
 	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq.yaml
 	@echo "Waiting for RabbitMQ to be ready..."
@@ -138,9 +150,8 @@ install-tool-rabbitmq:
 
 # uninstall RabbitMQ
 uninstall-tool-rabbitmq:
-	kubectl delete statefulset rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-	kubectl delete service rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-	kubectl delete secret rabbitmq-secret --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete -f overrides/rabbitmq/rabbitmq.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete -f overrides/rabbitmq/values.secrets.local.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
 	kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
 
 # install PostgreSQL
@@ -148,10 +159,10 @@ install-tool-postgresql:
     helm upgrade --install postgresql bitnami/postgresql \
       --version {{POSTGRESQL_CHART_VERSION}} \
       -f overrides/postgresql/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_TOOLS}} --create-namespace
+      --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
     @echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
-    @echo "postgres password : $$(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgres-password}" | base64 -d 2>/dev/null || kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.postgresql-password}" | base64 -d)"
-    @echo "user password     : $$(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath="{.data.password}" | base64 -d 2>/dev/null || true)"
+    @echo "postgres password : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath='{.data.postgres-password}' | base64 -d 2>/dev/null || kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath='{.data.postgresql-password}' | base64 -d)"
+    @echo "user password     : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath='{.data.password}' | base64 -d 2>/dev/null || true)"
 
 # uninstall PostgreSQL
 uninstall-tool-postgresql:
@@ -159,7 +170,7 @@ uninstall-tool-postgresql:
 
 # install Redis
 install-tool-redis:
-    helm upgrade --install redis bitnami/redis --version {{REDIS_CHART_VERSION}} -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace
+    helm upgrade --install redis bitnami/redis --version {{REDIS_CHART_VERSION}} -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
 
 # uninstall Redis
 uninstall-tool-redis:
@@ -260,6 +271,7 @@ build-images module="all":
 
 # Install required Helm plugins
 helm-tools:
+    @helm plugin install --verify=false https://github.com/databus23/helm-diff 2>/dev/null || true
     @helm plugin install --verify=false https://github.com/dadav/helm-schema 2>/dev/null || true
     @echo "Installed Helm plugins:"
     @helm plugin list
@@ -267,8 +279,8 @@ helm-tools:
 # Generate Helm chart documentation (README.md) for all charts
 generate-docu:
     docker run --rm \
-        --volume "$$(pwd):/helm-docs" \
-        --user "$$(id -u):$$(id -g)" \
+        --volume "$(pwd):/helm-docs" \
+        --user "$(id -u):$(id -g)" \
         jnorwood/helm-docs:{{ HELM_DOCS_VERSION }} \
         --chart-search-root ./charts \
         --log-level warning
@@ -297,18 +309,35 @@ repo-add:
 repo-update: repo-add
     helm repo update
 
-# scaffold helm values for tools (run this only if you need to update original values)
-scaffold-tool-values: repo-update
-    helm show values traefik/traefik > overrides/traefik/values.orig.yaml
-    helm show values traefik/traefik-crds > overrides/traefik/values-crds.orig.yaml
-    helm show values bitnami/postgresql > overrides/postgresql/values.orig.yaml
-    helm show values bitnami/redis > overrides/redis/values.orig.yaml
-    helm show values metrics-server/metrics-server > overrides/metrics-server/values.orig.yaml
-    helm show values open-telemetry/opentelemetry-operator > overrides/opentelemetry/values-operator.orig.yaml
-    helm show values open-telemetry/opentelemetry-collector > overrides/opentelemetry/values-collector.orig.yaml
-    helm show values prometheus-community/kube-prometheus-stack > overrides/prometheus/values.orig.yaml
-    helm show values grafana/tempo > overrides/tempo/values.orig.yaml
-    helm show values grafana/grafana > overrides/grafana/values.orig.yaml
+
+## 🧪 Testing & Debugging ##
+
+# lint all application charts
+lint-all:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for app in {{LABS64IO_APPS}}; do
+        helm lint ./charts/"$app"
+    done
+
+# run helm template for an application locally to inspect output
+template app:
+    helm template labs64io-{{app}} ./charts/{{app}} \
+      --namespace {{NAMESPACE_LABS64IO}} \
+      -f ./charts/{{app}}/values.yaml \
+      -f ./overrides/{{app}}/values.{{ENV}}.yaml
+
+# run helm diff for an application (requires helm-diff plugin)
+diff app:
+    helm diff upgrade labs64io-{{app}} ./charts/{{app}} \
+      --namespace {{NAMESPACE_LABS64IO}} \
+      --allow-unreleased \
+      -f ./charts/{{app}}/values.yaml \
+      -f ./overrides/{{app}}/values.{{ENV}}.yaml
+
+# test an application using helm test
+test app:
+    helm test labs64io-{{app}} --namespace {{NAMESPACE_LABS64IO}}
 
 
 ## 🔧 Utilities & Operations ##
@@ -355,13 +384,13 @@ e2e-auth-test:
     TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
-      --data-urlencode 'scope=admin' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+      --data-urlencode 'scope=admin' | jq -r '.access_token')
     no_token=$(curl -s -o /dev/null -w '%{http_code}' 'http://gateway.localhost/auditflow/api/v1/audit/publish')
     with_token=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" 'http://gateway.localhost/auditflow/api/v1/audit/publish')
     BAD_TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
-      --data-urlencode 'scope=no-access' | python3 -c 'import sys,json; print(json.load(sys.stdin)["access_token"])')
+      --data-urlencode 'scope=no-access' | jq -r '.access_token')
     wrong_scope=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $BAD_TOKEN" 'http://gateway.localhost/auditflow/api/v1/audit/publish')
     echo "no token   -> $no_token (expected 401)"
     echo "with token -> $with_token (expected not 401/403)"
@@ -378,4 +407,4 @@ generate-jwt scope="admin":
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=local-test' \
       --data-urlencode 'client_secret=local-test' \
-      --data-urlencode 'scope={{scope}}'
+      --data-urlencode 'scope={{scope}}' | jq .

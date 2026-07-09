@@ -46,7 +46,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | gateway.entryPoints | list | `["web","websecure"]` | Traefik entry points |
 | gateway.prefix | string | `""` | External path prefix; defaults to /<chart-name> |
 | gateway.routes | list | `[{"path":"/api/v1","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"],"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
-| gateway.routes[0] | object | `{"path":"/api/v1","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"],"stripPath":true}` | Checkout API (protected; Traefik owns the /api/v1 version prefix and strips the full '<prefix>/api/v1' before forwarding — the backend is root-mapped) |
+| gateway.routes[0] | object | `{"path":"/api/v1","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"],"stripPath":true}` | Checkout API (protected; strips '<prefix>/api/v1' — backend is root-mapped) |
 | gateway.routes[1] | object | `{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}` | OpenAPI docs (public, prefix stripped before forwarding) |
 | gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers","stripAuthHeaders":"gateway-common-strip-auth-headers"}` | Names of the shared middlewares provided by the gateway-common chart |
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |
