@@ -1,3 +1,5 @@
+replicaCount: 1
+
 image:
   repository: localhost:5005/traefik-authproxy
   tag: latest
