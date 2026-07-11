@@ -390,6 +390,11 @@ e2e-auth-test:
     [ "$no_token" = "401" ] || { echo "FAIL: expected 401 without token"; exit 1; }
     case "$with_token" in 401|403) echo "FAIL: token rejected"; exit 1;; esac
     [ "$wrong_scope" = "403" ] || { echo "FAIL: expected 403 for wrong-scope token"; exit 1; }
+    # auth-policy discovery is live: ACS table is non-empty and ready
+    ready=$(kubectl exec -n labs64io deploy/labs64io-traefik-authproxy -- \
+      sh -c 'wget -qO- http://localhost:8081/health/ready >/dev/null 2>&1 && echo 200 || echo 000')
+    echo "authproxy ready -> $ready (expected 200)"
+    [ "$ready" = "200" ] || { echo "FAIL: authproxy not ready"; exit 1; }
     echo "e2e auth: OK"
 
 # generate an M2M JWT from the mock OIDC provider (scope: admin|auditflow|ecommerce)

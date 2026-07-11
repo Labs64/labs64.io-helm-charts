@@ -566,7 +566,8 @@ Common causes:
 ### 401/403 on API calls
 
 - Verify token: `just generate-jwt admin`
-- Check role mapping: `kubectl get configmap -n labs64io -l app=traefik-authproxy -o yaml`
+- Check auth-policy discovery: `kubectl get svc -n labs64io -l labs64.io/auth-policy=true` (each module's Service publishes its policy at `/.well-known/auth-policy`, watched by the auth proxy) and `kubectl exec -n labs64io deploy/labs64io-traefik-authproxy -- wget -qO- http://localhost:8081/health/ready`
+- Check static UI policies: `kubectl get configmap -n labs64io -l app.kubernetes.io/name=traefik-authproxy -o yaml` (renders `static_policies.yaml` from `staticPolicies`)
 - Check auth-proxy logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=traefik-authproxy`
 
 ### RabbitMQ connection refused
