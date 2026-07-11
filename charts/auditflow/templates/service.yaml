@@ -4,6 +4,11 @@ metadata:
   name: {{ include "chart-libs.fullname" . }}
   labels:
     {{- include "chart-libs.labels" . | nindent 4 }}
+    {{- with (include "chart-libs.authPolicyLabels" .) }}{{ . | nindent 4 }}{{- end }}
+  {{- with (include "chart-libs.authPolicyAnnotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
 spec:
   type: {{ .Values.service.type }}
   ports:

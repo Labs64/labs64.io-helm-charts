@@ -25,7 +25,7 @@ spec:
   headers:
     customRequestHeaders:
       X-Auth-User: ""
-      X-Auth-Roles: ""
+      X-Auth-Scopes: ""
       X-Auth-Tenant: ""
 ---
 apiVersion: traefik.io/v1alpha1

@@ -81,7 +81,7 @@ Modules need capabilities, not specific tools:
 | auditflow | AMQP 0-9-1 broker |
 | checkout | AMQP 0-9-1 broker; PostgreSQL (db `checkout`, login with CREATE DATABASE for first install) |
 | payment-gateway | AMQP 0-9-1 broker; PostgreSQL (db `payment_gateway`); Redis |
-| gateway stack | any OIDC provider supporting client_credentials; role claims are configurable via `TOKEN_ROLES_CLAIM_PATHS` (default: `realm_access.roles`) |
+| gateway stack | any OIDC provider supporting client_credentials; scope/role claims are configurable via `TOKEN_SCOPES_CLAIM_PATHS` (default: `scope,realm_access.roles,resource_access.{audience}.roles`) |
 
 Reference versions (tested in CI via the bundled subcharts): RabbitMQ chart 16.0.14,
 PostgreSQL chart 18.7.11, Redis chart 27.0.13. For local development, images must be

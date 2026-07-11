@@ -1,6 +1,6 @@
 # payment-gateway
 
-![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
@@ -21,7 +21,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.4 |
+| file://../chart-libs | chart-libs | 0.1.0 |
 | https://charts.bitnami.com/bitnami | postgresql | ^16.0.0 |
 | https://charts.bitnami.com/bitnami | rabbitmq | ^16.0.0 |
 | https://charts.bitnami.com/bitnami | redis | ^20.0.0 |
@@ -45,12 +45,15 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
-| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"","routes":[{"path":"/api/v1","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"],"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/providers","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/checkout-sessions","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/payment-definitions","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers","stripAuthHeaders":"gateway-common-strip-auth-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| gateway | object | `{"authPolicy":{"basePath":"","enabled":true},"enabled":false,"entryPoints":["web","websecure"],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/providers","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/checkout-sessions","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/payment-definitions","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers","stripAuthHeaders":"gateway-common-strip-auth-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy discovery: label+annotations on the Service so the gateway's traefik-authproxy fetches this module's /.well-known/auth-policy and enforces the OpenAPI-declared per-operation policy at the edge. |
+| gateway.authPolicy.basePath | string | `""` | External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1 |
+| gateway.authPolicy.enabled | bool | `true` | Publish this module's auth policy to the gateway ACS |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
 | gateway.entryPoints | list | `["web","websecure"]` | Traefik entry points |
 | gateway.prefix | string | `""` | External path prefix; defaults to /<chart-name> |
-| gateway.routes | list | `[{"path":"/api/v1","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"],"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/providers","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/checkout-sessions","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/payment-definitions","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
-| gateway.routes[0] | object | `{"path":"/api/v1","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"],"stripPath":true}` | Payment Gateway API (protected; strips '<prefix>/api/v1' — backend is root-mapped) |
+| gateway.routes | list | `[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/providers","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/checkout-sessions","port":8080,"public":true,"stripPrefix":true},{"path":"/api/v1/payment-definitions","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
+| gateway.routes[0] | object | `{"path":"/api/v1","port":8080,"stripPath":true}` | Payment Gateway API (protected; strips '<prefix>/api/v1' — backend is root-mapped) |
 | gateway.routes[1] | object | `{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}` | OpenAPI docs (public, prefix stripped before forwarding) |
 | gateway.routes[2] | object | `{"path":"/api/v1/providers","port":8080,"public":true,"stripPrefix":true}` | PSP webhooks + provider checkout return/cancel redirects (public — PSP servers and browsers cannot carry a JWT; authenticity is enforced by PSP signature checks and the backend's own public-path allowlist) |
 | gateway.routes[3] | object | `{"path":"/api/v1/checkout-sessions","port":8080,"public":true,"stripPrefix":true}` | Checkout-session confirmation redirect target (public, same rationale) |

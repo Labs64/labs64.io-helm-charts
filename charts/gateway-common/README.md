@@ -1,6 +1,6 @@
 # gateway-common
 
-![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.0.4](https://img.shields.io/badge/Version-0.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, security headers)
 
@@ -26,9 +26,9 @@ Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, s
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Roles","X-Auth-Tenant","X-Request-ID"],"port":8081,"serviceName":"labs64io-traefik-authproxy","trustForwardHeader":true}` | ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy) |
+| authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"],"port":8081,"serviceName":"labs64io-traefik-authproxy","trustForwardHeader":true}` | ForwardAuth middleware configuration (OIDC/JWT validation via traefik-authproxy) |
 | authProxy.address | string | `""` | Full URL override for the traefik-authproxy /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth |
-| authProxy.authResponseHeaders | list | `["X-Auth-User","X-Auth-Roles","X-Auth-Tenant","X-Request-ID"]` | Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through) |
+| authProxy.authResponseHeaders | list | `["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"]` | Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through) |
 | authProxy.port | int | `8081` | Service port of the traefik-authproxy release |
 | authProxy.serviceName | string | `"labs64io-traefik-authproxy"` | Service name of the traefik-authproxy release |
 | authProxy.trustForwardHeader | bool | `true` | Trust X-Forwarded-* headers from the proxy |

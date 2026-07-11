@@ -167,27 +167,11 @@
                     "default": 8080,
                     "title": "port",
                     "type": "integer"
-                  },
-                  "roles": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "roles",
-                    "type": "array"
                   }
                 },
                 "required": [
                   "path",
-                  "port",
-                  "roles"
+                  "port"
                 ],
                 "type": "object"
               }

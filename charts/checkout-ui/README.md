@@ -1,6 +1,6 @@
 # checkout-ui
 
-![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform, built with Vite and Vue 3. Provides a responsive and customizable user experience for digital commerce workflows.
 
@@ -21,7 +21,7 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.4 |
+| file://../chart-libs | chart-libs | 0.1.0 |
 
 ## Values
 
@@ -37,12 +37,12 @@ Labs64.IO :: Checkout UI – Frontend Interface for the Labs64 Checkout Platform
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
-| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"/checkout","routes":[{"path":"","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers","stripAuthHeaders":"gateway-common-strip-auth-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| gateway | object | `{"enabled":false,"entryPoints":["web","websecure"],"prefix":"/checkout","routes":[{"path":"","port":8080}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers","stripAuthHeaders":"gateway-common-strip-auth-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
 | gateway.entryPoints | list | `["web","websecure"]` | Traefik entry points |
 | gateway.prefix | string | `"/checkout"` | External path prefix; checkout-ui serves under /checkout |
-| gateway.routes | list | `[{"path":"","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}]` | Routes exposed by this module |
-| gateway.routes[0] | object | `{"path":"","port":8080,"roles":["admin-role","ecommerce-role","default-roles-labs64io"]}` | Checkout UI (protected) |
+| gateway.routes | list | `[{"path":"","port":8080}]` | Routes exposed by this module |
+| gateway.routes[0] | object | `{"path":"","port":8080}` | Checkout UI (protected) |
 | gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers","stripAuthHeaders":"gateway-common-strip-auth-headers"}` | Names of the shared middlewares provided by the gateway-common chart |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/checkout-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |

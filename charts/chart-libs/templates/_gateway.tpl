@@ -11,8 +11,7 @@ Usage: {{ include "chart-libs.gatewayHost" . }}
 {{- end }}
 
 {{/*
-Module-owned gateway routes: IngressRoute + strip-prefix Middleware +
-role-mapping ConfigMap fragment for the traefik-authproxy sidecar.
+Module-owned gateway routes: IngressRoute + strip-prefix Middleware.
 Usage (wrapper template in the module chart):
 {{ include "chart-libs.gateway-routes" . }}
 */}}
@@ -79,18 +78,37 @@ spec:
       - {{ . }}
       {{- end }}
 {{- end }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ $fullname }}-role-mapping-fragment
+{{- end }}
+{{- end }}
+
+{{/*
+Auth-policy discovery metadata for the module Service. The traefik-authproxy
+watches Services carrying the label and fetches
+http://<svc>.<ns>:<port>/.well-known/auth-policy, prefixing every OpenAPI
+route with the base-path annotation.
+Usage in a module chart's service.yaml:
   labels:
     {{- include "chart-libs.labels" . | nindent 4 }}
-    labs64.io/role-mapping: "true"
-data:
-  {{ $fullname }}.yaml: |
-    {{- range $route := .Values.gateway.routes }}
-    {{ $prefix }}{{ $route.path }}: {{ default (list) $route.roles | toJson }}
-    {{- end }}
+    {{- with (include "chart-libs.authPolicyLabels" .) }}{{ . | nindent 4 }}{{- end }}
+  {{- with (include "chart-libs.authPolicyAnnotations" .) }}
+  annotations:
+    {{- . | nindent 4 }}
+  {{- end }}
+*/}}
+{{- define "chart-libs.authPolicyEnabled" -}}
+{{- if and .Values.gateway .Values.gateway.enabled .Values.gateway.authPolicy .Values.gateway.authPolicy.enabled -}}true{{- end -}}
+{{- end }}
+
+{{- define "chart-libs.authPolicyLabels" -}}
+{{- if include "chart-libs.authPolicyEnabled" . }}
+labs64.io/auth-policy: "true"
+{{- end }}
+{{- end }}
+
+{{- define "chart-libs.authPolicyAnnotations" -}}
+{{- if include "chart-libs.authPolicyEnabled" . }}
+{{- $prefix := .Values.gateway.prefix | default (printf "/%s" .Chart.Name) }}
+labs64.io/auth-policy-base-path: {{ .Values.gateway.authPolicy.basePath | default (printf "%s/api/v1" $prefix) | quote }}
+labs64.io/auth-policy-port: {{ .Values.service.port | quote }}
 {{- end }}
 {{- end }}

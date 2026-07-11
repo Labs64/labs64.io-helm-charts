@@ -96,26 +96,6 @@
             "additionalProperties": false,
             "properties": {
               "name": {
-                "default": "ROLE_MAPPING_FILE",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "/opt/application-config/role_mapping.yaml",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
                 "default": "LOG_LEVEL",
                 "title": "name",
                 "type": "string"
@@ -136,32 +116,12 @@
             "additionalProperties": false,
             "properties": {
               "name": {
-                "default": "ROLE_MAPPING_DIR",
+                "default": "TOKEN_SCOPES_CLAIM_PATHS",
                 "title": "name",
                 "type": "string"
               },
               "value": {
-                "default": "/opt/role-mappings",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "TOKEN_ROLES_CLAIM_PATHS",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "realm_access.roles,resource_access.{audience}.roles",
+                "default": "scope,realm_access.roles,resource_access.{audience}.roles",
                 "title": "value",
                 "type": "string"
               }
@@ -189,6 +149,86 @@
             "required": [
               "name",
               "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "STATIC_POLICY_FILE",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "/opt/application-config/static_policies.yaml",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "POLICY_REFRESH_INTERVAL",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "30",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "POD_NAMESPACE",
+                "title": "name",
+                "type": "string"
+              },
+              "valueFrom": {
+                "additionalProperties": false,
+                "properties": {
+                  "fieldRef": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "fieldPath": {
+                        "default": "metadata.namespace",
+                        "title": "fieldPath",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "fieldPath"
+                    ],
+                    "title": "fieldRef",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "fieldRef"
+                ],
+                "title": "valueFrom",
+                "type": "object"
+              }
+            },
+            "required": [
+              "name",
+              "valueFrom"
             ],
             "type": "object"
           }
@@ -409,7 +449,7 @@
           "additionalProperties": false,
           "properties": {
             "path": {
-              "default": "/docs",
+              "default": "/health",
               "title": "path",
               "type": "string"
             },
@@ -564,7 +604,7 @@
     },
     "rbac": {
       "additionalProperties": false,
-      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)\nThe role-mapping sidecar needs to watch ConfigMaps in the release namespace.",
+      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)\nThe auth proxy watches Services labeled labs64.io/auth-policy=true for policy discovery.",
       "properties": {
         "create": {
           "default": true,
@@ -654,7 +694,7 @@
           "additionalProperties": false,
           "properties": {
             "path": {
-              "default": "/docs",
+              "default": "/health/ready",
               "title": "path",
               "type": "string"
             },
@@ -756,134 +796,69 @@
       "title": "resources",
       "type": "object"
     },
-    "roleMapping": {
-      "additionalProperties": true,
-      "description": "Static base role mappings (rarely needed). Real path→role mappings are\nowned by the module charts: each publishes a role-mapping ConfigMap fragment\n(label labs64.io/role-mapping=true, rendered by chart-libs.gateway-routes)\nthat the sidecar merges on top of this base. Forwarded URIs are always\nmodule-prefixed (e.g. /checkout/api/v1), so entries here must be too —\nunprefixed paths like /v3/api-docs never match and are dead configuration.\nPaths with no roles, an empty list, or [\"public\"] are treated as public.",
-      "required": [],
-      "title": "roleMapping",
-      "type": "object"
-    },
-    "roleMappingSidecar": {
+    "securityContext": {
       "additionalProperties": false,
-      "description": "Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true)",
       "properties": {
-        "enabled": {
-          "default": true,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "folder": {
-          "default": "/opt/role-mappings",
-          "description": "Directory (shared emptyDir) the fragments are written to",
-          "title": "folder",
-          "type": "string"
-        },
-        "image": {
+        "capabilities": {
           "additionalProperties": false,
           "properties": {
-            "pullPolicy": {
-              "default": "IfNotPresent",
-              "title": "pullPolicy",
-              "type": "string"
-            },
-            "repository": {
-              "default": "kiwigrid/k8s-sidecar",
-              "title": "repository",
-              "type": "string"
-            },
-            "tag": {
-              "default": "1.30.0",
-              "title": "tag",
-              "type": "string"
+            "drop": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "drop",
+              "type": "array"
             }
           },
           "required": [
-            "repository",
-            "tag",
-            "pullPolicy"
+            "drop"
           ],
-          "title": "image",
+          "title": "capabilities",
           "type": "object"
         },
-        "label": {
-          "default": "labs64.io/role-mapping",
-          "description": "ConfigMap label to watch",
-          "title": "label",
-          "type": "string"
+        "runAsGroup": {
+          "default": 1064,
+          "title": "runAsGroup",
+          "type": "integer"
         },
-        "labelValue": {
-          "default": "true",
-          "title": "labelValue",
-          "type": "string"
+        "runAsNonRoot": {
+          "default": true,
+          "title": "runAsNonRoot",
+          "type": "boolean"
         },
-        "resources": {
+        "runAsUser": {
+          "default": 1064,
+          "title": "runAsUser",
+          "type": "integer"
+        },
+        "seccompProfile": {
           "additionalProperties": false,
           "properties": {
-            "limits": {
-              "additionalProperties": false,
-              "properties": {
-                "cpu": {
-                  "default": "50m",
-                  "title": "cpu",
-                  "type": "string"
-                },
-                "memory": {
-                  "default": "128Mi",
-                  "title": "memory",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "cpu",
-                "memory"
-              ],
-              "title": "limits",
-              "type": "object"
-            },
-            "requests": {
-              "additionalProperties": false,
-              "properties": {
-                "cpu": {
-                  "default": "10m",
-                  "title": "cpu",
-                  "type": "string"
-                },
-                "memory": {
-                  "default": "32Mi",
-                  "title": "memory",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "cpu",
-                "memory"
-              ],
-              "title": "requests",
-              "type": "object"
+            "type": {
+              "default": "RuntimeDefault",
+              "title": "type",
+              "type": "string"
             }
           },
           "required": [
-            "requests",
-            "limits"
+            "type"
           ],
-          "title": "resources",
+          "title": "seccompProfile",
           "type": "object"
         }
       },
       "required": [
-        "enabled",
-        "image",
-        "folder",
-        "label",
-        "labelValue",
-        "resources"
+        "capabilities",
+        "runAsNonRoot",
+        "runAsUser",
+        "runAsGroup",
+        "seccompProfile"
       ],
-      "title": "roleMappingSidecar",
-      "type": "object"
-    },
-    "securityContext": {
-      "additionalProperties": false,
-      "required": [],
       "title": "securityContext",
       "type": "object"
     },
@@ -963,7 +938,7 @@
           "additionalProperties": false,
           "properties": {
             "path": {
-              "default": "/docs",
+              "default": "/health/ready",
               "title": "path",
               "type": "string"
             },
@@ -999,6 +974,76 @@
       ],
       "title": "startupProbe",
       "type": "object"
+    },
+    "staticPolicies": {
+      "description": "Static prefix policies for gateway surfaces without an OpenAPI spec\n(UI bundles). Longest prefix wins; consulted only when no module\nauth-policy route matches. Scope check is any-overlap with the token's\nTOKEN_SCOPES_CLAIM_PATHS claims.",
+      "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "default": "/checkout-ui",
+                "title": "path",
+                "type": "string"
+              },
+              "scopes": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "required": []
+                },
+                "title": "scopes",
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "scopes"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "default": "/customer-portal-ui",
+                "title": "path",
+                "type": "string"
+              },
+              "scopes": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "required": []
+                },
+                "title": "scopes",
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "scopes"
+            ],
+            "type": "object"
+          }
+        ],
+        "required": []
+      },
+      "title": "staticPolicies",
+      "type": "array"
     },
     "terminationGracePeriodSeconds": {
       "default": 45,
@@ -1059,7 +1104,7 @@
     "tolerations",
     "affinity",
     "env",
-    "roleMappingSidecar",
+    "staticPolicies",
     "podDisruptionBudget",
     "networkPolicy"
   ],
