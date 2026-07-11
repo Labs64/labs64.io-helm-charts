@@ -271,16 +271,20 @@ gateway:
     securityHeaders: gateway-common-security-headers
     compress: gateway-common-compress
     stripAuthHeaders: gateway-common-strip-auth-headers
+  # -- Auth-policy discovery: label+annotations on the Service so the gateway's
+  # traefik-authproxy fetches this module's /.well-known/auth-policy and
+  # enforces the OpenAPI-declared per-operation policy at the edge.
+  authPolicy:
+    # -- Publish this module's auth policy to the gateway ACS
+    enabled: true
+    # -- External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1
+    basePath: ""
   # -- Routes exposed by this module
   routes:
     # -- Checkout API (protected; strips '<prefix>/api/v1' — backend is root-mapped)
     - path: /api/v1
       port: 8080
       stripPath: true
-      roles:
-        - admin-role
-        - ecommerce-role
-        - default-roles-labs64io
     # -- OpenAPI docs (public, prefix stripped before forwarding)
     - path: /v3/api-docs
       port: 8080

@@ -183,9 +183,6 @@ gateway:
     # -- Customer Portal UI (protected)
     - path: ""
       port: 8080
-      roles:
-        - admin-role
-        - default-roles-labs64io
 # -- PodDisruptionBudget (rendered by chart-libs.pdb)
 podDisruptionBudget:
   enabled: false

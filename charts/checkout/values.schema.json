@@ -129,6 +129,30 @@
       "additionalProperties": false,
       "description": "Gateway routes published by this module (rendered by chart-libs.gateway-routes)",
       "properties": {
+        "authPolicy": {
+          "additionalProperties": false,
+          "description": "Auth-policy discovery: label+annotations on the Service so the gateway's\ntraefik-authproxy fetches this module's /.well-known/auth-policy and\nenforces the OpenAPI-declared per-operation policy at the edge.",
+          "properties": {
+            "basePath": {
+              "default": "",
+              "description": "External base path prepended to the module's OpenAPI paths; defaults to \u003cprefix\u003e/api/v1",
+              "title": "basePath",
+              "type": "string"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Publish this module's auth policy to the gateway ACS",
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "basePath"
+          ],
+          "title": "authPolicy",
+          "type": "object"
+        },
         "enabled": {
           "default": false,
           "description": "Publish this module's routes on the Traefik gateway",
@@ -174,24 +198,6 @@
                     "title": "port",
                     "type": "integer"
                   },
-                  "roles": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "roles",
-                    "type": "array"
-                  },
                   "stripPath": {
                     "default": true,
                     "title": "stripPath",
@@ -201,53 +207,7 @@
                 "required": [
                   "path",
                   "port",
-                  "stripPath",
-                  "roles"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "default": "/api/v1",
-                    "title": "path",
-                    "type": "string"
-                  },
-                  "port": {
-                    "default": 8080,
-                    "title": "port",
-                    "type": "integer"
-                  },
-                  "roles": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "roles",
-                    "type": "array"
-                  },
-                  "stripPrefix": {
-                    "default": true,
-                    "title": "stripPrefix",
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "path",
-                  "port",
-                  "stripPrefix",
-                  "roles"
+                  "stripPath"
                 ],
                 "type": "object"
               },
@@ -335,6 +295,7 @@
         "prefix",
         "entryPoints",
         "sharedMiddlewares",
+        "authPolicy",
         "routes"
       ],
       "title": "gateway",
