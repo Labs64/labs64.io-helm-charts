@@ -208,15 +208,14 @@ env:
 # (UI bundles). Longest prefix wins; consulted only when no module
 # auth-policy route matches. Scope check is any-overlap with the token's
 # TOKEN_SCOPES_CLAIM_PATHS claims.
+# TODO: remove after the corresponding modules will be using OpenAPI
 staticPolicies:
-  - path: /checkout-ui
+  - path: /checkout
     scopes:
-      - admin-role
-      - ecommerce-role
-  - path: /customer-portal-ui
+      - checkout-role
+  - path: /customer-portal
     scopes:
-      - admin-role
-      - default-roles-labs64io
+       - customer-portal-role
 
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema
