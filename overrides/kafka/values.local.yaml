@@ -11,5 +11,4 @@ sasl:
   client:
     users:
       - labs64
-    passwords: "labs64pw"
-  existingSecret: ""
+  existingSecret: "kafka-secret"
