@@ -12,15 +12,13 @@ env:
     value: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
   - name: OIDC_AUDIENCE
     value: account
-  - name: ROLE_MAPPING_FILE
-    value: /opt/application-config/role_mapping.yaml
-  - name: ROLE_MAPPING_DIR
-    value: /opt/role-mappings
   - name: LOG_LEVEL
     value: DEBUG
-  # Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE.
-  - name: TOKEN_ROLES_CLAIM_PATHS
-    value: "realm_access.roles,resource_access.{audience}.roles"
+  # Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to OIDC_AUDIENCE.
+  - name: TOKEN_SCOPES_CLAIM_PATHS
+    value: "scope,realm_access.roles,resource_access.{audience}.roles"
   # Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
   - name: TOKEN_TENANT_CLAIM_PATH
     value: "tenant"
+  - name: STATIC_POLICY_FILE
+    value: /opt/application-config/static_policies.yaml

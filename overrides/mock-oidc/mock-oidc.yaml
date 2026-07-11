@@ -25,6 +25,7 @@ data:
                 "sub": "svc:auditflow-client",
                 "tenant": "t_mock",
                 "aud": ["account"],
+                "scope": "audit-event:write",
                 "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
               }
             },
@@ -35,6 +36,7 @@ data:
                 "sub": "svc:ecommerce-client",
                 "tenant": "t_mock",
                 "aud": ["account"],
+                "scope": "customer:read customer:write purchase-order:read purchase-order:write purchase-order:checkout checkout-transaction:read payment:read payment:write payment:pay payment-provider:read payment-transaction:read",
                 "realm_access": { "roles": ["ecommerce-role", "default-roles-labs64io"] }
               }
             },
@@ -54,6 +56,7 @@ data:
                 "sub": "svc:admin-client",
                 "tenant": "t_mock",
                 "aud": ["account"],
+                "scope": "audit-event:write customer:read customer:write purchase-order:read purchase-order:write purchase-order:checkout checkout-transaction:read payment:read payment:write payment:pay payment-provider:read payment-provider:write payment-transaction:read",
                 "realm_access": { "roles": ["admin-role", "default-roles-labs64io"] }
               }
             }

@@ -33,38 +33,6 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.roleMappingSidecar.enabled }}
-      initContainers:
-        # One-shot fetch of the role-mapping ConfigMap fragments into the shared volume
-        # BEFORE the auth proxy starts, so it loads a complete mapping on first import.
-        # Without this, the main container can pass its readiness probe (which only hits
-        # the always-available /docs) and start receiving traffic before the live sidecar
-        # below has finished its first sync + POST /reload — causing transient fail-closed
-        # 403s on every rollout. The live sidecar still handles subsequent hot updates.
-        - name: role-mapping-init
-          image: "{{ .Values.roleMappingSidecar.image.repository }}:{{ .Values.roleMappingSidecar.image.tag }}"
-          imagePullPolicy: {{ .Values.roleMappingSidecar.image.pullPolicy }}
-          env:
-            - name: METHOD
-              value: LIST
-            - name: LABEL
-              value: {{ .Values.roleMappingSidecar.label | quote }}
-            - name: LABEL_VALUE
-              value: {{ .Values.roleMappingSidecar.labelValue | quote }}
-            - name: FOLDER
-              value: {{ .Values.roleMappingSidecar.folder | quote }}
-            - name: RESOURCE
-              value: configmap
-            - name: NAMESPACE
-              value: {{ .Release.Namespace | quote }}
-          {{- with .Values.roleMappingSidecar.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: role-mapping-fragments
-              mountPath: {{ .Values.roleMappingSidecar.folder }}
-      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           {{- with .Values.securityContext }}
@@ -102,52 +70,16 @@ spec:
             - secretRef:
                 name: {{ include "chart-libs.fullname" . }}
           volumeMounts:
-            - name: role-mapping
+            - name: static-policies
               mountPath: /opt/application-config
               readOnly: true
-          {{- if .Values.roleMappingSidecar.enabled }}
-            - name: role-mapping-fragments
-              mountPath: {{ .Values.roleMappingSidecar.folder }}
-              readOnly: true
-          {{- end }}
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- if .Values.roleMappingSidecar.enabled }}
-        - name: role-mapping-sidecar
-          image: "{{ .Values.roleMappingSidecar.image.repository }}:{{ .Values.roleMappingSidecar.image.tag }}"
-          imagePullPolicy: {{ .Values.roleMappingSidecar.image.pullPolicy }}
-          env:
-            - name: LABEL
-              value: {{ .Values.roleMappingSidecar.label | quote }}
-            - name: LABEL_VALUE
-              value: {{ .Values.roleMappingSidecar.labelValue | quote }}
-            - name: FOLDER
-              value: {{ .Values.roleMappingSidecar.folder | quote }}
-            - name: RESOURCE
-              value: configmap
-            - name: NAMESPACE
-              value: {{ .Release.Namespace | quote }}
-            - name: REQ_URL
-              value: "http://localhost:{{ .Values.service.port }}/reload"
-            - name: REQ_METHOD
-              value: POST
-          {{- with .Values.roleMappingSidecar.resources }}
-          resources:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          volumeMounts:
-            - name: role-mapping-fragments
-              mountPath: {{ .Values.roleMappingSidecar.folder }}
-        {{- end }}
       volumes:
-        - name: role-mapping
+        - name: static-policies
           configMap:
-            name: {{ include "chart-libs.fullname" . }}-role-mapping
-        {{- if .Values.roleMappingSidecar.enabled }}
-        - name: role-mapping-fragments
-          emptyDir: {}
-        {{- end }}
+            name: {{ include "chart-libs.fullname" . }}-static-policies
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

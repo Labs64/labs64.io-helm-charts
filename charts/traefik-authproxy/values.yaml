@@ -29,12 +29,12 @@ serviceAccount:
   name: ""
 
 # RBAC configuration (create RBAC resources: Role, RoleBinding)
-# The role-mapping sidecar needs to watch ConfigMaps in the release namespace.
+# The auth proxy watches Services labeled labs64.io/auth-policy=true for policy discovery.
 rbac:
   create: true
   rules:
     - apiGroups: [""]
-      resources: ["configmaps"]
+      resources: ["services"]
       verbs: ["get", "list", "watch"]
 
 # -- This is for setting Kubernetes Annotations to a Pod.
@@ -101,7 +101,7 @@ resources:
 # -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
   httpGet:
-    path: /docs
+    path: /health
     port: 8081
   initialDelaySeconds: 30
   periodSeconds: 10
@@ -111,7 +111,7 @@ livenessProbe:
 # -- This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 readinessProbe:
   httpGet:
-    path: /docs
+    path: /health/ready
     port: 8081
   initialDelaySeconds: 10
   periodSeconds: 5
@@ -122,7 +122,7 @@ readinessProbe:
 # liveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds.
 startupProbe:
   httpGet:
-    path: /docs
+    path: /health/ready
     port: 8081
   failureThreshold: 20
   periodSeconds: 3
@@ -180,37 +180,41 @@ env:
   # -- Audience for the auth proxy.
   - name: OIDC_AUDIENCE
     value: account
-  # -- Path to the role mapping file for the auth proxy.
-  - name: ROLE_MAPPING_FILE
-    value: /opt/application-config/role_mapping.yaml
   # -- Log level for the auth proxy.
   - name: LOG_LEVEL
     value: INFO
-  # -- Directory with per-module role-mapping fragments (populated by the k8s-sidecar)
-  - name: ROLE_MAPPING_DIR
-    value: /opt/role-mappings
-  # -- Dot-paths (comma-separated) to collect roles from the JWT; "{audience}" expands to OIDC_AUDIENCE.
-  # Default: realm_access.roles,resource_access.{audience}.roles.
-  - name: TOKEN_ROLES_CLAIM_PATHS
-    value: "realm_access.roles,resource_access.{audience}.roles"
+  # -- Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to OIDC_AUDIENCE.
+  # Default: scope,realm_access.roles,resource_access.{audience}.roles.
+  - name: TOKEN_SCOPES_CLAIM_PATHS
+    value: "scope,realm_access.roles,resource_access.{audience}.roles"
   # -- Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
   - name: TOKEN_TENANT_CLAIM_PATH
     value: "tenant"
+  # -- Static prefix policies file (rendered from .Values.staticPolicies)
+  - name: STATIC_POLICY_FILE
+    value: /opt/application-config/static_policies.yaml
+  # -- Periodic auth-policy re-fetch interval (seconds); the Service watch
+  # triggers immediate refreshes, this is the belt-and-suspenders floor.
+  - name: POLICY_REFRESH_INTERVAL
+    value: "30"
+  - name: POD_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
 
-# -- Static base role mappings (rarely needed). Real path→role mappings are
-# owned by the module charts: each publishes a role-mapping ConfigMap fragment
-# (label labs64.io/role-mapping=true, rendered by chart-libs.gateway-routes)
-# that the sidecar merges on top of this base. Forwarded URIs are always
-# module-prefixed (e.g. /checkout/api/v1), so entries here must be too —
-# unprefixed paths like /v3/api-docs never match and are dead configuration.
-# Paths with no roles, an empty list, or ["public"] are treated as public.
-# @schema
-# type: object
-# additionalProperties: true
-# @schema
-roleMapping: {}
-  # /custom/path:
-  #   - <role-name-1>
+# -- Static prefix policies for gateway surfaces without an OpenAPI spec
+# (UI bundles). Longest prefix wins; consulted only when no module
+# auth-policy route matches. Scope check is any-overlap with the token's
+# TOKEN_SCOPES_CLAIM_PATHS claims.
+staticPolicies:
+  - path: /checkout-ui
+    scopes:
+      - admin-role
+      - ecommerce-role
+  - path: /customer-portal-ui
+    scopes:
+      - admin-role
+      - default-roles-labs64io
 
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema
@@ -218,26 +222,6 @@ roleMapping: {}
 # additionalProperties: true
 # @schema
 chart-libs: {}
-
-# -- Sidecar that collects per-module role-mapping ConfigMap fragments (label labs64.io/role-mapping=true)
-roleMappingSidecar:
-  enabled: true
-  image:
-    repository: kiwigrid/k8s-sidecar
-    tag: "1.30.0"
-    pullPolicy: IfNotPresent
-  # -- Directory (shared emptyDir) the fragments are written to
-  folder: /opt/role-mappings
-  # -- ConfigMap label to watch
-  label: labs64.io/role-mapping
-  labelValue: "true"
-  resources:
-    requests:
-      cpu: 10m
-      memory: 32Mi
-    limits:
-      cpu: 50m
-      memory: 128Mi
 
 # -- PodDisruptionBudget (rendered by chart-libs.pdb)
 podDisruptionBudget:
