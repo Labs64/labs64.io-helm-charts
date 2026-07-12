@@ -128,7 +128,7 @@ config:
       tls:
         insecure: true
     otlphttp/loki:
-      endpoint: "http://loki.monitoring.svc.cluster.local:3100/otlp/v1/logs"
+      endpoint: "http://loki.monitoring.svc.cluster.local:3100/otlp"
       tls:
         insecure: true
 
