@@ -144,7 +144,7 @@ observability:
   # -- Enable runtime auto-instrumentation (traces + logs + metrics via OTLP)
   enabled: false
   # -- OTLP endpoint of the OpenTelemetry Collector
-  otlpEndpoint: "http://otel-collector:4318"
+  otlpEndpoint: "http://$(NODE_IP):4318"
 
 # -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:

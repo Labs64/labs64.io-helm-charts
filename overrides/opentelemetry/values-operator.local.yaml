@@ -40,7 +40,7 @@ manager:
   # Prefixing a gate with '+' or no prefix will enable support.
   # A full list of valid identifiers can be found here: https://github.com/open-telemetry/opentelemetry-operator/blob/main/pkg/featuregate/featuregate.go
   # NOTE: the featureGates value is deprecated and will be replaced by featureGatesMap in the future.
-  featureGates: ""
+  # NOTE: the featureGates value is deprecated and will be replaced by featureGatesMap in the future.
   # The featureGatesMap will enable or disable specific feature gates in the operator as well as deploy any prerequisites for the feature gate.
   # If this property is not an empty map, the featureGates property will be ignored.
   featureGatesMap: {}
@@ -69,7 +69,6 @@ manager:
   ## e.g ENV_VAR: env_value
   env:
     ENABLE_WEBHOOKS: "true"
-
 
   # Extra definitions of environment variables.
   extraEnvs: []
@@ -177,38 +176,7 @@ manager:
     seccompProfile:
       type: RuntimeDefault
 
-## Provide OpenTelemetry Operator kube-rbac-proxy container image.
-##
-kubeRBACProxy:
-  enabled: true
-  image:
-    repository: quay.io/brancz/kube-rbac-proxy
-    tag: v0.19.1
-  ports:
-    proxyPort: 8443
-  resources: {}
-  # resources:
-  #   limits:
-  #     cpu: 500m
-  #     memory: 128Mi
-  #   requests:
-  #     cpu: 5m
-  #     memory: 64Mi
 
-  ## List of additional cli arguments to configure the kube-rbac-proxy
-  ## for example: --tls-cipher-suites, --tls-min-version, etc.
-  extraArgs: []
-
-  ## Container specific securityContext
-  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-  securityContext:
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop:
-        - ALL
-    runAsNonRoot: true
-    seccompProfile:
-      type: RuntimeDefault
 
 ## Admission webhooks make sure only requests with correctly formatted rules will get into the Operator.
 ## They also enable the sidecar injection for OpenTelemetryCollector and Instrumentation CR's
@@ -239,7 +207,7 @@ admissionWebhooks:
   ## TLS Certificate Option 1: Use certManager to generate self-signed certificate.
   ## certManager must be enabled. If enabled, always takes precedence over options 2 and 3.
   certManager:
-    enabled: true
+    enabled: false
     ## Provide the issuer kind and name to do the cert auth job.
     ## By default, OpenTelemetry Operator will use self-signer issuer.
     issuerRef: {}
@@ -352,4 +320,3 @@ testFramework:
   #   requests:
   #     cpu: 10m
   #     memory: 64Mi
-

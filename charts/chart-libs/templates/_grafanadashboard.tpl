@@ -4,7 +4,8 @@ Generated if `.Values.slo.enabled` is true.
 */}}
 {{- define "chart-libs.slo.grafanadashboard" -}}
 {{- if and .Values.slo .Values.slo.enabled }}
-{{- $svc := include "chart-libs.name" . }}
+{{- /* Match the collector's "<namespace>/<service.name>" job label (see _prometheusrule.tpl). */ -}}
+{{- $svc := printf "%s/%s" .Release.Namespace (include "chart-libs.name" .) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -19,6 +19,10 @@ spec:
     metadata:
       labels:
         app: rabbitmq
+        # Standard k8s label so module egress NetworkPolicies (which target
+        # app.kubernetes.io/name, matching the Bitnami postgres/redis convention)
+        # can select RabbitMQ. `app: rabbitmq` is kept for the StatefulSet/Service selector.
+        app.kubernetes.io/name: rabbitmq
     spec:
       containers:
       - name: rabbitmq

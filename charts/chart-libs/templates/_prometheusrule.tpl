@@ -9,8 +9,15 @@ rules use `sum by (job)` so the recorded series keep the `job` label the
 Grafana dashboard filters on.
 */}}
 {{- define "chart-libs.slo.prometheusrule" -}}
-{{- if and .Values.slo .Values.slo.enabled }}
-{{- $svc := include "chart-libs.name" . }}
+{{- /* Only render when SLOs are enabled AND the PrometheusRule CRD exists, so
+       installing apps before the monitoring stack (e.g. `just up`) never fails
+       on an unknown kind. */ -}}
+{{- if and .Values.slo .Values.slo.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/PrometheusRule") }}
+{{- /* The OTel Collector's prometheusremotewrite exporter emits `job` as
+       "<namespace>/<service.name>", so the SLO selector must match that form.
+       chart-libs.name == the pod's app.kubernetes.io/name (relabeled to the
+       service part by the collector's kubernetes-pods scrape). */ -}}
+{{- $svc := printf "%s/%s" .Release.Namespace (include "chart-libs.name" .) }}
 {{- $le := .Values.slo.latency.thresholdSeconds | default "0.5" }}
 {{- $availTarget := .Values.slo.availability.targetRatio | default "0.999" }}
 {{- $latTarget := .Values.slo.latency.targetRatio | default "0.99" }}

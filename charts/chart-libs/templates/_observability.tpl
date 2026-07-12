@@ -30,6 +30,12 @@ Usage inside a container's env: list:
 */}}
 {{- define "chart-libs.observability.javaEnv" -}}
 {{- if and .Values.observability .Values.observability.enabled }}
+# Node IP for node-local OTLP export to the OTel Collector DaemonSet (hostPort).
+# Referenced as $(NODE_IP) by the endpoint below — must be defined before it.
+- name: NODE_IP
+  valueFrom:
+    fieldRef:
+      fieldPath: status.hostIP
 - name: JAVA_TOOL_OPTIONS
   value: "-javaagent:/otel/opentelemetry-javaagent.jar"
 - name: OTEL_SERVICE_NAME
@@ -52,6 +58,12 @@ Usage inside a container's env: list:
 */}}
 {{- define "chart-libs.observability.pythonEnv" -}}
 {{- if and .Values.observability .Values.observability.enabled }}
+# Node IP for node-local OTLP export to the OTel Collector DaemonSet (hostPort).
+# Referenced as $(NODE_IP) by the endpoint below — must be defined before it.
+- name: NODE_IP
+  valueFrom:
+    fieldRef:
+      fieldPath: status.hostIP
 - name: OTEL_SERVICE_NAME
   value: {{ include "chart-libs.fullname" . }}
 - name: OTEL_EXPORTER_OTLP_ENDPOINT

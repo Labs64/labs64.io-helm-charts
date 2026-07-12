@@ -38,35 +38,46 @@ config:
     prometheus:
       config:
         scrape_configs:
-          - job_name: 'kubernetes-pods'
+          - job_name: "kubernetes-pods"
             kubernetes_sd_configs:
               - role: pod
             relabel_configs:
               # Only scrape pods that opt in via the prometheus.io/scrape annotation.
-              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+              - source_labels:
+                  [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
                 action: keep
                 regex: true
               # Honor prometheus.io/path (e.g. /actuator/prometheus for Spring Boot).
-              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+              - source_labels:
+                  [__meta_kubernetes_pod_annotation_prometheus_io_path]
                 action: replace
                 target_label: __metrics_path__
                 regex: (.+)
               # Honor prometheus.io/port — rewrite the scrape address to podIP:port.
-              - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+              - source_labels:
+                  [
+                    __address__,
+                    __meta_kubernetes_pod_annotation_prometheus_io_port,
+                  ]
                 action: replace
                 regex: ([^:]+)(?::\d+)?;(\d+)
                 replacement: $$1:$$2
                 target_label: __address__
               # Set `job` to the stable service name (app.kubernetes.io/name) so
               # per-service SLO rules and dashboards can filter by job.
-              - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+              - source_labels:
+                  [__meta_kubernetes_pod_label_app_kubernetes_io_name]
                 action: replace
                 target_label: job
                 regex: (.+)
-              # Expose namespace and pod as labels for drill-down.
+              # Expose namespace and pod as labels for drill-down. NOTE: the label
+              # is named k8s_namespace (not `namespace`) on purpose — a `namespace`
+              # target label is promoted to the service.namespace resource attribute,
+              # which makes the prometheusremotewrite exporter emit job as
+              # "<namespace>/<name>" instead of the bare service name the SLO rules expect.
               - source_labels: [__meta_kubernetes_namespace]
                 action: replace
-                target_label: namespace
+                target_label: k8s_namespace
               - source_labels: [__meta_kubernetes_pod_name]
                 action: replace
                 target_label: pod
@@ -77,7 +88,7 @@ config:
         #- /var/log/pods/*/*.log
       start_at: beginning
       # Exclude logs from the collector itself to avoid self-loop
-      exclude: [ /var/log/pods/*/otel-collector-*.log ]
+      exclude: [/var/log/pods/*/otel-collector-*.log]
       # Parse multiline logs (e.g., stack traces)
       #multiline:
       #  pattern: '^\S'

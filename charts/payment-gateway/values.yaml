@@ -145,7 +145,7 @@ observability:
   # -- Enable runtime instrumentation (traces + logs via OTLP; metrics via Prometheus scrape)
   enabled: false
   # -- OTLP endpoint of the OpenTelemetry Collector
-  otlpEndpoint: "http://otel-collector:4318"
+  otlpEndpoint: "http://$(NODE_IP):4318"
   # -- Prometheus metrics path scraped from the pod
   metricsPath: /actuator/prometheus
 

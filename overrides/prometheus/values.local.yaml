@@ -11,3 +11,9 @@ alertmanager:
 prometheus:
   prometheusSpec:
     enableRemoteWriteReceiver: true
+    # Pick up PrometheusRules (e.g. the module SLO rules) and dashboards that are
+    # not labelled with the Helm release name. Without this, kube-prometheus-stack
+    # only selects rules labelled release=prometheus and the SLO rules never load.
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false

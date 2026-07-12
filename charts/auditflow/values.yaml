@@ -263,7 +263,7 @@ observability:
   # -- Enable runtime instrumentation (traces + logs OTLP, Prometheus-annotation metrics scrape)
   enabled: false
   # -- OTLP endpoint of the OpenTelemetry Collector
-  otlpEndpoint: "http://otel-collector:4318"
+  otlpEndpoint: "http://$(NODE_IP):4318"
 
 # -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead.

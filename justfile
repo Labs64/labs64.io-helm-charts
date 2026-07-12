@@ -10,13 +10,17 @@ METRICS_SERVER_CHART_VERSION := "3.13.1"
 RABBITMQ_CHART_VERSION := "16.0.14"
 POSTGRESQL_CHART_VERSION := "18.7.11"
 REDIS_CHART_VERSION := "27.0.13"
-OTEL_OPERATOR_CHART_VERSION := "0.118.0"
-OTEL_COLLECTOR_CHART_VERSION := "0.162.0"
-PROMETHEUS_STACK_CHART_VERSION := "87.5.1"
+OTEL_OPERATOR_CHART_VERSION := "0.119.0"
+OTEL_COLLECTOR_CHART_VERSION := "0.165.0"
+PROMETHEUS_STACK_CHART_VERSION := "87.15.1"
 TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
+VICTORIA_LOGS_CHART_VERSION := "0.13.8"
 
 LABS64IO_APPS := "traefik-authproxy gateway-common swagger-ui auditflow checkout checkout-ui payment-gateway customer-portal-ui"
+# Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
+# `up-full` enables observability on these once the monitoring stack is present.
+OBSERVABILITY_APPS := "traefik-authproxy auditflow checkout payment-gateway"
 
 # List available commands
 default:
@@ -45,8 +49,21 @@ down:
 # reset the environment (uninstall all apps, monitoring, and tools) without destroying the cluster
 reset: uninstall-all-apps uninstall-monitoring uninstall-tools
 
-# start local environment with monitoring stack
-up-full: up install-monitoring
+# start local environment with monitoring stack + module telemetry enabled
+up-full: up install-monitoring enable-observability
+
+# enable OTel instrumentation on instrumented module apps (requires the monitoring
+# stack — the collector DaemonSet must be running so OTLP export has a target).
+# Kept off in the base `up` profile so a monitoring-less cluster shows no export errors.
+enable-observability:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for app in {{OBSERVABILITY_APPS}}; do
+        echo "=== Enabling observability: $app ==="
+        helm upgrade labs64io-"$app" ./charts/"$app" \
+          --namespace {{NAMESPACE_LABS64IO}} --reuse-values \
+          --set observability.enabled=true
+    done
 
 # automatically scaffold missing local secrets from their .example templates
 generate-secrets:
@@ -180,10 +197,10 @@ uninstall-tool-mock-oidc:
 ## 📊 Monitoring Tools ##
 
 # Install all monitoring tools
-install-monitoring: install-tool-metrics-server install-tool-opentelemetry install-tool-prometheus install-tool-tempo install-tool-grafana
+install-monitoring: install-tool-metrics-server install-tool-opentelemetry install-tool-prometheus install-tool-victorialogs install-tool-tempo install-tool-grafana
 
 # Uninstall all monitoring tools
-uninstall-monitoring: uninstall-tool-grafana uninstall-tool-tempo uninstall-tool-prometheus uninstall-tool-opentelemetry uninstall-tool-metrics-server
+uninstall-monitoring: uninstall-tool-grafana uninstall-tool-tempo uninstall-tool-victorialogs uninstall-tool-prometheus uninstall-tool-opentelemetry uninstall-tool-metrics-server
 
 # install Metrics Server
 install-tool-metrics-server:
@@ -191,7 +208,7 @@ install-tool-metrics-server:
       --version {{METRICS_SERVER_CHART_VERSION}} \
       -f overrides/metrics-server/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_KUBE_SYSTEM}} \
-      --set args="{--kubelet-insecure-tls}"
+      --set args="{--kubelet-insecure-tls}" || echo "metrics-server install failed (possibly pre-installed), continuing"
 
 # uninstall Metrics Server
 uninstall-tool-metrics-server:
@@ -225,6 +242,16 @@ install-tool-prometheus:
 uninstall-tool-prometheus:
     helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}} || true
 
+# install VictoriaLogs
+install-tool-victorialogs:
+    helm upgrade --install victoria-logs victoria-metrics/victoria-logs-single \
+      --version {{VICTORIA_LOGS_CHART_VERSION}} \
+      --namespace {{NAMESPACE_MONITORING}} --create-namespace
+
+# uninstall VictoriaLogs
+uninstall-tool-victorialogs:
+    helm uninstall victoria-logs --namespace {{NAMESPACE_MONITORING}} || true
+
 # install Tempo
 install-tool-tempo:
     helm upgrade --install tempo grafana/tempo \
@@ -242,13 +269,18 @@ install-tool-grafana:
       --version {{GRAFANA_CHART_VERSION}} \
       -f overrides/grafana/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    @echo "Run this command to open Grafana: kubectl port-forward svc/grafana --namespace {{NAMESPACE_MONITORING}} 3000:80"
-    @just grafana-password
+    kubectl apply -f overrides/grafana/grafana-ingressroute.yaml
+    kubectl apply -f overrides/grafana/grafana-dashboards.yaml
 
 # retrieve Grafana password
 grafana-password:
-    @echo "Username: admin"
     @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
+# open grafana and print password
+grafana:
+    @just grafana-password
+    @echo "Opening Grafana... (Press Ctrl+C to quit)"
+    open http://gateway.localhost/grafana/ || echo "Visit http://gateway.localhost/grafana/"
 
 # uninstall Grafana
 uninstall-tool-grafana:

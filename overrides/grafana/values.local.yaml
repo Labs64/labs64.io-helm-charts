@@ -1,3 +1,6 @@
+image:
+  tag: 13.1.0
+
 service:
   type: LoadBalancer
   port: 3000
@@ -5,20 +8,33 @@ service:
 datasources:
   datasources.yaml:
     apiVersion: 1
+    deleteDatasources:
+      - name: Prometheus
+        orgId: 1
+      - name: VictoriaLogs
+        orgId: 1
+      - name: Tempo
+        orgId: 1
     datasources:
       - name: Prometheus
         type: prometheus
+        uid: Prometheus
         url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
         access: proxy
         isDefault: true
       - name: VictoriaLogs
         type: victoriametrics-logs-datasource
+        uid: VictoriaLogs
         url: http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428
         access: proxy
       - name: Tempo
         type: tempo
+        uid: Tempo
         url: http://tempo.monitoring.svc.cluster.local:3200
         access: proxy
+
+plugins:
+  - victoriametrics-logs-datasource
 
 # Enable persistence for Grafana dashboards and configurations
 persistence:
@@ -33,3 +49,10 @@ sidecar:
     enabled: true
     label: grafana_dashboard
     labelValue: "1"
+initChownData:
+  enabled: false
+grafana.ini:
+  server:
+    domain: gateway.localhost
+    root_url: "%(protocol)s://%(domain)s/grafana/"
+    serve_from_sub_path: true
