@@ -129,20 +129,34 @@
           "title": "enabled",
           "type": "boolean"
         },
-        "entryPoints": {
-          "description": "Traefik entry points",
+        "parentRefs": {
+          "description": "Gateway API parent Gateway(s) this module's HTTPRoute attaches to",
           "items": {
             "anyOf": [
               {
-                "type": "string"
-              },
-              {
-                "type": "string"
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "labs64io-gateway",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "namespace": {
+                    "default": "tools",
+                    "title": "namespace",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "namespace"
+                ],
+                "type": "object"
               }
             ],
             "required": []
           },
-          "title": "entryPoints",
+          "title": "parentRefs",
           "type": "array"
         },
         "prefix": {
@@ -199,24 +213,12 @@
               "default": "gateway-common-ratelimit",
               "title": "rateLimit",
               "type": "string"
-            },
-            "securityHeaders": {
-              "default": "gateway-common-security-headers",
-              "title": "securityHeaders",
-              "type": "string"
-            },
-            "stripAuthHeaders": {
-              "default": "gateway-common-strip-auth-headers",
-              "title": "stripAuthHeaders",
-              "type": "string"
             }
           },
           "required": [
             "auth",
             "rateLimit",
-            "securityHeaders",
-            "compress",
-            "stripAuthHeaders"
+            "compress"
           ],
           "title": "sharedMiddlewares",
           "type": "object"
@@ -225,7 +227,7 @@
       "required": [
         "enabled",
         "prefix",
-        "entryPoints",
+        "parentRefs",
         "sharedMiddlewares",
         "routes"
       ],

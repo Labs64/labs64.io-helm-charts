@@ -11,7 +11,10 @@ Usage: {{ include "chart-libs.gatewayHost" . }}
 {{- end }}
 
 {{/*
-Module-owned gateway routes: IngressRoute + strip-prefix Middleware.
+Module-owned Gateway API routes: one HTTPRoute with native filters
+(RequestHeaderModifier / ResponseHeaderModifier / URLRewrite) plus Traefik
+ExtensionRef filters for ForwardAuth, rate-limit, and compress (no native
+Gateway API primitive exists for those three).
 Usage (wrapper template in the module chart):
 {{ include "chart-libs.gateway-routes" . }}
 */}}
@@ -21,64 +24,99 @@ Usage (wrapper template in the module chart):
 {{- $prefix := .Values.gateway.prefix | default (printf "/%s" .Chart.Name) -}}
 {{- $host := include "chart-libs.gatewayHost" . -}}
 {{- $mw := .Values.gateway.sharedMiddlewares -}}
-{{- /* Strip list order: full-path strips (stripPath) are added before the bare module prefix (stripPrefix). Traefik strips the first matching prefix. */ -}}
-{{- $stripPrefixes := list -}}
-{{- range .Values.gateway.routes -}}
-{{- if .stripPath -}}{{- $stripPrefixes = append $stripPrefixes (printf "%s%s" $prefix .path) -}}{{- end -}}
-{{- end -}}
-{{- range .Values.gateway.routes -}}
-{{- if and .stripPrefix (not .stripPath) -}}{{- $stripPrefixes = append $stripPrefixes $prefix -}}{{- end -}}
-{{- end -}}
-{{- $stripPrefixes = $stripPrefixes | uniq -}}
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
   name: {{ $fullname }}-gateway
   labels:
     {{- include "chart-libs.labels" . | nindent 4 }}
 spec:
-  entryPoints:
-    {{- toYaml .Values.gateway.entryPoints | nindent 4 }}
-  routes:
+  parentRefs:
+    {{- toYaml .Values.gateway.parentRefs | nindent 4 }}
+  hostnames:
+    - {{ $host | quote }}
+  rules:
     {{- range $route := .Values.gateway.routes }}
-    - match: Host(`{{ $host }}`) && PathPrefix(`{{ $prefix }}{{ $route.path }}`)
-      kind: Rule
-      services:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ printf "%s%s" $prefix $route.path | default "/" | quote }}
+      filters:
+        {{- /* 1. ALWAYS FIRST: strip inbound X-Auth-* so clients can never smuggle
+               identity headers — native RequestHeaderModifier, public routes included. */}}
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            remove:
+              - X-Auth-User
+              - X-Auth-Scopes
+              - X-Auth-Tenant
+        {{- if not $route.public }}
+        {{- /* 2. ForwardAuth + rate-limit: no native primitive → Traefik ExtensionRef. */}}
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $mw.auth }}
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $mw.rateLimit }}
+        {{- end }}
+        {{- /* 3. Security headers — native ResponseHeaderModifier. */}}
+        - type: ResponseHeaderModifier
+          responseHeaderModifier:
+            set:
+              {{- include "chart-libs.securityHeaders" $ | nindent 14 }}
+        {{- /* 4. Response compression: no native primitive → Traefik ExtensionRef. */}}
+        {{- if $mw.compress }}
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $mw.compress }}
+        {{- end }}
+        {{- /* 5. Path rewrite — native URLRewrite. ReplacePrefixMatch replaces the
+               whole matched PathPrefix: stripPath -> "/", stripPrefix -> route path. */}}
+        {{- if $route.stripPath }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+        {{- else if $route.stripPrefix }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ $route.path | default "/" | quote }}
+        {{- end }}
+      backendRefs:
         - name: {{ $route.service | default $fullname }}
           port: {{ $route.port }}
-      middlewares:
-        {{- /* Always first: drop inbound X-Auth-* so clients can never smuggle
-               identity headers to backends — public
-               routes included, where no ForwardAuth would overwrite them. */}}
-        - name: {{ $mw.stripAuthHeaders | default "gateway-common-strip-auth-headers" }}
-        {{- if not $route.public }}
-        - name: {{ $mw.auth }}
-        - name: {{ $mw.rateLimit }}
-        {{- end }}
-        - name: {{ $mw.securityHeaders }}
-        {{- if $mw.compress }}
-        - name: {{ $mw.compress }}
-        {{- end }}
-        {{- if or $route.stripPrefix $route.stripPath }}
-        - name: {{ $fullname }}-strip-prefix
-        {{- end }}
     {{- end }}
-{{- if $stripPrefixes }}
----
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: {{ $fullname }}-strip-prefix
-  labels:
-    {{- include "chart-libs.labels" . | nindent 4 }}
-spec:
-  stripPrefix:
-    prefixes:
-      {{- range $stripPrefixes }}
-      - {{ . }}
-      {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+Security response headers as a Gateway API ResponseHeaderModifier `set` list.
+Canonical source (replaces the removed gateway-common security-headers Middleware).
+Values mirror the prior Traefik headers-middleware semantics 1:1.
+Usage: {{ include "chart-libs.securityHeaders" . | nindent N }}
+*/}}
+{{- define "chart-libs.securityHeaders" -}}
+- name: X-Frame-Options
+  value: DENY
+- name: X-Content-Type-Options
+  value: nosniff
+- name: X-XSS-Protection
+  value: "1; mode=block"
+- name: Referrer-Policy
+  value: strict-origin-when-cross-origin
+- name: Content-Security-Policy
+  value: "default-src 'self'; script-src 'self'; object-src 'none'"
+- name: Strict-Transport-Security
+  value: "max-age=31536000; includeSubDomains"
 {{- end }}
 
 {{/*

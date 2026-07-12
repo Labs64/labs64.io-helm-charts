@@ -262,17 +262,15 @@ gateway:
   enabled: false
   # -- External path prefix; defaults to /<chart-name>
   prefix: ""
-  # -- Traefik entry points
-  entryPoints:
-    - web
-    - websecure
+  # -- Gateway API parent Gateway(s) this module's HTTPRoute attaches to
+  parentRefs:
+    - name: labs64io-gateway
+      namespace: tools
   # -- Names of the shared middlewares provided by the gateway-common chart
   sharedMiddlewares:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
-    securityHeaders: gateway-common-security-headers
     compress: gateway-common-compress
-    stripAuthHeaders: gateway-common-strip-auth-headers
   # -- Auth-policy discovery: label+annotations on the Service so the gateway's
   # traefik-authproxy fetches this module's /.well-known/auth-policy and
   # enforces the OpenAPI-declared per-operation policy at the edge.
