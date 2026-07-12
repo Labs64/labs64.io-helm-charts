@@ -17,7 +17,7 @@ build_traefik_authproxy() {
     echo "=== Building traefik-authproxy image ==="
     (
         echo "= Build Auth Proxy ="
-        cd ../labs64.io-gateway/traefik-authproxy
+        cd ../labs64.io-authproxy/traefik-authproxy
         docker build -t ${REGISTRY}/traefik-authproxy:latest .
     )
     docker push ${REGISTRY}/traefik-authproxy:latest

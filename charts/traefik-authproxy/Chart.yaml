@@ -19,7 +19,7 @@ keywords:
   - middleware
 sources:
   - https://github.com/Labs64/labs64.io-helm-charts
-  - https://github.com/Labs64/labs64.io-gateway/tree/master/traefik-authproxy
+  - https://github.com/Labs64/labs64.io-authproxy/tree/master/traefik-authproxy
 maintainers:
   - name: labs64
     email: info@labs64.com
