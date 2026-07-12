@@ -1,6 +1,6 @@
 # swagger-ui
 
-![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.27.1](https://img.shields.io/badge/AppVersion-v5.27.1-informational?style=flat-square)
+![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.27.1](https://img.shields.io/badge/AppVersion-v5.27.1-informational?style=flat-square)
 
 Labs64.IO :: Swagger UI
 
@@ -20,7 +20,7 @@ Labs64.IO :: Swagger UI
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.4 |
+| file://../chart-libs | chart-libs | 0.1.0 |
 
 ## Values
 
@@ -31,6 +31,10 @@ Labs64.IO :: Swagger UI
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
+| gateway | object | `{"enabled":true,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"routes":[]}` | Gateway API HTTPRoute for swagger-ui (public docs aggregator; module API routes are owned by the module charts). No auth — faithful to prior behavior. |
+| gateway.enabled | bool | `true` | Enable the swagger-ui HTTPRoute |
+| gateway.parentRefs | list | `[{"name":"labs64io-gateway","namespace":"tools"}]` | Gateway(s) this HTTPRoute attaches to |
+| gateway.routes | list | `[]` | Routes. Each: path, optional pathType (default PathPrefix), service{name,port}; stripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path. @schema type: array @schema |
 | global | object | `{"domain":"localhost"}` | Global values shared across Labs64.IO charts |
 | global.domain | string | `"localhost"` | Base domain; swagger-ui is exposed as gateway.<domain> |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"swaggerapi/swagger-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
@@ -38,11 +42,6 @@ Labs64.IO :: Swagger UI
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ingress | object | `{"annotations":{},"className":"nginx","enabled":false,"hosts":[{"host":"localhost","paths":[{"path":"/","pathType":"Prefix"}]}],"tls":[]}` | This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/ |
-| ingressroute | object | `{"enabled":true,"entryPoints":["web","websecure"],"middlewares":[],"routes":[]}` | IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/ |
-| ingressroute.enabled | bool | `true` | This sets whether the IngressRoute is enabled or not |
-| ingressroute.entryPoints | list | `["web","websecure"]` | Entry points for the IngressRoute |
-| ingressroute.middlewares | list | `[]` | Middlewares owned by this chart (rendered by templates/middleware.yaml) @schema type: array @schema |
-| ingressroute.routes | list | `[]` | IngressRoute routes definitions |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
 | networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
@@ -66,7 +65,11 @@ Labs64.IO :: Swagger UI
 | resources.limits.memory | string | `"1Gi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
-| securityContext | object | `{}` |  |
+| securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| securityContext.runAsGroup | int | `1064` |  |
+| securityContext.runAsNonRoot | bool | `true` |  |
+| securityContext.runAsUser | int | `1064` |  |
+| securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |

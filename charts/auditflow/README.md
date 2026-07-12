@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
@@ -51,17 +51,17 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` | Environment variables to add to the container |
 | fullnameOverride | string | `""` |  |
-| gateway | object | `{"authPolicy":{"basePath":"","enabled":true},"enabled":false,"entryPoints":["web","websecure"],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers","stripAuthHeaders":"gateway-common-strip-auth-headers"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| gateway | object | `{"authPolicy":{"basePath":"","enabled":true},"enabled":false,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
 | gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy discovery: label+annotations on the Service so the gateway's traefik-authproxy fetches this module's /.well-known/auth-policy and enforces the OpenAPI-declared per-operation policy at the edge. |
 | gateway.authPolicy.basePath | string | `""` | External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1 |
 | gateway.authPolicy.enabled | bool | `true` | Publish this module's auth policy to the gateway ACS |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
-| gateway.entryPoints | list | `["web","websecure"]` | Traefik entry points |
+| gateway.parentRefs | list | `[{"name":"labs64io-gateway","namespace":"tools"}]` | Gateway API parent Gateway(s) this module's HTTPRoute attaches to |
 | gateway.prefix | string | `""` | External path prefix; defaults to /<chart-name> |
 | gateway.routes | list | `[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
 | gateway.routes[0] | object | `{"path":"/api/v1","port":8080,"stripPath":true}` | AuditFlow API (protected; strips '<prefix>/api/v1' — backend is root-mapped) |
 | gateway.routes[1] | object | `{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}` | OpenAPI docs (public, prefix stripped before forwarding) |
-| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit","securityHeaders":"gateway-common-security-headers","stripAuthHeaders":"gateway-common-strip-auth-headers"}` | Names of the shared middlewares provided by the gateway-common chart |
+| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the gateway-common chart |
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |
 | global.security.allowInsecureImages | bool | `true` | Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard) |
 | gracefulShutdown.timeout | string | `"30s"` | Max time Spring Boot waits for in-flight work before forced shutdown |
@@ -73,13 +73,14 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/liveness","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
-| networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy | object | `{"egress":[{"ports":[{"port":5672,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"rabbitmq"}}}]},{"ports":[{"port":6379,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"redis"}}}]}],"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy.egress | list | `[{"ports":[{"port":5672,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"rabbitmq"}}}]},{"ports":[{"port":6379,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"redis"}}}]}]` | Egress rules enforcing database-per-service isolation. |
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | nodeSelector | object | `{}` | Node labels for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
-| observability | object | `{"enabled":false,"otlpEndpoint":"http://otel-collector:4318"}` | Observability is an infrastructure concern: the same images run with or without it. When enabled, the backend's bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and the Python sidecars start under opentelemetry-instrument (triggered by the OTLP endpoint env). Java metrics stay on Micrometer via /actuator/prometheus (prometheus.io/* pod annotations are added automatically when enabled). |
+| observability | object | `{"enabled":false,"otlpEndpoint":"http://$(NODE_IP):4318"}` | Observability is an infrastructure concern: the same images run with or without it. When enabled, the backend's bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and the Python sidecars start under opentelemetry-instrument (triggered by the OTLP endpoint env). Java metrics stay on Micrometer via /actuator/prometheus (prometheus.io/* pod annotations are added automatically when enabled). |
 | observability.enabled | bool | `false` | Enable runtime instrumentation (traces + logs OTLP, Prometheus-annotation metrics scrape) |
-| observability.otlpEndpoint | string | `"http://otel-collector:4318"` | OTLP endpoint of the OpenTelemetry Collector |
+| observability.otlpEndpoint | string | `"http://$(NODE_IP):4318"` | OTLP endpoint of the OpenTelemetry Collector |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podDisruptionBudget | object | `{"enabled":false,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
@@ -113,6 +114,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | sink.resources | object | `{"limits":{"cpu":"200m","memory":"256Mi"},"requests":{"cpu":"50m","memory":"128Mi"}}` | Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service). |
 | sink.service | object | `{"port":8082}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | sink.service.port | int | `8082` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
+| slo | object | `{"availability":{"targetRatio":0.999},"enabled":true,"latency":{"targetRatio":0.99,"thresholdSeconds":0.5}}` | SLO recording rules and dashboards (rendered by chart-libs.slo.*) |
 | startupProbe | object | `{"failureThreshold":30,"httpGet":{"path":"/actuator/health/liveness","port":8080},"periodSeconds":5,"timeoutSeconds":2}` | Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts (Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds. |
 | terminationGracePeriodSeconds | int | `45` | Graceful shutdown: drain in-flight requests / message handlers on rolling updates and scale-in. Keep terminationGracePeriodSeconds > preStop + gracefulShutdown.timeout. |
 | tests | object | `{"enabled":true,"healthPath":"/actuator/health"}` | helm test hook (rendered by chart-libs.test-connection) |
