@@ -108,7 +108,7 @@ graph TB
     User((Developer)) -->|HTTP 80/443| traefik
     traefik -.->|"ForwardAuth call (gateway-common middleware)"| authproxy
     authproxy -->|Validates JWT against| mock_oidc
-    traefik -->|"Routes via IngressRoute, gateway-common middlewares applied in-chain"| swagger_ui
+    traefik -->|"Routes via Gateway API HTTPRoute (native filters + gateway-common middlewares via ExtensionRef)"| swagger_ui
     traefik --> audit_be
     traefik --> checkout_be
     traefik --> pg_be
@@ -154,7 +154,7 @@ graph TB
 
 ### Request Flow
 
-Traefik receives external requests mapping on ports 80/443. Depending on `IngressRoutes`, it routes traffic through the `traefik-authproxy` middleware. The proxy validates the `Authorization: Bearer` against the `Mock OIDC Provider` (generating fake JWT tokens for local environments). Validated requests pass into `gateway-common` before hitting the downstream microservices.
+Traefik receives external requests mapping on ports 80/443 and routes them via Kubernetes Gateway API `HTTPRoute`s (module-owned, attached to the platform `Gateway` `labs64io-gateway` in `tools`). Each protected route strips inbound `X-Auth-*` headers first (native `RequestHeaderModifier`), then calls the `traefik-authproxy` ForwardAuth middleware via an `ExtensionRef` filter. The proxy validates the `Authorization: Bearer` against the `Mock OIDC Provider` (generating fake JWT tokens for local environments). Validated requests pass through the remaining `gateway-common` middlewares (rate-limit, compress) before hitting the downstream microservices.
 
 ## Building module images
 
@@ -560,7 +560,8 @@ Common causes:
 ### 404 from gateway.localhost
 
 - Check Traefik is running: `kubectl get pods -n tools -l app.kubernetes.io/name=traefik`
-- Check IngressRoutes: `kubectl get ingressroute -n labs64io`
+- Check HTTPRoutes are accepted: `kubectl get httproute -n labs64io` (details: `kubectl describe httproute <name> -n labs64io`)
+- Check the platform Gateway is programmed: `kubectl get gateway -n tools labs64io-gateway`
 - Check auth-proxy is running: `kubectl get pods -n labs64io -l app.kubernetes.io/name=traefik-authproxy`
 
 ### 401/403 on API calls

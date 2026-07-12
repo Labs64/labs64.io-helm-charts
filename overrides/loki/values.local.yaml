@@ -36,3 +36,5 @@ chunksCache:
   enabled: false
 resultsCache:
   enabled: false
+#lokiCanary:
+#  enabled: true
