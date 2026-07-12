@@ -105,6 +105,18 @@ config:
       #     kubernetes.container.name: "$FILE_NAME_REGEX(^/var/log/pods/[^/]+/[^/]+_([^/]+)-([^_]+)/)"
 
   processors:
+    filter/drop_unknown_service_noise:
+      error_mode: ignore
+      log_conditions:
+        # Drop Loki canary heartbeat noise rendered as `unknown_service`, while
+        # preserving application service logs and other unknown-service records.
+        - >-
+          (
+            (resource.attributes["k8s.pod.name"] != nil and IsMatch(resource.attributes["k8s.pod.name"], "^loki-canary-"))
+            or resource.attributes["service.name"] == nil
+            or resource.attributes["service.name"] == "unknown_service"
+          )
+          and IsMatch(log.body, "^([0-9]+[[:space:]]+)?p+[[:space:]]*$")
     batch:
       send_batch_size: 256
       timeout: 10s
@@ -144,5 +156,5 @@ config:
         exporters: [otlp/tempo]
       logs:
         receivers: [filelog, otlp]
-        processors: [batch]
+        processors: [filter/drop_unknown_service_noise, batch]
         exporters: [otlphttp/loki]
