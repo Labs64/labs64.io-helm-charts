@@ -304,6 +304,39 @@ networkPolicy:
   gatewayNamespace: tools
   # -- Additional raw ingress rules
   extraIngress: []
+  # -- Egress rules enforcing database-per-service isolation.
+  egress:
+    # RabbitMQ
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tools
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: rabbitmq
+      ports:
+        - protocol: TCP
+          port: 5672
+    # PostgreSQL
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tools
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432
+
+# -- SLO recording rules and dashboards (rendered by chart-libs.slo.*)
+slo:
+  enabled: true
+  availability:
+    targetRatio: 0.999
+  latency:
+    targetRatio: 0.99
+    thresholdSeconds: 0.5
 
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema

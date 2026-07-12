@@ -687,6 +687,340 @@
       "additionalProperties": false,
       "description": "NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)",
       "properties": {
+        "egress": {
+          "description": "Egress rules enforcing database-per-service isolation.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
+                              "default": 5672,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "kubernetes.io/metadata.name": {
+                                      "default": "tools",
+                                      "title": "kubernetes.io/metadata.name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "kubernetes.io/metadata.name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "namespaceSelector",
+                              "type": "object"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "rabbitmq",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "namespaceSelector",
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
+                              "default": 5432,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "kubernetes.io/metadata.name": {
+                                      "default": "tools",
+                                      "title": "kubernetes.io/metadata.name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "kubernetes.io/metadata.name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "namespaceSelector",
+                              "type": "object"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "postgresql",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "namespaceSelector",
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
+                              "default": 6379,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "kubernetes.io/metadata.name": {
+                                      "default": "tools",
+                                      "title": "kubernetes.io/metadata.name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "kubernetes.io/metadata.name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "namespaceSelector",
+                              "type": "object"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "redis",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "namespaceSelector",
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "egress",
+          "type": "array"
+        },
         "enabled": {
           "default": false,
           "title": "enabled",
@@ -710,7 +1044,8 @@
       "required": [
         "enabled",
         "gatewayNamespace",
-        "extraIngress"
+        "extraIngress",
+        "egress"
       ],
       "title": "networkPolicy",
       "type": "object"
@@ -1241,6 +1576,60 @@
       "title": "serviceAccount",
       "type": "object"
     },
+    "slo": {
+      "additionalProperties": false,
+      "description": "SLO recording rules and dashboards (rendered by chart-libs.slo.*)",
+      "properties": {
+        "availability": {
+          "additionalProperties": false,
+          "properties": {
+            "targetRatio": {
+              "default": 0.999,
+              "title": "targetRatio",
+              "type": "number"
+            }
+          },
+          "required": [
+            "targetRatio"
+          ],
+          "title": "availability",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "latency": {
+          "additionalProperties": false,
+          "properties": {
+            "targetRatio": {
+              "default": 0.99,
+              "title": "targetRatio",
+              "type": "number"
+            },
+            "thresholdSeconds": {
+              "default": 0.5,
+              "title": "thresholdSeconds",
+              "type": "number"
+            }
+          },
+          "required": [
+            "targetRatio",
+            "thresholdSeconds"
+          ],
+          "title": "latency",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "availability",
+        "latency"
+      ],
+      "title": "slo",
+      "type": "object"
+    },
     "startupProbe": {
       "additionalProperties": false,
       "description": "Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts\n(Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting\npod. Max boot budget = failureThreshold * periodSeconds.",
@@ -1377,6 +1766,7 @@
     "gateway",
     "podDisruptionBudget",
     "networkPolicy",
+    "slo",
     "tests"
   ],
   "type": "object"

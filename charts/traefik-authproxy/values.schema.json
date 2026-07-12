@@ -976,23 +976,20 @@
       "type": "object"
     },
     "staticPolicies": {
-      "description": "Static prefix policies for gateway surfaces without an OpenAPI spec\n(UI bundles). Longest prefix wins; consulted only when no module\nauth-policy route matches. Scope check is any-overlap with the token's\nTOKEN_SCOPES_CLAIM_PATHS claims.",
+      "description": "Static prefix policies for gateway surfaces without an OpenAPI spec\n(UI bundles). Longest prefix wins; consulted only when no module\nauth-policy route matches. Scope check is any-overlap with the token's\nTOKEN_SCOPES_CLAIM_PATHS claims.\nTODO: remove after the corresponding modules will be using OpenAPI",
       "items": {
         "anyOf": [
           {
             "additionalProperties": false,
             "properties": {
               "path": {
-                "default": "/checkout-ui",
+                "default": "/checkout",
                 "title": "path",
                 "type": "string"
               },
               "scopes": {
                 "items": {
                   "anyOf": [
-                    {
-                      "type": "string"
-                    },
                     {
                       "type": "string"
                     }
@@ -1013,16 +1010,13 @@
             "additionalProperties": false,
             "properties": {
               "path": {
-                "default": "/customer-portal-ui",
+                "default": "/customer-portal",
                 "title": "path",
                 "type": "string"
               },
               "scopes": {
                 "items": {
                   "anyOf": [
-                    {
-                      "type": "string"
-                    },
                     {
                       "type": "string"
                     }

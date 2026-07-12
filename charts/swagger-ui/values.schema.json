@@ -67,7 +67,7 @@
       "properties": {
         "domain": {
           "default": "localhost",
-          "description": "Base domain; the gateway is exposed as gateway.\u003cdomain\u003e",
+          "description": "Base domain; swagger-ui is exposed as gateway.\u003cdomain\u003e",
           "title": "domain",
           "type": "string"
         }
