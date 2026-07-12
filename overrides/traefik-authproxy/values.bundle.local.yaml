@@ -1,0 +1,25 @@
+# Local provenance-mode override (RFC-05 P0): run the ACS from a cosign-signed,
+# digest-pinned edge-policy bundle instead of live pod discovery.
+#
+# Apply on top of the normal local values, filling digest + cosignPublicKey from
+# the build-bundle.sh output, e.g.:
+#
+#   DIGEST=$(cat ../labs64.io-authproxy/policy-bundle/build/digest.txt)
+#   PUB=$(cat ../labs64.io-authproxy/policy-bundle/.cosign/cosign.pub)
+#   helm upgrade labs64io-traefik-authproxy ./charts/traefik-authproxy -n labs64io \
+#     -f charts/traefik-authproxy/values.yaml \
+#     -f overrides/traefik-authproxy/values.local.yaml \
+#     -f overrides/traefik-authproxy/values.bundle.local.yaml \
+#     --set policyBundle.digest="$DIGEST" \
+#     --set-literal policyBundle.cosignPublicKey="$PUB"
+image:
+  pullPolicy: Always
+policyBundle:
+  enabled: true
+  registry: labs64io-registry:5000
+  repo: policies/labs64io
+  plainHttp: true
+  digest: ""            # set at apply time
+  cosignPublicKey: ""   # set at apply time
+  orasImage: ghcr.io/oras-project/oras:v1.2.0
+  cosignImage: gcr.io/projectsigstore/cosign:v3.1.1

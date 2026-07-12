@@ -1,8 +1,16 @@
+# Dashboard is served via a Gateway API HTTPRoute (dashboard-httproute.yaml) on
+# dashboard.localhost instead of the chart's IngressRoute. api.insecure serves the
+# dashboard/API on the internal `traefik` entrypoint (:8080), which the route
+# targets through the Service. DEV ONLY — never enable api.insecure in production.
+api:
+  insecure: true
+ports:
+  traefik:
+    expose:
+      default: true
 ingressRoute:
   dashboard:
-    enabled: true
-    matchRule: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
-    entryPoints: ["web"]
+    enabled: false
 
 # Gateway API is now the routing substrate: modules own HTTPRoutes that attach to
 # the platform Gateway below. ForwardAuth/rate-limit/compress remain Traefik

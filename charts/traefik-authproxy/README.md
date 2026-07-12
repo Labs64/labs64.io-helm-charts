@@ -1,6 +1,6 @@
 # traefik-authproxy
 
-![Version: 0.0.4](https://img.shields.io/badge/Version-0.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Traefik Auth (M2M) Middleware
 
@@ -21,7 +21,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.0.4 |
+| file://../chart-libs | chart-libs | 0.1.0 |
 
 ## Values
 
@@ -45,10 +45,6 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ingress | object | `{"annotations":{},"className":"nginx","enabled":false,"hosts":[{"host":"localhost","paths":[{"path":"/","pathType":"Prefix"}]}],"tls":[]}` | This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/ |
-| ingressroute | object | `{"enabled":false,"entryPoints":["web","websecure"],"host":"localhost"}` | IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/ |
-| ingressroute.enabled | bool | `false` | This sets whether the IngressRoute is enabled or not |
-| ingressroute.entryPoints | list | `["web","websecure"]` | Entry points for the IngressRoute |
-| ingressroute.host | string | `"localhost"` | Host for the IngressRoute |
 | lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/health","port":8081},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
@@ -56,13 +52,21 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | nodeSelector | object | `{}` |  |
-| observability | object | `{"enabled":false,"otlpEndpoint":"http://otel-collector:4318"}` | Observability is infrastructure-owned: the same image runs with or without it. When enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI (traces + correlated logs + metrics via OTLP). |
+| observability | object | `{"enabled":false,"otlpEndpoint":"http://$(NODE_IP):4318"}` | Observability is infrastructure-owned: the same image runs with or without it. When enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI (traces + correlated logs + metrics via OTLP). |
 | observability.enabled | bool | `false` | Enable runtime auto-instrumentation (traces + logs + metrics via OTLP) |
-| observability.otlpEndpoint | string | `"http://otel-collector:4318"` | OTLP endpoint of the OpenTelemetry Collector |
+| observability.otlpEndpoint | string | `"http://$(NODE_IP):4318"` | OTLP endpoint of the OpenTelemetry Collector |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podDisruptionBudget | object | `{"enabled":true,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
+| policyBundle | object | `{"cosignImage":"gcr.io/projectsigstore/cosign:v3.1.1","cosignPublicKey":"","digest":"","enabled":false,"orasImage":"ghcr.io/oras-project/oras:v1.2.0","plainHttp":true,"registry":"labs64io-registry:5000","repo":"policies/labs64io"}` | Signed edge-policy bundle (RFC-05 P0 — Provenance). When enabled, the ACS loads module auth policies from a cosign-signed OCI bundle pulled BY DIGEST and verified by an init container, instead of fetching them live from the module pods it authorizes (closes F2: self-authored runtime policy). Build/sign/push the bundle with labs64.io-authproxy/policy-bundle/build-bundle.sh. |
+| policyBundle.cosignPublicKey | string | `""` | Cosign public key (PEM) that signed the bundle. REQUIRED when enabled. |
+| policyBundle.digest | string | `""` | Immutable digest to pin (sha256:...). REQUIRED when enabled — this is what ties the running ACS to a reviewed, signed artifact. |
+| policyBundle.enabled | bool | `false` | Enable bundle mode. Off = legacy live in-cluster /.well-known discovery. |
+| policyBundle.orasImage | string | `"ghcr.io/oras-project/oras:v1.2.0"` | Init-container images for pull + verify. |
+| policyBundle.plainHttp | bool | `true` | Use plain HTTP (local dev registry). Set false for TLS registries. |
+| policyBundle.registry | string | `"labs64io-registry:5000"` | OCI registry holding the bundle (in-cluster reachable name). |
+| policyBundle.repo | string | `"policies/labs64io"` | Repository path of the bundle artifact. |
 | rbac.create | bool | `true` |  |
 | rbac.rules[0].apiGroups[0] | string | `""` |  |
 | rbac.rules[0].resources[0] | string | `"services"` |  |
@@ -75,7 +79,11 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | resources.limits.memory | string | `"512Mi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
-| securityContext | object | `{}` |  |
+| securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| securityContext.runAsGroup | int | `1064` |  |
+| securityContext.runAsNonRoot | bool | `true` |  |
+| securityContext.runAsUser | int | `1064` |  |
+| securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | service | object | `{"port":8081,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8081` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
@@ -85,7 +93,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | startupProbe | object | `{"failureThreshold":20,"httpGet":{"path":"/health/ready","port":8081},"periodSeconds":3,"timeoutSeconds":2}` | Startup probe (rendered by chart-libs.startupProbe): guards cold start so the liveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds. |
-| staticPolicies | list | `[{"path":"/checkout-ui","scopes":["admin-role","ecommerce-role"]},{"path":"/customer-portal-ui","scopes":["admin-role","default-roles-labs64io"]}]` | Static prefix policies for gateway surfaces without an OpenAPI spec (UI bundles). Longest prefix wins; consulted only when no module auth-policy route matches. Scope check is any-overlap with the token's TOKEN_SCOPES_CLAIM_PATHS claims. |
+| staticPolicies | list | `[{"path":"/checkout","scopes":["checkout-role"]},{"path":"/customer-portal","scopes":["customer-portal-role"]}]` | Static prefix policies for gateway surfaces without an OpenAPI spec (UI bundles). Longest prefix wins; consulted only when no module auth-policy route matches. Scope check is any-overlap with the token's TOKEN_SCOPES_CLAIM_PATHS claims. TODO: remove after the corresponding modules will be using OpenAPI |
 | terminationGracePeriodSeconds | int | `45` | Graceful shutdown: drain on rolling updates / scale-in (uvicorn handles SIGTERM; preStop gives Traefik/kube-proxy time to deregister the pod first). |
 | tolerations | list | `[]` |  |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |

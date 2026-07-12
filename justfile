@@ -56,6 +56,8 @@ up-full: up install-monitoring enable-observability
 # enable OTel instrumentation on instrumented module apps (requires the monitoring
 # stack — the collector DaemonSet must be running so OTLP export has a target).
 # Kept off in the base `up` profile so a monitoring-less cluster shows no export errors.
+# Once the collector exists, `install-app` re-enables observability automatically on
+# every (re)install, so this recipe is only needed for the initial up-full flip.
 enable-observability:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -112,6 +114,14 @@ install-app app:
       echo "Using secrets override: overrides/{{app}}/values.secrets.{{ENV}}.yaml"
       ARGS+=("-f" "./overrides/{{app}}/values.secrets.{{ENV}}.yaml")
     fi
+    # Observability follows the monitoring stack declaratively: if the OTel
+    # collector is running and this app is instrumented, enable it on every
+    # (re)install so a reinstall can never silently drop telemetry.
+    if [[ " {{OBSERVABILITY_APPS}} " == *" {{app}} "* ]] \
+       && kubectl get daemonset opentelemetry-collector-agent -n {{NAMESPACE_MONITORING}} >/dev/null 2>&1; then
+      echo "Monitoring stack detected — enabling observability for {{app}}"
+      ARGS+=("--set" "observability.enabled=true")
+    fi
     helm upgrade --install labs64io-{{app}} ./charts/{{app}} "${ARGS[@]}"
 
 # Install a single Labs64.IO application standalone (bundled infra, no swagger-ui stack)
@@ -144,6 +154,7 @@ install-tool-traefik:
     echo "Installing Traefik CRDs..."
     helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
     helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait --skip-crds
+    kubectl apply -f overrides/traefik/dashboard-httproute.yaml
 
 # uninstall Traefik
 uninstall-tool-traefik:
@@ -273,7 +284,7 @@ install-tool-grafana:
       --version {{GRAFANA_CHART_VERSION}} \
       -f overrides/grafana/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    kubectl apply -f overrides/grafana/grafana-ingressroute.yaml
+    kubectl apply -f overrides/grafana/grafana-httproute.yaml
     kubectl apply -f overrides/grafana/grafana-dashboards.yaml
 
 # retrieve Grafana password

@@ -81,16 +81,28 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-# -- IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
-ingressroute:
-  # -- This sets whether the IngressRoute is enabled or not
+# -- Signed edge-policy bundle (RFC-05 P0 — Provenance). When enabled, the ACS
+# loads module auth policies from a cosign-signed OCI bundle pulled BY DIGEST and
+# verified by an init container, instead of fetching them live from the module
+# pods it authorizes (closes F2: self-authored runtime policy). Build/sign/push
+# the bundle with labs64.io-authproxy/policy-bundle/build-bundle.sh.
+policyBundle:
+  # -- Enable bundle mode. Off = legacy live in-cluster /.well-known discovery.
   enabled: false
-  # -- Host for the IngressRoute
-  host: localhost
-  # -- Entry points for the IngressRoute
-  entryPoints:
-    - web
-    - websecure
+  # -- OCI registry holding the bundle (in-cluster reachable name).
+  registry: labs64io-registry:5000
+  # -- Repository path of the bundle artifact.
+  repo: policies/labs64io
+  # -- Immutable digest to pin (sha256:...). REQUIRED when enabled — this is what
+  # ties the running ACS to a reviewed, signed artifact.
+  digest: ""
+  # -- Use plain HTTP (local dev registry). Set false for TLS registries.
+  plainHttp: true
+  # -- Cosign public key (PEM) that signed the bundle. REQUIRED when enabled.
+  cosignPublicKey: ""
+  # -- Init-container images for pull + verify.
+  orasImage: ghcr.io/oras-project/oras:v1.2.0
+  cosignImage: gcr.io/projectsigstore/cosign:v3.1.1
 
 resources:
   limits:

@@ -379,47 +379,6 @@
       "title": "ingress",
       "type": "object"
     },
-    "ingressroute": {
-      "additionalProperties": false,
-      "description": "IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/",
-      "properties": {
-        "enabled": {
-          "default": false,
-          "description": "This sets whether the IngressRoute is enabled or not",
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "entryPoints": {
-          "description": "Entry points for the IngressRoute",
-          "items": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "string"
-              }
-            ],
-            "required": []
-          },
-          "title": "entryPoints",
-          "type": "array"
-        },
-        "host": {
-          "default": "localhost",
-          "description": "Host for the IngressRoute",
-          "title": "host",
-          "type": "string"
-        }
-      },
-      "required": [
-        "enabled",
-        "host",
-        "entryPoints"
-      ],
-      "title": "ingressroute",
-      "type": "object"
-    },
     "lifecycle": {
       "additionalProperties": false,
       "properties": {
@@ -547,7 +506,7 @@
           "type": "boolean"
         },
         "otlpEndpoint": {
-          "default": "http://otel-collector:4318",
+          "default": "http://$(NODE_IP):4318",
           "description": "OTLP endpoint of the OpenTelemetry Collector",
           "title": "otlpEndpoint",
           "type": "string"
@@ -600,6 +559,71 @@
       "additionalProperties": false,
       "required": [],
       "title": "podSecurityContext",
+      "type": "object"
+    },
+    "policyBundle": {
+      "additionalProperties": false,
+      "description": "Signed edge-policy bundle (RFC-05 P0 — Provenance). When enabled, the ACS\nloads module auth policies from a cosign-signed OCI bundle pulled BY DIGEST and\nverified by an init container, instead of fetching them live from the module\npods it authorizes (closes F2: self-authored runtime policy). Build/sign/push\nthe bundle with labs64.io-authproxy/policy-bundle/build-bundle.sh.",
+      "properties": {
+        "cosignImage": {
+          "default": "gcr.io/projectsigstore/cosign:v3.1.1",
+          "title": "cosignImage",
+          "type": "string"
+        },
+        "cosignPublicKey": {
+          "default": "",
+          "description": "Cosign public key (PEM) that signed the bundle. REQUIRED when enabled.",
+          "title": "cosignPublicKey",
+          "type": "string"
+        },
+        "digest": {
+          "default": "",
+          "description": "Immutable digest to pin (sha256:...). REQUIRED when enabled — this is what\nties the running ACS to a reviewed, signed artifact.",
+          "title": "digest",
+          "type": "string"
+        },
+        "enabled": {
+          "default": false,
+          "description": "Enable bundle mode. Off = legacy live in-cluster /.well-known discovery.",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "orasImage": {
+          "default": "ghcr.io/oras-project/oras:v1.2.0",
+          "description": "Init-container images for pull + verify.",
+          "title": "orasImage",
+          "type": "string"
+        },
+        "plainHttp": {
+          "default": true,
+          "description": "Use plain HTTP (local dev registry). Set false for TLS registries.",
+          "title": "plainHttp",
+          "type": "boolean"
+        },
+        "registry": {
+          "default": "labs64io-registry:5000",
+          "description": "OCI registry holding the bundle (in-cluster reachable name).",
+          "title": "registry",
+          "type": "string"
+        },
+        "repo": {
+          "default": "policies/labs64io",
+          "description": "Repository path of the bundle artifact.",
+          "title": "repo",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "registry",
+        "repo",
+        "digest",
+        "plainHttp",
+        "cosignPublicKey",
+        "orasImage",
+        "cosignImage"
+      ],
+      "title": "policyBundle",
       "type": "object"
     },
     "rbac": {
@@ -1083,7 +1107,7 @@
     "securityContext",
     "service",
     "ingress",
-    "ingressroute",
+    "policyBundle",
     "resources",
     "livenessProbe",
     "readinessProbe",

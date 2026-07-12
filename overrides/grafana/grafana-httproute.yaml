@@ -1,0 +1,22 @@
+# Grafana behind the platform Gateway (Gateway API HTTPRoute; replaced the
+# former Traefik IngressRoute). Grafana serves from the /grafana sub-path
+# (grafana.ini in values.local.yaml), so no URLRewrite is needed.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  parentRefs:
+    - name: labs64io-gateway
+      namespace: tools
+  hostnames:
+    - gateway.localhost
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /grafana
+      backendRefs:
+        - name: grafana
+          port: 3000

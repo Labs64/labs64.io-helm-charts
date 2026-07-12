@@ -11,23 +11,10 @@ spec:
     authResponseHeaders:
       {{- toYaml .Values.authProxy.authResponseHeaders | nindent 6 }}
 ---
-# Drops inbound X-Auth-* ahead of ForwardAuth (spoofing prevention,
-# edge-stripping layer). Attached first on every gateway route — public routes
-# included, where no ForwardAuth response would otherwise overwrite them.
-# An empty customRequestHeaders value removes the header in Traefik.
-apiVersion: traefik.io/v1alpha1
-kind: Middleware
-metadata:
-  name: {{ include "chart-libs.fullname" . }}-strip-auth-headers
-  labels:
-    {{- include "chart-libs.labels" . | nindent 4 }}
-spec:
-  headers:
-    customRequestHeaders:
-      X-Auth-User: ""
-      X-Auth-Scopes: ""
-      X-Auth-Tenant: ""
----
+# NOTE: inbound X-Auth-* stripping is now a native Gateway API RequestHeaderModifier
+# filter emitted first in every route by chart-libs.gateway-routes (spec §3.2). The
+# former gateway-common-strip-auth-headers Middleware was removed 2026-07-12 after the
+# live ordering gate proved the native filter runs before the ExtensionRef ForwardAuth.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
