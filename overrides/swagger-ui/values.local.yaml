@@ -6,24 +6,24 @@ networkPolicy:
 
 ingressroute:
 
-  # -- Define IngressRoute(s) for labs64io-gateway (module routes are owned by the module charts)
+  # -- Define IngressRoute(s) for swagger-ui (module routes are owned by the module charts)
   routes:
     # -- Swagger UI served under /swagger-ui (public — no auth required)
     - path: /swagger-ui
       service:
-        name: labs64io-gateway
+        name: labs64io-swagger-ui
         port: 8080
       middlewares:
         - name: strip-prefix
     # -- Root path convenience redirect to the Swagger UI (Traefik prefers longer matches, so module routes always win over this catch-all)
     - path: /
       service:
-        name: labs64io-gateway
+        name: labs64io-swagger-ui
         port: 8080
       middlewares:
         - name: root-redirect
 
-  # -- Middlewares owned by the gateway chart itself
+  # -- Middlewares owned by the swagger-ui chart itself
   middlewares:
     # -- Strip Prefix Middleware (swagger-ui only)
     - name: strip-prefix

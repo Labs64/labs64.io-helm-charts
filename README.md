@@ -54,7 +54,7 @@ Every module chart is standalone - install only what you need. Bundled infra
 | customer-portal-ui | Customer portal | - | `/customer-portal` (protected) | `helm install my-portal labs64io-pub/customer-portal-ui` |
 | gateway-common | Shared Traefik middlewares (auth, rate limit, headers) | - | n/a | `helm install gateway-common labs64io-pub/gateway-common` |
 | traefik-authproxy | ForwardAuth OIDC/JWT verifier | - | n/a | `helm install authproxy labs64io-pub/traefik-authproxy` |
-| gateway | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install gateway labs64io-pub/gateway` |
+| swagger-ui | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install swagger-ui labs64io-pub/swagger-ui` |
 
 Gateway integration (`gateway.enabled: true`) requires Traefik v3 CRDs plus the
 `gateway-common` and `traefik-authproxy` charts; without them, use the standard

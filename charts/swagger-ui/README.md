@@ -1,8 +1,8 @@
-# gateway
+# swagger-ui
 
 ![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.27.1](https://img.shields.io/badge/AppVersion-v5.27.1-informational?style=flat-square)
 
-Labs64.IO :: API Gateway
+Labs64.IO :: Swagger UI
 
 **Homepage:** <https://labs64.io>
 
@@ -32,7 +32,7 @@ Labs64.IO :: API Gateway
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | global | object | `{"domain":"localhost"}` | Global values shared across Labs64.IO charts |
-| global.domain | string | `"localhost"` | Base domain; the gateway is exposed as gateway.<domain> |
+| global.domain | string | `"localhost"` | Base domain; swagger-ui is exposed as gateway.<domain> |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"swaggerapi/swagger-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |

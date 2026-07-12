@@ -1,6 +1,6 @@
 # -- Global values shared across Labs64.IO charts
 global:
-  # -- Base domain; the gateway is exposed as gateway.<domain>
+  # -- Base domain; swagger-ui is exposed as gateway.<domain>
   domain: localhost
 
 # -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/

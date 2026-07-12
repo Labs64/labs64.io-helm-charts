@@ -16,7 +16,7 @@ PROMETHEUS_STACK_CHART_VERSION := "87.5.1"
 TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
 
-LABS64IO_APPS := "traefik-authproxy gateway-common gateway auditflow checkout checkout-ui payment-gateway customer-portal-ui"
+LABS64IO_APPS := "traefik-authproxy gateway-common swagger-ui auditflow checkout checkout-ui payment-gateway customer-portal-ui"
 
 # List available commands
 default:
@@ -96,7 +96,7 @@ install-app app:
     fi
     helm upgrade --install labs64io-{{app}} ./charts/{{app}} "${ARGS[@]}"
 
-# Install a single Labs64.IO application standalone (bundled infra, no gateway stack)
+# Install a single Labs64.IO application standalone (bundled infra, no swagger-ui stack)
 install-app-standalone app:
     helm dependencies update ./charts/{{app}}
     helm upgrade --install labs64io-{{app}} ./charts/{{app}} \

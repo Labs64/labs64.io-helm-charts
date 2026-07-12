@@ -68,7 +68,7 @@ graph TB
         subgraph ns_labs64io["Namespace: labs64io (Labs64 Modules)"]
             
             subgraph Gateway["Gateway & Auth"]
-                gateway["gateway<br/>(Swagger UI)"]:::labs64
+                swagger_ui["swagger-ui<br/>(Swagger UI)"]:::labs64
                 gateway_common["gateway-common<br/>(Middlewares)"]:::labs64
                 authproxy["traefik-authproxy"]:::labs64
             end
@@ -108,7 +108,7 @@ graph TB
     User((Developer)) -->|HTTP 80/443| traefik
     traefik -.->|"ForwardAuth call (gateway-common middleware)"| authproxy
     authproxy -->|Validates JWT against| mock_oidc
-    traefik -->|"Routes via IngressRoute, gateway-common middlewares applied in-chain"| gateway
+    traefik -->|"Routes via IngressRoute, gateway-common middlewares applied in-chain"| swagger_ui
     traefik --> audit_be
     traefik --> checkout_be
     traefik --> pg_be
@@ -335,7 +335,7 @@ just up
 ```bash
 just install-app traefik-authproxy   # auth proxy (required first)
 just install-app gateway-common      # shared Traefik middlewares
-just install-app gateway             # Swagger UI
+just install-app swagger-ui           # Swagger UI
 just install-app auditflow           # audit logging
 just install-app checkout            # checkout backend
 just install-app checkout-ui         # checkout frontend

@@ -1,5 +1,5 @@
 **********************************************************************
-***      Labs64.IO :: API Gateway has been deployed!            ***
+***      Labs64.IO :: Swagger UI has been deployed!            ***
 **********************************************************************
 
 Release Name: {{ .Release.Name }}
@@ -22,7 +22,7 @@ App Version:  {{ .Chart.AppVersion }}
    Host: {{ include "chart-libs.gatewayHost" . }}
    Entry Points: {{ join ", " .Values.ingressroute.entryPoints }}
 
-   Access your API Gateway at:
+   Access Swagger UI at:
    http://{{ include "chart-libs.gatewayHost" . }}/swagger-ui/
 {{- end }}
 
@@ -36,7 +36,7 @@ App Version:  {{ .Chart.AppVersion }}
 {{- end }}
 
 📖 Swagger UI:
-   The API Gateway provides unified access to all microservice API documentation.
+   Swagger UI provides unified access to all microservice API documentation.
 
 {{- if .Values.swaggerUI }}
 {{- if .Values.swaggerUI.urls }}
@@ -72,7 +72,7 @@ App Version:  {{ .Chart.AppVersion }}
 
 🔧 Configuration:
    To update API routes, modify the swaggerUI.urls in your values file and upgrade:
-   helm upgrade {{ .Release.Name }} labs64io/gateway -f your-values.yaml
+   helm upgrade {{ .Release.Name }} labs64io/swagger-ui -f your-values.yaml
 
 📚 Documentation:
    GitHub: https://github.com/Labs64/labs64.io-helm-charts

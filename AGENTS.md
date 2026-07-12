@@ -12,7 +12,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | `charts/payment-gateway/` | Payment gateway backend |
 | `charts/customer-portal/` | Customer portal backend |
 | `charts/customer-portal-ui/` | Customer portal frontend |
-| `charts/gateway/` | Swagger UI aggregator |
+| `charts/swagger-ui/` | Swagger UI aggregator |
 | `charts/gateway-common/` | Shared Traefik middlewares |
 | `charts/traefik-authproxy/` | ForwardAuth OIDC/JWT verifier |
 | `charts/preflight/` | Infrastructure readiness checks |
