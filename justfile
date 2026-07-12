@@ -6,6 +6,7 @@ NAMESPACE_TOOLS := "tools"
 HELM_DOCS_VERSION := "v1.14.2"
 TRAEFIK_CHART_VERSION := "41.0.1"
 TRAEFIK_CRDS_CHART_VERSION := "1.18.0"
+GATEWAY_API_VERSION := "v1.2.1"
 METRICS_SERVER_CHART_VERSION := "3.13.1"
 RABBITMQ_CHART_VERSION := "16.0.14"
 POSTGRESQL_CHART_VERSION := "18.7.11"
@@ -138,6 +139,8 @@ uninstall-tools: uninstall-tool-traefik uninstall-tool-mock-oidc uninstall-tool-
 install-tool-traefik:
     #!/usr/bin/env bash
     set -euo pipefail
+    echo "Installing Gateway API (standard channel) CRDs..."
+    kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/{{GATEWAY_API_VERSION}}/standard-install.yaml
     echo "Installing Traefik CRDs..."
     helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
     helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait --skip-crds

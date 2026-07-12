@@ -4,14 +4,30 @@ ingressRoute:
     matchRule: PathPrefix(`/dashboard`) || PathPrefix(`/api`)
     entryPoints: ["web"]
 
+# Gateway API is now the routing substrate: modules own HTTPRoutes that attach to
+# the platform Gateway below. ForwardAuth/rate-limit/compress remain Traefik
+# Middlewares referenced from the HTTPRoutes via ExtensionRef.
 providers:
   kubernetesGateway:
-    enabled: false
+    enabled: true
 
-#gateway:
-#  listeners:
-#    web:
-#      namespacePolicy: All
+# Chart-provisioned GatewayClass (referenced by the Gateway below).
+gatewayClass:
+  enabled: true
+
+# Chart-provisioned platform Gateway. Modules in the labs64io namespace attach
+# their HTTPRoutes here via parentRefs {name: labs64io-gateway, namespace: tools},
+# so the listener must allow routes from all namespaces.
+gateway:
+  enabled: true
+  name: labs64io-gateway
+  namespace: tools
+  listeners:
+    web:
+      port: 8000
+      protocol: HTTP
+      namespacePolicy:
+        from: All
 
 # logs:
 #   general:
