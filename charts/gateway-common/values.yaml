@@ -44,16 +44,10 @@ compress:
     - image/webp
     - application/grpc
 
-# -- Security headers middleware configuration
-securityHeaders:
-  frameDeny: true
-  contentTypeNosniff: true
-  browserXssFilter: true
-  referrerPolicy: "strict-origin-when-cross-origin"
-  contentSecurityPolicy: "default-src 'self'; script-src 'self'; object-src 'none'"
-  forceSTSHeader: true
-  stsSeconds: 31536000
-  stsIncludeSubdomains: true
+# -- Security response headers are now emitted as a native Gateway API
+# ResponseHeaderModifier filter on each HTTPRoute rule; the canonical values live
+# in the chart-libs "chart-libs.securityHeaders" helper. (The former Traefik
+# security-headers Middleware has been removed.)
 
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema

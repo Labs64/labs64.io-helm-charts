@@ -168,64 +168,6 @@
       ],
       "title": "rateLimit",
       "type": "object"
-    },
-    "securityHeaders": {
-      "additionalProperties": false,
-      "description": "Security headers middleware configuration",
-      "properties": {
-        "browserXssFilter": {
-          "default": true,
-          "title": "browserXssFilter",
-          "type": "boolean"
-        },
-        "contentSecurityPolicy": {
-          "default": "default-src 'self'; script-src 'self'; object-src 'none'",
-          "title": "contentSecurityPolicy",
-          "type": "string"
-        },
-        "contentTypeNosniff": {
-          "default": true,
-          "title": "contentTypeNosniff",
-          "type": "boolean"
-        },
-        "forceSTSHeader": {
-          "default": true,
-          "title": "forceSTSHeader",
-          "type": "boolean"
-        },
-        "frameDeny": {
-          "default": true,
-          "title": "frameDeny",
-          "type": "boolean"
-        },
-        "referrerPolicy": {
-          "default": "strict-origin-when-cross-origin",
-          "title": "referrerPolicy",
-          "type": "string"
-        },
-        "stsIncludeSubdomains": {
-          "default": true,
-          "title": "stsIncludeSubdomains",
-          "type": "boolean"
-        },
-        "stsSeconds": {
-          "default": 31536000,
-          "title": "stsSeconds",
-          "type": "integer"
-        }
-      },
-      "required": [
-        "frameDeny",
-        "contentTypeNosniff",
-        "browserXssFilter",
-        "referrerPolicy",
-        "contentSecurityPolicy",
-        "forceSTSHeader",
-        "stsSeconds",
-        "stsIncludeSubdomains"
-      ],
-      "title": "securityHeaders",
-      "type": "object"
     }
   },
   "required": [
@@ -233,8 +175,7 @@
     "nameOverride",
     "authProxy",
     "rateLimit",
-    "compress",
-    "securityHeaders"
+    "compress"
   ],
   "type": "object"
 }
