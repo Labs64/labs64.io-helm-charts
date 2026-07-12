@@ -16,11 +16,11 @@ App Version:  {{ .Chart.AppVersion }}
 📋 Logs:
    kubectl logs -l app.kubernetes.io/name={{ include "chart-libs.name" . }} -n {{ .Release.Namespace }} -f
 
-{{- if .Values.ingressroute.enabled }}
+{{- if .Values.gateway.enabled }}
 
-🌐 IngressRoute:
+🌐 HTTPRoute (Gateway API):
    Host: {{ include "chart-libs.gatewayHost" . }}
-   Entry Points: {{ join ", " .Values.ingressroute.entryPoints }}
+   Parent Gateway(s): {{ range .Values.gateway.parentRefs }}{{ .name }}{{ with .namespace }}.{{ . }}{{ end }} {{ end }}
 
    Access Swagger UI at:
    http://{{ include "chart-libs.gatewayHost" . }}/swagger-ui/

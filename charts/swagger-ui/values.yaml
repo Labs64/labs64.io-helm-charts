@@ -84,33 +84,27 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-# -- IngressRoute configuration for Traefik more information can be found here: https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/
-ingressroute:
-  # -- This sets whether the IngressRoute is enabled or not
+# -- Gateway API HTTPRoute for swagger-ui (public docs aggregator; module API
+# routes are owned by the module charts). No auth — faithful to prior behavior.
+gateway:
+  # -- Enable the swagger-ui HTTPRoute
   enabled: true
-  # -- Entry points for the IngressRoute
-  entryPoints:
-    - web
-    - websecure
-  # -- IngressRoute routes definitions
-  routes: []
-  #  - path: /<servicename>/v3/api-docs
-  #    service:
-  #      name: <service-name>
-  #      port: 8080
-  #    middleware:
-  #      name: <gateway-service-name>-path-stripper
-  # -- Middlewares owned by this chart (rendered by templates/middleware.yaml)
+  # -- Gateway(s) this HTTPRoute attaches to
+  parentRefs:
+    - name: labs64io-gateway
+      namespace: tools
+  # -- Routes. Each: path, optional pathType (default PathPrefix), service{name,port};
+  # stripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path.
   # @schema
   # type: array
   # @schema
-  middlewares: []
-  #  - name: path-stripper
-  #    spec:
-  #      stripPrefix:
-  #        prefixes:
-  #          - /<prefix1>
-  #          - /<prefix2>
+  routes: []
+  #  - path: /swagger-ui
+  #    service: { name: labs64io-swagger-ui, port: 8080 }
+  #    stripPrefix: true
+  #  - path: /
+  #    pathType: Exact
+  #    redirectTo: /swagger-ui/
 
 resources:
   limits:
