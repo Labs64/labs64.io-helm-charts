@@ -127,8 +127,8 @@ config:
       endpoint: "http://tempo.monitoring.svc.cluster.local:4317"
       tls:
         insecure: true
-    otlphttp/victorialogs:
-      endpoint: "http://victoria-logs-victoria-logs-single-server.monitoring.svc.cluster.local:9428/insert/opentelemetry/v1/logs"
+    otlphttp/loki:
+      endpoint: "http://loki.monitoring.svc.cluster.local:3100/otlp/v1/logs"
       tls:
         insecure: true
 
@@ -145,4 +145,4 @@ config:
       logs:
         receivers: [filelog, otlp]
         processors: [batch]
-        exporters: [otlphttp/victorialogs]
+        exporters: [otlphttp/loki]

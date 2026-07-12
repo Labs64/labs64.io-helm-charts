@@ -59,7 +59,7 @@ flowchart LR
     PYI -- "traces + logs + metrics (OTLP)" --> COL
     appcode -- "/actuator/prometheus<br/>(Micrometer, always on)" --> SCRAPE["Prometheus scrape"]
     COL --> TEMPO["Tempo<br/>(traces)"]
-    COL --> LOGS["VictoriaLogs (k8s)<br/>Loki (compose)"]
+    COL --> LOGS["Loki (k8s)<br/>Loki (compose)"]
     COL --> PROM["Prometheus<br/>(metrics)"]
     SCRAPE --> PROM
     PROM & TEMPO & LOGS --> GRAF["Grafana<br/>(single pane)"]
@@ -193,7 +193,7 @@ flowchart LR
     MET --> PROMR
     STDOUT --> FILE
     OTLP -- traces --> TEMPO["Tempo"]
-    OTLP -- logs --> VL["VictoriaLogs"]
+    OTLP -- logs --> LOKI["Loki"]
     OTLP -- metrics --> PROM["Prometheus<br/>(remote write)"]
     PROMR -- metrics --> PROM
     FILE -- logs --> VL
@@ -205,12 +205,12 @@ flowchart LR
 | Signal | Producer | Collector pipeline | Backend |
 |---|---|---|---|
 | **Traces** | Java Agent, Python auto-instr | `otlp` → `otlp/tempo` | **Tempo** |
-| **Logs** | Java Agent (OTLP), Python (OTLP), container stdout | `filelog + otlp` → `otlphttp/victorialogs` | **VictoriaLogs** (k8s) |
+| **Logs** | Java Agent (OTLP), Python (OTLP), container stdout | `filelog + otlp` → `otlphttp/loki` | **Loki** (k8s) |
 | **Metrics (Java)** | Micrometer `/actuator/prometheus` | `prometheus` receiver → `prometheusremotewrite` | **Prometheus** |
 | **Metrics (Python)** | auto-instr (OTLP) | `otlp` → `prometheusremotewrite` | **Prometheus** |
-| **Dashboards** | — | — | **Grafana** (Prometheus + Tempo + VictoriaLogs datasources) |
+| **Dashboards** | — | — | **Grafana** (Prometheus + Tempo + Loki datasources) |
 
-> **Logs backend differs by environment:** Kubernetes uses **VictoriaLogs**; the local Docker
+> **Logs backend differs by environment:** Kubernetes uses **Loki**; the local Docker
 > Compose observability overlay uses **Loki**. Both are queried through Grafana.
 
 ---

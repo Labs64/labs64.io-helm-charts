@@ -58,7 +58,7 @@ graph TB
             subgraph Observability["Observability Stack (optional)"]
                 otel["OpenTelemetry<br/>Collector"]:::obs
                 tempo["Tempo<br/>(Traces)"]:::obs
-                vlogs["VictoriaLogs<br/>(Logs)"]:::obs
+                vlogs["Loki<br/>(Logs)"]:::obs
                 prom["Prometheus<br/>(Metrics)"]:::obs
                 grafana["Grafana<br/>(Dashboards)"]:::obs
             end

@@ -16,7 +16,7 @@ OTEL_COLLECTOR_CHART_VERSION := "0.165.0"
 PROMETHEUS_STACK_CHART_VERSION := "87.15.1"
 TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
-VICTORIA_LOGS_CHART_VERSION := "0.13.8"
+LOKI_CHART_VERSION := "6.24.0"
 
 LABS64IO_APPS := "traefik-authproxy gateway-common swagger-ui auditflow checkout checkout-ui payment-gateway customer-portal-ui"
 # Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
@@ -200,10 +200,10 @@ uninstall-tool-mock-oidc:
 ## 📊 Monitoring Tools ##
 
 # Install all monitoring tools
-install-monitoring: install-tool-metrics-server install-tool-opentelemetry install-tool-prometheus install-tool-victorialogs install-tool-tempo install-tool-grafana
+install-monitoring: install-tool-metrics-server install-tool-opentelemetry install-tool-prometheus install-tool-loki install-tool-tempo install-tool-grafana
 
 # Uninstall all monitoring tools
-uninstall-monitoring: uninstall-tool-grafana uninstall-tool-tempo uninstall-tool-victorialogs uninstall-tool-prometheus uninstall-tool-opentelemetry uninstall-tool-metrics-server
+uninstall-monitoring: uninstall-tool-grafana uninstall-tool-tempo uninstall-tool-loki uninstall-tool-prometheus uninstall-tool-opentelemetry uninstall-tool-metrics-server
 
 # install Metrics Server
 install-tool-metrics-server:
@@ -245,15 +245,16 @@ install-tool-prometheus:
 uninstall-tool-prometheus:
     helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}} || true
 
-# install VictoriaLogs
-install-tool-victorialogs:
-    helm upgrade --install victoria-logs victoria-metrics/victoria-logs-single \
-      --version {{VICTORIA_LOGS_CHART_VERSION}} \
+# install Loki
+install-tool-loki:
+    helm upgrade --install loki grafana/loki \
+      --version {{LOKI_CHART_VERSION}} \
+      -f overrides/loki/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
 
-# uninstall VictoriaLogs
-uninstall-tool-victorialogs:
-    helm uninstall victoria-logs --namespace {{NAMESPACE_MONITORING}} || true
+# uninstall Loki
+uninstall-tool-loki:
+    helm uninstall loki --namespace {{NAMESPACE_MONITORING}} || true
 
 # install Tempo
 install-tool-tempo:

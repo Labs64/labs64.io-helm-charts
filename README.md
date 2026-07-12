@@ -108,7 +108,7 @@ runs as one container; the Job succeeds only if all pass.
 Observability across the ecosystem is **infrastructure-owned**: services ship no OpenTelemetry
 SDK, instrumentation is injected at runtime (OTel Java Agent / `opentelemetry-instrument`), and
 the whole stack is toggled per deployment with `observability.enabled` — the same image runs with
-it on or off. Signals flow through an OpenTelemetry Collector to Tempo (traces), VictoriaLogs
+it on or off. Signals flow through an OpenTelemetry Collector to Tempo (traces), Loki
 (logs), and Prometheus (metrics), unified in Grafana.
 
 See **[OBSERVABILITY.md](OBSERVABILITY.md)** for the full model, the env-variable contract, and
