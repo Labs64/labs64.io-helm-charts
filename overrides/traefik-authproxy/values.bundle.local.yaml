@@ -23,3 +23,10 @@ policyBundle:
   cosignPublicKey: ""   # set at apply time
   orasImage: ghcr.io/oras-project/oras:v1.2.0
   cosignImage: gcr.io/projectsigstore/cosign:v3.1.1
+
+# Cedar edge tier (RFC-05 P2). shadow logs the cedar-vs-legacy diff per
+# module-route request; flip to enforce ONLY after e2e traffic shows
+# match=True across the matrix (grep 'cedar-shadow' in the ACS logs).
+cedar:
+  mode: shadow
+  # mode: enforce
