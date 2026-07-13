@@ -104,6 +104,15 @@ policyBundle:
   orasImage: ghcr.io/oras-project/oras:v1.2.0
   cosignImage: gcr.io/projectsigstore/cosign:v3.1.1
 
+# -- Cedar edge tier (RFC-05 P2). The ACS evaluates the generated per-operation
+# Cedar policies shipped inside the signed policy bundle (requires
+# policyBundle.enabled; without it the app degrades to off with a warning).
+cedar:
+  # -- off = legacy only · shadow = evaluate + log cedar-vs-legacy diff, legacy
+  # decides · enforce = Cedar decides module routes (flip ONLY after the shadow
+  # diff is clean — RFC-05 shadow-mode rule; static prefixes stay legacy).
+  mode: shadow
+
 resources:
   limits:
     cpu: 200m
