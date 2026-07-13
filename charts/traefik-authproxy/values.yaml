@@ -105,12 +105,15 @@ policyBundle:
   cosignImage: gcr.io/projectsigstore/cosign:v3.1.1
 
 # -- Cedar edge tier (RFC-05 P2). The ACS evaluates the generated per-operation
-# Cedar policies shipped inside the signed policy bundle (requires
-# policyBundle.enabled; without it the app degrades to off with a warning).
+# Cedar policies from whichever policy source is active: the signed policy
+# bundle (policyBundle.enabled) or, under live discovery, each module's
+# /.well-known/auth-policy.cedar (build-generated, same distribution as
+# auth-policy.json). This is the declarative auth-policy ↔ Cedar switch.
 cedar:
-  # -- off = legacy only · shadow = evaluate + log cedar-vs-legacy diff, legacy
-  # decides · enforce = Cedar decides module routes (flip ONLY after the shadow
-  # diff is clean — RFC-05 shadow-mode rule; static prefixes stay legacy).
+  # -- off = legacy auth-policy.json only · shadow = evaluate + log
+  # cedar-vs-legacy diff, legacy decides · enforce = Cedar decides module
+  # routes (flip ONLY after the shadow diff is clean — RFC-05 shadow-mode
+  # rule; static prefixes stay legacy).
   mode: shadow
 
 resources:

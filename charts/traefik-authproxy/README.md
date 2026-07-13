@@ -1,6 +1,6 @@
 # traefik-authproxy
 
-![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Traefik Auth (M2M) Middleware
 
@@ -29,8 +29,8 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
-| cedar | object | `{"mode":"shadow"}` | Cedar edge tier (RFC-05 P2). The ACS evaluates the generated per-operation Cedar policies shipped inside the signed policy bundle (requires policyBundle.enabled; without it the app degrades to off with a warning). |
-| cedar.mode | string | `"shadow"` | off = legacy only · shadow = evaluate + log cedar-vs-legacy diff, legacy decides · enforce = Cedar decides module routes (flip ONLY after the shadow diff is clean — RFC-05 shadow-mode rule; static prefixes stay legacy). |
+| cedar | object | `{"mode":"shadow"}` | Cedar edge tier (RFC-05 P2). The ACS evaluates the generated per-operation Cedar policies from whichever policy source is active: the signed policy bundle (policyBundle.enabled) or, under live discovery, each module's /.well-known/auth-policy.cedar (build-generated, same distribution as auth-policy.json). This is the declarative auth-policy ↔ Cedar switch. |
+| cedar.mode | string | `"shadow"` | off = legacy auth-policy.json only · shadow = evaluate + log cedar-vs-legacy diff, legacy decides · enforce = Cedar decides module routes (flip ONLY after the shadow diff is clean — RFC-05 shadow-mode rule; static prefixes stay legacy). |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env[0] | object | `{"name":"OIDC_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | OIDC discovery URL. Override per environment:   production: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration   local dev:  http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration |
 | env[1] | object | `{"name":"OIDC_AUDIENCE","value":"account"}` | Audience for the auth proxy. |
