@@ -231,7 +231,7 @@
           "type": "string"
         },
         "routes": {
-          "description": "Routes exposed by this module",
+          "description": "Routes exposed by this module.\nThe whole API surface is ONE route through ForwardAuth: the authproxy is the\nPEP and derives public-vs-protected per operation from OpenAPI x-labs64-auth\n(compiled to Cedar, live-discovered via /.well-known/auth-policy.cedar). Public\noperations (payment-definitions, PSP webhooks, provider/checkout redirect returns\n— none can carry a JWT) are allowed without a token by the authproxy itself, so\nthey MUST NOT be re-declared here. Re-declaring them as edge routes duplicates\nthe OpenAPI PEP and mis-strips their paths. OpenAPI stays the single source of truth.",
           "items": {
             "anyOf": [
               {
@@ -265,102 +265,6 @@
                 "properties": {
                   "path": {
                     "default": "/v3/api-docs",
-                    "title": "path",
-                    "type": "string"
-                  },
-                  "port": {
-                    "default": 8080,
-                    "title": "port",
-                    "type": "integer"
-                  },
-                  "public": {
-                    "default": true,
-                    "title": "public",
-                    "type": "boolean"
-                  },
-                  "stripPrefix": {
-                    "default": true,
-                    "title": "stripPrefix",
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "path",
-                  "port",
-                  "public",
-                  "stripPrefix"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "default": "/api/v1/providers",
-                    "title": "path",
-                    "type": "string"
-                  },
-                  "port": {
-                    "default": 8080,
-                    "title": "port",
-                    "type": "integer"
-                  },
-                  "public": {
-                    "default": true,
-                    "title": "public",
-                    "type": "boolean"
-                  },
-                  "stripPrefix": {
-                    "default": true,
-                    "title": "stripPrefix",
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "path",
-                  "port",
-                  "public",
-                  "stripPrefix"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "default": "/api/v1/checkout-sessions",
-                    "title": "path",
-                    "type": "string"
-                  },
-                  "port": {
-                    "default": 8080,
-                    "title": "port",
-                    "type": "integer"
-                  },
-                  "public": {
-                    "default": true,
-                    "title": "public",
-                    "type": "boolean"
-                  },
-                  "stripPrefix": {
-                    "default": true,
-                    "title": "stripPrefix",
-                    "type": "boolean"
-                  }
-                },
-                "required": [
-                  "path",
-                  "port",
-                  "public",
-                  "stripPrefix"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "path": {
-                    "default": "/api/v1/payment-definitions",
                     "title": "path",
                     "type": "string"
                   },

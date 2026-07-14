@@ -311,31 +311,23 @@ gateway:
     enabled: true
     # -- External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1
     basePath: ""
-  # -- Routes exposed by this module
+  # -- Routes exposed by this module.
+  # The whole API surface is ONE route through ForwardAuth: the authproxy is the
+  # PEP and derives public-vs-protected per operation from OpenAPI x-labs64-auth
+  # (compiled to Cedar, live-discovered via /.well-known/auth-policy.cedar). Public
+  # operations (payment-definitions, PSP webhooks, provider/checkout redirect returns
+  # — none can carry a JWT) are allowed without a token by the authproxy itself, so
+  # they MUST NOT be re-declared here. Re-declaring them as edge routes duplicates
+  # the OpenAPI PEP and mis-strips their paths. OpenAPI stays the single source of truth.
   routes:
-    # -- Payment Gateway API (protected; strips '<prefix>/api/v1' — backend is root-mapped)
+    # -- Whole Payment Gateway API (ForwardAuth PEP decides per-op from OpenAPI;
+    # strips '<prefix>/api/v1' — backend is root-mapped)
     - path: /api/v1
       port: 8080
       stripPath: true
-    # -- OpenAPI docs (public, prefix stripped before forwarding)
+    # -- OpenAPI docs (springdoc endpoint — NOT an OpenAPI operation, so it has no
+    # x-labs64-auth policy at the authproxy; public at the edge, prefix stripped)
     - path: /v3/api-docs
-      port: 8080
-      public: true
-      stripPrefix: true
-    # -- PSP webhooks + provider checkout return/cancel redirects (public — PSP
-    # servers and browsers cannot carry a JWT; authenticity is enforced by PSP
-    # signature checks and the backend's own public-path allowlist)
-    - path: /api/v1/providers
-      port: 8080
-      public: true
-      stripPrefix: true
-    # -- Checkout-session confirmation redirect target (public, same rationale)
-    - path: /api/v1/checkout-sessions
-      port: 8080
-      public: true
-      stripPrefix: true
-    # -- Payment definitions listing (public read-only catalog)
-    - path: /api/v1/payment-definitions
       port: 8080
       public: true
       stripPrefix: true
