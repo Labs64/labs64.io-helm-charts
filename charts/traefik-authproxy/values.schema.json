@@ -44,11 +44,11 @@
     },
     "cedar": {
       "additionalProperties": false,
-      "description": "Cedar edge tier (RFC-05 P2). The ACS evaluates the generated per-operation\nCedar policies shipped inside the signed policy bundle (requires\npolicyBundle.enabled; without it the app degrades to off with a warning).",
+      "description": "Cedar edge tier. The ACS evaluates the generated per-operation\nCedar policies shipped inside the signed policy bundle (requires\npolicyBundle.enabled; without it the app degrades to off with a warning).",
       "properties": {
         "mode": {
-          "default": "shadow",
-          "description": "off = legacy only · shadow = evaluate + log cedar-vs-legacy diff, legacy\ndecides · enforce = Cedar decides module routes (flip ONLY after the shadow\ndiff is clean — RFC-05 shadow-mode rule; static prefixes stay legacy).",
+          "default": "enforce",
+          "description": "off = legacy only · shadow = evaluate + log cedar-vs-legacy diff, legacy\ndecides · enforce = Cedar decides module routes (flip ONLY after the shadow\ndiff is clean — shadow-mode rule; static prefixes stay legacy).",
           "title": "mode",
           "type": "string"
         }
@@ -580,7 +580,7 @@
     },
     "policyBundle": {
       "additionalProperties": false,
-      "description": "Signed edge-policy bundle (RFC-05 P0 — Provenance). When enabled, the ACS\nloads module auth policies from a cosign-signed OCI bundle pulled BY DIGEST and\nverified by an init container, instead of fetching them live from the module\npods it authorizes (closes F2: self-authored runtime policy). Build/sign/push\nthe bundle with labs64.io-authproxy/policy-bundle/build-bundle.sh.",
+      "description": "Signed edge-policy bundle. When enabled, the ACS\nloads module auth policies from a cosign-signed OCI bundle pulled BY DIGEST and\nverified by an init container, instead of fetching them live from the module\npods it authorizes (closes F2: self-authored runtime policy). Build/sign/push\nthe bundle with labs64.io-authproxy/policy-bundle/build-bundle.sh.",
       "properties": {
         "cosignImage": {
           "default": "gcr.io/projectsigstore/cosign:v3.1.1",

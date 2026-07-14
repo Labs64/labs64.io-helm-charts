@@ -3,7 +3,7 @@
 {{- fail "policyBundle.enabled requires policyBundle.cosignPublicKey (the cosign public key that signed the bundle)" }}
 {{- end }}
 # Cosign public key used by the policy-bundle-verify init container to verify the
-# signed edge-policy bundle before the ACS starts (RFC-05 P0).
+# signed edge-policy bundle before the ACS starts.
 apiVersion: v1
 kind: ConfigMap
 metadata:

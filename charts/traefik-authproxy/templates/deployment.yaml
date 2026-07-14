@@ -37,7 +37,7 @@ spec:
       {{- $pb := .Values.policyBundle }}
       {{- $ref := printf "%s/%s@%s" $pb.registry $pb.repo (required "policyBundle.digest is required in bundle mode" $pb.digest) }}
       initContainers:
-        # RFC-05 P0 — Provenance: pull the edge-policy bundle BY DIGEST and verify
+        # Provenance: pull the edge-policy bundle BY DIGEST and verify
         # its cosign signature before the ACS starts. Policy comes only from this
         # signed artifact — never from the module pods it authorizes (F2 closed).
         - name: policy-bundle-pull

@@ -18,9 +18,7 @@ postgresql:
 redis:
   enabled: false
 
-# Cedar domain authorization (RFC-05 P4): the pilot module runs ENFORCE
-# locally — flipped after the shadow diff came back clean (unit + e2e).
-# Binding: LABS64_CEDAR_MODE -> labs64.auth.cedar.mode (application.yml).
+# Cedar domain authorization
 env:
   - name: LABS64_CEDAR_MODE
-    value: ENFORCE
+    value: SHADOW

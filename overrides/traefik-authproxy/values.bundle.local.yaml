@@ -1,4 +1,4 @@
-# Local provenance-mode override (RFC-05 P0): run the ACS from a cosign-signed,
+# Local provenance-mode override: run the ACS from a cosign-signed,
 # digest-pinned edge-policy bundle instead of live pod discovery.
 #
 # Apply on top of the normal local values, filling digest + cosignPublicKey from
@@ -24,7 +24,7 @@ policyBundle:
   orasImage: ghcr.io/oras-project/oras:v1.2.0
   cosignImage: gcr.io/projectsigstore/cosign:v3.1.1
 
-# Cedar edge tier (RFC-05 P2). shadow logs the cedar-vs-legacy diff per
+# Cedar edge tier. shadow logs the cedar-vs-legacy diff per
 # module-route request; flip to enforce ONLY after e2e traffic shows
 # match=True across the matrix (grep 'cedar-shadow' in the ACS logs).
 cedar:

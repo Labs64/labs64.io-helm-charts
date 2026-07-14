@@ -15,9 +15,7 @@ rabbitmq:
 postgresql:
   enabled: false
 
-# Cedar domain authorization (RFC-05 P4): SHADOW while the diff soaks; flip to
-# ENFORCE once cedar-domain decision logs show no mismatches.
-# Binding: LABS64_CEDAR_MODE -> labs64.auth.cedar.mode (application.yml).
-# env:
-#   - name: LABS64_CEDAR_MODE
-#     value: ENFORCE
+# Cedar domain authorization
+env:
+  - name: LABS64_CEDAR_MODE
+    value: SHADOW
