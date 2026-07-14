@@ -1,6 +1,15 @@
 # DEV ONLY: mock OIDC provider for local M2M testing.
 # Issues signed JWTs with Keycloak-shaped realm_access.roles claims for ANY
 # client_credentials request. Never deploy outside local environments.
+#
+# The `scope` request param selects the token shape:
+#   - Named personas (auditflow / ecommerce / no-access / admin) issue a fixed,
+#     curated scope set — convenient shorthand for coarse role testing.
+#   - ANY OTHER value is echoed verbatim into the JWT `scope` claim (${scope}),
+#     so you can mint a token with EXACTLY the scopes you ask for and assert
+#     fine-grained authorization (e.g. `audit-event:read` must NOT satisfy a
+#     route requiring `audit-event:write`). Unrecognized strings therefore grant
+#     only themselves — never accidental admin.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -51,13 +60,24 @@ data:
             },
             {
               "requestParam": "scope",
-              "match": "*",
+              "match": "admin",
               "claims": {
                 "sub": "svc:admin-client",
                 "tenant": "t_mock",
                 "aud": ["account"],
                 "scope": "audit-event:write customer:read customer:write purchase-order:read purchase-order:write purchase-order:checkout checkout-transaction:read payment:read payment:write payment:pay payment-provider:read payment-provider:write payment-transaction:read",
                 "realm_access": { "roles": ["admin-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "*",
+              "claims": {
+                "sub": "svc:local-test",
+                "tenant": "t_mock",
+                "aud": ["account"],
+                "scope": "${scope}",
+                "realm_access": { "roles": ["default-roles-labs64io"] }
               }
             }
           ]
