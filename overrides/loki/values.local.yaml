@@ -2,6 +2,9 @@
 # Single-binary mode with local filesystem storage
 deploymentMode: SingleBinary
 loki:
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3100"
   auth_enabled: false
   useTestSchema: true
   commonConfig:

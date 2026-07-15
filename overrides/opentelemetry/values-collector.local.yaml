@@ -1,5 +1,9 @@
 mode: daemonset
 
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8888"
+
 image:
   repository: otel/opentelemetry-collector-contrib
   tag: latest

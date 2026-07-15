@@ -9,218 +9,83 @@ data:
   ecosystem-overview.json: |
     {
       "uid": "labs64io-ecosystem",
-      "title": "Labs64.IO Ecosystem Overview",
-      "description": "Business monitoring dashboard for the Labs64.IO digital commerce ecosystem",
-      "tags": ["ecosystem", "business", "overview"],
+      "title": "01. Ecosystem Overview",
+      "description": "Comprehensive Global business and health metrics",
+      "tags": [
+        "ecosystem"
+      ],
       "timezone": "browser",
       "editable": true,
       "refresh": "10s",
-      "time": { "from": "now-1h", "to": "now" },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
       "templating": {
         "list": [
           {
             "name": "namespace",
             "type": "query",
-            "datasource": { "type": "prometheus", "uid": "Prometheus" },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
             "query": "label_values(kube_pod_info, namespace)",
             "refresh": 2,
             "includeAll": true,
             "multi": true,
-            "current": { "text": "All", "value": "$__all" }
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
           }
         ]
       },
       "panels": [
         {
           "id": 1,
-          "title": "Request Rate by Status",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "showPoints": "auto" },
-              "unit": "reqps"
-            },
-            "overrides": [
-              { "matcher": { "id": "byRegexp", "options": "2.." }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
-              { "matcher": { "id": "byRegexp", "options": "3.." }, "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] },
-              { "matcher": { "id": "byRegexp", "options": "4.." }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
-              { "matcher": { "id": "byRegexp", "options": "5.." }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
-            ]
+          "type": "row",
+          "title": "SLOs & High Level KPIs",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
           },
-          "targets": [
-            {
-              "expr": "sum(rate(traefik_entrypoint_requests_total[5m])) by (code)",
-              "legendFormat": "{{code}}",
-              "refId": "A"
-            }
-          ]
+          "collapsed": false,
+          "panels": []
         },
         {
           "id": 2,
-          "title": "Response Latency (p95)",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "s"
-            }
-          },
-          "targets": [
-            {
-              "expr": "histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le, entrypoint))",
-              "legendFormat": "p95 {{entrypoint}}",
-              "refId": "A"
-            },
-            {
-              "expr": "histogram_quantile(0.50, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le, entrypoint))",
-              "legendFormat": "p50 {{entrypoint}}",
-              "refId": "B"
-            }
-          ]
-        },
-        {
-          "id": 3,
-          "title": "Backend HTTP Requests by Service",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "reqps"
-            }
-          },
-          "targets": [
-            {
-              "expr": "sum(rate(http_server_requests_seconds_count{namespace=~\"$namespace\"}[5m])) by (application, status)",
-              "legendFormat": "{{application}} ({{status}})",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 4,
-          "title": "JVM Memory Usage (Heap)",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "bytes"
-            }
-          },
-          "targets": [
-            {
-              "expr": "sum(jvm_memory_used_bytes{area=\"heap\"}) by (application, id)",
-              "legendFormat": "{{application}} - {{id}}",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 5,
-          "title": "JVM Garbage Collection",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "s"
-            }
-          },
-          "targets": [
-            {
-              "expr": "rate(jvm_gc_pause_seconds_sum[5m])",
-              "legendFormat": "{{application}} - {{gc}} pause",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 6,
-          "title": "AuditFlow Event Processing",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "ops"
-            }
-          },
-          "targets": [
-            {
-              "expr": "sum(rate(auditflow_consumer_events_processed[5m])) by (application)",
-              "legendFormat": "{{application}} processed",
-              "refId": "A"
-            },
-            {
-              "expr": "sum(rate(auditflow_consumer_events_failed[5m])) by (application)",
-              "legendFormat": "{{application}} failed",
-              "refId": "B"
-            },
-            {
-              "expr": "sum(rate(auditflow_events_quarantined_total[5m]))",
-              "legendFormat": "quarantined",
-              "refId": "C"
-            }
-          ]
-        },
-        {
-          "id": 7,
-          "title": "Active Connections",
+          "title": "Availability SLO",
           "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 24 },
-          "fieldConfig": {
-            "defaults": { "unit": "none" }
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
           },
-          "targets": [
-            {
-              "expr": "sum(traefik_open_connections)",
-              "legendFormat": "Traefik",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 8,
-          "title": "HTTP Server Active Requests",
-          "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 24 },
-          "fieldConfig": {
-            "defaults": { "unit": "none" }
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 3,
+            "h": 4
           },
-          "targets": [
-            {
-              "expr": "sum(http_server_active_requests)",
-              "legendFormat": "Backend",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9,
-          "title": "SLO Availability",
-          "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 24 },
           "fieldConfig": {
             "defaults": {
               "unit": "percentunit",
+              "color": {
+                "mode": "value"
+              },
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  { "color": "red", "value": null },
-                  { "color": "yellow", "value": 0.99 },
-                  { "color": "green", "value": 0.999 }
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 0.99
+                  }
                 ]
               }
             }
@@ -231,23 +96,52 @@ data:
               "legendFormat": "{{application}}",
               "refId": "A"
             }
-          ]
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
         },
         {
-          "id": 10,
-          "title": "SLO Latency",
+          "id": 3,
+          "title": "Latency SLO",
           "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 24 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 3,
+            "y": 1,
+            "w": 3,
+            "h": 4
+          },
           "fieldConfig": {
             "defaults": {
               "unit": "percentunit",
+              "color": {
+                "mode": "value"
+              },
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  { "color": "red", "value": null },
-                  { "color": "yellow", "value": 0.95 },
-                  { "color": "green", "value": 0.99 }
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "green",
+                    "value": 0.99
+                  }
                 ]
               }
             }
@@ -258,25 +152,674 @@ data:
               "legendFormat": "{{application}}",
               "refId": "A"
             }
-          ]
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 4,
+          "title": "HTTP Req/s",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 6,
+            "y": 1,
+            "w": 3,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_entrypoint_requests_total[5m]))",
+              "legendFormat": "Req/s",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 5,
+          "title": "Auth Success",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 9,
+            "y": 1,
+            "w": 3,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(labs64_authz_decisions_total{decision=\"allow\"}[5m])) / sum(rate(labs64_authz_decisions_total[5m])) or vector(1)",
+              "legendFormat": "Success %",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 6,
+          "title": "Traefik Connections",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 1,
+            "w": 3,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(traefik_open_connections)",
+              "legendFormat": "Connections",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 7,
+          "title": "Backend Requests",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 15,
+            "y": 1,
+            "w": 3,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(http_server_active_requests)",
+              "legendFormat": "Requests",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 17,
+          "title": "Global Error Rate",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 18,
+            "y": 1,
+            "w": 3,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": {
+                "mode": "value"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.01
+                  }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"5..\"}[5m])) / sum(rate(traefik_entrypoint_requests_total[5m])) or vector(0)",
+              "legendFormat": "Error %",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 18,
+          "title": "Avg Response Time",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 21,
+            "y": 1,
+            "w": 3,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_entrypoint_request_duration_seconds_sum[5m])) / sum(rate(traefik_entrypoint_request_duration_seconds_count[5m]))",
+              "legendFormat": "Seconds",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 8,
+          "type": "row",
+          "title": "Traffic Matrix",
+          "gridPos": {
+            "x": 0,
+            "y": 5,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 9,
+          "title": "Request Rate by Status",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 6,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_entrypoint_requests_total[5m])) by (code)",
+              "legendFormat": "HTTP {{code}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 10,
+          "title": "Latency Percentiles",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 6,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.99, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p99"
+            },
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p95"
+            },
+            {
+              "expr": "histogram_quantile(0.50, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p50"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
         },
         {
           "id": 11,
-          "title": "Ecosystem Logs",
-          "type": "logs",
-          "datasource": { "type": "loki", "uid": "Loki" },
-          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 28 },
+          "title": "Requests by Service",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 6,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
           "targets": [
             {
-              "expr": "*",
+              "expr": "sum(rate(traefik_service_requests_total[5m])) by (service)",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 12,
+          "type": "row",
+          "title": "Business Overview",
+          "gridPos": {
+            "x": 0,
+            "y": 14,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 13,
+          "title": "AuditFlow Volume",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 15,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(auditflow_consumer_events_processed[5m]))",
+              "legendFormat": "Processed"
+            },
+            {
+              "expr": "sum(rate(auditflow_consumer_events_failed[5m]))",
+              "legendFormat": "Failed"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 14,
+          "title": "Checkout & Payment Activity",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 15,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(checkout_initiated_total[5m]))",
+              "legendFormat": "Checkout Initiated"
+            },
+            {
+              "expr": "sum(rate(payment_authorized_total[5m]))",
+              "legendFormat": "Payment Authorized"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 19,
+          "title": "Payment Errors",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 15,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(payment_failed_total[5m]))",
+              "legendFormat": "Failed Payments"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 15,
+          "type": "row",
+          "title": "Unified Logging",
+          "gridPos": {
+            "x": 0,
+            "y": 23,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 16,
+          "title": "All Namespace Logs",
+          "type": "logs",
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 24,
+            "w": 24,
+            "h": 10
+          },
+          "targets": [
+            {
+              "expr": "{namespace=~\"$namespace\"} |~ \".+\"",
               "refId": "A"
             }
-          ]
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": false,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "sortOrder": "Descending"
+          }
         }
       ],
       "schemaVersion": 39
     }
-    
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -289,302 +832,1760 @@ data:
   cluster-monitoring.json: |
     {
       "uid": "labs64io-cluster",
-      "title": "Labs64.IO Cluster Monitoring",
-      "description": "Kubernetes cluster health metrics — node status, pod health, resource requests, deployments, and networking",
-      "tags": ["kubernetes", "cluster", "infrastructure"],
+      "title": "02. Cluster Monitoring",
+      "description": "Kubernetes cluster metrics",
+      "tags": [
+        "kubernetes"
+      ],
       "timezone": "browser",
       "editable": true,
-      "refresh": "30s",
-      "time": { "from": "now-1h", "to": "now" },
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
       "templating": {
         "list": [
           {
             "name": "namespace",
             "type": "query",
-            "datasource": { "type": "prometheus", "uid": "Prometheus" },
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
             "query": "label_values(kube_pod_info, namespace)",
             "refresh": 2,
             "includeAll": true,
             "multi": true,
-            "current": { "text": "All", "value": "$__all" }
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
           }
         ]
       },
       "panels": [
         {
           "id": 1,
-          "title": "Node Ready",
-          "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
-          "fieldConfig": {
-            "defaults": {
-              "mappings": [
-                { "type": "value", "options": { "1": { "color": "green", "text": "READY" }, "0": { "color": "red", "text": "NOT READY" } } }
-              ]
-            }
+          "type": "row",
+          "title": "Nodes Overview",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
           },
-          "targets": [
-            {
-              "expr": "count(kube_node_info)",
-              "legendFormat": "Nodes",
-              "refId": "A"
-            }
-          ]
+          "collapsed": false,
+          "panels": []
         },
         {
           "id": 2,
-          "title": "Pods Running",
+          "title": "Nodes Ready",
           "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 4,
+            "h": 4
+          },
           "fieldConfig": {
-            "defaults": { "unit": "none" }
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
           },
           "targets": [
             {
-              "expr": "count(kube_pod_status_phase{phase=\"Running\"})",
-              "legendFormat": "Running",
+              "expr": "sum(kube_node_status_condition{condition=\"Ready\", status=\"true\"})",
+              "legendFormat": "Ready Nodes",
               "refId": "A"
             }
-          ]
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
         },
         {
           "id": 3,
-          "title": "Deployments Ready",
+          "title": "Mem Pressure",
           "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 4,
+            "y": 1,
+            "w": 4,
+            "h": 4
+          },
           "fieldConfig": {
-            "defaults": { "unit": "none" }
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
           },
           "targets": [
             {
-              "expr": "count(kube_deployment_status_replicas_available == kube_deployment_spec_replicas)",
-              "legendFormat": "Ready",
+              "expr": "sum(kube_node_status_condition{condition=\"MemoryPressure\", status=\"true\"})",
+              "legendFormat": "Nodes",
               "refId": "A"
-            },
-            {
-              "expr": "count(kube_deployment_spec_replicas)",
-              "legendFormat": "Total",
-              "refId": "B"
             }
-          ]
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
         },
         {
           "id": 4,
-          "title": "Namespaces",
+          "title": "Disk Pressure",
           "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 1,
+            "w": 4,
+            "h": 4
+          },
           "fieldConfig": {
-            "defaults": { "unit": "none" }
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
           },
           "targets": [
             {
-              "expr": "count(kube_namespace_status_phase{phase=\"Active\"})",
-              "legendFormat": "Active",
+              "expr": "sum(kube_node_status_condition{condition=\"DiskPressure\", status=\"true\"})",
+              "legendFormat": "Nodes",
               "refId": "A"
             }
-          ]
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
         },
         {
           "id": 5,
-          "title": "Services",
+          "title": "PID Pressure",
           "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
-          "fieldConfig": {
-            "defaults": { "unit": "none" }
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
           },
-          "targets": [
-            {
-              "expr": "count(kube_service_info)",
-              "legendFormat": "Services",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 6,
-          "title": "ConfigMaps",
-          "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 4, "w": 4, "x": 20, "y": 0 },
-          "fieldConfig": {
-            "defaults": { "unit": "none" }
+          "gridPos": {
+            "x": 12,
+            "y": 1,
+            "w": 4,
+            "h": 4
           },
-          "targets": [
-            {
-              "expr": "count(kube_configmap_info)",
-              "legendFormat": "ConfigMaps",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 7,
-          "title": "Pod Phase Distribution",
-          "type": "piechart",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 8, "x": 0, "y": 4 },
-          "targets": [
-            {
-              "expr": "count by (phase) (kube_pod_status_phase{namespace=~\"$namespace\"})",
-              "legendFormat": "{{phase}}",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 8,
-          "title": "Pod Restarts (Top 10)",
-          "type": "bargauge",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 8, "x": 8, "y": 4 },
           "fieldConfig": {
             "defaults": {
-              "unit": "short",
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(kube_node_status_condition{condition=\"PIDPressure\", status=\"true\"})",
+              "legendFormat": "Nodes",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 16,
+          "title": "Unvailable Pods",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 1,
+            "w": 4,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              },
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  { "color": "green", "value": null },
-                  { "color": "yellow", "value": 1 },
-                  { "color": "red", "value": 5 }
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
                 ]
               }
             }
           },
           "targets": [
             {
-              "expr": "topk(10, sum by (pod, namespace) (kube_pod_container_status_restarts_total{namespace=~\"$namespace\"}))",
-              "legendFormat": "{{namespace}}/{{pod}}",
+              "expr": "sum(kube_deployment_status_replicas_unavailable)",
+              "legendFormat": "Pods",
               "refId": "A"
             }
-          ]
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
         },
         {
-          "id": 9,
-          "title": "Deployment Replicas",
-          "type": "table",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 8, "x": 16, "y": 4 },
+          "id": 17,
+          "title": "OOM Kills (1h)",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 20,
+            "y": 1,
+            "w": 4,
+            "h": 4
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            }
+          },
           "targets": [
             {
-              "expr": "kube_deployment_spec_replicas",
-              "legendFormat": "{{namespace}}/{{deployment}}",
-              "refId": "A",
-              "format": "table",
-              "instant": true
-            },
-            {
-              "expr": "kube_deployment_status_replicas_available",
-              "legendFormat": "{{namespace}}/{{deployment}}",
-              "refId": "B",
-              "format": "table",
-              "instant": true
-            },
-            {
-              "expr": "kube_deployment_status_replicas_unavailable",
-              "legendFormat": "{{namespace}}/{{deployment}}",
-              "refId": "C",
-              "format": "table",
-              "instant": true
+              "expr": "sum(increase(kube_pod_container_status_terminated_reason{reason=\"OOMKilled\"}[1h]))",
+              "legendFormat": "Kills",
+              "refId": "A"
             }
           ],
-          "transformations": [
-            { "id": "merge", "options": {} },
-            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "instance": true, "job": true }, "renameByName": { "namespace": "Namespace", "deployment": "Deployment", "Value #A": "Desired", "Value #B": "Available", "Value #C": "Unavailable" } } }
-          ]
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 6,
+          "type": "row",
+          "title": "Workload Health",
+          "gridPos": {
+            "x": 0,
+            "y": 5,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 7,
+          "title": "Pod Phase Timeline",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 6,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_status_phase) by (phase)",
+              "legendFormat": "{{phase}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "Pod Restarts Rate",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 6,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "cores",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(kube_pod_container_status_restarts_total[5m])) by (namespace, pod)",
+              "legendFormat": "{{namespace}}/{{pod}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 18,
+          "title": "CPU Throttling",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 6,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(container_cpu_cfs_throttled_seconds_total[5m])) by (pod)",
+              "legendFormat": "{{pod}} Throttled"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
         },
         {
           "id": 10,
-          "title": "Pod Status by Namespace",
-          "type": "table",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
-          "targets": [
-            {
-              "expr": "count by (namespace, phase) (kube_pod_status_phase{namespace=~\"$namespace\"})",
-              "legendFormat": "{{namespace}} {{phase}}",
-              "refId": "A",
-              "format": "table",
-              "instant": true
-            }
-          ],
-          "transformations": [
-            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "instance": true, "job": true }, "renameByName": { "namespace": "Namespace", "phase": "Phase", "Value": "Count" } } }
-          ]
+          "type": "row",
+          "title": "Resource Top N",
+          "gridPos": {
+            "x": 0,
+            "y": 14,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
         },
         {
           "id": 11,
-          "title": "Node Conditions",
-          "type": "table",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 12 },
+          "title": "Top 10 CPU",
+          "type": "bargauge",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 15,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          },
           "targets": [
             {
-              "expr": "kube_node_status_condition{condition=~\"Ready|MemoryPressure|DiskPressure|PIDPressure|NetworkUnavailable\"}",
-              "legendFormat": "{{node}} {{condition}}",
-              "refId": "A",
-              "format": "table",
-              "instant": true
+              "expr": "topk(10, sum by (pod, namespace) (rate(container_cpu_usage_seconds_total{container!=\"\", namespace=~\"$namespace\"}[5m])))",
+              "legendFormat": "{{namespace}}/{{pod}}",
+              "refId": "A"
             }
           ],
-          "transformations": [
-            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "instance": true, "job": true, "endpoint": true, "namespace": true, "service": true }, "renameByName": { "node": "Node", "condition": "Condition", "status": "Status" } } }
-          ]
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient"
+          }
         },
         {
           "id": 12,
-          "title": "PersistentVolume Claims",
-          "type": "table",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 20 },
+          "title": "Top 10 Memory",
+          "type": "bargauge",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 15,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          },
           "targets": [
             {
-              "expr": "kube_persistentvolumeclaim_info",
-              "legendFormat": "{{namespace}}/{{persistentvolumeclaim}}",
-              "refId": "A",
-              "format": "table",
-              "instant": true
+              "expr": "topk(10, sum by (pod, namespace) (container_memory_working_set_bytes{container!=\"\", namespace=~\"$namespace\"}))",
+              "legendFormat": "{{namespace}}/{{pod}}",
+              "refId": "A"
             }
           ],
-          "transformations": [
-            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "instance": true, "job": true, "endpoint": true, "service": true }, "renameByName": { "namespace": "Namespace", "persistentvolumeclaim": "PVC", "storageclass_name": "StorageClass", "status": "Status" } } }
-          ]
+          "options": {
+            "orientation": "horizontal",
+            "displayMode": "gradient"
+          }
         },
         {
           "id": 13,
-          "title": "DaemonSet Status",
-          "type": "table",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 20 },
+          "type": "row",
+          "title": "Network & Volumes",
+          "gridPos": {
+            "x": 0,
+            "y": 23,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 14,
+          "title": "Network Rx Bytes",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 24,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "Bps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
           "targets": [
             {
-              "expr": "kube_daemonset_status_desired_number_scheduled",
-              "legendFormat": "{{namespace}}/{{daemonset}}",
-              "refId": "A",
-              "format": "table",
-              "instant": true
+              "expr": "sum(rate(container_network_receive_bytes_total{namespace=~\"$namespace\"}[5m])) by (pod)",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
             },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 15,
+          "title": "Network Tx Bytes",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 24,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "Bps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
             {
-              "expr": "kube_daemonset_status_number_ready",
-              "legendFormat": "{{namespace}}/{{daemonset}}",
-              "refId": "B",
+              "expr": "sum(rate(container_network_transmit_bytes_total{namespace=~\"$namespace\"}[5m])) by (pod)",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 19,
+          "title": "PVC Status",
+          "type": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 24,
+            "w": 8,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "kube_persistentvolumeclaim_status_phase",
+              "legendFormat": "{{persistentvolumeclaim}} {{phase}}",
               "format": "table",
               "instant": true
             }
           ],
-          "transformations": [
-            { "id": "merge", "options": {} },
-            { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true, "instance": true, "job": true }, "renameByName": { "namespace": "Namespace", "daemonset": "DaemonSet", "Value #A": "Desired", "Value #B": "Ready" } } }
-          ]
+          "transformations": []
         }
       ],
       "schemaVersion": 39
     }
-    
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: '1'
+  name: grafana-dashboard-hardware
+  namespace: monitoring
+data:
+  hardware-node-exporter.json: |
+    {
+      "uid": "labs64io-hardware",
+      "title": "03. Node Exporter (Hardware)",
+      "description": "Deep hardware and OS level metrics",
+      "tags": [
+        "hardware",
+        "node"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(kube_pod_info, namespace)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "instance",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(node_uname_info, instance)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "CPU & System",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 2,
+          "title": "CPU Usage by Mode",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "percentunit",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "avg(rate(node_cpu_seconds_total{instance=~\"$instance\"}[5m])) by (mode)",
+              "legendFormat": "{{mode}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Context Switches & Interrupts",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "rate(node_context_switches_total{instance=~\"$instance\"}[5m])",
+              "legendFormat": "Context Switches"
+            },
+            {
+              "expr": "rate(node_intr_total{instance=~\"$instance\"}[5m])",
+              "legendFormat": "Interrupts"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "System Load (1m, 5m, 15m)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "none",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "node_load1{instance=~\"$instance\"}",
+              "legendFormat": "Load 1m"
+            },
+            {
+              "expr": "node_load5{instance=~\"$instance\"}",
+              "legendFormat": "Load 5m"
+            },
+            {
+              "expr": "node_load15{instance=~\"$instance\"}",
+              "legendFormat": "Load 15m"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 5,
+          "type": "row",
+          "title": "Memory & Storage",
+          "gridPos": {
+            "x": 0,
+            "y": 9,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 6,
+          "title": "Memory Breakdown",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "node_memory_MemTotal_bytes{instance=~\"$instance\"} - node_memory_MemAvailable_bytes{instance=~\"$instance\"}",
+              "legendFormat": "Used"
+            },
+            {
+              "expr": "node_memory_Buffers_bytes{instance=~\"$instance\"}",
+              "legendFormat": "Buffers"
+            },
+            {
+              "expr": "node_memory_Cached_bytes{instance=~\"$instance\"}",
+              "legendFormat": "Cached"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "Disk IOPS (Read/Write)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "iops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "rate(node_disk_reads_completed_total{instance=~\"$instance\"}[5m])",
+              "legendFormat": "Reads {{device}}"
+            },
+            {
+              "expr": "rate(node_disk_writes_completed_total{instance=~\"$instance\"}[5m])",
+              "legendFormat": "Writes {{device}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "Disk Throughput",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "Bps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "rate(node_disk_read_bytes_total{instance=~\"$instance\"}[5m])",
+              "legendFormat": "Read {{device}}"
+            },
+            {
+              "expr": "rate(node_disk_written_bytes_total{instance=~\"$instance\"}[5m])",
+              "legendFormat": "Write {{device}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: '1'
+  name: grafana-dashboard-traefik
+  namespace: monitoring
+data:
+  traefik-gateway.json: |
+    {
+      "uid": "labs64io-traefik",
+      "title": "04. Traefik Gateway",
+      "description": "Comprehensive Gateway Metrics",
+      "tags": [
+        "traefik"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(kube_pod_info, namespace)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Entrypoints",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 2,
+          "title": "Total Connections",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 3,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(traefik_open_connections)",
+              "legendFormat": "Active",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 12,
+          "title": "Total Bytes Rx",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 3,
+            "y": 1,
+            "w": 3,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_entrypoint_request_size_bytes_sum[5m]))",
+              "legendFormat": "Rx",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 13,
+          "title": "Total Bytes Tx",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 6,
+            "y": 1,
+            "w": 3,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_entrypoint_response_size_bytes_sum[5m]))",
+              "legendFormat": "Tx",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Requests by Entrypoint",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 9,
+            "y": 1,
+            "w": 7,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_entrypoint_requests_total[5m])) by (entrypoint)",
+              "legendFormat": "{{entrypoint}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Latency by Entrypoint (p95)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 1,
+            "w": 8,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (le, entrypoint))",
+              "legendFormat": "{{entrypoint}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 5,
+          "type": "row",
+          "title": "Routers & Services",
+          "gridPos": {
+            "x": 0,
+            "y": 7,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 6,
+          "title": "Request Rate by Router",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_router_requests_total[5m])) by (router)",
+              "legendFormat": "{{router}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "Latency by Service (p95)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (le, service))",
+              "legendFormat": "{{service}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 14,
+          "title": "TLS Handshake Rate",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_tls_certs_not_after[5m]))",
+              "legendFormat": "TLS Handshakes"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 8,
+          "type": "row",
+          "title": "Errors & Configuration",
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 9,
+          "title": "4xx / 5xx Errors by Service",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 17,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_service_requests_total{code=~\"4..|5..\"}[5m])) by (service, code)",
+              "legendFormat": "{{service}} {{code}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 15,
+          "title": "Top 10 Router Errors",
+          "type": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 17,
+            "w": 8,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "topk(10, sum(rate(traefik_router_requests_total{code=~\"4..|5..\"}[5m])) by (router, code))",
+              "legendFormat": "{{router}} HTTP {{code}}",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": []
+        },
+        {
+          "id": 10,
+          "title": "Config Reloads Success",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 17,
+            "w": 4,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(traefik_config_reloads_total)",
+              "legendFormat": "Reloads",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 11,
+          "title": "Config Reloads Failure",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 20,
+            "y": 17,
+            "w": 4,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(traefik_config_reloads_failure_total)",
+              "legendFormat": "Failures",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -597,287 +2598,2634 @@ data:
   auth-security.json: |
     {
       "uid": "labs64io-auth-security",
-      "title": "Labs64.IO AuthN/AuthZ/Security",
-      "description": "Authentication, authorization, and security monitoring for the Labs64.IO ecosystem",
-      "tags": ["security", "authentication", "authorization", "auth"],
+      "title": "05. AuthN/AuthZ/Security",
+      "description": "Security metrics and access logs",
+      "tags": [
+        "security"
+      ],
       "timezone": "browser",
       "editable": true,
       "refresh": "10s",
-      "time": { "from": "now-1h", "to": "now" },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(kube_pod_info, namespace)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
       "panels": [
         {
           "id": 1,
-          "title": "Authentication Success Rate",
-          "type": "gauge",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "type": "row",
+          "title": "Access KPIs",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 2,
+          "title": "Auth Allow Rate",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 4,
+            "h": 6
+          },
           "fieldConfig": {
             "defaults": {
               "unit": "percentunit",
-              "min": 0,
-              "max": 1,
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(labs64_authz_decisions_total{decision=\"allow\"}[5m])) / sum(rate(labs64_authz_decisions_total[5m])) or vector(1)",
+              "legendFormat": "Allow Rate",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 12,
+          "title": "Total Traffic (1h)",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 4,
+            "y": 1,
+            "w": 5,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(traefik_service_requests_total[1h])) or vector(0)",
+              "legendFormat": "Reqs (1h)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 3,
+          "title": "401 Unauthorized",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 9,
+            "y": 1,
+            "w": 5,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_service_requests_total{code=\"401\"}[5m])) or vector(0)",
+              "legendFormat": "Req/s",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 4,
+          "title": "403 Forbidden",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 14,
+            "y": 1,
+            "w": 5,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(traefik_service_requests_total{code=\"403\"}[5m])) or vector(0)",
+              "legendFormat": "Req/s",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 5,
+          "title": "Auth Deny Count",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 19,
+            "y": 1,
+            "w": 5,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(labs64_authz_decisions_total{decision=\"deny\"}[1h])) or vector(0)",
+              "legendFormat": "Denials (1h)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 6,
+          "type": "row",
+          "title": "Detailed Traffic",
+          "gridPos": {
+            "x": 0,
+            "y": 7,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 7,
+          "title": "Authz Decisions by Action",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(labs64_authz_decisions_total[1h])) by (action, decision) or vector(0)",
+              "legendFormat": "{{action}} - {{decision}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "Gateway Traffic by Status Code (1h)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(traefik_service_requests_total[1h])) by (code) or vector(0)",
+              "legendFormat": "HTTP {{code}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 11,
+          "title": "Top Attack Targets (1h)",
+          "type": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "topk(10, sum(increase(traefik_service_requests_total{code=~\"401|403\"}[1h])) by (service, code))",
+              "legendFormat": "{{service}} {{code}}",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": []
+        },
+        {
+          "id": 9,
+          "type": "row",
+          "title": "Security Logs",
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 10,
+          "title": "Auth/Security Warnings & Errors",
+          "type": "logs",
+          "datasource": {
+            "type": "loki",
+            "uid": "Loki"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 17,
+            "w": 24,
+            "h": 10
+          },
+          "targets": [
+            {
+              "expr": "{namespace=~\"$namespace\"} |= \"auth\" |~ \"WARN|ERROR|401|403\"",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "showTime": true,
+            "showLabels": false,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "prettifyLogMessage": false,
+            "enableLogDetails": true,
+            "sortOrder": "Descending"
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: '1'
+  name: grafana-dashboard-jvm
+  namespace: monitoring
+data:
+  jvm-deep-dive.json: |
+    {
+      "uid": "labs64io-jvm",
+      "title": "06. JVM Deep Dive",
+      "description": "Exhaustive JVM application metrics",
+      "tags": [
+        "jvm"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(kube_pod_info, namespace)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          },
+          {
+            "name": "application",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(jvm_memory_used_bytes, application)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Memory Pools",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 2,
+          "title": "Heap Memory Overall",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "jvm_memory_used_bytes{area=\"heap\", application=~\"$application\"}",
+              "legendFormat": "{{application}} Heap Used"
+            },
+            {
+              "expr": "jvm_memory_max_bytes{area=\"heap\", application=~\"$application\"}",
+              "legendFormat": "{{application}} Heap Max"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 14,
+          "title": "Eden & Survivor Spaces",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "jvm_memory_used_bytes{id=~\"G1 Eden Space|Eden Space\", application=~\"$application\"}",
+              "legendFormat": "{{application}} Eden"
+            },
+            {
+              "expr": "jvm_memory_used_bytes{id=~\"G1 Survivor Space|Survivor Space\", application=~\"$application\"}",
+              "legendFormat": "{{application}} Survivor"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Non-Heap (Metaspace / Code Cache)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "jvm_memory_used_bytes{area=\"nonheap\", application=~\"$application\"}",
+              "legendFormat": "{{application}} {{id}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 4,
+          "type": "row",
+          "title": "Garbage Collection & Buffers",
+          "gridPos": {
+            "x": 0,
+            "y": 9,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 5,
+          "title": "GC Pause Duration",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "rate(jvm_gc_pause_seconds_sum{application=~\"$application\"}[5m])",
+              "legendFormat": "{{application}} GC {{action}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "GC Memory Allocated",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "Bps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "rate(jvm_gc_memory_allocated_bytes_total{application=~\"$application\"}[5m])",
+              "legendFormat": "{{application}} Allocated/s"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 15,
+          "title": "Direct & Mapped Buffers",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "jvm_buffer_memory_used_bytes{application=~\"$application\"}",
+              "legendFormat": "{{application}} {{id}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 7,
+          "type": "row",
+          "title": "Threads, Classes & Files",
+          "gridPos": {
+            "x": 0,
+            "y": 18,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 8,
+          "title": "Threads (Live/Daemon)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 19,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "jvm_threads_live_threads{application=~\"$application\"}",
+              "legendFormat": "{{application}} Live"
+            },
+            {
+              "expr": "jvm_threads_daemon_threads{application=~\"$application\"}",
+              "legendFormat": "{{application}} Daemon"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 9,
+          "title": "Classes Loaded",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 19,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "jvm_classes_loaded_classes{application=~\"$application\"}",
+              "legendFormat": "{{application}} Loaded"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 16,
+          "title": "Open File Descriptors",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 19,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "process_open_fds{application=~\"$application\"}",
+              "legendFormat": "{{application}} Open FDs"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 10,
+          "type": "row",
+          "title": "Database Connection Pools (HikariCP)",
+          "gridPos": {
+            "x": 0,
+            "y": 27,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 11,
+          "title": "Active Connections",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 28,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "hikaricp_connections_active{application=~\"$application\"}",
+              "legendFormat": "{{application}} Active"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 12,
+          "title": "Idle Connections",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 28,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "hikaricp_connections_idle{application=~\"$application\"}",
+              "legendFormat": "{{application}} Idle"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 13,
+          "title": "Pending Connections",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 28,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "hikaricp_connections_pending{application=~\"$application\"}",
+              "legendFormat": "{{application}} Pending"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: '1'
+  name: grafana-dashboard-auditflow
+  namespace: monitoring
+data:
+  auditflow-detailed.json: |
+    {
+      "uid": "labs64io-auditflow",
+      "title": "07. AuditFlow Details",
+      "description": "Deep dive into data pipeline",
+      "tags": [
+        "auditflow"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(kube_pod_info, namespace)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Pipeline Traffic",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 2,
+          "title": "Consumer Events Processed",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(auditflow_consumer_events_processed[5m]))",
+              "legendFormat": "Processed"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Consumer Failures & Quarantine",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(auditflow_consumer_events_failed[5m]))",
+              "legendFormat": "Failed"
+            },
+            {
+              "expr": "sum(rate(auditflow_events_quarantined_total[5m]))",
+              "legendFormat": "Quarantined"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 10,
+          "title": "Inflight Events",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(auditflow_consumer_events_inflight)",
+              "legendFormat": "Inflight",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 4,
+          "type": "row",
+          "title": "Pipeline Latency & Outcomes",
+          "gridPos": {
+            "x": 0,
+            "y": 9,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 5,
+          "title": "Avg Pipeline Duration",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(auditflow_pipeline_duration_seconds_sum[5m])) / sum(rate(auditflow_pipeline_duration_seconds_count[5m]))",
+              "legendFormat": "Avg Duration"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "Max Pipeline Duration",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "max(auditflow_pipeline_duration_seconds_max)",
+              "legendFormat": "Max Duration"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 11,
+          "title": "Pipeline Outcomes",
+          "type": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(auditflow_pipeline_outcomes_total[1h])) by (pipeline, outcome)",
+              "legendFormat": "{{pipeline}} - {{outcome}}",
+              "instant": true,
+              "format": "table"
+            }
+          ],
+          "transformations": []
+        }
+      ],
+      "schemaVersion": 39
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: '1'
+  name: grafana-dashboard-checkout
+  namespace: monitoring
+data:
+  checkout-payment.json: |
+    {
+      "uid": "labs64io-checkout",
+      "title": "08. Checkout & Payment Gateway",
+      "description": "Digital commerce specific metrics",
+      "tags": [
+        "checkout",
+        "payment"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(kube_pod_info, namespace)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Business Actions",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 2,
+          "title": "Checkouts",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 6,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(checkout_initiated_total[1h]))",
+              "legendFormat": "Initiated (1h)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Payments Auth",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 6,
+            "y": 1,
+            "w": 6,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(payment_authorized_total[1h]))",
+              "legendFormat": "Authorized (1h)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 4,
+          "title": "Payments Fail",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 1,
+            "w": 6,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(increase(payment_failed_total[1h]))",
+              "legendFormat": "Failed (1h)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 8,
+          "title": "Conversion Rate",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 18,
+            "y": 1,
+            "w": 6,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "(sum(increase(payment_authorized_total[1h])) / sum(increase(checkout_initiated_total[1h]))) or vector(0)",
+              "legendFormat": "Conversion (1h)",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 5,
+          "type": "row",
+          "title": "API & External Services",
+          "gridPos": {
+            "x": 0,
+            "y": 7,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 6,
+          "title": "Checkout Requests",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(http_server_requests_seconds_count{application=~\"checkout.*\"}[5m])) by (uri)",
+              "legendFormat": "{{uri}}"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "Payment PSP Latency (avg)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(payment_psp_request_duration_seconds_sum[5m])) by (provider) / sum(rate(payment_psp_request_duration_seconds_count[5m])) by (provider)",
+              "legendFormat": "{{provider}} Avg"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 9,
+          "title": "Payment Errors by PSP",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 8,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(payment_psp_request_duration_seconds_count{status=\"error\"}[5m])) by (provider)",
+              "legendFormat": "{{provider}} Error"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: '1'
+  name: grafana-dashboard-otel
+  namespace: monitoring
+data:
+  otel-telemetry.json: |
+    {
+      "uid": "labs64io-otel",
+      "title": "09. Observability Backends (OTel & Loki)",
+      "description": "Monitoring the observability pipeline",
+      "tags": [
+        "observability"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(kube_pod_info, namespace)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "OTel Collector Traffic",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 2,
+          "title": "Spans Processed",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(otelcol_receiver_accepted_spans_total[5m]))",
+              "legendFormat": "Spans"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "Metrics Processed",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(otelcol_receiver_accepted_metric_points_total[5m]))",
+              "legendFormat": "Metrics"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Logs Processed",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 1,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(otelcol_receiver_accepted_log_records_total[5m]))",
+              "legendFormat": "Logs"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 5,
+          "type": "row",
+          "title": "Collector Health & Memory",
+          "gridPos": {
+            "x": 0,
+            "y": 9,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 6,
+          "title": "Refused / Dropped",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(otelcol_receiver_refused_spans_total[5m]))",
+              "legendFormat": "Refused Spans"
+            },
+            {
+              "expr": "sum(rate(otelcol_receiver_failed_spans_total[5m]))",
+              "legendFormat": "Failed Spans"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "OTel Memory Usage",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 10,
+            "w": 8,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "otelcol_process_memory_rss",
+              "legendFormat": "Collector Memory"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 8,
+          "type": "row",
+          "title": "Loki & Tempo Ingestion",
+          "gridPos": {
+            "x": 0,
+            "y": 18,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 9,
+          "title": "Loki Ingest Bytes",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 19,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "Bps",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(loki_request_message_bytes_sum[5m]))",
+              "legendFormat": "Loki Bytes"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        },
+        {
+          "id": 10,
+          "title": "Prometheus Remote Write Latency",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 19,
+            "w": 12,
+            "h": 8
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(prometheus_remote_storage_sent_batch_duration_seconds_sum[5m])) / sum(rate(prometheus_remote_storage_sent_batch_duration_seconds_count[5m]))",
+              "legendFormat": "Prometheus Avg Latency"
+            }
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
+        }
+      ],
+      "schemaVersion": 39
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    grafana_dashboard: '1'
+  name: grafana-dashboard-argocd
+  namespace: monitoring
+data:
+  argocd-deployments.json: |
+    {
+      "uid": "labs64io-argocd",
+      "title": "10. Deployments (ArgoCD)",
+      "description": "Continuous Delivery Health",
+      "tags": [
+        "argocd",
+        "cicd"
+      ],
+      "timezone": "browser",
+      "editable": true,
+      "refresh": "10s",
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "query": "label_values(kube_pod_info, namespace)",
+            "refresh": 2,
+            "includeAll": true,
+            "multi": true,
+            "current": {
+              "text": "All",
+              "value": "$__all"
+            }
+          }
+        ]
+      },
+      "panels": [
+        {
+          "id": 1,
+          "type": "row",
+          "title": "Applications Summary",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 24,
+            "h": 1
+          },
+          "collapsed": false,
+          "panels": []
+        },
+        {
+          "id": 2,
+          "title": "Total Applications",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 1,
+            "w": 8,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "sum(argocd_app_info)",
+              "legendFormat": "Apps",
+              "refId": "A"
+            }
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
+        },
+        {
+          "id": 3,
+          "title": "Out of Sync",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 8,
+            "y": 1,
+            "w": 8,
+            "h": 6
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              },
               "thresholds": {
                 "mode": "absolute",
                 "steps": [
-                  { "color": "red", "value": null },
-                  { "color": "yellow", "value": 0.9 },
-                  { "color": "green", "value": 0.99 }
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
                 ]
               }
             }
           },
           "targets": [
             {
-              "expr": "sum(rate(authenticated_user_requests[5m])) / sum(rate(http_server_requests_seconds_count[5m])) or vector(0)",
-              "legendFormat": "Success Rate",
+              "expr": "sum(argocd_app_info{sync_status!=\"Synced\"})",
+              "legendFormat": "Out of Sync",
               "refId": "A"
             }
-          ]
-        },
-        {
-          "id": 2,
-          "title": "Auth Requests by Status",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 12, "x": 6, "y": 0 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "reqps"
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
             },
-            "overrides": [
-              { "matcher": { "id": "byRegexp", "options": "2.." }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
-              { "matcher": { "id": "byRegexp", "options": "3.." }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
-              { "matcher": { "id": "byRegexp", "options": "4.." }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
-              { "matcher": { "id": "byRegexp", "options": "5.." }, "properties": [{ "id": "color", "value": { "fixedColor": "dark-red", "mode": "fixed" } }] }
-            ]
-          },
-          "targets": [
-            {
-              "expr": "sum(rate(traefik_entrypoint_requests_total[5m])) by (code)",
-              "legendFormat": "HTTP {{code}}",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 3,
-          "title": "ForwardAuth Decision Latency",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "s"
-            }
-          },
-          "targets": [
-            {
-              "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket{service=~\".*authproxy.*\"}[5m])) by (le))",
-              "legendFormat": "p95",
-              "refId": "A"
-            },
-            {
-              "expr": "histogram_quantile(0.50, sum(rate(traefik_service_request_duration_seconds_bucket{service=~\".*authproxy.*\"}[5m])) by (le))",
-              "legendFormat": "p50",
-              "refId": "B"
-            }
-          ]
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
         },
         {
           "id": 4,
-          "title": "401 Unauthorized Rate (Potential Attacks)",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 6 },
+          "title": "Degraded",
+          "type": "stat",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 16,
+            "y": 1,
+            "w": 8,
+            "h": 6
+          },
           "fieldConfig": {
             "defaults": {
-              "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 50 },
-              "unit": "reqps",
-              "color": { "mode": "fixed", "fixedColor": "red" }
+              "unit": "none",
+              "color": {
+                "mode": "value"
+              },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
             }
           },
           "targets": [
             {
-              "expr": "sum(rate(traefik_entrypoint_requests_total{code=\"401\"}[5m])) by (entrypoint)",
-              "legendFormat": "401 {{entrypoint}}",
+              "expr": "sum(argocd_app_info{health_status=\"Degraded\"})",
+              "legendFormat": "Degraded",
               "refId": "A"
             }
-          ]
+          ],
+          "options": {
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ]
+            },
+            "orientation": "auto",
+            "textMode": "auto",
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto"
+          }
         },
         {
           "id": 5,
-          "title": "403 Forbidden Rate (Authorization Failures)",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 8, "x": 8, "y": 6 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 50 },
-              "unit": "reqps",
-              "color": { "mode": "fixed", "fixedColor": "orange" }
-            }
+          "type": "row",
+          "title": "Sync History",
+          "gridPos": {
+            "x": 0,
+            "y": 7,
+            "w": 24,
+            "h": 1
           },
-          "targets": [
-            {
-              "expr": "sum(rate(traefik_entrypoint_requests_total{code=\"403\"}[5m])) by (entrypoint)",
-              "legendFormat": "403 {{entrypoint}}",
-              "refId": "A"
-            }
-          ]
+          "collapsed": false,
+          "panels": []
         },
         {
           "id": 6,
-          "title": "5xx Error Rate (Server Errors)",
+          "title": "Sync Operations",
           "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 8, "x": 16, "y": 6 },
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
           "fieldConfig": {
             "defaults": {
-              "custom": { "drawStyle": "bars", "lineWidth": 1, "fillOpacity": 50 },
-              "unit": "reqps",
-              "color": { "mode": "fixed", "fixedColor": "dark-red" }
-            }
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 15,
+                "gradientMode": "opacity",
+                "showPoints": "never"
+              },
+              "unit": "ops",
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
           },
           "targets": [
             {
-              "expr": "sum(rate(traefik_entrypoint_requests_total{code=~\"5..\"}[5m])) by (entrypoint, code)",
-              "legendFormat": "{{code}} {{entrypoint}}",
-              "refId": "A"
+              "expr": "sum(rate(argocd_app_sync_total[5m])) by (phase)",
+              "legendFormat": "{{phase}}"
             }
-          ]
+          ],
+          "options": {
+            "tooltip": {
+              "mode": "multi",
+              "sort": "none"
+            },
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "calcs": []
+            }
+          }
         },
         {
           "id": 7,
-          "title": "Request Rate by Service",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "reqps"
-            }
+          "title": "Application Status Table",
+          "type": "table",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          },
+          "gridPos": {
+            "x": 12,
+            "y": 8,
+            "w": 12,
+            "h": 8
           },
           "targets": [
             {
-              "expr": "sum(rate(traefik_service_requests_total[5m])) by (service, code)",
-              "legendFormat": "{{service}} ({{code}})",
-              "refId": "A"
+              "expr": "argocd_app_info",
+              "legendFormat": "{{name}}",
+              "format": "table",
+              "instant": true
             }
-          ]
-        },
-        {
-          "id": 8,
-          "title": "Response Latency by Service (p95)",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "s"
-            }
-          },
-          "targets": [
-            {
-              "expr": "histogram_quantile(0.95, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (le, service))",
-              "legendFormat": "p95 {{service}}",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 9,
-          "title": "Traefik Open Connections",
-          "type": "timeseries",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 8, "x": 0, "y": 20 },
-          "fieldConfig": {
-            "defaults": {
-              "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 },
-              "unit": "none"
-            }
-          },
-          "targets": [
-            {
-              "expr": "traefik_open_connections",
-              "legendFormat": "{{entrypoint}} {{method}}",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 10,
-          "title": "Config Reload Status",
-          "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 4, "x": 8, "y": 20 },
-          "fieldConfig": {
-            "defaults": {
-              "mappings": [
-                { "type": "value", "options": { "1": { "color": "green", "text": "OK" }, "0": { "color": "red", "text": "FAILED" } } }
-              ]
-            }
-          },
-          "targets": [
-            {
-              "expr": "traefik_config_last_reload_success",
-              "legendFormat": "Reload",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 11,
-          "title": "Security Headers Active",
-          "type": "stat",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 4, "x": 12, "y": 20 },
-          "fieldConfig": {
-            "defaults": {
-              "mappings": [
-                { "type": "value", "options": { "1": { "color": "green", "text": "ACTIVE" }, "0": { "color": "red", "text": "INACTIVE" } } }
-              ]
-            }
-          },
-          "targets": [
-            {
-              "expr": "1",
-              "legendFormat": "Gateway API",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 12,
-          "title": "HTTP Method Distribution",
-          "type": "piechart",
-          "datasource": { "type": "prometheus", "uid": "Prometheus" },
-          "gridPos": { "h": 6, "w": 8, "x": 16, "y": 20 },
-          "targets": [
-            {
-              "expr": "sum(rate(traefik_entrypoint_requests_total[5m])) by (method)",
-              "legendFormat": "{{method}}",
-              "refId": "A"
-            }
-          ]
-        },
-        {
-          "id": 13,
-          "title": "Ecosystem Security Logs",
-          "type": "logs",
-          "datasource": { "type": "loki", "uid": "Loki" },
-          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 26 },
-          "targets": [
-            {
-              "expr": "* | level = \"WARN\" or level = \"ERROR\" or level = \"INFO\" | ~ \"auth|security|401|403|forbidden|unauthorized\"",
-              "refId": "A"
-            }
-          ]
+          ],
+          "transformations": []
         }
       ],
       "schemaVersion": 39
     }
-    
+---
