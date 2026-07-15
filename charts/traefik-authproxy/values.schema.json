@@ -42,23 +42,7 @@
       "title": "autoscaling",
       "type": "object"
     },
-    "cedar": {
-      "additionalProperties": false,
-      "description": "Cedar edge tier. The ACS evaluates the generated per-operation\nCedar policies shipped inside the signed policy bundle (requires\npolicyBundle.enabled; without it the app degrades to off with a warning).",
-      "properties": {
-        "mode": {
-          "default": "enforce",
-          "description": "off = legacy only · shadow = evaluate + log cedar-vs-legacy diff, legacy\ndecides · enforce = Cedar decides module routes (flip ONLY after the shadow\ndiff is clean — shadow-mode rule; static prefixes stay legacy).",
-          "title": "mode",
-          "type": "string"
-        }
-      },
-      "required": [
-        "mode"
-      ],
-      "title": "cedar",
-      "type": "object"
-    },
+
     "chart-libs": {
       "additionalProperties": true,
       "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
@@ -1125,7 +1109,6 @@
     "service",
     "ingress",
     "policyBundle",
-    "cedar",
     "resources",
     "livenessProbe",
     "readinessProbe",

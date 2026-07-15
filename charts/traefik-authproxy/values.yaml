@@ -104,18 +104,6 @@ policyBundle:
   orasImage: ghcr.io/oras-project/oras:v1.2.0
   cosignImage: gcr.io/projectsigstore/cosign:v3.1.1
 
-# -- Cedar edge tier. The ACS evaluates the generated per-operation
-# Cedar policies from whichever policy source is active: the signed policy
-# bundle (policyBundle.enabled) or, under live discovery, each module's
-# /.well-known/auth-policy.cedar (build-generated, same distribution as
-# auth-policy.json). This is the declarative auth-policy ↔ Cedar switch.
-cedar:
-  # -- off = legacy auth-policy.json only · shadow = evaluate + log
-  # cedar-vs-legacy diff, legacy decides · enforce = Cedar decides module
-  # routes (flip ONLY after the shadow diff is clean — shadow-mode
-  # rule; static prefixes stay legacy).
-  mode: enforce
-
 resources:
   limits:
     cpu: 200m
@@ -218,7 +206,7 @@ env:
     value: "tenant"
   # -- Static prefix policies file (rendered from .Values.staticPolicies)
   - name: STATIC_POLICY_FILE
-    value: /opt/application-config/static_policies.yaml
+    value: /opt/application-config/static_policies.cedar
   # -- Periodic auth-policy re-fetch interval (seconds); the Service watch
   # triggers immediate refreshes, this is the belt-and-suspenders floor.
   - name: POLICY_REFRESH_INTERVAL

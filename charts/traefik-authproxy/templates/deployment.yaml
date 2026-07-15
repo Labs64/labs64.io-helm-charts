@@ -104,8 +104,6 @@ spec:
             - name: POLICY_BUNDLE_DIGEST
               value: {{ .Values.policyBundle.digest | quote }}
           {{- end }}
-            - name: CEDAR_MODE
-              value: {{ .Values.cedar.mode | quote }}
           {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}

@@ -5,5 +5,19 @@ metadata:
   labels:
     {{- include "chart-libs.labels" . | nindent 4 }}
 data:
-  static_policies.yaml: |-
-{{ toYaml (dict "policies" (.Values.staticPolicies | default list)) | indent 4 }}
+  static_policies.cedar: |-
+    {{- range $i, $policy := .Values.staticPolicies }}
+    {{- $public := and (hasKey $policy "public") $policy.public }}
+    {{- $scopes := $policy.scopes | default list }}
+    @id("static::policy{{ $i }}")
+    @pathPrefix("{{ $policy.path }}")
+    @public("{{ $public }}")
+    @tenantRequired("false")
+    @scopes("{{ join "," $scopes }}")
+    permit(
+      principal,
+      action == Labs64IO::Action::"invoke",
+      resource == Labs64IO::ApiOperation::"static::policy{{ $i }}"
+    )
+    {{- if and (not $public) (gt (len $scopes) 0) }} when { {{ range $j, $s := $scopes }}{{ if $j }} || {{ end }}context.scopes.contains("{{ $s }}"){{ end }} }{{ end }};
+    {{- end }}
