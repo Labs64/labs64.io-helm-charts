@@ -388,19 +388,19 @@ curl -H "Authorization: Bearer $TOKEN" \
 
 ### End-to-end auth smoke test
 
-Tests that authentication works through the full Traefik → auth-proxy → upstream path:
+Authentication through the full Traefik → auth-proxy → upstream path is covered by the
+Robot Framework suite in `labs64.io-tests` (`tests/auditflow/authz.robot`):
 
 ```bash
-just e2e-auth-test
+cd labs64.io-tests
+robot --include auditflow tests/auditflow/authz.robot
 ```
 
-Expected output:
-```
-no token   -> 401 (expected 401)
-with token -> 200 (expected not 401/403)
-wrong scope -> 403 (expected 403)
-e2e auth: OK
-```
+This asserts the full scope matrix (no token, malformed token, wrong scope, no scope, correct
+scope, multiple scopes) against the live gateway edge, and — when the active kubectl context is
+the local k3d dev cluster — additionally corroborates each decision against the authproxy's
+Cedar decision log and AuditFlow's delivery log (`local-k8s-only` tagged cases; see
+`labs64.io-tests/AGENTS.md` "Local-only pod-log corroboration").
 
 ### Helm tests
 

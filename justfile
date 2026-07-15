@@ -416,42 +416,6 @@ docs:
 traefik-dashboard:
     open "http://dashboard.localhost/dashboard/"
 
-# end-to-end auth smoke test through Traefik
-e2e-auth-test:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
-      --data-urlencode 'grant_type=client_credentials' \
-      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
-      --data-urlencode 'scope=admin' | jq -r '.access_token')
-    no_token=$(curl -s -o /dev/null -w '%{http_code}' -X POST 'http://gateway.localhost/auditflow/api/v1/audit/publish')
-    with_token=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $TOKEN" 'http://gateway.localhost/auditflow/api/v1/audit/publish')
-    BAD_TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
-      --data-urlencode 'grant_type=client_credentials' \
-      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
-      --data-urlencode 'scope=no-access' | jq -r '.access_token')
-    no_scope=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $BAD_TOKEN" 'http://gateway.localhost/auditflow/api/v1/audit/publish')
-    # Fine-grained: a token holding the READ scope must NOT satisfy a WRITE route.
-    READ_TOKEN=$(curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
-      --data-urlencode 'grant_type=client_credentials' \
-      --data-urlencode 'client_id=e2e' --data-urlencode 'client_secret=e2e' \
-      --data-urlencode 'scope=audit-event:read' | jq -r '.access_token')
-    wrong_scope=$(curl -s -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $READ_TOKEN" 'http://gateway.localhost/auditflow/api/v1/audit/publish')
-    echo "no token    -> $no_token (expected 401)"
-    echo "with token  -> $with_token (expected not 401/403)"
-    echo "no scope    -> $no_scope (expected 403)"
-    echo "wrong scope -> $wrong_scope (expected 403; audit-event:read must not satisfy :write)"
-    [ "$no_token" = "401" ] || { echo "FAIL: expected 401 without token"; exit 1; }
-    case "$with_token" in 401|403) echo "FAIL: token rejected"; exit 1;; esac
-    [ "$no_scope" = "403" ] || { echo "FAIL: expected 403 for no-scope token"; exit 1; }
-    [ "$wrong_scope" = "403" ] || { echo "FAIL: expected 403 for read-scope token on write route"; exit 1; }
-    # auth-policy discovery is live: ACS table is non-empty and ready
-    ready=$(kubectl exec -n labs64io deploy/labs64io-traefik-authproxy -- \
-      sh -c 'python3 -c "import urllib.request;print(urllib.request.urlopen(\"http://localhost:8081/health/ready\").status)" 2>/dev/null || echo 000')
-    echo "authproxy ready -> $ready (expected 200)"
-    [ "$ready" = "200" ] || { echo "FAIL: authproxy not ready"; exit 1; }
-    echo "e2e auth: OK"
-
 # generate an M2M JWT from the mock OIDC provider.
 # Pass a persona (admin|auditflow|ecommerce|no-access) for a curated scope set,
 # or ANY exact scope string(s) to mint a token carrying precisely those scopes,
