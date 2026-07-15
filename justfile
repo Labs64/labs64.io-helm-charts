@@ -287,26 +287,16 @@ install-tool-grafana:
     kubectl apply -f overrides/grafana/grafana-httproute.yaml
     kubectl apply -f overrides/grafana/grafana-dashboards.yaml
 
-# retrieve Grafana password
-grafana-password:
-    @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
-
-# open grafana and print password
-grafana:
-    @just grafana-password
-    @echo "Opening Grafana... (Press Ctrl+C to quit)"
-    open http://gateway.localhost/grafana/ || echo "Visit http://gateway.localhost/grafana/"
-
 # uninstall Grafana
 uninstall-tool-grafana:
     helm uninstall grafana --namespace {{NAMESPACE_MONITORING}} || true
 
+# retrieve Grafana password
+grafana-password:
+    @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+
 
 ## 🏗️ Build & CodeGen ##
-
-# Build and push all module images to local registry (localhost:5005)
-build-images module="all":
-	./scripts/build-images.sh {{module}}
 
 # Install required Helm plugins
 helm-tools:
@@ -347,6 +337,10 @@ repo-add:
 # update helm repositories
 repo-update: repo-add
     helm repo update
+
+# Build and push all module images to local registry (localhost:5005)
+build-images module="all":
+	./scripts/build-images.sh {{module}}
 
 
 ## 🧪 Testing & Debugging ##
@@ -415,6 +409,12 @@ docs:
 # Traefik Dashboard
 traefik-dashboard:
     open "http://dashboard.localhost/dashboard/"
+
+# open grafana and print password
+grafana:
+    @just grafana-password
+    @echo "Opening Grafana... (Press Ctrl+C to quit)"
+    open http://gateway.localhost/grafana/ || echo "Visit http://gateway.localhost/grafana/"
 
 # generate an M2M JWT from the mock OIDC provider.
 # Pass a persona (admin|auditflow|ecommerce|no-access) for a curated scope set,
