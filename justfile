@@ -29,29 +29,29 @@ default:
 
 ## 🚀 Getting Started (Cluster & Setup) ##
 
-# start local k3d cluster + registry, install toolset and all Labs64.IO components
-up: generate-secrets cluster-create
-    just repo-update
-    just install-tools
-    just install-all-apps
-    @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
-
 # create the local k3d cluster + registry only
-cluster-create:
+cluster-up:
     k3d cluster create --config k3d/labs64io.yaml || true
     k3d kubeconfig merge -d labs64io
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/0\.0\.0\.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/127\.0\.0\.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
 
-# delete the local k3d cluster (and its registry)
-down:
-    k3d cluster delete labs64io
+# start local k3d cluster + registry, install toolset and all Labs64.IO components
+up: generate-secrets cluster-up
+    just repo-update
+    just install-tools
+    just install-all-apps
+    @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
+
+# start local environment with monitoring stack + module telemetry enabled
+up-full: up install-monitoring enable-observability
 
 # reset the environment (uninstall all apps, monitoring, and tools) without destroying the cluster
 reset: uninstall-all-apps uninstall-monitoring uninstall-tools
 
-# start local environment with monitoring stack + module telemetry enabled
-up-full: up install-monitoring enable-observability
+# delete the local k3d cluster (and its registry)
+cluster-down: reset
+    k3d cluster delete labs64io
 
 # enable OTel instrumentation on instrumented module apps (requires the monitoring
 # stack — the collector DaemonSet must be running so OTLP export has a target).
