@@ -5,6 +5,9 @@ values.secrets.*.yaml
 .cr-*
 /ct_*
 
+# --- Environment ---
+.env
+
 # --- IDE / OS ---
 .idea/
 .vscode/
@@ -15,3 +18,8 @@ values.secrets.*.yaml
 .DS_Store
 .deploy
 .history
+*.swp
+*~
+
+# --- Logs ---
+*.log
