@@ -338,10 +338,6 @@ repo-add:
 repo-update: repo-add
     helm repo update
 
-# Build and push all module images to local registry (localhost:5005)
-build-images module="all":
-	./scripts/build-images.sh {{module}}
-
 
 ## 🧪 Testing & Debugging ##
 
