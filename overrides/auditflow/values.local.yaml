@@ -56,7 +56,15 @@ applicationYaml:
       name: auditflow-sink
       namespace: labs64io
 
+  # Legacy global pipelines stay EMPTY — a non-empty list fails startup by design.
+  # Local pipelines live in the per-tenant blocks under `tenants:` below.
   auditflow:
+    pipelines: []
+
+# Local tenant provisioning (rendered as auditflow.io/tenant ConfigMaps).
+tenants:
+  # Tenantless/platform events (incl. Cedar decision audits).
+  platform:
     pipelines:
       - name: 'logs'
         enabled: true
@@ -136,6 +144,20 @@ applicationYaml:
             service-path: "/loki/api/v1/push"
             username: "1314691"
             password: "${GRAFANA_PASSWORD}"
+  additional:
+    # Every mock-oidc token carries tenant t_mock — provision it so gateway e2e/regression
+    # publishes (labs64.io-tests) keep flowing with the ingest gate active.
+    - tenantId: t_mock
+      enabled: true
+      pipelines:
+        - name: 'mock-logging'
+          enabled: true
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
 
 gateway:
   enabled: true

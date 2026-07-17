@@ -74,12 +74,22 @@ serviceAccount:
   name: ""
 
 # RBAC configuration (create RBAC resources: Role, RoleBinding)
+# Least-privilege, namespace-scoped: the tenant-config informer (tenants.source.mode=
+# gitops-configmap) needs ConfigMap get/list/watch; the secretRef resolver
+# (secretRef.resolver=k8s-secret) needs Secret get; kubernetes service discovery
+# (transformer/sink) needs Service get.
 rbac:
-  create: false
-  rules: []
-    #- apiGroups: [""]
-    #  resources: ["pods"]
-    #  verbs: ["get", "list", "watch"]
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["get"]
+    - apiGroups: [""]
+      resources: ["services"]
+      verbs: ["get"]
 
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
@@ -287,6 +297,42 @@ rabbitmq:
   auth:
     username: labs64
     password: labs64pw
+
+# -- Tenant provisioning shipped by the chart (rendered as `auditflow.io/tenant`-labelled
+# ConfigMaps consumed live by the gitops-configmap source — see templates/tenant-configmaps.yaml).
+tenants:
+  # -- The reserved `_platform` pseudo-tenant for tenantless/platform events. Shipped by
+  # default so platform events flow out of the box; K8s object name/label use the sanitized
+  # `platform`, the body keeps the canonical `_platform`.
+  platform:
+    # -- Per-tenant ingest rate limit (token bucket): sustained events/second
+    rateLimitPerSec: 200
+    # -- Per-tenant ingest rate limit: burst capacity
+    burst: 400
+    # -- The platform tenant's pipelines (same shape as the former global auditflow.pipelines)
+    # @schema
+    # type: array
+    # items:
+    #   type: object
+    #   additionalProperties: true
+    # @schema
+    pipelines:
+      - name: platform-logging
+        enabled: true
+        sink:
+          name: logging_sink
+          properties:
+            log-level: INFO
+  # -- Additional tenants to provision with the release: a list of full tenant documents
+  # ({tenantId, enabled, quota, pipelines}); each renders as its own labelled ConfigMap.
+  # Tenants can also be onboarded at any time by applying such a ConfigMap out-of-band (GitOps).
+  # @schema
+  # type: array
+  # items:
+  #   type: object
+  #   additionalProperties: true
+  # @schema
+  additional: []
 
 # -- Additional application properties
 applicationYaml:

@@ -96,8 +96,18 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | rabbitmq | object | `{"auth":{"password":"labs64pw","username":"labs64"},"enabled":false,"image":{"repository":"bitnamilegacy/rabbitmq"}}` | Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead. @schema type: object additionalProperties: true @schema |
 | rabbitmq.image | object | `{"repository":"bitnamilegacy/rabbitmq"}` | docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag @schema type: object additionalProperties: true @schema |
-| rbac.create | bool | `false` |  |
-| rbac.rules | list | `[]` |  |
+| rbac.create | bool | `true` |  |
+| rbac.rules[0].apiGroups[0] | string | `""` |  |
+| rbac.rules[0].resources[0] | string | `"configmaps"` |  |
+| rbac.rules[0].verbs[0] | string | `"get"` |  |
+| rbac.rules[0].verbs[1] | string | `"list"` |  |
+| rbac.rules[0].verbs[2] | string | `"watch"` |  |
+| rbac.rules[1].apiGroups[0] | string | `""` |  |
+| rbac.rules[1].resources[0] | string | `"secrets"` |  |
+| rbac.rules[1].verbs[0] | string | `"get"` |  |
+| rbac.rules[2].apiGroups[0] | string | `""` |  |
+| rbac.rules[2].resources[0] | string | `"services"` |  |
+| rbac.rules[2].verbs[0] | string | `"get"` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources | object | `{"limits":{"cpu":"500m","memory":"1Gi"},"requests":{"cpu":"100m","memory":"512Mi"}}` | Resource limits and requests for the container For production, it's recommended to set both requests and limits |
@@ -121,6 +131,12 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | sink.service.port | int | `8082` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | slo | object | `{"availability":{"targetRatio":0.999},"enabled":true,"latency":{"targetRatio":0.99,"thresholdSeconds":0.5}}` | SLO recording rules and dashboards (rendered by chart-libs.slo.*) |
 | startupProbe | object | `{"failureThreshold":30,"httpGet":{"path":"/actuator/health/liveness","port":8080},"periodSeconds":5,"timeoutSeconds":2}` | Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts (Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds. |
+| tenants | object | `{"additional":[],"platform":{"burst":400,"pipelines":[{"enabled":true,"name":"platform-logging","sink":{"name":"logging_sink","properties":{"log-level":"INFO"}}}],"rateLimitPerSec":200}}` | Tenant provisioning shipped by the chart (rendered as `auditflow.io/tenant`-labelled ConfigMaps consumed live by the gitops-configmap source — see templates/tenant-configmaps.yaml). |
+| tenants.additional | list | `[]` | Additional tenants to provision with the release: a list of full tenant documents ({tenantId, enabled, quota, pipelines}); each renders as its own labelled ConfigMap. Tenants can also be onboarded at any time by applying such a ConfigMap out-of-band (GitOps). @schema type: array items:   type: object   additionalProperties: true @schema |
+| tenants.platform | object | `{"burst":400,"pipelines":[{"enabled":true,"name":"platform-logging","sink":{"name":"logging_sink","properties":{"log-level":"INFO"}}}],"rateLimitPerSec":200}` | The reserved `_platform` pseudo-tenant for tenantless/platform events. Shipped by default so platform events flow out of the box; K8s object name/label use the sanitized `platform`, the body keeps the canonical `_platform`. |
+| tenants.platform.burst | int | `400` | Per-tenant ingest rate limit: burst capacity |
+| tenants.platform.pipelines | list | `[{"enabled":true,"name":"platform-logging","sink":{"name":"logging_sink","properties":{"log-level":"INFO"}}}]` | The platform tenant's pipelines (same shape as the former global auditflow.pipelines) @schema type: array items:   type: object   additionalProperties: true @schema |
+| tenants.platform.rateLimitPerSec | int | `200` | Per-tenant ingest rate limit (token bucket): sustained events/second |
 | terminationGracePeriodSeconds | int | `45` | Graceful shutdown: drain in-flight requests / message handlers on rolling updates and scale-in. Keep terminationGracePeriodSeconds > preStop + gracefulShutdown.timeout. |
 | tests | object | `{"enabled":true,"healthPath":"/actuator/health"}` | helm test hook (rendered by chart-libs.test-connection) |
 | tests.healthPath | string | `"/actuator/health"` | Health endpoint probed by `helm test` |

@@ -1,0 +1,38 @@
+{{- /*
+Tenant ConfigMaps consumed live by the backend's gitops-configmap tenant source
+(label selector: presence of `auditflow.io/tenant`; key: tenant.yaml).
+K8s names/labels use the sanitized tenant id (lowercase, [^a-z0-9-] -> '-', dashes trimmed);
+the document body keeps the canonical tenantId.
+*/}}
+{{- define "auditflow.tenantK8sName" -}}
+{{- regexReplaceAll "[^a-z0-9-]" (lower .) "-" | trimAll "-" -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auditflow-tenant-platform
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+    auditflow.io/tenant: "platform"
+data:
+  tenant.yaml: |
+    tenantId: _platform
+    enabled: true
+    quota:
+      rateLimitPerSec: {{ .Values.tenants.platform.rateLimitPerSec | default 200 }}
+      burst: {{ .Values.tenants.platform.burst | default 400 }}
+    pipelines:
+      {{- toYaml (.Values.tenants.platform.pipelines | default list) | nindent 6 }}
+{{- range .Values.tenants.additional }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auditflow-tenant-{{ include "auditflow.tenantK8sName" .tenantId }}
+  labels:
+    {{- include "chart-libs.labels" $ | nindent 4 }}
+    auditflow.io/tenant: {{ include "auditflow.tenantK8sName" .tenantId | quote }}
+data:
+  tenant.yaml: |
+    {{- toYaml . | nindent 4 }}
+{{- end }}

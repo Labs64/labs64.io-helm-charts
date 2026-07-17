@@ -1238,15 +1238,164 @@
     },
     "rbac": {
       "additionalProperties": false,
-      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
+      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)\nLeast-privilege, namespace-scoped: the tenant-config informer (tenants.source.mode=\ngitops-configmap) needs ConfigMap get/list/watch; the secretRef resolver\n(secretRef.resolver=k8s-secret) needs Secret get; kubernetes service discovery\n(transformer/sink) needs Service get.",
       "properties": {
         "create": {
-          "default": false,
+          "default": true,
           "title": "create",
           "type": "boolean"
         },
         "rules": {
           "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "apiGroups": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "apiGroups",
+                    "type": "array"
+                  },
+                  "resources": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "resources",
+                    "type": "array"
+                  },
+                  "verbs": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "verbs",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "apiGroups",
+                  "resources",
+                  "verbs"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "apiGroups": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "apiGroups",
+                    "type": "array"
+                  },
+                  "resources": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "resources",
+                    "type": "array"
+                  },
+                  "verbs": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "verbs",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "apiGroups",
+                  "resources",
+                  "verbs"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "apiGroups": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "apiGroups",
+                    "type": "array"
+                  },
+                  "resources": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "resources",
+                    "type": "array"
+                  },
+                  "verbs": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "verbs",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "apiGroups",
+                  "resources",
+                  "verbs"
+                ],
+                "type": "object"
+              }
+            ],
             "required": []
           },
           "title": "rules",
@@ -1711,6 +1860,61 @@
       "title": "startupProbe",
       "type": "object"
     },
+    "tenants": {
+      "additionalProperties": false,
+      "description": "Tenant provisioning shipped by the chart (rendered as `auditflow.io/tenant`-labelled\nConfigMaps consumed live by the gitops-configmap source — see templates/tenant-configmaps.yaml).",
+      "properties": {
+        "additional": {
+          "description": "Additional tenants to provision with the release: a list of full tenant documents\n({tenantId, enabled, quota, pipelines}); each renders as its own labelled ConfigMap.\nTenants can also be onboarded at any time by applying such a ConfigMap out-of-band (GitOps).",
+          "items": {
+            "additionalProperties": true,
+            "required": [],
+            "type": "object"
+          },
+          "title": "additional",
+          "type": "array"
+        },
+        "platform": {
+          "additionalProperties": false,
+          "description": "The reserved `_platform` pseudo-tenant for tenantless/platform events. Shipped by\ndefault so platform events flow out of the box; K8s object name/label use the sanitized\n`platform`, the body keeps the canonical `_platform`.",
+          "properties": {
+            "burst": {
+              "default": 400,
+              "description": "Per-tenant ingest rate limit: burst capacity",
+              "title": "burst",
+              "type": "integer"
+            },
+            "pipelines": {
+              "description": "The platform tenant's pipelines (same shape as the former global auditflow.pipelines)",
+              "items": {
+                "additionalProperties": true,
+                "required": [],
+                "type": "object"
+              },
+              "title": "pipelines",
+              "type": "array"
+            },
+            "rateLimitPerSec": {
+              "default": 200,
+              "description": "Per-tenant ingest rate limit (token bucket): sustained events/second",
+              "title": "rateLimitPerSec",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "rateLimitPerSec",
+            "burst"
+          ],
+          "title": "platform",
+          "type": "object"
+        }
+      },
+      "required": [
+        "platform"
+      ],
+      "title": "tenants",
+      "type": "object"
+    },
     "terminationGracePeriodSeconds": {
       "default": 45,
       "description": "Graceful shutdown: drain in-flight requests / message handlers on rolling\nupdates and scale-in. Keep terminationGracePeriodSeconds \u003e preStop + gracefulShutdown.timeout.",
@@ -1906,6 +2110,7 @@
     "affinity",
     "env",
     "observability",
+    "tenants",
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",
