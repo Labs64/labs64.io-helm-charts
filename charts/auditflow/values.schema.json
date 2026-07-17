@@ -18,7 +18,7 @@
           "description": "AuditFlow application properties (bound by",
           "properties": {
             "pipelines": {
-              "description": "AuditFlow pipelines configuration",
+              "description": "Legacy global pipelines — MUST stay empty: pipelines are per-tenant now (see\n`tenants.platform.pipelines` below and the tenant ConfigMaps), and a non-empty\nlist fails application startup by design.",
               "items": {
                 "required": []
               },
@@ -30,6 +30,22 @@
             "pipelines"
           ],
           "title": "auditflow",
+          "type": "object"
+        },
+        "secretRef": {
+          "additionalProperties": false,
+          "description": "Resolver for `${secretRef:\u003ckey\u003e}` sink-credential indirection; \"k8s-secret\" reads the\ntenant's own Secret `auditflow-tenant-\u003ctenantId\u003e-creds` (requires rbac.create), \"env\" reads\n`AUDITFLOW_TENANT_\u003cTENANTID\u003e_\u003cKEY\u003e` environment variables",
+          "properties": {
+            "resolver": {
+              "default": "k8s-secret",
+              "title": "resolver",
+              "type": "string"
+            }
+          },
+          "required": [
+            "resolver"
+          ],
+          "title": "secretRef",
           "type": "object"
         },
         "sink": {
@@ -169,6 +185,67 @@
           "title": "spring",
           "type": "object"
         },
+        "tenants": {
+          "additionalProperties": false,
+          "description": "Tenant model (silo isolation) — the chart pins the Kubernetes-native modes; the\napplication's built-in defaults are the cluster-free ones (local-dir / in-memory / env).\nKeys below are exact Spring property paths (",
+          "properties": {
+            "consumer": {
+              "additionalProperties": false,
+              "properties": {
+                "max-in-flight-per-tenant": {
+                  "default": 4,
+                  "description": "Max concurrently-processed events per tenant on the consumer side (fairness layer 2)",
+                  "title": "max-in-flight-per-tenant",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "max-in-flight-per-tenant"
+              ],
+              "title": "consumer",
+              "type": "object"
+            },
+            "ratelimit": {
+              "additionalProperties": false,
+              "properties": {
+                "backend": {
+                  "default": "redis",
+                  "description": "Per-tenant ingest rate-limit backend; \"redis\" is correct with \u003e1 replica (the\napplication default \"in-memory\" is single-replica only)",
+                  "title": "backend",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "backend"
+              ],
+              "title": "ratelimit",
+              "type": "object"
+            },
+            "source": {
+              "additionalProperties": false,
+              "properties": {
+                "mode": {
+                  "default": "gitops-configmap",
+                  "description": "Tenant config source; \"gitops-configmap\" watches ConfigMaps labelled `auditflow.io/tenant`\nin the release namespace (requires rbac.create), \"local-dir\" polls a mounted directory",
+                  "title": "mode",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mode"
+              ],
+              "title": "source",
+              "type": "object"
+            }
+          },
+          "required": [
+            "source",
+            "ratelimit",
+            "consumer"
+          ],
+          "title": "tenants",
+          "type": "object"
+        },
         "transformer": {
           "additionalProperties": false,
           "description": "Transformer configuration",
@@ -241,6 +318,8 @@
         "transformer",
         "sink",
         "auditflow",
+        "tenants",
+        "secretRef",
         "spring"
       ],
       "title": "applicationYaml",

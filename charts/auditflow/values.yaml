@@ -317,17 +317,32 @@ applicationYaml:
 
   # -- AuditFlow application properties (bound by @ConfigurationProperties(prefix = "auditflow"))
   auditflow:
-    # -- AuditFlow pipelines configuration
+    # -- Legacy global pipelines — MUST stay empty: pipelines are per-tenant now (see
+    # `tenants.platform.pipelines` below and the tenant ConfigMaps), and a non-empty
+    # list fails application startup by design.
     pipelines: []
-    #  - name: 'logs'
-    #    enabled: true
-    #    transformer:
-    #      name: 'zero'
-    #    sink:
-    #      name: 'logging_sink'
-    #      properties:
-    #        log-level: "DEBUG"
-    #        format: "json"
+
+  # -- Tenant model (silo isolation) — the chart pins the Kubernetes-native modes; the
+  # application's built-in defaults are the cluster-free ones (local-dir / in-memory / env).
+  # Keys below are exact Spring property paths (@Value binding, no relaxed naming) — keep kebab-case.
+  tenants:
+    source:
+      # -- Tenant config source; "gitops-configmap" watches ConfigMaps labelled `auditflow.io/tenant`
+      # in the release namespace (requires rbac.create), "local-dir" polls a mounted directory
+      mode: gitops-configmap
+    ratelimit:
+      # -- Per-tenant ingest rate-limit backend; "redis" is correct with >1 replica (the
+      # application default "in-memory" is single-replica only)
+      backend: redis
+    consumer:
+      # -- Max concurrently-processed events per tenant on the consumer side (fairness layer 2)
+      max-in-flight-per-tenant: 4
+
+  # -- Resolver for `${secretRef:<key>}` sink-credential indirection; "k8s-secret" reads the
+  # tenant's own Secret `auditflow-tenant-<tenantId>-creds` (requires rbac.create), "env" reads
+  # `AUDITFLOW_TENANT_<TENANTID>_<KEY>` environment variables
+  secretRef:
+    resolver: k8s-secret
 
   # -- Spring configuration
   spring:
