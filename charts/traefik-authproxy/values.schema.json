@@ -42,7 +42,6 @@
       "title": "autoscaling",
       "type": "object"
     },
-
     "chart-libs": {
       "additionalProperties": true,
       "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
@@ -162,7 +161,7 @@
                 "type": "string"
               },
               "value": {
-                "default": "/opt/application-config/static_policies.yaml",
+                "default": "/opt/application-config/static_policies.cedar",
                 "title": "value",
                 "type": "string"
               }

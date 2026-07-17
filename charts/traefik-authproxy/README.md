@@ -29,15 +29,13 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
-| cedar | object | `{"mode":"enforce"}` | Cedar edge tier. The ACS evaluates the generated per-operation Cedar policies from whichever policy source is active: the signed policy bundle (policyBundle.enabled) or, under live discovery, each module's /.well-known/auth-policy.cedar (build-generated, same distribution as auth-policy.json). This is the declarative auth-policy ↔ Cedar switch. |
-| cedar.mode | string | `"enforce"` | off = legacy auth-policy.json only · shadow = evaluate + log cedar-vs-legacy diff, legacy decides · enforce = Cedar decides module routes (flip ONLY after the shadow diff is clean — shadow-mode rule; static prefixes stay legacy). |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env[0] | object | `{"name":"OIDC_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | OIDC discovery URL. Override per environment:   production: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration   local dev:  http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration |
 | env[1] | object | `{"name":"OIDC_AUDIENCE","value":"account"}` | Audience for the auth proxy. |
 | env[2] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
 | env[3] | object | `{"name":"TOKEN_SCOPES_CLAIM_PATHS","value":"scope,realm_access.roles,resource_access.{audience}.roles"}` | Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to OIDC_AUDIENCE. Default: scope,realm_access.roles,resource_access.{audience}.roles. |
 | env[4] | object | `{"name":"TOKEN_TENANT_CLAIM_PATH","value":"tenant"}` | Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent. |
-| env[5] | object | `{"name":"STATIC_POLICY_FILE","value":"/opt/application-config/static_policies.yaml"}` | Static prefix policies file (rendered from .Values.staticPolicies) |
+| env[5] | object | `{"name":"STATIC_POLICY_FILE","value":"/opt/application-config/static_policies.cedar"}` | Static prefix policies file (rendered from .Values.staticPolicies) |
 | env[6] | object | `{"name":"POLICY_REFRESH_INTERVAL","value":"30"}` | Periodic auth-policy re-fetch interval (seconds); the Service watch triggers immediate refreshes, this is the belt-and-suspenders floor. |
 | env[7].name | string | `"POD_NAMESPACE"` |  |
 | env[7].valueFrom.fieldRef.fieldPath | string | `"metadata.namespace"` |  |
