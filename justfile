@@ -53,6 +53,10 @@ reset: uninstall-all-apps uninstall-monitoring uninstall-tools
 cluster-down: reset
     k3d cluster delete labs64io
 
+# prune docker system (including volumes) without prompting
+docker-system-prune:
+    docker system prune -a --volumes -f
+
 # enable OTel instrumentation on instrumented module apps (requires the monitoring
 # stack — the collector DaemonSet must be running so OTLP export has a target).
 # Kept off in the base `up` profile so a monitoring-less cluster shows no export errors.
@@ -130,7 +134,7 @@ install-app-standalone app:
     helm upgrade --install labs64io-{{app}} ./charts/{{app}} \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/{{app}}/values.yaml \
-      --force-conflicts
+      --force-conflicts \
       -f ./overrides/{{app}}/values.standalone.yaml
 
 # Uninstall a specific Labs64.IO application
