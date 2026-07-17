@@ -122,7 +122,7 @@ install-app app:
       echo "Monitoring stack detected — enabling observability for {{app}}"
       ARGS+=("--set" "observability.enabled=true")
     fi
-    helm upgrade --install labs64io-{{app}} ./charts/{{app}} "${ARGS[@]}"
+    helm upgrade --install labs64io-{{app}} ./charts/{{app}} "${ARGS[@]}" --force-conflicts
 
 # Install a single Labs64.IO application standalone (bundled infra, no swagger-ui stack)
 install-app-standalone app:
@@ -130,6 +130,7 @@ install-app-standalone app:
     helm upgrade --install labs64io-{{app}} ./charts/{{app}} \
       --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
       -f ./charts/{{app}}/values.yaml \
+      --force-conflicts
       -f ./overrides/{{app}}/values.standalone.yaml
 
 # Uninstall a specific Labs64.IO application

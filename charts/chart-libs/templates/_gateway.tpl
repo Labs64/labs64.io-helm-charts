@@ -63,6 +63,14 @@ spec:
             kind: Middleware
             name: {{ $mw.rateLimit }}
         {{- end }}
+        {{- /* 2.5 Buffering: prevent large payload attacks */}}
+        {{- if $mw.buffering }}
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $mw.buffering }}
+        {{- end }}
         {{- /* 3. Security headers — native ResponseHeaderModifier. */}}
         - type: ResponseHeaderModifier
           responseHeaderModifier:

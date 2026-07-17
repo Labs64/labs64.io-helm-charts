@@ -29,6 +29,18 @@ spec:
     sourceCriterion:
       requestHeaderName: X-Auth-User
     {{- end }}
+{{- if .Values.buffering.enabled }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-buffering
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+spec:
+  buffering:
+    maxRequestBodyBytes: {{ .Values.buffering.maxRequestBodyBytes }}
+{{- end }}
 {{- if .Values.compress.enabled }}
 ---
 # Response compression at the edge — a safe, universal frontstore optimization for

@@ -30,6 +30,14 @@ rateLimit:
   # -- Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent
   perUser: true
 
+# -- Buffering middleware configuration (limits payload sizes to prevent OOM / large event attacks)
+buffering:
+  # -- Enable the shared buffering middleware
+  enabled: true
+  # -- Maximum allowed request body size in bytes (default 2.5MB)
+  maxRequestBodyBytes: 2621440
+
+
 # -- Response-compression middleware (edge optimization for all modules routed through Traefik)
 compress:
   # -- Enable the shared compress middleware

@@ -32,6 +32,9 @@ Labs64.IO :: Gateway Common - shared Traefik middlewares (auth, rate limiting, s
 | authProxy.port | int | `8081` | Service port of the traefik-authproxy release |
 | authProxy.serviceName | string | `"labs64io-traefik-authproxy"` | Service name of the traefik-authproxy release |
 | authProxy.trustForwardHeader | bool | `true` | Trust X-Forwarded-* headers from the proxy |
+| buffering | object | `{"enabled":true,"maxRequestBodyBytes":2621440}` | Buffering middleware configuration (limits payload sizes to prevent OOM / large event attacks) |
+| buffering.enabled | bool | `true` | Enable the shared buffering middleware |
+| buffering.maxRequestBodyBytes | int | `2621440` | Maximum allowed request body size in bytes (default 2.5MB) |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | compress | object | `{"enabled":true,"excludedContentTypes":["image/png","image/jpeg","image/gif","image/webp","application/grpc"],"minResponseBodyBytes":1024}` | Response-compression middleware (edge optimization for all modules routed through Traefik) |
 | compress.enabled | bool | `true` | Enable the shared compress middleware |

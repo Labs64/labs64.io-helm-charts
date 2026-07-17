@@ -63,6 +63,30 @@
       "title": "authProxy",
       "type": "object"
     },
+    "buffering": {
+      "additionalProperties": false,
+      "description": "Buffering middleware configuration (limits payload sizes to prevent OOM / large event attacks)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable the shared buffering middleware",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "maxRequestBodyBytes": {
+          "default": 2621440,
+          "description": "Maximum allowed request body size in bytes (default 2.5MB)",
+          "title": "maxRequestBodyBytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "maxRequestBodyBytes"
+      ],
+      "title": "buffering",
+      "type": "object"
+    },
     "chart-libs": {
       "additionalProperties": true,
       "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
@@ -175,6 +199,7 @@
     "nameOverride",
     "authProxy",
     "rateLimit",
+    "buffering",
     "compress"
   ],
   "type": "object"

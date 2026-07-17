@@ -526,6 +526,11 @@
               "title": "auth",
               "type": "string"
             },
+            "buffering": {
+              "default": "gateway-common-buffering",
+              "title": "buffering",
+              "type": "string"
+            },
             "compress": {
               "default": "gateway-common-compress",
               "title": "compress",
@@ -540,7 +545,8 @@
           "required": [
             "auth",
             "rateLimit",
-            "compress"
+            "compress",
+            "buffering"
           ],
           "title": "sharedMiddlewares",
           "type": "object"

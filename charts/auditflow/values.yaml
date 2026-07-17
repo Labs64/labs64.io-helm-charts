@@ -421,6 +421,7 @@ gateway:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
     compress: gateway-common-compress
+    buffering: gateway-common-buffering
   # -- Auth-policy discovery: label+annotations on the Service so the gateway's
   # traefik-authproxy fetches this module's /.well-known/auth-policy and
   # enforces the OpenAPI-declared per-operation policy at the edge.
