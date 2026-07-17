@@ -476,6 +476,18 @@ networkPolicy:
       ports:
         - protocol: TCP
           port: 6379
+    # Kubernetes API server — required by the tenant-config ConfigMap watch
+    # (tenants.source.mode=gitops-configmap), the k8s-secret resolver, and kubernetes
+    # service discovery. The API server sits outside any namespace so it is only
+    # addressable via ipBlock; scoped to the HTTPS/API ports.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
 
 # -- SLO recording rules and dashboards (rendered by chart-libs.slo.*)
 slo:
