@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-config
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    server:
+      httpListenAddr: ":{{ .Values.service.httpPort }}"
+      grpcListenAddr: ":{{ .Values.service.grpcPort }}"
+    storage:
+      driver: disk
+      disk:
+        directory: /policies
+        watchForChanges: false
+    schema:
+      enforcement: {{ .Values.config.schemaEnforcement }}
+    audit:
+      enabled: {{ .Values.config.auditEnabled }}
