@@ -14,6 +14,11 @@ networkPolicy:
 podDisruptionBudget:
   enabled: true
 
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+
 applicationYaml:
   spring:
     rabbitmq:
