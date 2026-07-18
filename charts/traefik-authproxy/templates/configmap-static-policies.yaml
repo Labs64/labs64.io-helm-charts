@@ -5,19 +5,12 @@ metadata:
   labels:
     {{- include "chart-libs.labels" . | nindent 4 }}
 data:
-  static_policies.cedar: |-
-    {{- range $i, $policy := .Values.staticPolicies }}
-    {{- $public := and (hasKey $policy "public") $policy.public }}
-    {{- $scopes := $policy.scopes | default list }}
-    @id("static::policy{{ $i }}")
-    @pathPrefix("{{ $policy.path }}")
-    @public("{{ $public }}")
-    @tenantRequired("false")
-    @scopes("{{ join "," $scopes }}")
-    permit(
-      principal,
-      action == Labs64IO::Action::"invoke",
-      resource == Labs64IO::ApiOperation::"static::policy{{ $i }}"
-    )
-    {{- if and (not $public) (gt (len $scopes) 0) }} when { {{ range $j, $s := $scopes }}{{ if $j }} || {{ end }}context.scopes.contains("{{ $s }}"){{ end }} }{{ end }};
+  static_routes.yaml: |-
+    # GENERATED from .Values.staticPolicies — routing only; Cerbos static_api decides.
+    static:
+    {{- range .Values.staticPolicies }}
+      - id: {{ .id }}
+        prefix: {{ .prefix }}
+        public: {{ .public | default false }}
+        scopes: [{{ range $i, $s := (.scopes | default list) }}{{ if $i }}, {{ end }}{{ $s }}{{ end }}]
     {{- end }}

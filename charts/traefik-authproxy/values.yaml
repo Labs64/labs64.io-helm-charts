@@ -28,15 +28,6 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-# RBAC configuration (create RBAC resources: Role, RoleBinding)
-# The auth proxy watches Services labeled labs64.io/auth-policy=true for policy discovery.
-rbac:
-  create: true
-  rules:
-    - apiGroups: [""]
-      resources: ["services"]
-      verbs: ["get", "list", "watch"]
-
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
 podAnnotations: {}
@@ -80,29 +71,6 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
-
-# -- Signed edge-policy bundle. When enabled, the ACS
-# loads module auth policies from a cosign-signed OCI bundle pulled BY DIGEST and
-# verified by an init container, instead of fetching them live from the module
-# pods it authorizes (closes F2: self-authored runtime policy). Build/sign/push
-# the bundle with labs64.io-authproxy/policy-bundle/build-bundle.sh.
-policyBundle:
-  # -- Enable bundle mode. Off = legacy live in-cluster /.well-known discovery.
-  enabled: false
-  # -- OCI registry holding the bundle (in-cluster reachable name).
-  registry: labs64io-registry:5000
-  # -- Repository path of the bundle artifact.
-  repo: policies/labs64io
-  # -- Immutable digest to pin (sha256:...). REQUIRED when enabled — this is what
-  # ties the running ACS to a reviewed, signed artifact.
-  digest: ""
-  # -- Use plain HTTP (local dev registry). Set false for TLS registries.
-  plainHttp: true
-  # -- Cosign public key (PEM) that signed the bundle. REQUIRED when enabled.
-  cosignPublicKey: ""
-  # -- Init-container images for pull + verify.
-  orasImage: ghcr.io/oras-project/oras:v1.2.0
-  cosignImage: gcr.io/projectsigstore/cosign:v3.1.1
 
 resources:
   limits:
@@ -204,30 +172,35 @@ env:
   # -- Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
   - name: TOKEN_TENANT_CLAIM_PATH
     value: "tenant"
-  # -- Static prefix policies file (rendered from .Values.staticPolicies)
-  - name: STATIC_POLICY_FILE
-    value: /opt/application-config/static_policies.cedar
-  # -- Periodic auth-policy re-fetch interval (seconds); the Service watch
-  # triggers immediate refreshes, this is the belt-and-suspenders floor.
-  - name: POLICY_REFRESH_INTERVAL
-    value: "30"
-  - name: POD_NAMESPACE
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.namespace
+  # -- Central Cerbos PDP HTTP endpoint (the authorization decision, RFC-07).
+  - name: CERBOS_URL
+    value: http://cerbos:3592
+  # -- Directory of generated <module>.routes.yaml manifests (mounted ConfigMap).
+  - name: ROUTES_DIR
+    value: /app/routes
+  # -- Static prefix policies file (rendered from .Values.staticPolicies).
+  - name: STATIC_ROUTES_FILE
+    value: /opt/application-config/static_routes.yaml
 
 # -- Static prefix policies for gateway surfaces without an OpenAPI spec
-# (UI bundles). Longest prefix wins; consulted only when no module
-# auth-policy route matches. Scope check is any-overlap with the token's
-# TOKEN_SCOPES_CLAIM_PATHS claims.
+# (UI bundles). Rendered into static_routes.yaml; `id` MUST match an action in
+# the Cerbos static_api policy (charts/cerbos/policies/static_api.yaml) — that
+# policy makes the decision, this only carries the routing prefix. Longest prefix
+# wins; consulted only when no module route matches.
 # TODO: remove after the corresponding modules will be using OpenAPI
 staticPolicies:
-  - path: /checkout
+  - id: checkout-ui
+    prefix: /checkout-ui
+    public: false
     scopes:
-      - checkout-role
-  - path: /customer-portal
+      - admin-role
+      - ecommerce-role
+  - id: customer-portal-ui
+    prefix: /customer-portal-ui
+    public: false
     scopes:
-       - customer-portal-role
+      - admin-role
+      - default-roles-labs64io
 
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema

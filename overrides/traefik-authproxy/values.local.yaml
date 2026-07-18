@@ -22,13 +22,10 @@ env:
   # Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
   - name: TOKEN_TENANT_CLAIM_PATH
     value: "tenant"
-  - name: STATIC_POLICY_FILE
-    value: /opt/application-config/static_policies.yaml
-  # Periodic auth-policy re-fetch floor; the Service watch triggers immediate refreshes.
-  - name: POLICY_REFRESH_INTERVAL
-    value: "30"
-  # Namespace searched for labs64.io/auth-policy=true labeled Services.
-  - name: POD_NAMESPACE
-    valueFrom:
-      fieldRef:
-        fieldPath: metadata.namespace
+  # Central Cerbos PDP (RFC-07) — the authorization decision.
+  - name: CERBOS_URL
+    value: http://cerbos:3592
+  - name: ROUTES_DIR
+    value: /app/routes
+  - name: STATIC_ROUTES_FILE
+    value: /opt/application-config/static_routes.yaml

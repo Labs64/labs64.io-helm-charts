@@ -13,10 +13,13 @@ spec:
       {{- include "chart-libs.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        # Roll the ACS whenever the generated routes / static-route ConfigMaps change.
+        checksum/routes: {{ include (print $.Template.BasePath "/configmap-routes.yaml") . | sha256sum }}
+        checksum/static: {{ include (print $.Template.BasePath "/configmap-static-policies.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "chart-libs.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -32,43 +35,6 @@ spec:
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if .Values.policyBundle.enabled }}
-      {{- $pb := .Values.policyBundle }}
-      {{- $ref := printf "%s/%s@%s" $pb.registry $pb.repo (required "policyBundle.digest is required in bundle mode" $pb.digest) }}
-      initContainers:
-        # Provenance: pull the edge-policy bundle BY DIGEST and verify
-        # its cosign signature before the ACS starts. Policy comes only from this
-        # signed artifact — never from the module pods it authorizes (F2 closed).
-        - name: policy-bundle-pull
-          image: {{ $pb.orasImage | quote }}
-          command: ["oras", "pull"]
-          args:
-            {{- if $pb.plainHttp }}
-            - "--plain-http"
-            {{- end }}
-            - "--output"
-            - "/bundle"
-            - {{ $ref | quote }}
-          volumeMounts:
-            - name: policy-bundle
-              mountPath: /bundle
-        - name: policy-bundle-verify
-          image: {{ $pb.cosignImage | quote }}
-          # Fails closed: a bad/absent signature aborts pod startup.
-          command: ["cosign", "verify"]
-          args:
-            - "--key"
-            - "/keys/cosign.pub"
-            - "--insecure-ignore-tlog"
-            {{- if $pb.plainHttp }}
-            - "--allow-http-registry"
-            {{- end }}
-            - {{ $ref | quote }}
-          volumeMounts:
-            - name: policy-bundle-pubkey
-              mountPath: /keys
-              readOnly: true
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -98,12 +64,6 @@ spec:
           {{- end }}
           env:
           {{- include "chart-libs.observability.pythonEnv" . | nindent 12 }}
-          {{- if .Values.policyBundle.enabled }}
-            - name: POLICY_BUNDLE_DIR
-              value: /bundle
-            - name: POLICY_BUNDLE_DIGEST
-              value: {{ .Values.policyBundle.digest | quote }}
-          {{- end }}
           {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -113,28 +73,22 @@ spec:
             - secretRef:
                 name: {{ include "chart-libs.fullname" . }}
           volumeMounts:
+            - name: routes
+              mountPath: /app/routes
+              readOnly: true
             - name: static-policies
               mountPath: /opt/application-config
               readOnly: true
-            {{- if .Values.policyBundle.enabled }}
-            - name: policy-bundle
-              mountPath: /bundle
-              readOnly: true
-            {{- end }}
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
+        - name: routes
+          configMap:
+            name: {{ include "chart-libs.fullname" . }}-routes
         - name: static-policies
           configMap:
             name: {{ include "chart-libs.fullname" . }}-static-policies
-        {{- if .Values.policyBundle.enabled }}
-        - name: policy-bundle
-          emptyDir: {}
-        - name: policy-bundle-pubkey
-          configMap:
-            name: {{ include "chart-libs.fullname" . }}-policy-bundle-pubkey
-        {{- end }}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

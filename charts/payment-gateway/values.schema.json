@@ -607,6 +607,88 @@
                           "additionalProperties": false,
                           "properties": {
                             "port": {
+                              "default": 3593,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "cerbos",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
                               "default": 5672,
                               "title": "port",
                               "type": "integer"
