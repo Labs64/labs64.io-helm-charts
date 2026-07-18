@@ -329,6 +329,11 @@ generate-schema: helm-tools
 # Generate all — Helm charts docs and schema
 generate-all: generate-docu generate-schema
 
+# Generate the Cerbos policy set + authproxy routes manifests from module OpenAPI
+# specs (RFC-07). Writes charts/cerbos/{policies,schemas} + charts/traefik-authproxy/routes.
+build-policies:
+    ./policies/build-cerbos-policies.sh
+
 # add external helm repositories
 repo-add:
     helm repo add labs64io-pub https://labs64.github.io/labs64.io-helm-charts
