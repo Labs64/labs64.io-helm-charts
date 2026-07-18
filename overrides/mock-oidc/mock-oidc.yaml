@@ -29,6 +29,17 @@ data:
           "requestMappings": [
             {
               "requestParam": "scope",
+              "match": "auditflow-tenant-2",
+              "claims": {
+                "sub": "svc:auditflow-client-2",
+                "tenant": "t_mock_2",
+                "aud": ["account"],
+                "scope": "audit-event:write",
+                "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
               "match": "auditflow",
               "claims": {
                 "sub": "svc:auditflow-client",
