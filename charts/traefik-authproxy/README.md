@@ -47,7 +47,8 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/health","port":8081},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
-| networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy | object | `{"egress":[{"ports":[{"port":3592,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"cerbos"}}}]}],"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy.egress | list | `[{"ports":[{"port":3592,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"cerbos"}}}]}]` | Egress rules enforcing database-per-service isolation. |
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | nodeSelector | object | `{}` |  |

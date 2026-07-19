@@ -221,3 +221,13 @@ networkPolicy:
   gatewayNamespace: tools
   # -- Additional raw ingress rules
   extraIngress: []
+  # -- Egress rules enforcing database-per-service isolation.
+  egress:
+    # Cerbos PDP: edge /auth decisions over the HTTP API (CerbosEdgeEngine).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: cerbos
+      ports:
+        - protocol: TCP
+          port: 3592
