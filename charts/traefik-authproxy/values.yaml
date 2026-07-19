@@ -174,7 +174,7 @@ env:
     value: "tenant"
   # -- Central Cerbos PDP HTTP endpoint (the authorization decision, RFC-07).
   - name: CERBOS_URL
-    value: http://cerbos:3592
+    value: http://labs64io-cerbos:3592
   # -- Directory of generated <module>.routes.yaml manifests (mounted ConfigMap).
   - name: ROUTES_DIR
     value: /app/routes

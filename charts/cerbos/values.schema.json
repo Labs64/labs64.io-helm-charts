@@ -359,10 +359,20 @@
           "title": "readOnlyRootFilesystem",
           "type": "boolean"
         },
+        "runAsGroup": {
+          "default": 1064,
+          "title": "runAsGroup",
+          "type": "integer"
+        },
         "runAsNonRoot": {
           "default": true,
           "title": "runAsNonRoot",
           "type": "boolean"
+        },
+        "runAsUser": {
+          "default": 1064,
+          "title": "runAsUser",
+          "type": "integer"
         },
         "seccompProfile": {
           "additionalProperties": false,
@@ -384,6 +394,8 @@
         "allowPrivilegeEscalation",
         "capabilities",
         "runAsNonRoot",
+        "runAsUser",
+        "runAsGroup",
         "readOnlyRootFilesystem",
         "seccompProfile"
       ],

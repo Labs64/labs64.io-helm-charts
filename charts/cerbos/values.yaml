@@ -32,6 +32,8 @@ securityContext:
     drop:
       - ALL
   runAsNonRoot: true
+  runAsUser: 1064
+  runAsGroup: 1064
   readOnlyRootFilesystem: true
   seccompProfile:
     type: RuntimeDefault

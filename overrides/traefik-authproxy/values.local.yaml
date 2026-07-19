@@ -24,7 +24,7 @@ env:
     value: "tenant"
   # Central Cerbos PDP (RFC-07) — the authorization decision.
   - name: CERBOS_URL
-    value: http://cerbos:3592
+    value: http://labs64io-cerbos:3592
   - name: ROUTES_DIR
     value: /app/routes
   - name: STATIC_ROUTES_FILE
