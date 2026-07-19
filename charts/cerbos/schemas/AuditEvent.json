@@ -1,6 +1,6 @@
 {
-  "type" : "object",
   "additionalProperties" : true,
+  "type" : "object",
   "properties" : {
     "tenant" : {
       "type" : "string"

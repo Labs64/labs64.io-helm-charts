@@ -10,6 +10,14 @@ resourcePolicy:
       ref: cerbos:///PurchaseOrder.json
   rules:
   - actions:
+    - listPurchaseOrders
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"purchase-order:read\")"
+  - actions:
     - getPurchaseOrder
     effect: EFFECT_ALLOW
     roles:

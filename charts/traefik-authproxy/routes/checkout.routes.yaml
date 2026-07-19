@@ -45,6 +45,7 @@ routes:
   tenantRequired: true
   scopes:
   - purchase-order:read
+  resource: PurchaseOrder
 - operationId: getPurchaseOrder
   method: GET
   path: "/purchase-orders/{id}"
