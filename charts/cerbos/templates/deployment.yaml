@@ -14,9 +14,10 @@ spec:
   template:
     metadata:
       annotations:
-        # Roll the ACS whenever the generated routes / static-route ConfigMaps change.
-        checksum/routes: {{ include (print $.Template.BasePath "/configmap-routes.yaml") . | sha256sum }}
-        checksum/static: {{ include (print $.Template.BasePath "/configmap-static-policies.yaml") . | sha256sum }}
+        # Roll the PDP whenever the generated policy/schema ConfigMaps change.
+        checksum/policies: {{ include (print $.Template.BasePath "/configmap-policies.yaml") . | sha256sum }}
+        checksum/schemas: {{ include (print $.Template.BasePath "/configmap-schemas.yaml") . | sha256sum }}
+        checksum/config: {{ include (print $.Template.BasePath "/configmap-config.yaml") . | sha256sum }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -31,7 +32,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "chart-libs.serviceAccountName" . }}
-      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 45 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds | default 30 }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -44,12 +45,16 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "server"
+            - "--config=/config/config.yaml"
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.service.httpPort }}
               protocol: TCP
-          {{- include "chart-libs.preStopDrain" . | nindent 10 }}
-          {{- include "chart-libs.startupProbe" . | nindent 10 }}
+            - name: grpc
+              containerPort: {{ .Values.service.grpcPort }}
+              protocol: TCP
           {{- with .Values.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -62,33 +67,37 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          env:
-          {{- include "chart-libs.observability.pythonEnv" . | nindent 12 }}
           {{- with .Values.env }}
+          env:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          envFrom:
-            - configMapRef:
-                name: {{ include "chart-libs.fullname" . }}
-            - secretRef:
-                name: {{ include "chart-libs.fullname" . }}
           volumeMounts:
-            - name: routes
-              mountPath: /app/routes
+            - name: config
+              mountPath: /config
               readOnly: true
-            - name: static-policies
-              mountPath: /opt/application-config
+            - name: policies
+              mountPath: /policies
               readOnly: true
+            - name: schemas
+              mountPath: /policies/_schemas
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
-        - name: routes
+        - name: config
           configMap:
-            name: {{ include "chart-libs.fullname" . }}-routes
-        - name: static-policies
+            name: {{ include "chart-libs.fullname" . }}-config
+        - name: policies
           configMap:
-            name: {{ include "chart-libs.fullname" . }}-static-policies
+            name: {{ include "chart-libs.fullname" . }}-policies
+        - name: schemas
+          configMap:
+            name: {{ include "chart-libs.fullname" . }}-schemas
+        - name: tmp
+          emptyDir: {}
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

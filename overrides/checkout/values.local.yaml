@@ -15,7 +15,9 @@ rabbitmq:
 postgresql:
   enabled: false
 
-# Cedar domain authorization
+# Authorization PEP -> central Cerbos PDP
 env:
-  - name: LABS64_CEDAR_MODE
+  - name: LABS64_AUTH_AUTHZ_MODE
     value: SHADOW
+  - name: LABS64_AUTH_AUTHZ_PDPADDRESS
+    value: labs64io-cerbos.labs64io.svc.cluster.local:3593

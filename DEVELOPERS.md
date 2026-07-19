@@ -399,7 +399,7 @@ robot --include auditflow tests/auditflow/authz.robot
 This asserts the full scope matrix (no token, malformed token, wrong scope, no scope, correct
 scope, multiple scopes) against the live gateway edge, and — when the active kubectl context is
 the local k3d dev cluster — additionally corroborates each decision against the authproxy's
-Cedar decision log and AuditFlow's delivery log (`local-k8s-only` tagged cases; see
+authz decision log and AuditFlow's delivery log (`local-k8s-only` tagged cases; see
 `labs64.io-tests/AGENTS.md` "Local-only pod-log corroboration").
 
 ### Helm tests
@@ -567,7 +567,7 @@ Common causes:
 ### 401/403 on API calls
 
 - Verify token: `just generate-jwt admin`
-- Check auth-policy discovery: `kubectl get svc -n labs64io -l labs64.io/auth-policy=true` (each module's Service publishes its policy at `/.well-known/auth-policy`, watched by the auth proxy) and `kubectl exec -n labs64io deploy/labs64io-traefik-authproxy -- wget -qO- http://localhost:8081/health/ready`
+- Check the central PDP: `kubectl get deploy,svc -n labs64io -l app.kubernetes.io/name=cerbos` and `kubectl exec -n labs64io deploy/labs64io-cerbos -- /cerbos healthcheck --kind=grpc` (— the authproxy loads a generated routes manifest and asks Cerbos; there is no `/.well-known/auth-policy` discovery anymore) plus `kubectl exec -n labs64io deploy/labs64io-traefik-authproxy -- wget -qO- http://localhost:8081/health/ready`
 - Check static UI policies: `kubectl get configmap -n labs64io -l app.kubernetes.io/name=traefik-authproxy -o yaml` (renders `static_policies.yaml` from `staticPolicies`)
 - Check auth-proxy logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=traefik-authproxy`
 

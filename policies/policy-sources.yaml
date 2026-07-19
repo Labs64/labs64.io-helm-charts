@@ -1,0 +1,17 @@
+# declares which modules' auth policies are generated into the Cerbos
+# PDP's policy set, and where each module's OpenAPI contract lives (relative to
+# the helm-charts repo root). CI (build-cerbos-policies.sh) generates one Cerbos
+# resource-policy set + routes manifest per module from these specs via the
+# commons OpenApiAuthPreprocessor — OpenAPI stays the single source of truth.
+#
+# basePath must match the module's gateway prefix + /api/v1.
+modules:
+  - name: auditflow
+    basePath: /auditflow/api/v1
+    openapi: ../labs64.io-auditflow/auditflow-api/src/main/resources/openapi/openapi-audit-v1.yaml
+  - name: payment-gateway
+    basePath: /payment-gateway/api/v1
+    openapi: ../labs64.io-payment-gateway/payment-gateway-be/src/main/resources/openapi/openapi-payment-gateway-v1.yaml
+  - name: checkout
+    basePath: /checkout/api/v1
+    openapi: ../labs64.io-checkout/checkout-be/src/main/resources/openapi/openapi-checkout-v1.yaml

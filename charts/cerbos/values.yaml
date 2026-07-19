@@ -1,0 +1,106 @@
+# -- Cerbos PDP replicas. On the hot path of every @Authorize / edge decision —
+# keep at least 2 for HA.
+replicaCount: 2
+
+# -- Cerbos container image (third-party; keeps its own non-root user).
+image:
+  repository: ghcr.io/cerbos/cerbos
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+# The upstream Cerbos image already runs as a non-root user; we harden further
+# without pinning uid/gid 1064 (that is our own images' contract, not Cerbos').
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  runAsUser: 1064
+  runAsGroup: 1064
+  readOnlyRootFilesystem: true
+  seccompProfile:
+    type: RuntimeDefault
+
+service:
+  type: ClusterIP
+  # -- Alias of httpPort: chart-libs' shared NetworkPolicy helper (monitoring
+  # ingress rule) reads .Values.service.port, not the httpPort/grpcPort pair
+  # below. Cerbos serves Prometheus metrics on the HTTP listener.
+  port: 3592
+  # -- HTTP API (authproxy edge client) and gRPC API (Java @Authorize SDK).
+  httpPort: 3592
+  grpcPort: 3593
+
+# -- Cerbos server config (rendered into a ConfigMap). Policies are served from
+# the disk store mounted from the policies/schemas ConfigMaps; schema enforcement
+# rejects requests whose attributes violate the JSON schemas (fail closed).
+config:
+  schemaEnforcement: reject
+  auditEnabled: false
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+livenessProbe:
+  httpGet:
+    path: /_cerbos/health
+    port: 3592
+  initialDelaySeconds: 10
+  periodSeconds: 15
+readinessProbe:
+  httpGet:
+    path: /_cerbos/health
+    port: 3592
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+autoscaling:
+  enabled: false
+
+# -- Restrict ingress to same-namespace callers (authproxy + module apps). The
+# chart-libs helper allows all same-namespace pods on all ports; no egress needed.
+networkPolicy:
+  enabled: true
+  gatewayNamespace: tools
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+terminationGracePeriodSeconds: 30
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+volumes: []
+volumeMounts: []
+env: []
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}

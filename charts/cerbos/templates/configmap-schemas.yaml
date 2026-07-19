@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-schemas
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+data:
+{{ (.Files.Glob "schemas/*.json").AsConfig | indent 2 }}

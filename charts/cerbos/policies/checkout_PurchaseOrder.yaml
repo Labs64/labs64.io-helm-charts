@@ -1,0 +1,51 @@
+# GENERATED from x-labs64-auth by OpenApiAuthPreprocessor — do not edit.
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: default
+  resource: PurchaseOrder
+  schemas:
+    principalSchema:
+      ref: cerbos:///principal.json
+    resourceSchema:
+      ref: cerbos:///PurchaseOrder.json
+  rules:
+  - actions:
+    - listPurchaseOrders
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"purchase-order:read\")"
+  - actions:
+    - getPurchaseOrder
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"purchase-order:read\")"
+  - actions:
+    - updatePurchaseOrder
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"purchase-order:write\")"
+  - actions:
+    - checkoutPurchaseOrder
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"purchase-order:checkout\")"
+  - actions:
+    - '*'
+    effect: EFFECT_DENY
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: has(request.resource.attr.tenant) && (!has(request.principal.attr.tenant) || request.resource.attr.tenant != request.principal.attr.tenant)

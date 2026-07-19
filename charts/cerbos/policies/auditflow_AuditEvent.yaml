@@ -1,0 +1,27 @@
+# GENERATED from x-labs64-auth by OpenApiAuthPreprocessor — do not edit.
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: default
+  resource: AuditEvent
+  schemas:
+    principalSchema:
+      ref: cerbos:///principal.json
+    resourceSchema:
+      ref: cerbos:///AuditEvent.json
+  rules:
+  - actions:
+    - publishEvent
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"audit-event:write\")"
+  - actions:
+    - '*'
+    effect: EFFECT_DENY
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: has(request.resource.attr.tenant) && (!has(request.principal.attr.tenant) || request.resource.attr.tenant != request.principal.attr.tenant)

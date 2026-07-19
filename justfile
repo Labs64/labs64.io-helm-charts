@@ -18,7 +18,7 @@ TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
 LOKI_CHART_VERSION := "6.24.0"
 
-LABS64IO_APPS := "traefik-authproxy gateway-common swagger-ui auditflow checkout checkout-ui payment-gateway customer-portal-ui"
+LABS64IO_APPS := "cerbos traefik-authproxy gateway-common swagger-ui auditflow checkout checkout-ui payment-gateway customer-portal-ui"
 # Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
 # `up-full` enables observability on these once the monitoring stack is present.
 OBSERVABILITY_APPS := "traefik-authproxy auditflow checkout payment-gateway"
@@ -328,6 +328,11 @@ generate-schema: helm-tools
 
 # Generate all — Helm charts docs and schema
 generate-all: generate-docu generate-schema
+
+# Generate the Cerbos policy set + authproxy routes manifests from module OpenAPI
+# specs. Writes charts/cerbos/{policies,schemas} + charts/traefik-authproxy/routes.
+build-policies:
+    ./policies/build-cerbos-policies.sh
 
 # add external helm repositories
 repo-add:

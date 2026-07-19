@@ -1,0 +1,130 @@
+# GENERATED from x-labs64-auth by OpenApiAuthPreprocessor — do not edit.
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: default
+  resource: payment_gateway_api
+  schemas:
+    principalSchema:
+      ref: cerbos:///principal.json
+  rules:
+  - actions:
+    - listPaymentDefinitions
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+  - actions:
+    - listPaymentProviders
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment-provider:read\")"
+  - actions:
+    - createPaymentProvider
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment-provider:write\")"
+  - actions:
+    - getPaymentProvider
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment-provider:write\")"
+  - actions:
+    - updatePaymentProvider
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment-provider:write\")"
+  - actions:
+    - deletePaymentProvider
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment-provider:write\")"
+  - actions:
+    - listPayments
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment:read\")"
+  - actions:
+    - createPayment
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment:write\")"
+  - actions:
+    - getPayment
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment:read\")"
+  - actions:
+    - payPayment
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment:pay\")"
+  - actions:
+    - closePayment
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment:write\")"
+  - actions:
+    - listPaymentTransactions
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment-transaction:read\")"
+  - actions:
+    - getPaymentTransaction
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment-transaction:read\")"
+  - actions:
+    - getCheckoutSessionConfirmation
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+  - actions:
+    - returnProviderCheckoutSession
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+  - actions:
+    - cancelProviderCheckoutSession
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+  - actions:
+    - handleProviderWebhook
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'

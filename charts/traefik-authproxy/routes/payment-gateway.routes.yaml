@@ -1,0 +1,122 @@
+# GENERATED from x-labs64-auth by OpenApiAuthPreprocessor — do not edit.
+version: 1
+module: payment-gateway
+basePath: /payment-gateway/api/v1
+routes:
+- operationId: listPaymentDefinitions
+  method: GET
+  path: /payment-definitions
+  public: true
+  tenantRequired: false
+  scopes: []
+- operationId: listPaymentProviders
+  method: GET
+  path: /payment-providers
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment-provider:read
+- operationId: createPaymentProvider
+  method: POST
+  path: /payment-providers
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment-provider:write
+- operationId: getPaymentProvider
+  method: GET
+  path: "/payment-providers/{paymentProviderId}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment-provider:write
+- operationId: updatePaymentProvider
+  method: PATCH
+  path: "/payment-providers/{paymentProviderId}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment-provider:write
+- operationId: deletePaymentProvider
+  method: DELETE
+  path: "/payment-providers/{paymentProviderId}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment-provider:write
+- operationId: listPayments
+  method: GET
+  path: /payments
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment:read
+- operationId: createPayment
+  method: POST
+  path: /payments
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment:write
+- operationId: getPayment
+  method: GET
+  path: "/payments/{paymentId}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment:read
+  resource: Payment
+- operationId: payPayment
+  method: POST
+  path: "/payments/{paymentId}/pay"
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment:pay
+  resource: Payment
+- operationId: closePayment
+  method: POST
+  path: "/payments/{paymentId}/close"
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment:write
+  resource: Payment
+- operationId: listPaymentTransactions
+  method: GET
+  path: /payment-transactions
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment-transaction:read
+- operationId: getPaymentTransaction
+  method: GET
+  path: "/payment-transactions/{paymentTransactionId}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - payment-transaction:read
+- operationId: getCheckoutSessionConfirmation
+  method: GET
+  path: "/checkout-sessions/{sessionId}/confirmation"
+  public: true
+  tenantRequired: false
+  scopes: []
+- operationId: returnProviderCheckoutSession
+  method: GET
+  path: "/providers/{provider}/checkout-sessions/{sessionId}/return"
+  public: true
+  tenantRequired: false
+  scopes: []
+- operationId: cancelProviderCheckoutSession
+  method: GET
+  path: "/providers/{provider}/checkout-sessions/{sessionId}/cancel"
+  public: true
+  tenantRequired: false
+  scopes: []
+- operationId: handleProviderWebhook
+  method: POST
+  path: "/providers/{provider}/webhooks"
+  public: true
+  tenantRequired: false
+  scopes: []

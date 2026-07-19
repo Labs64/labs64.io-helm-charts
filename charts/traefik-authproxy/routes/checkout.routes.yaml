@@ -1,0 +1,86 @@
+# GENERATED from x-labs64-auth by OpenApiAuthPreprocessor — do not edit.
+version: 1
+module: checkout
+basePath: /checkout/api/v1
+routes:
+- operationId: listCustomers
+  method: GET
+  path: /customers
+  public: false
+  tenantRequired: true
+  scopes:
+  - customer:read
+- operationId: createCustomer
+  method: POST
+  path: /customers
+  public: false
+  tenantRequired: true
+  scopes:
+  - customer:write
+- operationId: getCustomer
+  method: GET
+  path: "/customers/{id}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - customer:read
+- operationId: updateCustomer
+  method: PATCH
+  path: "/customers/{id}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - customer:write
+- operationId: createPurchaseOrder
+  method: POST
+  path: /purchase-orders
+  public: false
+  tenantRequired: true
+  scopes:
+  - purchase-order:write
+- operationId: listPurchaseOrders
+  method: GET
+  path: /purchase-orders
+  public: false
+  tenantRequired: true
+  scopes:
+  - purchase-order:read
+  resource: PurchaseOrder
+- operationId: getPurchaseOrder
+  method: GET
+  path: "/purchase-orders/{id}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - purchase-order:read
+  resource: PurchaseOrder
+- operationId: updatePurchaseOrder
+  method: PATCH
+  path: "/purchase-orders/{id}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - purchase-order:write
+  resource: PurchaseOrder
+- operationId: checkoutPurchaseOrder
+  method: POST
+  path: "/purchase-orders/{id}/checkout"
+  public: false
+  tenantRequired: true
+  scopes:
+  - purchase-order:checkout
+  resource: PurchaseOrder
+- operationId: listCheckoutTransactions
+  method: GET
+  path: /checkout-transactions
+  public: false
+  tenantRequired: true
+  scopes:
+  - checkout-transaction:read
+- operationId: getCheckoutTransaction
+  method: GET
+  path: "/checkout-transactions/{id}"
+  public: false
+  tenantRequired: true
+  scopes:
+  - checkout-transaction:read

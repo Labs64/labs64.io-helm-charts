@@ -1,0 +1,13 @@
+# GENERATED from x-labs64-auth by OpenApiAuthPreprocessor — do not edit.
+version: 1
+module: auditflow
+basePath: /auditflow/api/v1
+routes:
+- operationId: publishEvent
+  method: POST
+  path: /audit/publish
+  public: false
+  tenantRequired: true
+  scopes:
+  - audit-event:write
+  resource: AuditEvent

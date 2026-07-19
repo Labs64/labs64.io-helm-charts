@@ -1,0 +1,20 @@
+# Hand-authored: gateway surfaces without an OpenAPI spec (UI bundles).
+# Routing metadata lives in the authproxy's static_routes.yaml; THIS decides.
+# Mirrors the retired static policy semantics.
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: default
+  resource: static_api
+  rules:
+    - actions: ["checkout-ui"]
+      effect: EFFECT_ALLOW
+      roles: ["*"]
+      condition:
+        match:
+          expr: 'request.principal.attr.scopes.exists(s, s == "admin-role" || s == "ecommerce-role")'
+    - actions: ["customer-portal-ui"]
+      effect: EFFECT_ALLOW
+      roles: ["*"]
+      condition:
+        match:
+          expr: 'request.principal.attr.scopes.exists(s, s == "admin-role" || s == "default-roles-labs64io")'

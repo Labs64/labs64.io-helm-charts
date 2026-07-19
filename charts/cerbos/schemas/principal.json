@@ -1,0 +1,15 @@
+{
+  "type" : "object",
+  "properties" : {
+    "scopes" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "tenant" : {
+      "type" : "string"
+    }
+  },
+  "additionalProperties" : true
+}

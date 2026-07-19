@@ -1,0 +1,9 @@
+# Local (k3d) overrides for the Cerbos PDP. The upstream image is pulled from
+# ghcr.io directly; a single replica is enough locally.
+replicaCount: 1
+
+networkPolicy:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: false

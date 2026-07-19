@@ -166,7 +166,7 @@
       "properties": {
         "authPolicy": {
           "additionalProperties": false,
-          "description": "Auth-policy discovery: label+annotations on the Service so the gateway's\ntraefik-authproxy fetches this module's /.well-known/auth-policy and\nenforces the OpenAPI-declared per-operation policy at the edge.",
+          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/traefik-authproxy/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
           "properties": {
             "basePath": {
               "default": "",
@@ -231,7 +231,7 @@
           "type": "string"
         },
         "routes": {
-          "description": "Routes exposed by this module.\nThe whole API surface is ONE route through ForwardAuth: the authproxy is the\nPEP and derives public-vs-protected per operation from OpenAPI x-labs64-auth\n(compiled to Cedar, live-discovered via /.well-known/auth-policy.cedar). Public\noperations (payment-definitions, PSP webhooks, provider/checkout redirect returns\n— none can carry a JWT) are allowed without a token by the authproxy itself, so\nthey MUST NOT be re-declared here. Re-declaring them as edge routes duplicates\nthe OpenAPI PEP and mis-strips their paths. OpenAPI stays the single source of truth.",
+          "description": "Routes exposed by this module.\nThe whole API surface is ONE route through ForwardAuth: the authproxy is the\nPEP and derives public-vs-protected per operation from OpenAPI x-labs64-auth\n(generated into the authproxy routes manifest + the central Cerbos PDP). Public\noperations (payment-definitions, PSP webhooks, provider/checkout redirect returns\n— none can carry a JWT) are allowed without a token by the authproxy itself, so\nthey MUST NOT be re-declared here. Re-declaring them as edge routes duplicates\nthe OpenAPI PEP and mis-strips their paths. OpenAPI stays the single source of truth.",
           "items": {
             "anyOf": [
               {
@@ -597,6 +597,88 @@
           "description": "Egress rules enforcing database-per-service isolation.",
           "items": {
             "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
+                              "default": 3593,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "cerbos",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              },
               {
                 "additionalProperties": false,
                 "properties": {

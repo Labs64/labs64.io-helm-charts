@@ -271,9 +271,11 @@ gateway:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
     compress: gateway-common-compress
-  # -- Auth-policy discovery: label+annotations on the Service so the gateway's
-  # traefik-authproxy fetches this module's /.well-known/auth-policy and
-  # enforces the OpenAPI-declared per-operation policy at the edge.
+  # -- Auth-policy publication. NOTE: the traefik-authproxy no longer
+  # live-discovers per-module policies via /.well-known/auth-policy — it loads a
+  # generated routes manifest (charts/traefik-authproxy/routes/) and asks the
+  # central Cerbos PDP for every decision. This block is retained for backward
+  # compatibility and is a no-op for edge enforcement.
   authPolicy:
     # -- Publish this module's auth policy to the gateway ACS
     enabled: true
@@ -304,6 +306,14 @@ networkPolicy:
   extraIngress: []
   # -- Egress rules enforcing database-per-service isolation.
   egress:
+    # Cerbos PDP: @Authorize decisions over gRPC.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: cerbos
+      ports:
+        - protocol: TCP
+          port: 3593
     # RabbitMQ
     - to:
         - namespaceSelector:

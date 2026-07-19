@@ -1,0 +1,43 @@
+# GENERATED from x-labs64-auth by OpenApiAuthPreprocessor — do not edit.
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: default
+  resource: Payment
+  schemas:
+    principalSchema:
+      ref: cerbos:///principal.json
+    resourceSchema:
+      ref: cerbos:///Payment.json
+  rules:
+  - actions:
+    - getPayment
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment:read\")"
+  - actions:
+    - payPayment
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment:pay\")"
+  - actions:
+    - closePayment
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"payment:write\")"
+  - actions:
+    - '*'
+    effect: EFFECT_DENY
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: has(request.resource.attr.tenant) && (!has(request.principal.attr.tenant) || request.resource.attr.tenant != request.principal.attr.tenant)

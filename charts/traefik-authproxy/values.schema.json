@@ -156,12 +156,12 @@
             "additionalProperties": false,
             "properties": {
               "name": {
-                "default": "STATIC_POLICY_FILE",
+                "default": "CERBOS_URL",
                 "title": "name",
                 "type": "string"
               },
               "value": {
-                "default": "/opt/application-config/static_policies.cedar",
+                "default": "http://labs64io-cerbos:3592",
                 "title": "value",
                 "type": "string"
               }
@@ -176,12 +176,12 @@
             "additionalProperties": false,
             "properties": {
               "name": {
-                "default": "POLICY_REFRESH_INTERVAL",
+                "default": "ROUTES_DIR",
                 "title": "name",
                 "type": "string"
               },
               "value": {
-                "default": "30",
+                "default": "/app/routes",
                 "title": "value",
                 "type": "string"
               }
@@ -196,39 +196,19 @@
             "additionalProperties": false,
             "properties": {
               "name": {
-                "default": "POD_NAMESPACE",
+                "default": "STATIC_ROUTES_FILE",
                 "title": "name",
                 "type": "string"
               },
-              "valueFrom": {
-                "additionalProperties": false,
-                "properties": {
-                  "fieldRef": {
-                    "additionalProperties": false,
-                    "properties": {
-                      "fieldPath": {
-                        "default": "metadata.namespace",
-                        "title": "fieldPath",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "fieldPath"
-                    ],
-                    "title": "fieldRef",
-                    "type": "object"
-                  }
-                },
-                "required": [
-                  "fieldRef"
-                ],
-                "title": "valueFrom",
-                "type": "object"
+              "value": {
+                "default": "/opt/application-config/static_routes.yaml",
+                "title": "value",
+                "type": "string"
               }
             },
             "required": [
               "name",
-              "valueFrom"
+              "value"
             ],
             "type": "object"
           }
@@ -461,6 +441,206 @@
       "additionalProperties": false,
       "description": "NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)",
       "properties": {
+        "egress": {
+          "description": "Egress rules enforcing database-per-service isolation.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
+                              "default": 3592,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "cerbos",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
+                              "default": 8080,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "namespaceSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "kubernetes.io/metadata.name": {
+                                      "default": "tools",
+                                      "title": "kubernetes.io/metadata.name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "kubernetes.io/metadata.name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "namespaceSelector",
+                              "type": "object"
+                            },
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "mock-oidc",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "namespaceSelector",
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "egress",
+          "type": "array"
+        },
         "enabled": {
           "default": false,
           "title": "enabled",
@@ -484,7 +664,8 @@
       "required": [
         "enabled",
         "gatewayNamespace",
-        "extraIngress"
+        "extraIngress",
+        "egress"
       ],
       "title": "networkPolicy",
       "type": "object"
@@ -559,150 +740,6 @@
       "additionalProperties": false,
       "required": [],
       "title": "podSecurityContext",
-      "type": "object"
-    },
-    "policyBundle": {
-      "additionalProperties": false,
-      "description": "Signed edge-policy bundle. When enabled, the ACS\nloads module auth policies from a cosign-signed OCI bundle pulled BY DIGEST and\nverified by an init container, instead of fetching them live from the module\npods it authorizes (closes F2: self-authored runtime policy). Build/sign/push\nthe bundle with labs64.io-authproxy/policy-bundle/build-bundle.sh.",
-      "properties": {
-        "cosignImage": {
-          "default": "gcr.io/projectsigstore/cosign:v3.1.1",
-          "title": "cosignImage",
-          "type": "string"
-        },
-        "cosignPublicKey": {
-          "default": "",
-          "description": "Cosign public key (PEM) that signed the bundle. REQUIRED when enabled.",
-          "title": "cosignPublicKey",
-          "type": "string"
-        },
-        "digest": {
-          "default": "",
-          "description": "Immutable digest to pin (sha256:...). REQUIRED when enabled — this is what\nties the running ACS to a reviewed, signed artifact.",
-          "title": "digest",
-          "type": "string"
-        },
-        "enabled": {
-          "default": false,
-          "description": "Enable bundle mode. Off = legacy live in-cluster /.well-known discovery.",
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "orasImage": {
-          "default": "ghcr.io/oras-project/oras:v1.2.0",
-          "description": "Init-container images for pull + verify.",
-          "title": "orasImage",
-          "type": "string"
-        },
-        "plainHttp": {
-          "default": true,
-          "description": "Use plain HTTP (local dev registry). Set false for TLS registries.",
-          "title": "plainHttp",
-          "type": "boolean"
-        },
-        "registry": {
-          "default": "labs64io-registry:5000",
-          "description": "OCI registry holding the bundle (in-cluster reachable name).",
-          "title": "registry",
-          "type": "string"
-        },
-        "repo": {
-          "default": "policies/labs64io",
-          "description": "Repository path of the bundle artifact.",
-          "title": "repo",
-          "type": "string"
-        }
-      },
-      "required": [
-        "enabled",
-        "registry",
-        "repo",
-        "digest",
-        "plainHttp",
-        "cosignPublicKey",
-        "orasImage",
-        "cosignImage"
-      ],
-      "title": "policyBundle",
-      "type": "object"
-    },
-    "rbac": {
-      "additionalProperties": false,
-      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)\nThe auth proxy watches Services labeled labs64.io/auth-policy=true for policy discovery.",
-      "properties": {
-        "create": {
-          "default": true,
-          "title": "create",
-          "type": "boolean"
-        },
-        "rules": {
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "apiGroups": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "apiGroups",
-                    "type": "array"
-                  },
-                  "resources": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "resources",
-                    "type": "array"
-                  },
-                  "verbs": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "verbs",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "apiGroups",
-                  "resources",
-                  "verbs"
-                ],
-                "type": "object"
-              }
-            ],
-            "required": []
-          },
-          "title": "rules",
-          "type": "array"
-        }
-      },
-      "required": [
-        "create",
-        "rules"
-      ],
-      "title": "rbac",
       "type": "object"
     },
     "readinessProbe": {
@@ -1000,20 +1037,33 @@
       "type": "object"
     },
     "staticPolicies": {
-      "description": "Static prefix policies for gateway surfaces without an OpenAPI spec\n(UI bundles). Longest prefix wins; consulted only when no module\nauth-policy route matches. Scope check is any-overlap with the token's\nTOKEN_SCOPES_CLAIM_PATHS claims.\nTODO: remove after the corresponding modules will be using OpenAPI",
+      "description": "Static prefix policies for gateway surfaces without an OpenAPI spec\n(UI bundles). Rendered into static_routes.yaml; `id` MUST match an action in\nthe Cerbos static_api policy (charts/cerbos/policies/static_api.yaml) — that\npolicy makes the decision, this only carries the routing prefix. Longest prefix\nwins; consulted only when no module route matches.\nTODO: remove after the corresponding modules will be using OpenAPI",
       "items": {
         "anyOf": [
           {
             "additionalProperties": false,
             "properties": {
-              "path": {
-                "default": "/checkout",
-                "title": "path",
+              "id": {
+                "default": "checkout-ui",
+                "title": "id",
                 "type": "string"
+              },
+              "prefix": {
+                "default": "/checkout-ui",
+                "title": "prefix",
+                "type": "string"
+              },
+              "public": {
+                "default": false,
+                "title": "public",
+                "type": "boolean"
               },
               "scopes": {
                 "items": {
                   "anyOf": [
+                    {
+                      "type": "string"
+                    },
                     {
                       "type": "string"
                     }
@@ -1025,7 +1075,9 @@
               }
             },
             "required": [
-              "path",
+              "id",
+              "prefix",
+              "public",
               "scopes"
             ],
             "type": "object"
@@ -1033,14 +1085,27 @@
           {
             "additionalProperties": false,
             "properties": {
-              "path": {
-                "default": "/customer-portal",
-                "title": "path",
+              "id": {
+                "default": "customer-portal-ui",
+                "title": "id",
                 "type": "string"
+              },
+              "prefix": {
+                "default": "/customer-portal-ui",
+                "title": "prefix",
+                "type": "string"
+              },
+              "public": {
+                "default": false,
+                "title": "public",
+                "type": "boolean"
               },
               "scopes": {
                 "items": {
                   "anyOf": [
+                    {
+                      "type": "string"
+                    },
                     {
                       "type": "string"
                     }
@@ -1052,7 +1117,9 @@
               }
             },
             "required": [
-              "path",
+              "id",
+              "prefix",
+              "public",
               "scopes"
             ],
             "type": "object"
@@ -1100,14 +1167,12 @@
     "nameOverride",
     "fullnameOverride",
     "serviceAccount",
-    "rbac",
     "podAnnotations",
     "podLabels",
     "podSecurityContext",
     "securityContext",
     "service",
     "ingress",
-    "policyBundle",
     "resources",
     "livenessProbe",
     "readinessProbe",
