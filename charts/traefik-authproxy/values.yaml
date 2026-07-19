@@ -231,3 +231,14 @@ networkPolicy:
       ports:
         - protocol: TCP
           port: 3592
+    # OIDC provider: JWKS + discovery-document fetch for JWT verification.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tools
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mock-oidc
+      ports:
+        - protocol: TCP
+          port: 8080
