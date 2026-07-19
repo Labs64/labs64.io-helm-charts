@@ -567,7 +567,7 @@ Common causes:
 ### 401/403 on API calls
 
 - Verify token: `just generate-jwt admin`
-- Check the central PDP: `kubectl get deploy,svc -n labs64io -l app.kubernetes.io/name=cerbos` and `kubectl exec -n labs64io deploy/labs64io-cerbos -- /cerbos healthcheck --kind=grpc` (RFC-07 — the authproxy loads a generated routes manifest and asks Cerbos; there is no `/.well-known/auth-policy` discovery anymore) plus `kubectl exec -n labs64io deploy/labs64io-traefik-authproxy -- wget -qO- http://localhost:8081/health/ready`
+- Check the central PDP: `kubectl get deploy,svc -n labs64io -l app.kubernetes.io/name=cerbos` and `kubectl exec -n labs64io deploy/labs64io-cerbos -- /cerbos healthcheck --kind=grpc` (— the authproxy loads a generated routes manifest and asks Cerbos; there is no `/.well-known/auth-policy` discovery anymore) plus `kubectl exec -n labs64io deploy/labs64io-traefik-authproxy -- wget -qO- http://localhost:8081/health/ready`
 - Check static UI policies: `kubectl get configmap -n labs64io -l app.kubernetes.io/name=traefik-authproxy -o yaml` (renders `static_policies.yaml` from `staticPolicies`)
 - Check auth-proxy logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=traefik-authproxy`
 

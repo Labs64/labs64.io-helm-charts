@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# RFC-07: generate the Cerbos policy set + authproxy routes manifests from every
+# generate the Cerbos policy set + authproxy routes manifests from every
 # module's OpenAPI x-labs64-auth, via the commons OpenApiAuthPreprocessor.
 #
 # Outputs (committed, ArgoCD-synced — this is the RFC's provenance model):

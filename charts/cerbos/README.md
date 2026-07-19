@@ -2,11 +2,11 @@
 
 ![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.51.0](https://img.shields.io/badge/AppVersion-0.51.0-informational?style=flat-square)
 
-Labs64.IO :: Cerbos PDP — central authorization decision point (RFC-07)
+Labs64.IO :: Cerbos PDP — central authorization decision point
 
 **Homepage:** <https://labs64.io>
 
-## How it works (RFC-07)
+## How it works
 
 This chart runs the central [Cerbos](https://cerbos.dev) PDP that every
 `@Authorize` domain check (Java SDK, gRPC `:3593`) and every edge decision

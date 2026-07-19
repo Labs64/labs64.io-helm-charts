@@ -1,4 +1,4 @@
-# RFC-07: declares which modules' auth policies are generated into the Cerbos
+# declares which modules' auth policies are generated into the Cerbos
 # PDP's policy set, and where each module's OpenAPI contract lives (relative to
 # the helm-charts repo root). CI (build-cerbos-policies.sh) generates one Cerbos
 # resource-policy set + routes manifest per module from these specs via the

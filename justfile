@@ -330,7 +330,7 @@ generate-schema: helm-tools
 generate-all: generate-docu generate-schema
 
 # Generate the Cerbos policy set + authproxy routes manifests from module OpenAPI
-# specs (RFC-07). Writes charts/cerbos/{policies,schemas} + charts/traefik-authproxy/routes.
+# specs. Writes charts/cerbos/{policies,schemas} + charts/traefik-authproxy/routes.
 build-policies:
     ./policies/build-cerbos-policies.sh
 

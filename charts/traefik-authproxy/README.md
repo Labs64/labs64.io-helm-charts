@@ -35,7 +35,7 @@ Labs64.IO :: Traefik Auth (M2M) Middleware
 | env[2] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |
 | env[3] | object | `{"name":"TOKEN_SCOPES_CLAIM_PATHS","value":"scope,realm_access.roles,resource_access.{audience}.roles"}` | Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to OIDC_AUDIENCE. Default: scope,realm_access.roles,resource_access.{audience}.roles. |
 | env[4] | object | `{"name":"TOKEN_TENANT_CLAIM_PATH","value":"tenant"}` | Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent. |
-| env[5] | object | `{"name":"CERBOS_URL","value":"http://cerbos:3592"}` | Central Cerbos PDP HTTP endpoint (the authorization decision, RFC-07). |
+| env[5] | object | `{"name":"CERBOS_URL","value":"http://cerbos:3592"}` | Central Cerbos PDP HTTP endpoint (the authorization decision, ). |
 | env[6] | object | `{"name":"ROUTES_DIR","value":"/app/routes"}` | Directory of generated <module>.routes.yaml manifests (mounted ConfigMap). |
 | env[7] | object | `{"name":"STATIC_ROUTES_FILE","value":"/opt/application-config/static_routes.yaml"}` | Static prefix policies file (rendered from .Values.staticPolicies). |
 | fullnameOverride | string | `""` |  |

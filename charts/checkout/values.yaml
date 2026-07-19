@@ -304,7 +304,7 @@ networkPolicy:
   extraIngress: []
   # -- Egress rules enforcing database-per-service isolation.
   egress:
-    # Cerbos PDP (RFC-07): @Authorize decisions over gRPC.
+    # Cerbos PDP: @Authorize decisions over gRPC.
     - to:
         - podSelector:
             matchLabels:

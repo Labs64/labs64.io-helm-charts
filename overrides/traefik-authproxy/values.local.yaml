@@ -22,7 +22,7 @@ env:
   # Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
   - name: TOKEN_TENANT_CLAIM_PATH
     value: "tenant"
-  # Central Cerbos PDP (RFC-07) — the authorization decision.
+  # Central Cerbos PDP — the authorization decision.
   - name: CERBOS_URL
     value: http://labs64io-cerbos:3592
   - name: ROUTES_DIR

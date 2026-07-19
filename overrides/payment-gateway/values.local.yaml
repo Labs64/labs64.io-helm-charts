@@ -18,7 +18,7 @@ postgresql:
 redis:
   enabled: false
 
-# Authorization PEP -> central Cerbos PDP (RFC-07)
+# Authorization PEP -> central Cerbos PDP
 env:
   - name: LABS64_AUTH_AUTHZ_MODE
     value: SHADOW
