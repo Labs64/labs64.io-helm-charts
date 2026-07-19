@@ -40,6 +40,10 @@ securityContext:
 
 service:
   type: ClusterIP
+  # -- Alias of httpPort: chart-libs' shared NetworkPolicy helper (monitoring
+  # ingress rule) reads .Values.service.port, not the httpPort/grpcPort pair
+  # below. Cerbos serves Prometheus metrics on the HTTP listener.
+  port: 3592
   # -- HTTP API (authproxy edge client) and gRPC API (Java @Authorize SDK).
   httpPort: 3592
   grpcPort: 3593

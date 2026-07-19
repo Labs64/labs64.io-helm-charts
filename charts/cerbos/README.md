@@ -68,6 +68,7 @@ kubectl -n labs64io scale deploy cerbos --replicas=2   # recovers
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | autoscaling.enabled | bool | `false` |  |
+| chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | config | object | `{"auditEnabled":false,"schemaEnforcement":"reject"}` | Cerbos server config (rendered into a ConfigMap). Policies are served from the disk store mounted from the policies/schemas ConfigMaps; schema enforcement rejects requests whose attributes violate the JSON schemas (fail closed). |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
@@ -98,10 +99,13 @@ kubectl -n labs64io scale deploy cerbos --replicas=2   # recovers
 | securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | securityContext.capabilities.drop[0] | string | `"ALL"` |  |
 | securityContext.readOnlyRootFilesystem | bool | `true` |  |
+| securityContext.runAsGroup | int | `1064` |  |
 | securityContext.runAsNonRoot | bool | `true` |  |
+| securityContext.runAsUser | int | `1064` |  |
 | securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | service.grpcPort | int | `3593` |  |
 | service.httpPort | int | `3592` | HTTP API (authproxy edge client) and gRPC API (Java @Authorize SDK). |
+| service.port | int | `3592` | Alias of httpPort: chart-libs' shared NetworkPolicy helper (monitoring ingress rule) reads .Values.service.port, not the httpPort/grpcPort pair below. Cerbos serves Prometheus metrics on the HTTP listener. |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.automount | bool | `true` |  |

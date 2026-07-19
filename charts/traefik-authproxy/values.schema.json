@@ -161,7 +161,7 @@
                 "type": "string"
               },
               "value": {
-                "default": "http://cerbos:3592",
+                "default": "http://labs64io-cerbos:3592",
                 "title": "value",
                 "type": "string"
               }

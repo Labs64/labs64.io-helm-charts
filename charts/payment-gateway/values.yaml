@@ -316,7 +316,7 @@ gateway:
   # -- Routes exposed by this module.
   # The whole API surface is ONE route through ForwardAuth: the authproxy is the
   # PEP and derives public-vs-protected per operation from OpenAPI x-labs64-auth
-  # (generated into the authproxy routes manifest + the central Cerbos PDP, ). Public
+  # (generated into the authproxy routes manifest + the central Cerbos PDP). Public
   # operations (payment-definitions, PSP webhooks, provider/checkout redirect returns
   # — none can carry a JWT) are allowed without a token by the authproxy itself, so
   # they MUST NOT be re-declared here. Re-declaring them as edge routes duplicates

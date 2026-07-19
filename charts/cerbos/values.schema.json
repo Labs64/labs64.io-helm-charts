@@ -416,6 +416,12 @@
           "title": "httpPort",
           "type": "integer"
         },
+        "port": {
+          "default": 3592,
+          "description": "Alias of httpPort: chart-libs' shared NetworkPolicy helper (monitoring\ningress rule) reads .Values.service.port, not the httpPort/grpcPort pair\nbelow. Cerbos serves Prometheus metrics on the HTTP listener.",
+          "title": "port",
+          "type": "integer"
+        },
         "type": {
           "default": "ClusterIP",
           "title": "type",
@@ -424,6 +430,7 @@
       },
       "required": [
         "type",
+        "port",
         "httpPort",
         "grpcPort"
       ],

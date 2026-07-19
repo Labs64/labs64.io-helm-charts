@@ -42,7 +42,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"authPolicy":{"basePath":"","enabled":true},"enabled":false,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
-| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy discovery: label+annotations on the Service so the gateway's traefik-authproxy fetches this module's /.well-known/auth-policy and enforces the OpenAPI-declared per-operation policy at the edge. |
+| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/traefik-authproxy/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
 | gateway.authPolicy.basePath | string | `""` | External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1 |
 | gateway.authPolicy.enabled | bool | `true` | Publish this module's auth policy to the gateway ACS |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
