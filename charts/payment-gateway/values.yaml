@@ -303,9 +303,11 @@ gateway:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
     compress: gateway-common-compress
-  # -- Auth-policy discovery: label+annotations on the Service so the gateway's
-  # traefik-authproxy fetches this module's /.well-known/auth-policy and
-  # enforces the OpenAPI-declared per-operation policy at the edge.
+  # -- Auth-policy publication. NOTE (RFC-07): the traefik-authproxy no longer
+  # live-discovers per-module policies via /.well-known/auth-policy — it loads a
+  # generated routes manifest (charts/traefik-authproxy/routes/) and asks the
+  # central Cerbos PDP for every decision. This block is retained for backward
+  # compatibility and is a no-op for edge enforcement.
   authPolicy:
     # -- Publish this module's auth policy to the gateway ACS
     enabled: true
@@ -314,7 +316,7 @@ gateway:
   # -- Routes exposed by this module.
   # The whole API surface is ONE route through ForwardAuth: the authproxy is the
   # PEP and derives public-vs-protected per operation from OpenAPI x-labs64-auth
-  # (compiled to Cedar, live-discovered via /.well-known/auth-policy.cedar). Public
+  # (generated into the authproxy routes manifest + the central Cerbos PDP, RFC-07). Public
   # operations (payment-definitions, PSP webhooks, provider/checkout redirect returns
   # — none can carry a JWT) are allowed without a token by the authproxy itself, so
   # they MUST NOT be re-declared here. Re-declaring them as edge routes duplicates
