@@ -65,7 +65,7 @@ applicationYaml:
 
 # Local tenant provisioning (rendered as auditflow.io/tenant ConfigMaps).
 tenants:
-  # Tenantless/platform events (incl. Cedar decision audits).
+  # Tenantless/platform events (incl. Cerbos decision audits).
   platform:
     pipelines:
       - name: 'logs'

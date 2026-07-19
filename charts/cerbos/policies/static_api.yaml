@@ -1,6 +1,6 @@
 # Hand-authored: gateway surfaces without an OpenAPI spec (UI bundles).
 # Routing metadata lives in the authproxy's static_routes.yaml; THIS decides.
-# Mirrors the retired sample_static_policies.cedar semantics.
+# Mirrors the retired static policy semantics.
 apiVersion: api.cerbos.dev/v1
 resourcePolicy:
   version: default
