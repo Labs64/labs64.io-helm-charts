@@ -1,9 +1,9 @@
 {
   "additionalProperties" : true,
-  "type" : "object",
   "properties" : {
     "tenant" : {
       "type" : "string"
     }
-  }
+  },
+  "type" : "object"
 }

@@ -131,7 +131,7 @@
       "properties": {
         "authPolicy": {
           "additionalProperties": false,
-          "description": "Auth-policy discovery: label+annotations on the Service so the gateway's\ntraefik-authproxy fetches this module's /.well-known/auth-policy and\nenforces the OpenAPI-declared per-operation policy at the edge.",
+          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/traefik-authproxy/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
           "properties": {
             "basePath": {
               "default": "",

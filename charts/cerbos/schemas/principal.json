@@ -1,15 +1,15 @@
 {
-  "type" : "object",
   "properties" : {
     "scopes" : {
+      "type" : "array",
       "items" : {
         "type" : "string"
-      },
-      "type" : "array"
+      }
     },
     "tenant" : {
       "type" : "string"
     }
   },
-  "additionalProperties" : true
+  "additionalProperties" : true,
+  "type" : "object"
 }
