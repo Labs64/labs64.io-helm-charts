@@ -220,6 +220,12 @@ networkPolicy:
   gatewayNamespace: tools
   # -- Additional raw ingress rules
   extraIngress: []
+  # -- Tools-namespace destinations this service needs (name + port pairs); rendered as
+  # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
+  # database-per-service isolation.
+  toolsEgress:
+    - name: mock-oidc
+      port: 8080
   # -- Egress rules enforcing database-per-service isolation.
   egress:
     # Cerbos PDP: edge /auth decisions over the HTTP API (CerbosEdgeEngine).
@@ -230,17 +236,6 @@ networkPolicy:
       ports:
         - protocol: TCP
           port: 3592
-    # OIDC provider: JWKS + discovery-document fetch for JWT verification.
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tools
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: mock-oidc
-      ports:
-        - protocol: TCP
-          port: 8080
 # -- ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container)
 authProxy:
   # -- Full URL override for the /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth

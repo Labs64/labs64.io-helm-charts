@@ -20,6 +20,17 @@ jobs:
       - name: Install helm-schema plugin
         run: helm plugin install https://github.com/dadav/helm-schema
 
+      - name: Build chart dependencies
+        # Vendored deps (charts/*/charts/) are gitignored, so a fresh checkout is
+        # missing them (e.g. chart-libs, a file://../chart-libs local dependency);
+        # without this, every dependent chart fails to lint/template below.
+        run: |
+          set -euo pipefail
+          for chart_dir in charts/*/; do
+            [ -f "$chart_dir/Chart.yaml" ] || continue
+            helm dependency build "$chart_dir"
+          done
+
       - name: Enforce schema generation
         run: |
           helm schema --chart-search-root ./charts --no-dependencies --append-newline

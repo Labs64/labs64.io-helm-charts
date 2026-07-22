@@ -425,6 +425,14 @@ networkPolicy:
   gatewayNamespace: tools
   # -- Additional raw ingress rules
   extraIngress: []
+  # -- Tools-namespace destinations this service needs (name + port pairs); rendered as
+  # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
+  # database-per-service isolation.
+  toolsEgress:
+    - name: rabbitmq
+      port: 5672
+    - name: redis
+      port: 6379
   # -- Egress rules enforcing database-per-service isolation.
   egress:
     # Cerbos PDP: @Authorize decisions over gRPC.
@@ -435,28 +443,6 @@ networkPolicy:
       ports:
         - protocol: TCP
           port: 3593
-    # RabbitMQ
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tools
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: rabbitmq
-      ports:
-        - protocol: TCP
-          port: 5672
-    # Redis
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tools
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: redis
-      ports:
-        - protocol: TCP
-          port: 6379
     # Kubernetes API server — required by the tenant-config ConfigMap watch
     # (tenants.source.mode=gitops-configmap), the k8s-secret resolver, and kubernetes
     # service discovery. The API server sits outside any namespace so it is only
@@ -469,7 +455,6 @@ networkPolicy:
           port: 443
         - protocol: TCP
           port: 6443
-
 # -- SLO recording rules and dashboards (rendered by chart-libs.slo.*)
 slo:
   enabled: true

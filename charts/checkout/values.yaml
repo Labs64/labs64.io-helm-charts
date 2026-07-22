@@ -257,6 +257,14 @@ networkPolicy:
   gatewayNamespace: tools
   # -- Additional raw ingress rules
   extraIngress: []
+  # -- Tools-namespace destinations this service needs (name + port pairs); rendered as
+  # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
+  # database-per-service isolation.
+  toolsEgress:
+    - name: rabbitmq
+      port: 5672
+    - name: postgresql
+      port: 5432
   # -- Egress rules enforcing database-per-service isolation.
   egress:
     # Cerbos PDP: @Authorize decisions over gRPC.
@@ -267,29 +275,6 @@ networkPolicy:
       ports:
         - protocol: TCP
           port: 3593
-    # RabbitMQ
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tools
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: rabbitmq
-      ports:
-        - protocol: TCP
-          port: 5672
-    # PostgreSQL
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tools
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: postgresql
-      ports:
-        - protocol: TCP
-          port: 5432
-
 # -- SLO recording rules and dashboards (rendered by chart-libs.slo.*)
 slo:
   enabled: true

@@ -591,114 +591,6 @@
                   "ports"
                 ],
                 "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "ports": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "port": {
-                              "default": 8080,
-                              "title": "port",
-                              "type": "integer"
-                            },
-                            "protocol": {
-                              "default": "TCP",
-                              "title": "protocol",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "protocol",
-                            "port"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "ports",
-                    "type": "array"
-                  },
-                  "to": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "namespaceSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "kubernetes.io/metadata.name": {
-                                      "default": "tools",
-                                      "title": "kubernetes.io/metadata.name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "kubernetes.io/metadata.name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "namespaceSelector",
-                              "type": "object"
-                            },
-                            "podSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "app.kubernetes.io/name": {
-                                      "default": "mock-oidc",
-                                      "title": "app.kubernetes.io/name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "app.kubernetes.io/name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "podSelector",
-                              "type": "object"
-                            }
-                          },
-                          "required": [
-                            "namespaceSelector",
-                            "podSelector"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "to",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "to",
-                  "ports"
-                ],
-                "type": "object"
               }
             ],
             "required": []
@@ -724,12 +616,43 @@
           "description": "Namespace where Traefik runs",
           "title": "gatewayNamespace",
           "type": "string"
+        },
+        "toolsEgress": {
+          "description": "Tools-namespace destinations this service needs (name + port pairs); rendered as\nscoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve\ndatabase-per-service isolation.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "mock-oidc",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "toolsEgress",
+          "type": "array"
         }
       },
       "required": [
         "enabled",
         "gatewayNamespace",
         "extraIngress",
+        "toolsEgress",
         "egress"
       ],
       "title": "networkPolicy",
