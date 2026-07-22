@@ -66,7 +66,7 @@ metadata:
     app.kubernetes.io/component: ui
 subjects:
   - kind: ServiceAccount
-    name: {{ include "chart-libs.fullname" . }}-ui
+    name: {{ include "chart-libs.ui-serviceAccountName" . }}
 roleRef:
   kind: Role
   name: {{ include "chart-libs.fullname" . }}-ui-role
