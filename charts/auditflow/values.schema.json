@@ -158,7 +158,7 @@
               "description": "RabbitMQ connection params",
               "properties": {
                 "host": {
-                  "default": "{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}",
+                  "default": "rabbitmq.tools.svc.cluster.local",
                   "description": "RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host",
                   "title": "host",
                   "type": "string"
@@ -664,98 +664,6 @@
       },
       "title": "imagePullSecrets",
       "type": "array"
-    },
-    "ingress": {
-      "additionalProperties": false,
-      "description": "This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/",
-      "properties": {
-        "annotations": {
-          "additionalProperties": false,
-          "required": [],
-          "title": "annotations",
-          "type": "object"
-        },
-        "className": {
-          "default": "",
-          "title": "className",
-          "type": "string"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "hosts": {
-          "description": "kubernetes.io/ingress.class: nginx\nkubernetes.io/tls-acme: \"true\"",
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "host": {
-                    "default": "chart-example.local",
-                    "title": "host",
-                    "type": "string"
-                  },
-                  "paths": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "path": {
-                              "default": "/",
-                              "title": "path",
-                              "type": "string"
-                            },
-                            "pathType": {
-                              "default": "ImplementationSpecific",
-                              "title": "pathType",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "path",
-                            "pathType"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "paths",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "host",
-                  "paths"
-                ],
-                "type": "object"
-              }
-            ],
-            "required": []
-          },
-          "title": "hosts",
-          "type": "array"
-        },
-        "tls": {
-          "items": {
-            "required": []
-          },
-          "title": "tls",
-          "type": "array"
-        }
-      },
-      "required": [
-        "enabled",
-        "className",
-        "annotations",
-        "hosts",
-        "tls"
-      ],
-      "title": "ingress",
-      "type": "object"
     },
     "lifecycle": {
       "additionalProperties": false,
@@ -1382,59 +1290,6 @@
         "seccompProfile"
       ],
       "title": "podSecurityContext",
-      "type": "object"
-    },
-    "rabbitmq": {
-      "additionalProperties": true,
-      "description": "Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own broker instead.",
-      "properties": {
-        "auth": {
-          "additionalProperties": true,
-          "properties": {
-            "password": {
-              "default": "labs64pw",
-              "title": "password",
-              "type": "string"
-            },
-            "username": {
-              "default": "labs64",
-              "title": "username",
-              "type": "string"
-            }
-          },
-          "required": [
-            "username",
-            "password"
-          ],
-          "title": "auth",
-          "type": "object"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "image": {
-          "additionalProperties": true,
-          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
-          "properties": {
-            "repository": {
-              "default": "bitnamilegacy/rabbitmq",
-              "title": "repository",
-              "type": "string"
-            }
-          },
-          "required": [
-            "repository"
-          ],
-          "title": "image",
-          "type": "object"
-        }
-      },
-      "required": [
-        "enabled"
-      ],
-      "title": "rabbitmq",
       "type": "object"
     },
     "rbac": {
@@ -2296,7 +2151,6 @@
     "podSecurityContext",
     "securityContext",
     "service",
-    "ingress",
     "resources",
     "livenessProbe",
     "readinessProbe",

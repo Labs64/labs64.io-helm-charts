@@ -167,6 +167,3 @@ gateway:
 networkPolicy:
   enabled: true
 
-# Use shared tools/rabbitmq instead of bundled broker
-rabbitmq:
-  enabled: false

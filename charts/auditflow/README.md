@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.4.1](https://img.shields.io/badge/Version-0.4.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
+![Version: 0.5.0](https://img.shields.io/badge/Version-0.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.2](https://img.shields.io/badge/AppVersion-0.0.2-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
@@ -22,14 +22,13 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | Repository | Name | Version |
 |------------|------|---------|
 | file://../chart-libs | chart-libs | 0.1.0 |
-| https://charts.bitnami.com/bitnami | rabbitmq | ^16.0.0 |
 
 ## Values
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` | Affinity for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity |
-| applicationYaml | object | `{"auditflow":{"pipelines":[]},"secretRef":{"resolver":"k8s-secret"},"sink":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8082"},"service":{"name":"auditflow-sink","namespace":"default"}},"spring":{"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}},"tenants":{"consumer":{"max-in-flight-per-tenant":4},"ratelimit":{"backend":"redis"},"source":{"mode":"gitops-configmap"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
+| applicationYaml | object | `{"auditflow":{"pipelines":[]},"secretRef":{"resolver":"k8s-secret"},"sink":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8082"},"service":{"name":"auditflow-sink","namespace":"default"}},"spring":{"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}},"rabbitmq":{"host":"rabbitmq.tools.svc.cluster.local","port":5672}},"tenants":{"consumer":{"max-in-flight-per-tenant":4},"ratelimit":{"backend":"redis"},"source":{"mode":"gitops-configmap"}},"transformer":{"discovery":{"mode":"local"},"local":{"url":"http://localhost:8081"},"service":{"name":"auditflow-transformer","namespace":"default"}}}` | Additional application properties |
 | applicationYaml.auditflow | object | `{"pipelines":[]}` | AuditFlow application properties (bound by @ConfigurationProperties(prefix = "auditflow")) |
 | applicationYaml.auditflow.pipelines | list | `[]` | Legacy global pipelines — MUST stay empty: pipelines are per-tenant now (see `tenants.platform.pipelines` below and the tenant ConfigMaps), and a non-empty list fails application startup by design. |
 | applicationYaml.secretRef | object | `{"resolver":"k8s-secret"}` | Resolver for `${secretRef:<key>}` sink-credential indirection; "k8s-secret" reads the tenant's own Secret `auditflow-tenant-<tenantId>-creds` (requires rbac.create), "env" reads `AUDITFLOW_TENANT_<TENANTID>_<KEY>` environment variables |
@@ -37,12 +36,12 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | applicationYaml.sink.discovery | object | `{"mode":"local"}` | Discovery mode; "local" or "kubernetes" |
 | applicationYaml.sink.local | object | `{"url":"http://localhost:8082"}` | Local URL for the sink service |
 | applicationYaml.sink.service | object | `{"name":"auditflow-sink","namespace":"default"}` | Service name and namespace for the sink |
-| applicationYaml.spring | object | `{"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}},"rabbitmq":{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}}` | Spring configuration |
+| applicationYaml.spring | object | `{"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}},"rabbitmq":{"host":"rabbitmq.tools.svc.cluster.local","port":5672}}` | Spring configuration |
 | applicationYaml.spring.data | object | `{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}}` | Redis connection params (backing store for the idempotency/dedup service; auditflow.idempotency.store=redis) |
 | applicationYaml.spring.data.redis.host | string | `"redis-master.tools.svc.cluster.local"` | Redis host; defaults to the shared tools Redis. Override for your own Redis in non-local installs. |
 | applicationYaml.spring.data.redis.port | int | `6379` | Redis port; default: 6379 |
-| applicationYaml.spring.rabbitmq | object | `{"host":"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}","port":5672}` | RabbitMQ connection params |
-| applicationYaml.spring.rabbitmq.host | string | `"{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}"` | RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host |
+| applicationYaml.spring.rabbitmq | object | `{"host":"rabbitmq.tools.svc.cluster.local","port":5672}` | RabbitMQ connection params |
+| applicationYaml.spring.rabbitmq.host | string | `"rabbitmq.tools.svc.cluster.local"` | RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host |
 | applicationYaml.spring.rabbitmq.port | int | `5672` | RabbitMQ port; default: 5672 |
 | applicationYaml.tenants | object | `{"consumer":{"max-in-flight-per-tenant":4},"ratelimit":{"backend":"redis"},"source":{"mode":"gitops-configmap"}}` | Tenant model (silo isolation) — the chart pins the Kubernetes-native modes; the application's built-in defaults are the cluster-free ones (local-dir / in-memory / env). Keys below are exact Spring property paths (@Value binding, no relaxed naming) — keep kebab-case. |
 | applicationYaml.tenants.consumer.max-in-flight-per-tenant | int | `4` | Max concurrently-processed events per tenant on the consumer side (fairness layer 2) |
@@ -55,9 +54,11 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` | Environment variables to add to the container |
+| externalSecrets.enabled | bool | `false` |  |
+| externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"authPolicy":{"basePath":"","enabled":true},"enabled":false,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","buffering":"gateway-common-buffering","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
-| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/traefik-authproxy/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
+| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/api-gateway/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
 | gateway.authPolicy.basePath | string | `""` | External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1 |
 | gateway.authPolicy.enabled | bool | `true` | Publish this module's auth policy to the gateway ACS |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
@@ -74,12 +75,11 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
-| ingress | object | `{"annotations":{},"className":"","enabled":false,"hosts":[{"host":"chart-example.local","paths":[{"path":"/","pathType":"ImplementationSpecific"}]}],"tls":[]}` | This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/ |
 | lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/liveness","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
-| networkPolicy | object | `{"egress":[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"cerbos"}}}]},{"ports":[{"port":5672,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"rabbitmq"}}}]},{"ports":[{"port":6379,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"redis"}}}]},{"ports":[{"port":443,"protocol":"TCP"},{"port":6443,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}],"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
-| networkPolicy.egress | list | `[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"cerbos"}}}]},{"ports":[{"port":5672,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"rabbitmq"}}}]},{"ports":[{"port":6379,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"redis"}}}]},{"ports":[{"port":443,"protocol":"TCP"},{"port":6443,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}]` | Egress rules enforcing database-per-service isolation. |
+| networkPolicy | object | `{"egress":[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]},{"ports":[{"port":5672,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"rabbitmq"}}}]},{"ports":[{"port":6379,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"redis"}}}]},{"ports":[{"port":443,"protocol":"TCP"},{"port":6443,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}],"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy.egress | list | `[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]},{"ports":[{"port":5672,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"rabbitmq"}}}]},{"ports":[{"port":6379,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"tools"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"redis"}}}]},{"ports":[{"port":443,"protocol":"TCP"},{"port":6443,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}]` | Egress rules enforcing database-per-service isolation. |
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | nodeSelector | object | `{}` | Node labels for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
@@ -94,8 +94,6 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | podSecurityContext.runAsNonRoot | bool | `true` |  |
 | podSecurityContext.runAsUser | int | `1064` |  |
 | podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| rabbitmq | object | `{"auth":{"password":"labs64pw","username":"labs64"},"enabled":false,"image":{"repository":"bitnamilegacy/rabbitmq"}}` | Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs. Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead. @schema type: object additionalProperties: true @schema |
-| rabbitmq.image | object | `{"repository":"bitnamilegacy/rabbitmq"}` | docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag @schema type: object additionalProperties: true @schema |
 | rbac.create | bool | `true` |  |
 | rbac.rules[0].apiGroups[0] | string | `""` |  |
 | rbac.rules[0].resources[0] | string | `"configmaps"` |  |

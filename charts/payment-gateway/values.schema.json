@@ -24,7 +24,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "host": {
-                      "default": "{{ ternary (printf \"%s-redis-master\" .Release.Name) \"redis-master.tools.svc.cluster.local\" .Values.redis.enabled }}",
+                      "default": "redis-master.tools.svc.cluster.local",
                       "description": "Redis host; resolves to the bundled subchart when redis.enabled, else set your Redis host",
                       "title": "host",
                       "type": "string"
@@ -55,7 +55,7 @@
               "description": "PostgreSQL connection params",
               "properties": {
                 "url": {
-                  "default": "{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway\" .Values.postgresql.enabled }}",
+                  "default": "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway",
                   "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL",
                   "title": "url",
                   "type": "string"
@@ -72,7 +72,7 @@
               "description": "RabbitMQ connection params",
               "properties": {
                 "host": {
-                  "default": "{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}",
+                  "default": "rabbitmq.tools.svc.cluster.local",
                   "description": "RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host",
                   "title": "host",
                   "type": "string"
@@ -439,98 +439,6 @@
       },
       "title": "imagePullSecrets",
       "type": "array"
-    },
-    "ingress": {
-      "additionalProperties": false,
-      "description": "This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/",
-      "properties": {
-        "annotations": {
-          "additionalProperties": false,
-          "required": [],
-          "title": "annotations",
-          "type": "object"
-        },
-        "className": {
-          "default": "nginx",
-          "title": "className",
-          "type": "string"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "hosts": {
-          "description": "kubernetes.io/ingress.class: nginx\nkubernetes.io/tls-acme: \"true\"",
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "host": {
-                    "default": "localhost",
-                    "title": "host",
-                    "type": "string"
-                  },
-                  "paths": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "path": {
-                              "default": "/",
-                              "title": "path",
-                              "type": "string"
-                            },
-                            "pathType": {
-                              "default": "Prefix",
-                              "title": "pathType",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "path",
-                            "pathType"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "paths",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "host",
-                  "paths"
-                ],
-                "type": "object"
-              }
-            ],
-            "required": []
-          },
-          "title": "hosts",
-          "type": "array"
-        },
-        "tls": {
-          "items": {
-            "required": []
-          },
-          "title": "tls",
-          "type": "array"
-        }
-      },
-      "required": [
-        "enabled",
-        "className",
-        "annotations",
-        "hosts",
-        "tls"
-      ],
-      "title": "ingress",
-      "type": "object"
     },
     "lifecycle": {
       "additionalProperties": false,
@@ -1138,118 +1046,6 @@
       "title": "podSecurityContext",
       "type": "object"
     },
-    "postgresql": {
-      "additionalProperties": true,
-      "description": "Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own database instead.",
-      "properties": {
-        "auth": {
-          "additionalProperties": true,
-          "properties": {
-            "database": {
-              "default": "payment_gateway",
-              "title": "database",
-              "type": "string"
-            },
-            "password": {
-              "default": "labs64pw",
-              "title": "password",
-              "type": "string"
-            },
-            "username": {
-              "default": "labs64",
-              "title": "username",
-              "type": "string"
-            }
-          },
-          "required": [
-            "username",
-            "password",
-            "database"
-          ],
-          "title": "auth",
-          "type": "object"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "image": {
-          "additionalProperties": true,
-          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
-          "properties": {
-            "repository": {
-              "default": "bitnamilegacy/postgresql",
-              "title": "repository",
-              "type": "string"
-            }
-          },
-          "required": [
-            "repository"
-          ],
-          "title": "image",
-          "type": "object"
-        }
-      },
-      "required": [
-        "enabled"
-      ],
-      "title": "postgresql",
-      "type": "object"
-    },
-    "rabbitmq": {
-      "additionalProperties": true,
-      "description": "Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own broker instead.",
-      "properties": {
-        "auth": {
-          "additionalProperties": true,
-          "properties": {
-            "password": {
-              "default": "labs64pw",
-              "title": "password",
-              "type": "string"
-            },
-            "username": {
-              "default": "labs64",
-              "title": "username",
-              "type": "string"
-            }
-          },
-          "required": [
-            "username",
-            "password"
-          ],
-          "title": "auth",
-          "type": "object"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "image": {
-          "additionalProperties": true,
-          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
-          "properties": {
-            "repository": {
-              "default": "bitnamilegacy/rabbitmq",
-              "title": "repository",
-              "type": "string"
-            }
-          },
-          "required": [
-            "repository"
-          ],
-          "title": "image",
-          "type": "object"
-        }
-      },
-      "required": [
-        "enabled"
-      ],
-      "title": "rabbitmq",
-      "type": "object"
-    },
     "rbac": {
       "additionalProperties": false,
       "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
@@ -1328,59 +1124,6 @@
         "timeoutSeconds"
       ],
       "title": "readinessProbe",
-      "type": "object"
-    },
-    "redis": {
-      "additionalProperties": true,
-      "description": "Optional bundled Redis (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own Redis instead.",
-      "properties": {
-        "architecture": {
-          "default": "standalone",
-          "title": "architecture",
-          "type": "string"
-        },
-        "auth": {
-          "additionalProperties": true,
-          "properties": {
-            "password": {
-              "default": "labs64pw",
-              "title": "password",
-              "type": "string"
-            }
-          },
-          "required": [
-            "password"
-          ],
-          "title": "auth",
-          "type": "object"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "image": {
-          "additionalProperties": true,
-          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
-          "properties": {
-            "repository": {
-              "default": "bitnamilegacy/redis",
-              "title": "repository",
-              "type": "string"
-            }
-          },
-          "required": [
-            "repository"
-          ],
-          "title": "image",
-          "type": "object"
-        }
-      },
-      "required": [
-        "enabled",
-        "architecture"
-      ],
-      "title": "redis",
       "type": "object"
     },
     "replicaCount": {
@@ -1756,7 +1499,6 @@
     "podSecurityContext",
     "securityContext",
     "service",
-    "ingress",
     "resources",
     "livenessProbe",
     "readinessProbe",

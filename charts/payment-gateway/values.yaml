@@ -75,23 +75,6 @@ service:
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8080
 
-# -- This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-ingress:
-  enabled: false
-  className: "nginx"
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: localhost
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
 resources:
   limits:
     cpu: 500m
@@ -203,22 +186,6 @@ secrets:
 # type: object
 # additionalProperties: true
 # @schema
-rabbitmq:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/rabbitmq
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    username: labs64
-    password: labs64pw
 
 # -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for production; point applicationYaml at your own database instead.
@@ -226,23 +193,6 @@ rabbitmq:
 # type: object
 # additionalProperties: true
 # @schema
-postgresql:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/postgresql
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    username: labs64
-    password: labs64pw
-    database: payment_gateway
 
 # -- Optional bundled Redis (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for production; point applicationYaml at your own Redis instead.
@@ -250,22 +200,6 @@ postgresql:
 # type: object
 # additionalProperties: true
 # @schema
-redis:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/redis
-  architecture: standalone
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    password: labs64pw
 
 # -- Additional application properties
 applicationYaml:
@@ -274,20 +208,20 @@ applicationYaml:
     # -- RabbitMQ connection params
     rabbitmq:
       # -- RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host
-      host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
+      host: "rabbitmq.tools.svc.cluster.local"
       # -- RabbitMQ port; default: 5672
       port: 5672
 
     # -- PostgreSQL connection params
     datasource:
       # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
-      url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway" .Values.postgresql.enabled }}'
+      url: "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway"
 
     # -- Redis connection params
     data:
       redis:
         # -- Redis host; resolves to the bundled subchart when redis.enabled, else set your Redis host
-        host: '{{ ternary (printf "%s-redis-master" .Release.Name) "redis-master.tools.svc.cluster.local" .Values.redis.enabled }}'
+        host: "redis-master.tools.svc.cluster.local"
         # -- Redis port; default: 6379
         port: 6379
 

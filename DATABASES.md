@@ -31,12 +31,6 @@ Each service uses its own **logical database name** on the shared PostgreSQL
 instance — this is the database-per-service pattern enforced at the
 application level.
 
-### Standalone (bundled subcharts)
-
-Each service chart includes optional Bitnami subcharts (`postgresql.enabled`,
-`redis.enabled`, `rabbitmq.enabled`). When enabled, the service gets its own
-dedicated database instance — no sharing.
-
 ### Production
 
 Point `applicationYaml` at your own infrastructure. Each service needs its own

@@ -9,14 +9,8 @@ gateway:
 networkPolicy:
   enabled: true
 
-rabbitmq:
-  enabled: false
 
-postgresql:
-  enabled: false
 
-redis:
-  enabled: false
 
 # Authorization PEP -> central Cerbos PDP
 env:

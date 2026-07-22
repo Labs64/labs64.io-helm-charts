@@ -41,11 +41,14 @@ helm uninstall my-<chart-name>
 
 ## Building-Box: cherry-pick your modules
 
-Every module chart is standalone - install only what you need. Bundled infra
-(`<dep>.enabled: true`) is for evaluation/local use; production installs point
-`applicationYaml` at your own infrastructure.
+Every module chart is standalone - install only what you need. Infrastructure
+(RabbitMQ, PostgreSQL, Redis) is decoupled from every application chart — no chart
+bundles them as a dependency. Point `applicationYaml` at whatever broker/database you
+provide (the shared local toolset installed by `just install-tools`, or your own
+infrastructure in a real environment); see [Capability requirements](#capability-requirements-bring-your-own-infrastructure)
+below for what each module needs.
 
-| Module | Purpose | Infra (optional bundled) | Gateway routes (opt-in) | Install |
+| Module | Purpose | Infra required (BYO) | Gateway routes (opt-in) | Install |
 |---|---|---|---|---|
 | auditflow | Audit logging | RabbitMQ | `/auditflow/api` (protected), `/auditflow/v3/api-docs` (public) | `helm install my-auditflow labs64io-pub/auditflow` |
 | checkout | Checkout API + UI (`ui.enabled`) | RabbitMQ, PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public), `/checkout` UI (protected) | `helm install my-checkout labs64io-pub/checkout` |
@@ -55,20 +58,18 @@ Every module chart is standalone - install only what you need. Bundled infra
 | authz-pdp | Cerbos PDP — central authorization decision point | - | n/a | `helm install authz-pdp labs64io-pub/authz-pdp` |
 | api-docs | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install api-docs labs64io-pub/api-docs` |
 
-Gateway integration (`gateway.enabled: true`) requires Traefik v3 CRDs plus the
-`api-gateway` chart (ForwardAuth + shared middlewares); without them, use the standard
-`ingress.enabled` with any ingress controller.
+Gateway integration (`gateway.enabled: true`, Gateway API `HTTPRoute`) requires Traefik v3
++ Gateway API CRDs plus the `api-gateway` chart (ForwardAuth + shared middlewares). There is
+no legacy `Ingress` fallback — every module routes exclusively through Gateway API.
 
-Local testing: `just mock-oidc-install` (dev-only M2M tokens),
-`just labs64io-<module>-install`, `helm test labs64io-<module> -n labs64io`,
-`just labs64io-e2e-auth`.
+Local testing: `just install-tool-mock-oidc` (dev-only M2M tokens),
+`just install-app <module>`, `helm test labs64io-<module> -n labs64io`.
 
 ### Provisioning profiles
 
 | Profile | File | Use case |
 |---|---|---|
-| shared local | `overrides/<module>/values.local.yaml` | dev cluster with the shared toolset (`just local-up`) |
-| standalone | `overrides/<module>/values.standalone.yaml` | single-module eval with bundled infra (`just labs64io-standalone-install <module>`) |
+| shared local | `overrides/<module>/values.local.yaml` | dev cluster with the shared toolset (`just up`) |
 | BYO / production | `overrides/<module>/values.prod-example.yaml` | copy & adapt: your infrastructure, credentials via `secrets.data` (ESO recommended) |
 
 ### Capability requirements (bring-your-own infrastructure)
@@ -82,9 +83,10 @@ Modules need capabilities, not specific tools:
 | payment-gateway | AMQP 0-9-1 broker; PostgreSQL (db `payment_gateway`); Redis |
 | gateway stack | any OIDC provider supporting client_credentials; scope/role claims are configurable via `TOKEN_SCOPES_CLAIM_PATHS` (default: `scope,realm_access.roles,resource_access.{audience}.roles`) |
 
-Reference versions (tested in CI via the bundled subcharts): RabbitMQ chart 16.0.14,
-PostgreSQL chart 18.7.11, Redis chart 27.0.13. For local development, images must be
-built and pushed to the local registry (`localhost:5005`) — see DEVELOPERS.md.
+Reference versions (the shared local toolset installed by `just install-tools` /
+`helmfile.yaml.gotmpl`): RabbitMQ chart 16.0.14, PostgreSQL chart 18.7.11, Redis chart
+27.0.13. For local development, images must be built and pushed to the local registry
+(`localhost:5005`) — see DEVELOPERS.md.
 
 ### Preflight: verify your infrastructure first
 

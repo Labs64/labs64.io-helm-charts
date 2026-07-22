@@ -75,23 +75,6 @@ service:
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8080
 
-# -- This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-ingress:
-  enabled: false
-  className: "nginx"
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: localhost
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
 resources:
   limits:
     cpu: 500m
@@ -203,22 +186,6 @@ secrets:
 # type: object
 # additionalProperties: true
 # @schema
-rabbitmq:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/rabbitmq
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    username: labs64
-    password: labs64pw
 
 # -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for production; point applicationYaml at your own database instead.
@@ -226,23 +193,6 @@ rabbitmq:
 # type: object
 # additionalProperties: true
 # @schema
-postgresql:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/postgresql
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    username: labs64
-    password: labs64pw
-    database: checkout
 
 # -- Additional application properties
 applicationYaml:
@@ -251,14 +201,14 @@ applicationYaml:
     # -- RabbitMQ connection params
     rabbitmq:
       # -- RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host
-      host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
+      host: "rabbitmq.tools.svc.cluster.local"
       # -- RabbitMQ port; default: 5672
       port: 5672
 
     # -- PostgreSQL connection params
     datasource:
       # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
-      url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout" .Values.postgresql.enabled }}'
+      url: "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout"
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
   # -- Publish this module's routes on the Traefik gateway
@@ -436,103 +386,6 @@ ui:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
     # Non-privileged port served by nginx-unprivileged.
     port: 8080
-  
-  # -- This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-  ingress:
-    enabled: false
-    className: "nginx"
-    annotations: {}
-      # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-    hosts:
-      - host: localhost
-        paths:
-          - path: /
-            pathType: Prefix
-    tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
-  
-  resources:
-    limits:
-      cpu: 200m
-      memory: 256Mi
-    requests:
-      cpu: 50m
-      memory: 128Mi
-  
-  # -- This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-  livenessProbe:
-    httpGet:
-      path: /
-      port: 8080
-    initialDelaySeconds: 10
-    periodSeconds: 10
-    failureThreshold: 3
-    timeoutSeconds: 2
-  
-  # -- This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-  readinessProbe:
-    httpGet:
-      path: /
-      port: 8080
-    initialDelaySeconds: 5
-    periodSeconds: 5
-    failureThreshold: 3
-    timeoutSeconds: 2
-  
-  # -- Startup probe (rendered by chart-libs.startupProbe): nginx starts fast, but this
-  # keeps rollout semantics uniform across the ecosystem.
-  startupProbe:
-    httpGet:
-      path: /
-      port: 8080
-    failureThreshold: 10
-    periodSeconds: 3
-    timeoutSeconds: 2
-  
-  # -- Graceful shutdown: let Traefik/kube-proxy deregister the pod before nginx stops.
-  terminationGracePeriodSeconds: 30
-  lifecycle:
-    # -- preStop sleep (seconds) so the gateway deregisters the pod before shutdown; 0 disables
-    preStopDrainSeconds: 5
-  
-  # -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 3
-    targetCPUUtilizationPercentage: 80
-  
-  # -- Additional volumes on the output Deployment definition.
-  volumes: []
-  # - name: foo
-  #   secret:
-  #     secretName: mysecret
-  #     optional: false
-  
-  # -- Additional volumeMounts on the output Deployment definition.
-  volumeMounts: []
-  # - name: foo
-  #   mountPath: "/etc/foo"
-  #   readOnly: true
-  
-  nodeSelector: {}
-  
-  tolerations: []
-  
-  affinity: {}
-  
-  env: []
-  
-  # -- Secret data to be used as environment variables
-  secrets:
-    # @schema
-    # type: object
-    # additionalProperties: true
-    # @schema
-    data: {}
 
   application:
     runtimeEnv:

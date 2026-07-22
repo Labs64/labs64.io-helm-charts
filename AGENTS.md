@@ -34,8 +34,12 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | Profile | File pattern | Use case |
 |---------|-------------|----------|
 | Local | `overrides/<module>/values.local.yaml` | Dev cluster with shared toolset |
-| Standalone | `overrides/<module>/values.standalone.yaml` | Single-module eval with bundled infra |
 | Production | `overrides/<module>/values.prod-example.yaml` | Copy & adapt for your infrastructure |
+
+Infrastructure is decoupled from application charts — no module chart bundles RabbitMQ/PostgreSQL/Redis
+as a dependency anymore; every app connects to externally-provisioned infra via `applicationYaml`
+(defaults point at the shared `tools`-namespace services). There is no "standalone, bundled-infra"
+profile — evaluate a single module against the shared local toolset (`just install-tools`) instead.
 
 ## Build, run, test
 

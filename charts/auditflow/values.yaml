@@ -125,23 +125,6 @@ service:
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8080
 
-# -- This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
 # -- Resource limits and requests for the container
 # For production, it's recommended to set both requests and limits
 resources:
@@ -284,22 +267,6 @@ observability:
 # type: object
 # additionalProperties: true
 # @schema
-rabbitmq:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/rabbitmq
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    username: labs64
-    password: labs64pw
 
 # -- Tenant provisioning shipped by the chart (rendered as `auditflow.io/tenant`-labelled
 # ConfigMaps consumed live by the gitops-configmap source — see templates/tenant-configmaps.yaml).
@@ -398,7 +365,7 @@ applicationYaml:
     # -- RabbitMQ connection params
     rabbitmq:
       # -- RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host
-      host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
+      host: "rabbitmq.tools.svc.cluster.local"
       # -- RabbitMQ port; default: 5672
       port: 5672
     # -- Redis connection params (backing store for the idempotency/dedup service; auditflow.idempotency.store=redis)

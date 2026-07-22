@@ -124,14 +124,6 @@ install-app app:
     fi
     helm upgrade --install labs64io-{{app}} ./charts/{{app}} "${ARGS[@]}" --force-conflicts
 
-# Install a single Labs64.IO application standalone (bundled infra, no swagger-ui stack)
-install-app-standalone app:
-    helm dependencies update ./charts/{{app}}
-    helm upgrade --install labs64io-{{app}} ./charts/{{app}} \
-      --namespace {{NAMESPACE_LABS64IO}} --create-namespace \
-      -f ./charts/{{app}}/values.yaml \
-      --force-conflicts \
-      -f ./overrides/{{app}}/values.standalone.yaml
 
 # Uninstall a specific Labs64.IO application
 uninstall-app app:

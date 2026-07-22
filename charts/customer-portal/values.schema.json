@@ -17,12 +17,6 @@
     "ui": {
       "additionalProperties": false,
       "properties": {
-        "affinity": {
-          "additionalProperties": false,
-          "required": [],
-          "title": "affinity",
-          "type": "object"
-        },
         "application": {
           "additionalProperties": false,
           "properties": {
@@ -81,51 +75,10 @@
           "title": "application",
           "type": "object"
         },
-        "autoscaling": {
-          "additionalProperties": false,
-          "description": "This section is for setting up autoscaling",
-          "properties": {
-            "enabled": {
-              "default": false,
-              "title": "enabled",
-              "type": "boolean"
-            },
-            "maxReplicas": {
-              "default": 3,
-              "title": "maxReplicas",
-              "type": "integer"
-            },
-            "minReplicas": {
-              "default": 1,
-              "title": "minReplicas",
-              "type": "integer"
-            },
-            "targetCPUUtilizationPercentage": {
-              "default": 80,
-              "title": "targetCPUUtilizationPercentage",
-              "type": "integer"
-            }
-          },
-          "required": [
-            "enabled",
-            "minReplicas",
-            "maxReplicas",
-            "targetCPUUtilizationPercentage"
-          ],
-          "title": "autoscaling",
-          "type": "object"
-        },
         "enabled": {
           "default": true,
           "title": "enabled",
           "type": "boolean"
-        },
-        "env": {
-          "items": {
-            "required": []
-          },
-          "title": "env",
-          "type": "array"
         },
         "fullnameOverride": {
           "default": "",
@@ -284,169 +237,6 @@
           "title": "imagePullSecrets",
           "type": "array"
         },
-        "ingress": {
-          "additionalProperties": false,
-          "description": "This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/",
-          "properties": {
-            "annotations": {
-              "additionalProperties": false,
-              "required": [],
-              "title": "annotations",
-              "type": "object"
-            },
-            "className": {
-              "default": "nginx",
-              "title": "className",
-              "type": "string"
-            },
-            "enabled": {
-              "default": false,
-              "title": "enabled",
-              "type": "boolean"
-            },
-            "hosts": {
-              "items": {
-                "anyOf": [
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "host": {
-                        "default": "localhost",
-                        "title": "host",
-                        "type": "string"
-                      },
-                      "paths": {
-                        "items": {
-                          "anyOf": [
-                            {
-                              "additionalProperties": false,
-                              "properties": {
-                                "path": {
-                                  "default": "/",
-                                  "title": "path",
-                                  "type": "string"
-                                },
-                                "pathType": {
-                                  "default": "Prefix",
-                                  "title": "pathType",
-                                  "type": "string"
-                                }
-                              },
-                              "required": [
-                                "path",
-                                "pathType"
-                              ],
-                              "type": "object"
-                            }
-                          ],
-                          "required": []
-                        },
-                        "title": "paths",
-                        "type": "array"
-                      }
-                    },
-                    "required": [
-                      "host",
-                      "paths"
-                    ],
-                    "type": "object"
-                  }
-                ],
-                "required": []
-              },
-              "title": "hosts",
-              "type": "array"
-            },
-            "tls": {
-              "items": {
-                "required": []
-              },
-              "title": "tls",
-              "type": "array"
-            }
-          },
-          "required": [
-            "enabled",
-            "className",
-            "annotations",
-            "hosts",
-            "tls"
-          ],
-          "title": "ingress",
-          "type": "object"
-        },
-        "lifecycle": {
-          "additionalProperties": false,
-          "properties": {
-            "preStopDrainSeconds": {
-              "default": 5,
-              "description": "preStop sleep (seconds) so the gateway deregisters the pod before shutdown; 0 disables",
-              "title": "preStopDrainSeconds",
-              "type": "integer"
-            }
-          },
-          "required": [
-            "preStopDrainSeconds"
-          ],
-          "title": "lifecycle",
-          "type": "object"
-        },
-        "livenessProbe": {
-          "additionalProperties": false,
-          "description": "This is to setup the liveness probes",
-          "properties": {
-            "failureThreshold": {
-              "default": 3,
-              "title": "failureThreshold",
-              "type": "integer"
-            },
-            "httpGet": {
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "default": "/",
-                  "title": "path",
-                  "type": "string"
-                },
-                "port": {
-                  "default": 8080,
-                  "title": "port",
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "path",
-                "port"
-              ],
-              "title": "httpGet",
-              "type": "object"
-            },
-            "initialDelaySeconds": {
-              "default": 10,
-              "title": "initialDelaySeconds",
-              "type": "integer"
-            },
-            "periodSeconds": {
-              "default": 10,
-              "title": "periodSeconds",
-              "type": "integer"
-            },
-            "timeoutSeconds": {
-              "default": 2,
-              "title": "timeoutSeconds",
-              "type": "integer"
-            }
-          },
-          "required": [
-            "httpGet",
-            "initialDelaySeconds",
-            "periodSeconds",
-            "failureThreshold",
-            "timeoutSeconds"
-          ],
-          "title": "livenessProbe",
-          "type": "object"
-        },
         "nameOverride": {
           "default": "",
           "description": "This is to override the chart name.",
@@ -482,12 +272,6 @@
             "extraIngress"
           ],
           "title": "networkPolicy",
-          "type": "object"
-        },
-        "nodeSelector": {
-          "additionalProperties": false,
-          "required": [],
-          "title": "nodeSelector",
           "type": "object"
         },
         "podAnnotations": {
@@ -599,135 +383,11 @@
           "title": "rbac",
           "type": "object"
         },
-        "readinessProbe": {
-          "additionalProperties": false,
-          "description": "This is to setup the readiness probes",
-          "properties": {
-            "failureThreshold": {
-              "default": 3,
-              "title": "failureThreshold",
-              "type": "integer"
-            },
-            "httpGet": {
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "default": "/",
-                  "title": "path",
-                  "type": "string"
-                },
-                "port": {
-                  "default": 8080,
-                  "title": "port",
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "path",
-                "port"
-              ],
-              "title": "httpGet",
-              "type": "object"
-            },
-            "initialDelaySeconds": {
-              "default": 5,
-              "title": "initialDelaySeconds",
-              "type": "integer"
-            },
-            "periodSeconds": {
-              "default": 5,
-              "title": "periodSeconds",
-              "type": "integer"
-            },
-            "timeoutSeconds": {
-              "default": 2,
-              "title": "timeoutSeconds",
-              "type": "integer"
-            }
-          },
-          "required": [
-            "httpGet",
-            "initialDelaySeconds",
-            "periodSeconds",
-            "failureThreshold",
-            "timeoutSeconds"
-          ],
-          "title": "readinessProbe",
-          "type": "object"
-        },
         "replicaCount": {
           "default": 1,
           "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/",
           "title": "replicaCount",
           "type": "integer"
-        },
-        "resources": {
-          "additionalProperties": false,
-          "properties": {
-            "limits": {
-              "additionalProperties": false,
-              "properties": {
-                "cpu": {
-                  "default": "200m",
-                  "title": "cpu",
-                  "type": "string"
-                },
-                "memory": {
-                  "default": "256Mi",
-                  "title": "memory",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "cpu",
-                "memory"
-              ],
-              "title": "limits",
-              "type": "object"
-            },
-            "requests": {
-              "additionalProperties": false,
-              "properties": {
-                "cpu": {
-                  "default": "50m",
-                  "title": "cpu",
-                  "type": "string"
-                },
-                "memory": {
-                  "default": "128Mi",
-                  "title": "memory",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "cpu",
-                "memory"
-              ],
-              "title": "requests",
-              "type": "object"
-            }
-          },
-          "required": [
-            "limits",
-            "requests"
-          ],
-          "title": "resources",
-          "type": "object"
-        },
-        "secrets": {
-          "additionalProperties": false,
-          "description": "Secret data to be used as environment variables",
-          "properties": {
-            "data": {
-              "additionalProperties": true,
-              "required": [],
-              "title": "data",
-              "type": "object"
-            }
-          },
-          "required": [],
-          "title": "secrets",
-          "type": "object"
         },
         "securityContext": {
           "additionalProperties": false,
@@ -836,62 +496,6 @@
           "title": "serviceAccount",
           "type": "object"
         },
-        "startupProbe": {
-          "additionalProperties": false,
-          "description": "uniform across the ecosystem.",
-          "properties": {
-            "failureThreshold": {
-              "default": 10,
-              "title": "failureThreshold",
-              "type": "integer"
-            },
-            "httpGet": {
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "default": "/",
-                  "title": "path",
-                  "type": "string"
-                },
-                "port": {
-                  "default": 8080,
-                  "title": "port",
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "path",
-                "port"
-              ],
-              "title": "httpGet",
-              "type": "object"
-            },
-            "periodSeconds": {
-              "default": 3,
-              "title": "periodSeconds",
-              "type": "integer"
-            },
-            "timeoutSeconds": {
-              "default": 2,
-              "title": "timeoutSeconds",
-              "type": "integer"
-            }
-          },
-          "required": [
-            "httpGet",
-            "failureThreshold",
-            "periodSeconds",
-            "timeoutSeconds"
-          ],
-          "title": "startupProbe",
-          "type": "object"
-        },
-        "terminationGracePeriodSeconds": {
-          "default": 30,
-          "description": "Graceful shutdown: let Traefik/kube-proxy deregister the pod before nginx stops.",
-          "title": "terminationGracePeriodSeconds",
-          "type": "integer"
-        },
         "tests": {
           "additionalProperties": false,
           "properties": {
@@ -913,29 +517,6 @@
           ],
           "title": "tests",
           "type": "object"
-        },
-        "tolerations": {
-          "items": {
-            "required": []
-          },
-          "title": "tolerations",
-          "type": "array"
-        },
-        "volumeMounts": {
-          "description": "Additional volumeMounts on the output Deployment definition.",
-          "items": {
-            "required": []
-          },
-          "title": "volumeMounts",
-          "type": "array"
-        },
-        "volumes": {
-          "description": "Additional volumes on the output Deployment definition.",
-          "items": {
-            "required": []
-          },
-          "title": "volumes",
-          "type": "array"
         }
       },
       "required": [
@@ -952,21 +533,6 @@
         "podSecurityContext",
         "securityContext",
         "service",
-        "ingress",
-        "resources",
-        "livenessProbe",
-        "readinessProbe",
-        "startupProbe",
-        "terminationGracePeriodSeconds",
-        "lifecycle",
-        "autoscaling",
-        "volumes",
-        "volumeMounts",
-        "nodeSelector",
-        "tolerations",
-        "affinity",
-        "env",
-        "secrets",
         "application",
         "gateway",
         "podDisruptionBudget",

@@ -2,14 +2,5 @@ dependencies:
 - name: chart-libs
   repository: file://../chart-libs
   version: 0.1.0
-- name: rabbitmq
-  repository: https://charts.bitnami.com/bitnami
-  version: 16.0.14
-- name: postgresql
-  repository: https://charts.bitnami.com/bitnami
-  version: 16.7.27
-- name: redis
-  repository: https://charts.bitnami.com/bitnami
-  version: 20.13.4
-digest: sha256:168e9ebfadbc438a63bf1878e3dad1fc2c4887715d976818ed95eaf1f546d065
-generated: "2026-07-11T16:20:34.390381+02:00"
+digest: sha256:deb6e4cfc625272716b5852f27601918b2fac7cc2db42f7b4edc57d0d8346ddb
+generated: "2026-07-22T23:42:00.903955+02:00"

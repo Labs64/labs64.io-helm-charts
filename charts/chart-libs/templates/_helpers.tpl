@@ -74,19 +74,6 @@ rbac.authorization.k8s.io/v1beta1
 {{- end -}}
 
 {{/*
-Return the appropriate apiVersion for ingress
-*/}}
-{{- define "chart-libs.ingress.apiVersion" -}}
-{{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" -}}
-networking.k8s.io/v1
-{{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" -}}
-networking.k8s.io/v1beta1
-{{- else -}}
-extensions/v1beta1
-{{- end -}}
-{{- end -}}
-
-{{/*
 Return the appropriate apiVersion for HPA
 */}}
 {{- define "chart-libs.hpa.apiVersion" -}}

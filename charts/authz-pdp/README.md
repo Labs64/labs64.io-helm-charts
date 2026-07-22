@@ -6,45 +6,6 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 
 **Homepage:** <https://labs64.io>
 
-## How it works
-
-This chart runs the central [Cerbos](https://cerbos.dev) PDP that every
-`@Authorize` domain check (Java SDK, gRPC `:3593`) and every edge decision
-(traefik-authproxy HTTP client, `:3592`) consults. It is on the hot path of
-every request — hence `replicaCount: 2` (HA) and a PodDisruptionBudget.
-
-### Policy pipeline & provenance
-
-Policies are **generated**, never hand-authored (one exception: `static_api.yaml`
-for the UI-bundle prefixes). `policies/build-authz-policies.sh` runs the commons
-`OpenApiAuthPreprocessor` over each module's OpenAPI `x-labs64-auth` and writes:
-
-- `charts/cerbos/policies/*.yaml` — one edge resource policy per module
-  (`<module>_api`) plus per-domain-type policies (`<module>_<Type>`), each with
-  the structural cross-tenant guard.
-- `charts/cerbos/schemas/*.json` — principal + per-type JSON schemas
-  (`schema.enforcement: reject` → fail closed on malformed attributes).
-- `charts/traefik-authproxy/routes/*.routes.yaml` — the authproxy routing table.
-
-These generated files are **committed and ArgoCD-synced** — the review of the
-generated diff is the provenance model (there is no signed OCI bundle anymore).
-Regenerate with `just build-policies` after any module OpenAPI change; the script
-runs `cerbos compile` as a local gate. OpenAPI stays the single source of truth.
-
-The chart mounts `policies/*` (via `configmap-policies`) at `/policies` and
-`schemas/*` at `/policies/_schemas`; checksum annotations roll the PDP whenever
-either ConfigMap changes.
-
-### Fail-closed outage drill
-
-Every caller denies when the PDP is unreachable. To verify:
-
-```bash
-kubectl -n labs64io scale deploy cerbos --replicas=0
-curl -si https://gateway.localhost/payment-gateway/api/v1/... -H "Authorization: Bearer <valid>"   # expect 403
-kubectl -n labs64io scale deploy cerbos --replicas=2   # recovers
-```
-
 ## Maintainers
 
 | Name | Email | Url |

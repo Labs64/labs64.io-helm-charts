@@ -591,8 +591,6 @@ alertmanager:
   #       {{ end }}
   #       {{ end }}
 
-  ingress:
-    enabled: false
 
     ingressClassName: ""
 
@@ -1297,10 +1295,6 @@ grafana:
     ##
     pspEnabled: false
 
-  ingress:
-    ## If true, Grafana Ingress will be created
-    ##
-    enabled: false
 
     ## IngressClassName for Grafana Ingress.
     ## Should be provided if Ingress is enable.
@@ -3691,8 +3685,6 @@ prometheus:
   #     foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0
   #     someoneelse:$apr1$DMZX2Z4q$6SbQIfyuLQd.xmo/P0m2c.
 
-  ingress:
-    enabled: false
 
     ingressClassName: ""
 
@@ -4873,8 +4865,6 @@ thanosRuler:
     # maxUnavailable: ""
     unhealthyPodEvictionPolicy: AlwaysAllow
 
-  ingress:
-    enabled: false
 
     ingressClassName: ""
 

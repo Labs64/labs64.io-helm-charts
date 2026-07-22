@@ -309,9 +309,10 @@ just build-images
 Every chart with a `secret.yaml` supports two mutually-exclusive modes, toggled by
 `externalSecrets.enabled`:
 
-- **`false` (default, local):** a plain `Secret` rendered from `.Values.secrets.data`
-  (and, for `checkout`/`payment-gateway`, from `rabbitmq.auth`/`postgresql.auth`/`redis.auth`
-  when those bundled deps are enabled). Populated locally via `values.secrets.local.yaml`
+- **`false` (default, local):** a plain `Secret` rendered from `.Values.secrets.data` only
+  — infrastructure is decoupled from every application chart, so there is no bundled-dep
+  credential fallback; broker/database credentials must always be supplied explicitly.
+  Populated locally via `values.secrets.local.yaml`
   (below) — never committed.
 - **`true` (opt-in locally, intended default for staging/prod):** an `ExternalSecret`
   (`chart-libs.externalsecret`) that ESO resolves against a `ClusterSecretStore` — the
@@ -493,18 +494,8 @@ just uninstall-tool-rabbitmq
 just uninstall-tool-postgresql
 just uninstall-tool-redis
 just uninstall-tool-mock-oidc
-just down                    # delete the k3d cluster
+just cluster-down             # delete the k3d cluster
 ```
-
-### Standalone module testing
-
-To test a single module with its own bundled infrastructure (no shared cluster):
-
-```bash
-just install-app-standalone checkout
-```
-
-This installs checkout with its own RabbitMQ and PostgreSQL (bundled as subcharts).
 
 ## Local development with hot reload
 

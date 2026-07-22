@@ -1,4 +1,0 @@
-# Standalone/eval profile: bundled infra, no gateway stack required.
-# Install: helm upgrade --install my-auditflow ./charts/auditflow -f ./charts/auditflow/values.yaml -f ./overrides/auditflow/values.standalone.yaml
-rabbitmq:
-  enabled: true

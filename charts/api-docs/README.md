@@ -1,6 +1,6 @@
 # api-docs
 
-![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.27.1](https://img.shields.io/badge/AppVersion-v5.27.1-informational?style=flat-square)
+![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.27.1](https://img.shields.io/badge/AppVersion-v5.27.1-informational?style=flat-square)
 
 Labs64.IO :: Swagger UI
 
@@ -30,6 +30,8 @@ Labs64.IO :: Swagger UI
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | env | list | `[]` |  |
+| externalSecrets.enabled | bool | `false` |  |
+| externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"enabled":true,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"routes":[]}` | Gateway API HTTPRoute for swagger-ui (public docs aggregator; module API routes are owned by the module charts). No auth — faithful to prior behavior. |
 | gateway.enabled | bool | `true` | Enable the swagger-ui HTTPRoute |
@@ -41,7 +43,6 @@ Labs64.IO :: Swagger UI
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
-| ingress | object | `{"annotations":{},"className":"nginx","enabled":false,"hosts":[{"host":"localhost","paths":[{"path":"/","pathType":"Prefix"}]}],"tls":[]}` | This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/ |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
 | networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
@@ -65,6 +66,7 @@ Labs64.IO :: Swagger UI
 | resources.limits.memory | string | `"1Gi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |
+| secrets | object | `{"data":{}}` | Secret data to be used as environment variables (delivered via envFrom) |
 | securityContext.capabilities.drop[0] | string | `"ALL"` |  |
 | securityContext.runAsGroup | int | `1064` |  |
 | securityContext.runAsNonRoot | bool | `true` |  |
