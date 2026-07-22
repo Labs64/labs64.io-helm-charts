@@ -9,6 +9,11 @@
       "title": "affinity",
       "type": "object"
     },
+    "applicationType": {
+      "default": "java",
+      "title": "applicationType",
+      "type": "string"
+    },
     "applicationYaml": {
       "additionalProperties": false,
       "description": "Additional application properties",
@@ -394,6 +399,11 @@
       ],
       "title": "externalSecrets",
       "type": "object"
+    },
+    "extraContainers": {
+      "default": "- name: auditflow-transformer\n  image: '{{ .Values.transformer.image.repository }}:{{ .Values.transformer.image.tag | default .Chart.AppVersion }}'\n  imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'\n  ports:\n    - name: http-trn\n      containerPort: {{ .Values.transformer.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-transformer\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-transformer\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: '{{ $.Values.observability.otlpEndpoint | quote }}'\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-trn\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-trn\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n\n- name: auditflow-sink\n  image: '{{ .Values.sink.image.repository }}:{{ .Values.sink.image.tag | default .Chart.AppVersion }}'\n  imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'\n  ports:\n    - name: http-snk\n      containerPort: {{ .Values.sink.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-sink\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-sink\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: '{{ $.Values.observability.otlpEndpoint | quote }}'\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-snk\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-snk\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n",
+      "title": "extraContainers",
+      "type": "string"
     },
     "fullnameOverride": {
       "default": "",
@@ -2007,7 +2017,9 @@
     "podDisruptionBudget",
     "networkPolicy",
     "slo",
-    "tests"
+    "tests",
+    "applicationType",
+    "extraContainers"
   ],
   "type": "object"
 }

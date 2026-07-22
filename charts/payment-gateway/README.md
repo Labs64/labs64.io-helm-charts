@@ -28,6 +28,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
+| applicationType | string | `"java"` |  |
 | applicationYaml | object | `{"spring":{"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}},"datasource":{"url":"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway"},"rabbitmq":{"host":"rabbitmq.tools.svc.cluster.local","port":5672}}}` | Additional application properties |
 | applicationYaml.spring | object | `{"data":{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}},"datasource":{"url":"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway"},"rabbitmq":{"host":"rabbitmq.tools.svc.cluster.local","port":5672}}` | Spring configuration |
 | applicationYaml.spring.data | object | `{"redis":{"host":"redis-master.tools.svc.cluster.local","port":6379}}` | Redis connection params |

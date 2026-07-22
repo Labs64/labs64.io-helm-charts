@@ -8,6 +8,12 @@
       "title": "affinity",
       "type": "object"
     },
+    "applicationType": {
+      "default": "python",
+      "description": "Security response headers are now emitted as a native Gateway API\nResponseHeaderModifier filter on each HTTPRoute rule; the canonical values live\nin the chart-libs \"chart-libs.securityHeaders\" helper. (The former Traefik\nsecurity-headers Middleware has been removed.)",
+      "title": "applicationType",
+      "type": "string"
+    },
     "authProxy": {
       "additionalProperties": false,
       "description": "ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container)",
@@ -373,6 +379,22 @@
       ],
       "title": "externalSecrets",
       "type": "object"
+    },
+    "extraConfigChecksums": {
+      "description": "Roll the ACS whenever the generated routes / static-route ConfigMaps change\n(checksum/config already covers configmap.yaml; these are the extra dynamically\ngenerated ConfigMaps this chart mounts).",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "required": []
+      },
+      "title": "extraConfigChecksums",
+      "type": "array"
     },
     "fullnameOverride": {
       "default": "gateway-common",
@@ -1178,16 +1200,130 @@
       "type": "array"
     },
     "volumeMounts": {
-      "description": "Additional volumeMounts on the output Deployment definition.",
       "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/app/routes",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "routes",
+                "title": "name",
+                "type": "string"
+              },
+              "readOnly": {
+                "default": true,
+                "title": "readOnly",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath",
+              "readOnly"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/opt/application-config",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "static-policies",
+                "title": "name",
+                "type": "string"
+              },
+              "readOnly": {
+                "default": true,
+                "title": "readOnly",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath",
+              "readOnly"
+            ],
+            "type": "object"
+          }
+        ],
         "required": []
       },
       "title": "volumeMounts",
       "type": "array"
     },
     "volumes": {
-      "description": "Additional volumes on the output Deployment definition.",
       "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "configMap": {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "{{ include \"chart-libs.fullname\" . }}-routes",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "title": "configMap",
+                "type": "object"
+              },
+              "name": {
+                "default": "routes",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "configMap"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "configMap": {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "{{ include \"chart-libs.fullname\" . }}-static-policies",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "title": "configMap",
+                "type": "object"
+              },
+              "name": {
+                "default": "static-policies",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "configMap"
+            ],
+            "type": "object"
+          }
+        ],
         "required": []
       },
       "title": "volumes",
@@ -1228,7 +1364,9 @@
     "authProxy",
     "rateLimit",
     "buffering",
-    "compress"
+    "compress",
+    "applicationType",
+    "extraConfigChecksums"
   ],
   "type": "object"
 }

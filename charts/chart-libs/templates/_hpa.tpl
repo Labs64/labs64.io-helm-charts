@@ -40,7 +40,7 @@ spec:
 UI HorizontalPodAutoscaler. Usage: {{ include "chart-libs.ui-hpa" . }}
 */}}
 {{- define "chart-libs.ui-hpa" -}}
-{{- if and .Values.ui.autoscaling .Values.ui.autoscaling.enabled }}
+{{- if and .Values.ui .Values.ui.autoscaling .Values.ui.autoscaling.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

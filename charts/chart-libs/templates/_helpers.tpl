@@ -69,7 +69,7 @@ own service account) when ui.serviceAccount.create is false, since the UI pod mu
 silently inherit the backend's (potentially more privileged) identity.
 */}}
 {{- define "chart-libs.ui-serviceAccountName" -}}
-{{- if and .Values.ui.serviceAccount .Values.ui.serviceAccount.create }}
+{{- if and .Values.ui .Values.ui.serviceAccount .Values.ui.serviceAccount.create }}
 {{- default (printf "%s-ui" (include "chart-libs.fullname" .)) .Values.ui.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.ui.serviceAccount.name }}

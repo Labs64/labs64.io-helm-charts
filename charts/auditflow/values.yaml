@@ -476,3 +476,114 @@ tests:
   enabled: true
   # -- Health endpoint probed by `helm test`
   healthPath: /actuator/health
+
+applicationType: "java"
+
+extraContainers: |
+    - name: auditflow-transformer
+      image: '{{ .Values.transformer.image.repository }}:{{ .Values.transformer.image.tag | default .Chart.AppVersion }}'
+      imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'
+      ports:
+        - name: http-trn
+          containerPort: {{ .Values.transformer.service.port }}
+          protocol: TCP
+      env:
+        - name: APP_NAME
+          value: "auditflow-transformer"
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+      {{- if $.Values.observability.enabled }}
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: OTEL_SERVICE_NAME
+          value: "auditflow-transformer"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: '{{ $.Values.observability.otlpEndpoint | quote }}'
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "http/protobuf"
+        - name: OTEL_PYTHON_LOG_CORRELATION
+          value: "true"
+        - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+          value: "true"
+        - name: OTEL_LOGS_EXPORTER
+          value: "otlp"
+        - name: OTEL_METRICS_EXPORTER
+          value: "otlp"
+      {{- end }}
+      livenessProbe:
+        httpGet:
+          path: /live
+          port: http-trn
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        failureThreshold: 3
+        timeoutSeconds: 2
+      readinessProbe:
+        httpGet:
+          path: /ready
+          port: http-trn
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 3
+        timeoutSeconds: 2
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+  
+    - name: auditflow-sink
+      image: '{{ .Values.sink.image.repository }}:{{ .Values.sink.image.tag | default .Chart.AppVersion }}'
+      imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'
+      ports:
+        - name: http-snk
+          containerPort: {{ .Values.sink.service.port }}
+          protocol: TCP
+      env:
+        - name: APP_NAME
+          value: "auditflow-sink"
+        - name: HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+      {{- if $.Values.observability.enabled }}
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: OTEL_SERVICE_NAME
+          value: "auditflow-sink"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: '{{ $.Values.observability.otlpEndpoint | quote }}'
+        - name: OTEL_EXPORTER_OTLP_PROTOCOL
+          value: "http/protobuf"
+        - name: OTEL_PYTHON_LOG_CORRELATION
+          value: "true"
+        - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+          value: "true"
+        - name: OTEL_LOGS_EXPORTER
+          value: "otlp"
+        - name: OTEL_METRICS_EXPORTER
+          value: "otlp"
+      {{- end }}
+      livenessProbe:
+        httpGet:
+          path: /live
+          port: http-snk
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        failureThreshold: 3
+        timeoutSeconds: 2
+      readinessProbe:
+        httpGet:
+          path: /ready
+          port: http-snk
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        failureThreshold: 3
+        timeoutSeconds: 2
+      volumeMounts:
+        - name: tmp
+          mountPath: /tmp

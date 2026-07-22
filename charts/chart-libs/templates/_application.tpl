@@ -20,3 +20,7 @@ data:
   application.yaml: |-
 {{ tpl (toYaml .Values.applicationYaml) $  | indent 4 }}
 {{- end }}
+---
+{{- include "chart-libs.test-connection" . }}
+---
+{{- include "chart-libs.ui-test-connection" . }}

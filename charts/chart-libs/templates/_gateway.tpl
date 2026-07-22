@@ -44,6 +44,15 @@ spec:
       filters:
         {{- /* 1. ALWAYS FIRST: strip inbound X-Auth-* so clients can never smuggle
                identity headers — native RequestHeaderModifier, public routes included. */}}
+        {{- /* Root convenience redirect: 302 to a fixed path (native RequestRedirect). */}}
+        {{- if $route.redirectTo }}
+        - type: RequestRedirect
+          requestRedirect:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: {{ $route.redirectTo | quote }}
+            statusCode: 302
+        {{- end }}
         - type: RequestHeaderModifier
           requestHeaderModifier:
             remove:
@@ -99,9 +108,11 @@ spec:
               type: ReplacePrefixMatch
               replacePrefixMatch: {{ $route.path | default "/" | quote }}
         {{- end }}
+      {{- if not $route.redirectTo }}
       backendRefs:
         - name: {{ $route.service | default $fullname }}
           port: {{ $route.port }}
+      {{- end }}
     {{- end }}
 {{- end }}
 {{- end }}

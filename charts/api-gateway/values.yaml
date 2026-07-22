@@ -289,3 +289,27 @@ compress:
 # ResponseHeaderModifier filter on each HTTPRoute rule; the canonical values live
 # in the chart-libs "chart-libs.securityHeaders" helper. (The former Traefik
 # security-headers Middleware has been removed.)
+applicationType: python
+
+# -- Roll the ACS whenever the generated routes / static-route ConfigMaps change
+# (checksum/config already covers configmap.yaml; these are the extra dynamically
+# generated ConfigMaps this chart mounts).
+extraConfigChecksums:
+  - configmap-routes
+  - configmap-static-policies
+
+volumeMounts:
+  - name: routes
+    mountPath: /app/routes
+    readOnly: true
+  - name: static-policies
+    mountPath: /opt/application-config
+    readOnly: true
+
+volumes:
+  - name: routes
+    configMap:
+      name: '{{ include "chart-libs.fullname" . }}-routes'
+  - name: static-policies
+    configMap:
+      name: '{{ include "chart-libs.fullname" . }}-static-policies'

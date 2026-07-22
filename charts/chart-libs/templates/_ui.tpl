@@ -190,3 +190,57 @@ data:
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{/*
+UI NetworkPolicy macro.
+*/}}
+{{- define "chart-libs.ui-networkpolicy" -}}
+{{- if and .Values.ui .Values.ui.enabled }}
+{{ include "chart-libs.networkpolicy" . }}
+{{- end }}
+{{- end }}
+
+{{/*
+UI Gateway Routes macro.
+*/}}
+{{- define "chart-libs.ui-gateway-routes" -}}
+{{- if and .Values.ui .Values.ui.enabled }}
+{{ include "chart-libs.gateway-routes" . }}
+{{- end }}
+{{- end }}
+
+{{/*
+UI Secret macro.
+*/}}
+{{- define "chart-libs.ui-secret" -}}
+{{- if and .Values.ui .Values.ui.enabled .Values.ui.secrets .Values.ui.secrets.data }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-ui
+  labels:
+    helm.sh/chart: {{ include "chart-libs.chart" . }}
+    app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: "Labs64.IO"
+    app.kubernetes.io/component: ui
+type: Opaque
+stringData:
+{{- range $key, $value := .Values.ui.secrets.data }}
+  {{ $key }}: {{ $value | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+UI PodDisruptionBudget macro.
+*/}}
+{{- define "chart-libs.ui-pdb" -}}
+{{- if and .Values.ui .Values.ui.enabled }}
+{{ include "chart-libs.pdb" . }}
+{{- end }}
+{{- end }}

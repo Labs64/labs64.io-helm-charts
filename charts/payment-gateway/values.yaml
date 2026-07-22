@@ -324,3 +324,4 @@ tests:
   enabled: true
   # -- Health endpoint probed by `helm test`
   healthPath: /actuator/health
+applicationType: java

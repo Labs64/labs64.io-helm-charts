@@ -28,6 +28,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
+| applicationType | string | `"java"` |  |
 | applicationYaml | object | `{"spring":{"datasource":{"url":"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout"},"rabbitmq":{"host":"rabbitmq.tools.svc.cluster.local","port":5672}}}` | Additional application properties |
 | applicationYaml.spring | object | `{"datasource":{"url":"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout"},"rabbitmq":{"host":"rabbitmq.tools.svc.cluster.local","port":5672}}` | Spring configuration |
 | applicationYaml.spring.datasource | object | `{"url":"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout"}` | PostgreSQL connection params |

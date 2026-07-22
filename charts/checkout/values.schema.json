@@ -8,6 +8,11 @@
       "title": "affinity",
       "type": "object"
     },
+    "applicationType": {
+      "default": "java",
+      "title": "applicationType",
+      "type": "string"
+    },
     "applicationYaml": {
       "additionalProperties": false,
       "description": "Additional application properties",
@@ -1751,7 +1756,8 @@
     "networkPolicy",
     "slo",
     "tests",
-    "ui"
+    "ui",
+    "applicationType"
   ],
   "type": "object"
 }

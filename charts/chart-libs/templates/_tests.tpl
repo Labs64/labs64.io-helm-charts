@@ -22,3 +22,25 @@ spec:
   restartPolicy: Never
 {{- end }}
 {{- end }}
+
+{{- define "chart-libs.ui-test-connection" -}}
+{{- if and .Values.ui .Values.ui.enabled .Values.ui.tests .Values.ui.tests.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "chart-libs.fullname" . }}-ui-test-connection"
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+    app.kubernetes.io/component: ui
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox:1.36
+      command: ['wget']
+      args: ['-qO-', '{{ include "chart-libs.fullname" . }}-ui:{{ .Values.ui.service.port }}{{ .Values.ui.tests.healthPath }}']
+  restartPolicy: Never
+{{- end }}
+{{- end }}

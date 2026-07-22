@@ -32,7 +32,7 @@ roleRef:
 UI Role and RoleBinding. Usage: {{ include "chart-libs.ui-rbac" . }}
 */}}
 {{- define "chart-libs.ui-rbac" -}}
-{{- if and .Values.ui.rbac .Values.ui.rbac.create }}
+{{- if and .Values.ui .Values.ui.rbac .Values.ui.rbac.create }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:

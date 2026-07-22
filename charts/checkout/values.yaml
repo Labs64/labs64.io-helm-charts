@@ -430,3 +430,4 @@ ui:
   # additionalProperties: true
   # @schema
   chart-libs: {}
+applicationType: java

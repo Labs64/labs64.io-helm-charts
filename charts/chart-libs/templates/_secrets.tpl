@@ -22,7 +22,7 @@ spec:
 {{- end -}}
 
 {{- define "chart-libs.secret" -}}
-{{- if .Values.externalSecrets.enabled }}
+{{- if and .Values.externalSecrets .Values.externalSecrets.enabled }}
 {{ include "chart-libs.externalsecret" . }}
 {{- else }}
 apiVersion: v1
@@ -37,7 +37,7 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation
 type: Opaque
 stringData:
-{{- if .Values.secrets.data }}
+{{- if and .Values.secrets .Values.secrets.data }}
 {{- range $key, $value := .Values.secrets.data }}
   {{ $key }}: {{ $value | quote }}
 {{- end }}

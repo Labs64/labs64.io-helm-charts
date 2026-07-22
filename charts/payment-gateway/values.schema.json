@@ -8,6 +8,11 @@
       "title": "affinity",
       "type": "object"
     },
+    "applicationType": {
+      "default": "java",
+      "title": "applicationType",
+      "type": "string"
+    },
     "applicationYaml": {
       "additionalProperties": false,
       "description": "Additional application properties",
@@ -1266,7 +1271,8 @@
     "podDisruptionBudget",
     "networkPolicy",
     "slo",
-    "tests"
+    "tests",
+    "applicationType"
   ],
   "type": "object"
 }

@@ -21,7 +21,7 @@ automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
 UI ServiceAccount. Usage: {{ include "chart-libs.ui-serviceAccount" . }}
 */}}
 {{- define "chart-libs.ui-serviceAccount" -}}
-{{- if and .Values.ui.serviceAccount .Values.ui.serviceAccount.create -}}
+{{- if and .Values.ui .Values.ui.serviceAccount .Values.ui.serviceAccount.create -}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
