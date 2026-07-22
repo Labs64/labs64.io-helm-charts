@@ -1,0 +1,22 @@
+ui:
+  image:
+    repository: localhost:5005/customer-portal-ui
+    tag: latest
+    pullPolicy: Always
+  
+  application:
+    runtimeEnv:
+      # Enable loading a runtime config file (env.json).
+      enabled: true
+      # Strict mode: if true, the container must not start when env.json is missing/invalid.
+      strict: true
+      # Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).
+      env:
+        # Primary API base URL
+        VITE_API_URL: http://localhost:8010
+  
+  gateway:
+    enabled: true
+  
+  networkPolicy:
+    enabled: true

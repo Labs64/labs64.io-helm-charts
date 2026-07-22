@@ -29,3 +29,12 @@ secrets:
   data:
     SPRING_RABBITMQ_USERNAME: <your-broker-username>
     SPRING_RABBITMQ_PASSWORD: <your-broker-password>
+
+# RECOMMENDED for production: replace the inline secrets.data above with an
+# ExternalSecret sourced from your real secret backend (AWS Secrets Manager, Vault,
+# etc.) via a ClusterSecretStore you define — do not reuse the local dev
+# "local-kubernetes-store" (kubernetes-provider) outside of local/CI.
+# externalSecrets:
+#   enabled: true
+#   storeName: <your-clustersecretstore-name>
+#   secretKey: <key/path in your backend containing this app's secret map>

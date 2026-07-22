@@ -18,10 +18,10 @@ TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
 LOKI_CHART_VERSION := "6.24.0"
 
-LABS64IO_APPS := "cerbos traefik-authproxy gateway-common swagger-ui auditflow checkout checkout-ui payment-gateway customer-portal-ui"
+LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal"
 # Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
 # `up-full` enables observability on these once the monitoring stack is present.
-OBSERVABILITY_APPS := "traefik-authproxy auditflow checkout payment-gateway"
+OBSERVABILITY_APPS := "api-gateway auditflow checkout payment-gateway"
 
 # List available commands
 default:
@@ -88,11 +88,7 @@ generate-secrets:
 
 # Install all Labs64.IO apps
 install-all-apps:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    for app in {{LABS64IO_APPS}}; do
-        just install-app "$app"
-    done
+    helmfile -e {{ENV}} apply -l layer=apps
 
 # Uninstall all Labs64.IO apps
 uninstall-all-apps:
@@ -145,26 +141,43 @@ uninstall-app app:
 ## 🛠️ Core Tools ##
 
 # Install all core tools
-install-tools: install-tool-traefik install-tool-mock-oidc install-tool-rabbitmq install-tool-postgresql install-tool-redis
+install-tools: install-crds
+    helmfile -e {{ENV}} apply -l layer=infra
+    kubectl apply -f overrides/traefik/dashboard-httproute.yaml
+    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
+    kubectl apply -f overrides/eso/cluster-secret-store.yaml
 
 # Uninstall all core tools
-uninstall-tools: uninstall-tool-traefik uninstall-tool-mock-oidc uninstall-tool-rabbitmq uninstall-tool-postgresql uninstall-tool-redis
+uninstall-tools: uninstall-tool-traefik uninstall-tool-external-secrets uninstall-tool-mock-oidc uninstall-tool-rabbitmq uninstall-tool-postgresql uninstall-tool-redis
 
-# install Traefik
-install-tool-traefik:
+# Install the Gateway API (standard channel) + Traefik CRDs before the `traefik` Helm
+# release (Helmfile's release schema has no per-release skip-crds equivalent, and Helm
+# never upgrades CRDs bundled in a chart's crds/ directory after first install — so these
+# are managed here as an independently-versioned, re-appliable step. Helm/Helmfile only
+# install a chart's bundled CRDs "if not already present", so pre-seeding them here means
+# the `traefik` release's own bundled copies are simply skipped, no conflict).
+install-crds:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Installing Gateway API (standard channel) CRDs..."
     kubectl apply --server-side -f https://github.com/kubernetes-sigs/gateway-api/releases/download/{{GATEWAY_API_VERSION}}/standard-install.yaml
     echo "Installing Traefik CRDs..."
     helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
+
+# install Traefik standalone (bypasses helmfile — for single-tool workflows only;
+# `install-tools` uses helmfile for the actual release)
+install-tool-traefik: install-crds
     helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait --skip-crds
     kubectl apply -f overrides/traefik/dashboard-httproute.yaml
 
 # uninstall Traefik
 uninstall-tool-traefik:
     helm uninstall traefik --namespace {{NAMESPACE_TOOLS}} || true
-    helm uninstall traefik-crds --namespace {{NAMESPACE_TOOLS}} || true
+
+# uninstall External Secrets Operator + the local ClusterSecretStore/RBAC it serves
+uninstall-tool-external-secrets:
+    kubectl delete -f overrides/eso/cluster-secret-store.yaml --ignore-not-found
+    helm uninstall external-secrets --namespace {{NAMESPACE_TOOLS}} || true
 
 # install RabbitMQ (official image)
 install-tool-rabbitmq:
@@ -207,6 +220,7 @@ uninstall-tool-redis:
 # install mock OIDC provider (DEV ONLY - M2M tokens for local testing)
 install-tool-mock-oidc:
     kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
+    kubectl apply -f overrides/eso/cluster-secret-store.yaml
 
 # uninstall mock OIDC provider
 uninstall-tool-mock-oidc:
@@ -216,7 +230,8 @@ uninstall-tool-mock-oidc:
 ## 📊 Monitoring Tools ##
 
 # Install all monitoring tools
-install-monitoring: install-tool-metrics-server install-tool-opentelemetry install-tool-prometheus install-tool-loki install-tool-tempo install-tool-grafana
+install-monitoring:
+    helmfile -e {{ENV}} apply -l layer=monitoring
 
 # Uninstall all monitoring tools
 uninstall-monitoring: uninstall-tool-grafana uninstall-tool-tempo uninstall-tool-loki uninstall-tool-prometheus uninstall-tool-opentelemetry uninstall-tool-metrics-server
@@ -330,9 +345,9 @@ generate-schema: helm-tools
 generate-all: generate-docu generate-schema
 
 # Generate the Cerbos policy set + authproxy routes manifests from module OpenAPI
-# specs. Writes charts/cerbos/{policies,schemas} + charts/traefik-authproxy/routes.
+# specs. Writes charts/authz-pdp/{policies,schemas} + charts/api-gateway/routes.
 build-policies:
-    ./policies/build-cerbos-policies.sh
+    ./policies/build-authz-policies.sh
 
 # add external helm repositories
 repo-add:

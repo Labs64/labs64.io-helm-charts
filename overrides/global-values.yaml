@@ -1,0 +1,3 @@
+global:
+  domain: gateway.localhost
+  environment: local

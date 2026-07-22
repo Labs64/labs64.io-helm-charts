@@ -1,3 +1,6 @@
+externalSecrets:
+  enabled: false
+  storeName: local-kubernetes-store
 # -- Global values shared across Labs64.IO charts and Bitnami subcharts
 # @schema
 # type: object
@@ -298,14 +301,14 @@ gateway:
   parentRefs:
     - name: labs64io-gateway
       namespace: tools
-  # -- Names of the shared middlewares provided by the gateway-common chart
+  # -- Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)
   sharedMiddlewares:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
     compress: gateway-common-compress
   # -- Auth-policy publication. NOTE: the traefik-authproxy no longer
   # live-discovers per-module policies via /.well-known/auth-policy — it loads a
-  # generated routes manifest (charts/traefik-authproxy/routes/) and asks the
+  # generated routes manifest (charts/api-gateway/routes/) and asks the
   # central Cerbos PDP for every decision. This block is retained for backward
   # compatibility and is a no-op for edge enforcement.
   authPolicy:
@@ -352,7 +355,7 @@ networkPolicy:
     - to:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/name: cerbos
+              app.kubernetes.io/name: authz-pdp
       ports:
         - protocol: TCP
           port: 3593

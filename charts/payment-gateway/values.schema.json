@@ -155,6 +155,27 @@
       "title": "env",
       "type": "array"
     },
+    "externalSecrets": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "storeName": {
+          "default": "local-kubernetes-store",
+          "title": "storeName",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "storeName"
+      ],
+      "title": "externalSecrets",
+      "type": "object"
+    },
     "fullnameOverride": {
       "default": "",
       "title": "fullnameOverride",
@@ -166,7 +187,7 @@
       "properties": {
         "authPolicy": {
           "additionalProperties": false,
-          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/traefik-authproxy/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
+          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/api-gateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
           "properties": {
             "basePath": {
               "default": "",
@@ -300,7 +321,7 @@
         },
         "sharedMiddlewares": {
           "additionalProperties": false,
-          "description": "Names of the shared middlewares provided by the gateway-common chart",
+          "description": "Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)",
           "properties": {
             "auth": {
               "default": "gateway-common-auth",
@@ -642,7 +663,7 @@
                                   "additionalProperties": false,
                                   "properties": {
                                     "app.kubernetes.io/name": {
-                                      "default": "cerbos",
+                                      "default": "authz-pdp",
                                       "title": "app.kubernetes.io/name",
                                       "type": "string"
                                     }
@@ -1722,6 +1743,7 @@
     }
   },
   "required": [
+    "externalSecrets",
     "replicaCount",
     "image",
     "imagePullSecrets",

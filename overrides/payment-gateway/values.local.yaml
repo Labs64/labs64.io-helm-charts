@@ -23,4 +23,4 @@ env:
   - name: LABS64_AUTH_AUTHZ_MODE
     value: SHADOW
   - name: LABS64_AUTH_AUTHZ_PDPADDRESS
-    value: labs64io-cerbos.labs64io.svc.cluster.local:3593
+    value: labs64io-authz-pdp.labs64io.svc.cluster.local:3593

@@ -33,3 +33,12 @@ secrets:
     SPRING_DATASOURCE_USERNAME: <your-db-username>
     SPRING_DATASOURCE_PASSWORD: <your-db-password>
     SPRING_DATA_REDIS_PASSWORD: <your-redis-password>
+
+# RECOMMENDED for production: replace the inline secrets.data above with an
+# ExternalSecret sourced from your real secret backend (AWS Secrets Manager, Vault,
+# etc.) via a ClusterSecretStore you define — do not reuse the local dev
+# "local-kubernetes-store" (kubernetes-provider) outside of local/CI.
+# externalSecrets:
+#   enabled: true
+#   storeName: <your-clustersecretstore-name>
+#   secretKey: <key/path in your backend containing this app's secret map>

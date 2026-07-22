@@ -20,4 +20,26 @@ env:
   - name: LABS64_AUTH_AUTHZ_MODE
     value: SHADOW
   - name: LABS64_AUTH_AUTHZ_PDPADDRESS
-    value: labs64io-cerbos.labs64io.svc.cluster.local:3593
+    value: labs64io-authz-pdp.labs64io.svc.cluster.local:3593
+ui:
+  image:
+    repository: localhost:5005/checkout-ui
+    tag: latest
+    pullPolicy: Always
+  
+  application:
+    runtimeEnv:
+      # Enable loading a runtime config file (env.json).
+      enabled: true
+      # Strict mode: if true, the container must not start when env.json is missing/invalid (e.g., ConfigMap not mounted).
+      strict: true
+      # Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).
+      env:
+        # Primary API base URL — replace <HOST> with your domain/host.
+        VITE_API_URL: http://localhost:8010
+  
+  gateway:
+    enabled: true
+  
+  networkPolicy:
+    enabled: true

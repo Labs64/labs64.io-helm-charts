@@ -1,1 +1,0 @@
-{{ include "chart-libs.test-connection" . }}

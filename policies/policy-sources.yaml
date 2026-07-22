@@ -1,6 +1,6 @@
 # declares which modules' auth policies are generated into the Cerbos
 # PDP's policy set, and where each module's OpenAPI contract lives (relative to
-# the helm-charts repo root). CI (build-cerbos-policies.sh) generates one Cerbos
+# the helm-charts repo root). CI (build-authz-policies.sh) generates one Cerbos
 # resource-policy set + routes manifest per module from these specs via the
 # commons OpenApiAuthPreprocessor — OpenAPI stays the single source of truth.
 #

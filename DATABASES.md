@@ -10,10 +10,10 @@ database credentials or connect to another service's database.
 | checkout | `checkout` | — | yes | Transaction processing |
 | payment-gateway | `payment_gateway` | yes | yes | Billing + idempotency cache |
 | auditflow | — | yes | yes | Idempotency/dedup store |
-| traefik-authproxy | — | — | — | Stateless |
-| checkout-ui | — | — | — | Stateless |
-| customer-portal-ui | — | — | — | Stateless |
-| swagger-ui | — | — | — | Stateless |
+| api-gateway | — | — | — | Stateless |
+| authz-pdp | — | — | — | Stateless (policies mounted via ConfigMap) |
+| customer-portal | — | — | — | Stateless |
+| api-docs | — | — | — | Stateless |
 
 ## Deployment Modes
 

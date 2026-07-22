@@ -1,0 +1,4 @@
+{{- if .Values.ui.enabled }}
+{{ include "chart-libs.networkpolicy" . }}
+
+{{- end }}

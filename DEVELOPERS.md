@@ -11,6 +11,7 @@ Install these tools before starting:
 | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | latest | Container runtime |
 | [k3d](https://k3d.io/) | v5.x+ | Local k3s (lightweight Kubernetes) |
 | [Helm](https://helm.sh/) | v3.x+ | Kubernetes package manager |
+| [Helmfile](https://helmfile.io/) | v1.x+ | Declarative multi-release orchestration (`just up`/`install-tools`/`install-all-apps`) |
 | [kubectl](https://kubernetes.io/docs/tasks/tools/) | v1.28+ | Kubernetes CLI |
 | [just](https://github.com/casey/just) | latest | Task runner (each repo has a justfile) |
 | [curl](https://curl.se/) | latest | API testing |
@@ -68,9 +69,8 @@ graph TB
         subgraph ns_labs64io["Namespace: labs64io (Labs64 Modules)"]
             
             subgraph Gateway["Gateway & Auth"]
-                swagger_ui["swagger-ui<br/>(Swagger UI)"]:::labs64
-                gateway_common["gateway-common<br/>(Middlewares)"]:::labs64
-                authproxy["traefik-authproxy"]:::labs64
+                api_docs["api-docs<br/>(Swagger UI)"]:::labs64
+                authproxy["api-gateway<br/>(AuthProxy + Middlewares)"]:::labs64
             end
             
             subgraph AuditFlow["AuditFlow"]
@@ -80,7 +80,7 @@ graph TB
             end
             
             subgraph Checkout["Checkout"]
-                checkout_fe["checkout-ui<br/>(Vue)"]:::labs64
+                checkout_fe["checkout ui.enabled<br/>(Vue)"]:::labs64
                 checkout_be["checkout-be<br/>(Java)"]:::labs64
             end
             
@@ -89,7 +89,7 @@ graph TB
             end
             
             subgraph CustomerPortal["Customer Portal"]
-                cp_fe["customer-portal-ui<br/>(Vue)"]:::labs64
+                cp_fe["customer-portal ui.enabled<br/>(Vue)"]:::labs64
             end
         end
     end
@@ -106,9 +106,9 @@ graph TB
 
     %% User Ingress Flow
     User((Developer)) -->|HTTP 80/443| traefik
-    traefik -.->|"ForwardAuth call (gateway-common middleware)"| authproxy
+    traefik -.->|"ForwardAuth call (api-gateway auth middleware)"| authproxy
     authproxy -->|Validates JWT against| mock_oidc
-    traefik -->|"Routes via Gateway API HTTPRoute (native filters + gateway-common middlewares via ExtensionRef)"| swagger_ui
+    traefik -->|"Routes via Gateway API HTTPRoute (native filters + api-gateway middlewares via ExtensionRef)"| api_docs
     traefik --> audit_be
     traefik --> checkout_be
     traefik --> pg_be
@@ -154,7 +154,7 @@ graph TB
 
 ### Request Flow
 
-Traefik receives external requests mapping on ports 80/443 and routes them via Kubernetes Gateway API `HTTPRoute`s (module-owned, attached to the platform `Gateway` `labs64io-gateway` in `tools`). Each protected route strips inbound `X-Auth-*` headers first (native `RequestHeaderModifier`), then calls the `traefik-authproxy` ForwardAuth middleware via an `ExtensionRef` filter. The proxy validates the `Authorization: Bearer` against the `Mock OIDC Provider` (generating fake JWT tokens for local environments). Validated requests pass through the remaining `gateway-common` middlewares (rate-limit, compress) before hitting the downstream microservices.
+Traefik receives external requests mapping on ports 80/443 and routes them via Kubernetes Gateway API `HTTPRoute`s (module-owned, attached to the platform `Gateway` `labs64io-gateway` in `tools`). Each protected route strips inbound `X-Auth-*` headers first (native `RequestHeaderModifier`), then calls the `api-gateway` ForwardAuth middleware via an `ExtensionRef` filter. The proxy validates the `Authorization: Bearer` against the `Mock OIDC Provider` (generating fake JWT tokens for local environments). Validated requests pass through the remaining `api-gateway` middlewares (rate-limit, compress) before hitting the downstream microservices.
 
 ## Building module images
 
@@ -269,41 +269,27 @@ just repo-update
 
 This adds repositories for: traefik, bitnami (RabbitMQ, PostgreSQL, Redis), open-telemetry, grafana, prometheus-community, metrics-server.
 
-### 3. Install Traefik (ingress controller)
+### 3-5. Install core tools (Traefik, ESO, RabbitMQ, PostgreSQL, Redis, mock OIDC)
+
+All infra tools are declared as [Helmfile](https://helmfile.io/) releases (`helmfile.yaml.gotmpl`,
+`layer: infra`) and installed together:
 
 ```bash
-just install-tool traefik
+just install-tools
 ```
 
-Installs Traefik v3 with CRDs. Wait for pods to be ready:
+This installs the Gateway API + Traefik CRDs (`just install-crds`, run first since Helmfile
+has no per-release CRD-skip equivalent), then via Helmfile: Traefik v3, [External Secrets
+Operator](https://external-secrets.io/) (ESO), RabbitMQ, PostgreSQL, and Redis — then applies
+the Traefik dashboard HTTPRoute, the mock OIDC provider, and the local `ClusterSecretStore`
+(`overrides/eso/cluster-secret-store.yaml`) that lets any chart opt into ESO-backed secrets via
+`externalSecrets.enabled` (see [Unified secret management](#unified-secret-management) below).
+
+To install/inspect a single tool, use its own recipe, e.g. `just install-tool-traefik`,
+`just install-tool-rabbitmq`, `just install-tool-postgresql`, `just install-tool-redis`,
+`just install-tool-mock-oidc` — or target just that Helmfile release/layer directly:
 ```bash
-kubectl get pods -n tools -l app.kubernetes.io/name=traefik
-```
-
-### 4. Install mock OIDC provider (for local dev)
-
-```bash
-just install-tool mock-oidc
-```
-
-This deploys a lightweight OIDC provider that issues M2M (Machine-to-Machine) JWT tokens. **For local development only.**
-
-Verify:
-```bash
-kubectl get pods -n tools -l app=mock-oidc
-```
-
-### 5. Install infrastructure dependencies
-
-```bash
-# RabbitMQ (message broker)
-just install-tool rabbitmq
-
-# PostgreSQL (checkout + payment-gateway databases)
-just install-tool postgresql
-
-# Redis (payment-gateway idempotency cache)
-just install-tool redis
+helmfile -e local -l name=rabbitmq apply
 ```
 
 Wait for all pods:
@@ -318,12 +304,31 @@ kubectl get pods -n tools
 just build-images
 ```
 
-**Note on Secrets:**
-Before installing the modules, make sure you have the required secrets configured. You can auto-generate the default local secrets from their `.example` templates by running:
+### Unified secret management
+
+Every chart with a `secret.yaml` supports two mutually-exclusive modes, toggled by
+`externalSecrets.enabled`:
+
+- **`false` (default, local):** a plain `Secret` rendered from `.Values.secrets.data`
+  (and, for `checkout`/`payment-gateway`, from `rabbitmq.auth`/`postgresql.auth`/`redis.auth`
+  when those bundled deps are enabled). Populated locally via `values.secrets.local.yaml`
+  (below) — never committed.
+- **`true` (opt-in locally, intended default for staging/prod):** an `ExternalSecret`
+  (`chart-libs.externalsecret`) that ESO resolves against a `ClusterSecretStore` — the
+  same object shape in every environment, only the backing store differs. Locally that
+  store is the `kubernetes`-provider `local-kubernetes-store` (installed by
+  `just install-tools`), which replicates a same-named Secret out of the `tools`
+  namespace; a real environment would point `externalSecrets.storeName` at a
+  ClusterSecretStore backed by AWS Secrets Manager, Vault, etc. See `overrides/<app>/values.prod-example.yaml`
+  for a documented example per app.
+
+**Local secrets (default mode):** before installing the modules, make sure you have the
+required secrets configured. Auto-generate the default local secrets from their `.example`
+templates by running:
 ```bash
 just generate-secrets
 ```
-This is done automatically when you run `just up`. These files are ignored by git but injected during the local helm upgrade.
+This is done automatically when you run `just up`. These files are ignored by git but injected during the local helm upgrade (and, since Helmfile adoption, by the matching `helmfile.yaml.gotmpl` release's conditional `values.secrets.local.yaml` entry).
 
 **Install all at once:**
 ```bash
@@ -333,14 +338,13 @@ just up
 
 **Or one at a time:**
 ```bash
-just install-app traefik-authproxy   # auth proxy (required first)
-just install-app gateway-common      # shared Traefik middlewares
-just install-app swagger-ui           # Swagger UI
+just install-app authz-pdp           # Cerbos PDP (required first)
+just install-app api-gateway         # auth proxy + shared Traefik middlewares
+just install-app api-docs            # Swagger UI
 just install-app auditflow           # audit logging
-just install-app checkout            # checkout backend
-just install-app checkout-ui         # checkout frontend
+just install-app checkout            # checkout backend + UI (ui.enabled)
 just install-app payment-gateway     # payment gateway
-just install-app customer-portal-ui  # customer portal frontend
+just install-app customer-portal      # customer portal UI (no backend yet)
 ```
 
 Verify all pods:
@@ -471,7 +475,7 @@ just show-errors
 # Specific module
 kubectl logs -n labs64io -l app.kubernetes.io/name=checkout --tail=100
 kubectl logs -n labs64io -l app.kubernetes.io/name=payment-gateway --tail=100
-kubectl logs -n labs64io -l app.kubernetes.io/name=traefik-authproxy --tail=100
+kubectl logs -n labs64io -l app.kubernetes.io/name=api-gateway --tail=100
 ```
 
 ### Reinstall a single module
@@ -562,14 +566,14 @@ Common causes:
 - Check Traefik is running: `kubectl get pods -n tools -l app.kubernetes.io/name=traefik`
 - Check HTTPRoutes are accepted: `kubectl get httproute -n labs64io` (details: `kubectl describe httproute <name> -n labs64io`)
 - Check the platform Gateway is programmed: `kubectl get gateway -n tools labs64io-gateway`
-- Check auth-proxy is running: `kubectl get pods -n labs64io -l app.kubernetes.io/name=traefik-authproxy`
+- Check auth-proxy is running: `kubectl get pods -n labs64io -l app.kubernetes.io/name=api-gateway`
 
 ### 401/403 on API calls
 
 - Verify token: `just generate-jwt admin`
-- Check the central PDP: `kubectl get deploy,svc -n labs64io -l app.kubernetes.io/name=cerbos` and `kubectl exec -n labs64io deploy/labs64io-cerbos -- /cerbos healthcheck --kind=grpc` (— the authproxy loads a generated routes manifest and asks Cerbos; there is no `/.well-known/auth-policy` discovery anymore) plus `kubectl exec -n labs64io deploy/labs64io-traefik-authproxy -- wget -qO- http://localhost:8081/health/ready`
-- Check static UI policies: `kubectl get configmap -n labs64io -l app.kubernetes.io/name=traefik-authproxy -o yaml` (renders `static_policies.yaml` from `staticPolicies`)
-- Check auth-proxy logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=traefik-authproxy`
+- Check the central PDP: `kubectl get deploy,svc -n labs64io -l app.kubernetes.io/name=authz-pdp` and `kubectl exec -n labs64io deploy/labs64io-authz-pdp -- /cerbos healthcheck --kind=grpc` (— the authproxy loads a generated routes manifest and asks Cerbos; there is no `/.well-known/auth-policy` discovery anymore) plus `kubectl exec -n labs64io deploy/gateway-common -- wget -qO- http://localhost:8081/health/ready`
+- Check static UI policies: `kubectl get configmap -n labs64io -l app.kubernetes.io/name=api-gateway -o yaml` (renders `static_policies.yaml` from `staticPolicies`)
+- Check auth-proxy logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=api-gateway`
 
 ### RabbitMQ connection refused
 

@@ -1,0 +1,35 @@
+replicaCount: 1
+
+image:
+  repository: localhost:5005/traefik-authproxy
+  tag: latest
+  pullPolicy: Always
+
+networkPolicy:
+  enabled: true
+
+env:
+  # mock-oauth2-server (just mock-oidc-install)
+  - name: OIDC_DISCOVERY_URL
+    value: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
+  - name: OIDC_AUDIENCE
+    value: account
+  - name: LOG_LEVEL
+    value: DEBUG
+  # Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to OIDC_AUDIENCE.
+  - name: TOKEN_SCOPES_CLAIM_PATHS
+    value: "scope,realm_access.roles,resource_access.{audience}.roles"
+  # Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
+  - name: TOKEN_TENANT_CLAIM_PATH
+    value: "tenant"
+  # Central Cerbos PDP — the authorization decision.
+  - name: CERBOS_URL
+    value: http://labs64io-authz-pdp:3592
+  - name: ROUTES_DIR
+    value: /app/routes
+  - name: STATIC_ROUTES_FILE
+    value: /opt/application-config/static_routes.yaml
+# Local development overrides for gateway-common
+rateLimit:
+  average: 100
+  burst: 50

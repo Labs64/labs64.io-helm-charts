@@ -48,16 +48,15 @@ Every module chart is standalone - install only what you need. Bundled infra
 | Module | Purpose | Infra (optional bundled) | Gateway routes (opt-in) | Install |
 |---|---|---|---|---|
 | auditflow | Audit logging | RabbitMQ | `/auditflow/api` (protected), `/auditflow/v3/api-docs` (public) | `helm install my-auditflow labs64io-pub/auditflow` |
-| checkout | Checkout API | RabbitMQ, PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public) | `helm install my-checkout labs64io-pub/checkout` |
-| checkout-ui | Checkout UI | - | `/checkout` (protected) | `helm install my-checkout-ui labs64io-pub/checkout-ui` |
+| checkout | Checkout API + UI (`ui.enabled`) | RabbitMQ, PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public), `/checkout` UI (protected) | `helm install my-checkout labs64io-pub/checkout` |
 | payment-gateway | Payments API | RabbitMQ, PostgreSQL, Redis | `/payment-gateway/api` (protected), `/payment-gateway/v3/api-docs` (public) | `helm install my-payments labs64io-pub/payment-gateway` |
-| customer-portal-ui | Customer portal | - | `/customer-portal` (protected) | `helm install my-portal labs64io-pub/customer-portal-ui` |
-| gateway-common | Shared Traefik middlewares (auth, rate limit, headers) | - | n/a | `helm install gateway-common labs64io-pub/gateway-common` |
-| traefik-authproxy | ForwardAuth OIDC/JWT verifier | - | n/a | `helm install authproxy labs64io-pub/traefik-authproxy` |
-| swagger-ui | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install swagger-ui labs64io-pub/swagger-ui` |
+| customer-portal | Customer portal UI (no backend yet; `ui.enabled`) | - | `/customer-portal` (protected) | `helm install my-portal labs64io-pub/customer-portal` |
+| api-gateway | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (auth, rate limit, headers) | - | n/a | `helm install api-gateway labs64io-pub/api-gateway` |
+| authz-pdp | Cerbos PDP — central authorization decision point | - | n/a | `helm install authz-pdp labs64io-pub/authz-pdp` |
+| api-docs | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install api-docs labs64io-pub/api-docs` |
 
 Gateway integration (`gateway.enabled: true`) requires Traefik v3 CRDs plus the
-`gateway-common` and `traefik-authproxy` charts; without them, use the standard
+`api-gateway` chart (ForwardAuth + shared middlewares); without them, use the standard
 `ingress.enabled` with any ingress controller.
 
 Local testing: `just mock-oidc-install` (dev-only M2M tokens),

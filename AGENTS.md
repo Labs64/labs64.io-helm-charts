@@ -7,17 +7,16 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | Path | Purpose |
 |------|---------|
 | `charts/auditflow/` | AuditFlow backend + transformer + sink |
-| `charts/checkout/` | Checkout backend |
-| `charts/checkout-ui/` | Checkout frontend |
+| `charts/checkout/` | Checkout backend + UI (`ui.enabled`, templates prefixed `ui-*`) |
 | `charts/payment-gateway/` | Payment gateway backend |
-| `charts/customer-portal/` | Customer portal backend |
-| `charts/customer-portal-ui/` | Customer portal frontend |
-| `charts/swagger-ui/` | Swagger UI aggregator |
-| `charts/gateway-common/` | Shared Traefik middlewares |
-| `charts/traefik-authproxy/` | ForwardAuth OIDC/JWT verifier |
+| `charts/customer-portal/` | Customer portal UI (no backend yet; `ui.enabled`, templates prefixed `ui-*`) |
+| `charts/api-docs/` | Swagger UI aggregator (formerly `swagger-ui`) |
+| `charts/api-gateway/` | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (merged `traefik-authproxy` + `gateway-common`; `fullnameOverride: gateway-common` keeps the stable middleware-name prefix) |
+| `charts/authz-pdp/` | Cerbos PDP — central authorization decision point (formerly `cerbos`) |
 | `charts/preflight/` | Infrastructure readiness checks |
 | `charts/chart-libs/` | Shared Helm library (all charts depend on this) |
-| `overrides/` | Per-module values files for different profiles |
+| `helmfile.yaml.gotmpl` | Helmfile state — infra/monitoring/app releases for local + CI deployments |
+| `overrides/` | Per-module values files for different profiles; `overrides/eso/` holds the local `ClusterSecretStore` + RBAC for External Secrets Operator |
 | `DEVELOPERS.md` | Local development setup guide with architecture diagram |
 | `OBSERVABILITY.md` | Canonical observability model for the whole ecosystem (infrastructure-owned instrumentation) |
 
@@ -27,6 +26,8 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 2. **All module charts depend on `chart-libs`** — do not break this dependency.
 3. **Credentials are Kubernetes Secrets** — never ConfigMaps for sensitive data.
 4. **Observability is infrastructure-owned** — toggle it via `observability.enabled` (env/annotation injection only); never add OTel SDK deps to services. See [`OBSERVABILITY.md`](OBSERVABILITY.md).
+5. **Local + CI deployments go through Helmfile** (`helmfile.yaml.gotmpl`, drives `just up`/`install-tools`/`install-all-apps`) — do not reintroduce raw per-tool `helm upgrade --install` calls into that path; ArgoCD (`labs64.io-devops`) remains the separate GitOps path for real environments.
+6. **Secret management is unified via `externalSecrets.enabled`** on every chart with a `secret.yaml`: `false` (default) renders a plain `Secret` from `.Values.secrets.data`; `true` renders an `ExternalSecret` resolved through a `ClusterSecretStore` (local: `overrides/eso/cluster-secret-store.yaml`'s `kubernetes`-provider store; real environments: point `externalSecrets.storeName` at a real backend). Same object shape everywhere — only the backing store differs.
 
 ## Provisioning profiles
 
@@ -39,10 +40,11 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 ## Build, run, test
 
 ```bash
-just local-up                # k3d cluster + all modules
-just local-up-full           # + monitoring stack
-just local-down              # delete cluster
-just labs64io-auditflow-install  # install single module
+just up                      # k3d cluster + registry + all modules (Helmfile-driven)
+just up-full                 # + monitoring stack, observability enabled
+just reset                   # uninstall apps/monitoring/tools, keep the cluster
+just cluster-down            # delete the k3d cluster
+just install-app auditflow   # install/reinstall a single module
 just generate-all            # regenerate chart README + values.schema.json
 ```
 
