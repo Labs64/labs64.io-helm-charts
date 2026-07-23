@@ -32,13 +32,13 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | checkout.enabled | bool | `true` |  |
 | customer-portal.enabled | bool | `true` |  |
 | global.postgresql.database | string | `"labs64io"` |  |
-| global.postgresql.host | string | `"{{ .Release.Name }}-postgresql"` |  |
+| global.postgresql.host | string | `"labs64io-postgresql"` |  |
 | global.postgresql.port | int | `5432` |  |
 | global.postgresql.username | string | `"labs64"` |  |
-| global.rabbitmq.host | string | `"{{ .Release.Name }}-rabbitmq"` |  |
+| global.rabbitmq.host | string | `"labs64io-rabbitmq"` |  |
 | global.rabbitmq.port | int | `5672` |  |
 | global.rabbitmq.username | string | `"labs64"` |  |
-| global.redis.host | string | `"{{ .Release.Name }}-redis-master"` |  |
+| global.redis.host | string | `"labs64io-redis-master"` |  |
 | global.redis.port | int | `6379` |  |
 | global.sharedConfig.enabled | bool | `true` |  |
 | global.sharedConfig.name | string | `"labs64io-shared-config"` |  |
@@ -51,14 +51,17 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | postgresql.auth.secretKeys.userPasswordKey | string | `"SPRING_DATASOURCE_PASSWORD"` |  |
 | postgresql.auth.username | string | `"labs64"` |  |
 | postgresql.enabled | bool | `true` |  |
+| postgresql.fullnameOverride | string | `"labs64io-postgresql"` | Pinned so `global.postgresql.host` above can be a plain string (standalone architecture: no "-primary" suffix on the resulting service name) |
 | rabbitmq.auth.existingPasswordSecret | string | `"labs64io-shared-secret"` |  |
 | rabbitmq.auth.existingSecretPasswordKey | string | `"SPRING_RABBITMQ_PASSWORD"` |  |
 | rabbitmq.auth.username | string | `"labs64"` |  |
 | rabbitmq.enabled | bool | `true` |  |
+| rabbitmq.fullnameOverride | string | `"labs64io-rabbitmq"` | Pinned so `global.rabbitmq.host` above can be a plain string |
 | redis.architecture | string | `"standalone"` |  |
 | redis.auth.existingSecret | string | `"labs64io-shared-secret"` |  |
 | redis.auth.existingSecretPasswordKey | string | `"SPRING_DATA_REDIS_PASSWORD"` |  |
 | redis.enabled | bool | `true` |  |
+| redis.fullnameOverride | string | `"labs64io-redis"` | Pinned so `global.redis.host` above can be a plain string (standalone architecture: the primary/master service is named "<fullnameOverride>-master") |
 | secrets.postgresqlPassword | string | `"labs64_dev_password"` |  |
 | secrets.rabbitmqPassword | string | `"labs64_dev_password"` |  |
 | secrets.redisPassword | string | `"labs64_dev_password"` |  |

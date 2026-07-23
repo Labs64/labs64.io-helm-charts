@@ -28,7 +28,7 @@
                   "additionalProperties": false,
                   "properties": {
                     "host": {
-                      "default": "{{ if and .Values.global .Values.global.redis }}{{ tpl (.Values.global.redis.host | default \"redis.tools.svc.cluster.local\") . }}{{ else }}redis.tools.svc.cluster.local{{ end }}",
+                      "default": "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}",
                       "description": "Redis host",
                       "title": "host",
                       "type": "string"
@@ -58,7 +58,7 @@
               "additionalProperties": false,
               "properties": {
                 "url": {
-                  "default": "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ tpl (.Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\") . }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/checkout",
+                  "default": "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/checkout",
                   "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL\nUsername/password are NOT set here — this block renders into a plain ConfigMap.\nSet credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`\n(a Secret, injected via envFrom) instead — see `secrets.data` below.",
                   "title": "url",
                   "type": "string"
@@ -74,7 +74,7 @@
               "additionalProperties": false,
               "properties": {
                 "host": {
-                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ tpl (.Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\") . }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}",
+                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}",
                   "description": "RabbitMQ host",
                   "title": "host",
                   "type": "string"

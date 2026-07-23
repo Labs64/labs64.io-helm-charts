@@ -99,7 +99,7 @@
       "properties": {
         "postgresql": {
           "additionalProperties": false,
-          "description": "External dependencies",
+          "description": "External dependencies. Plain, fixed hostnames — the bundled Bitnami subcharts below are\npinned to matching `fullnameOverride`s, so these never need release-name templating (a\n`{{ .Release.Name }}-postgresql`-style string here would need a second `tpl` pass wherever\nit's consumed, which is exactly the class of bug this fixed-naming setup avoids).",
           "properties": {
             "database": {
               "default": "labs64io",
@@ -107,7 +107,7 @@
               "type": "string"
             },
             "host": {
-              "default": "{{ .Release.Name }}-postgresql",
+              "default": "labs64io-postgresql",
               "title": "host",
               "type": "string"
             },
@@ -135,7 +135,7 @@
           "additionalProperties": false,
           "properties": {
             "host": {
-              "default": "{{ .Release.Name }}-rabbitmq",
+              "default": "labs64io-rabbitmq",
               "title": "host",
               "type": "string"
             },
@@ -162,7 +162,7 @@
           "additionalProperties": false,
           "properties": {
             "host": {
-              "default": "{{ .Release.Name }}-redis-master",
+              "default": "labs64io-redis-master",
               "title": "host",
               "type": "string"
             },
@@ -303,10 +303,17 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "fullnameOverride": {
+          "default": "labs64io-postgresql",
+          "description": "Pinned so `global.postgresql.host` above can be a plain string (standalone\narchitecture: no \"-primary\" suffix on the resulting service name)",
+          "title": "fullnameOverride",
+          "type": "string"
         }
       },
       "required": [
-        "enabled"
+        "enabled",
+        "fullnameOverride"
       ],
       "title": "postgresql",
       "type": "object"
@@ -345,10 +352,17 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "fullnameOverride": {
+          "default": "labs64io-rabbitmq",
+          "description": "Pinned so `global.rabbitmq.host` above can be a plain string",
+          "title": "fullnameOverride",
+          "type": "string"
         }
       },
       "required": [
-        "enabled"
+        "enabled",
+        "fullnameOverride"
       ],
       "title": "rabbitmq",
       "type": "object"
@@ -386,11 +400,18 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "fullnameOverride": {
+          "default": "labs64io-redis",
+          "description": "Pinned so `global.redis.host` above can be a plain string (standalone architecture:\nthe primary/master service is named \"\u003cfullnameOverride\u003e-master\")",
+          "title": "fullnameOverride",
+          "type": "string"
         }
       },
       "required": [
         "enabled",
-        "architecture"
+        "architecture",
+        "fullnameOverride"
       ],
       "title": "redis",
       "type": "object"

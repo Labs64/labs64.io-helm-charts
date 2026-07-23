@@ -213,16 +213,16 @@ applicationYaml:
       # Username/password are NOT set here — this block renders into a plain ConfigMap.
       # Set credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`
       # (a Secret, injected via envFrom) instead — see `secrets.data` below.
-      url: "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ tpl (.Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\") . }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"
+      url: "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"
     rabbitmq:
       # -- RabbitMQ host
-      host: "{{ if and .Values.global .Values.global.rabbitmq }}{{ tpl (.Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\") . }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}"
+      host: "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}"
       # -- RabbitMQ port
       port: '{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}'
     data:
       redis:
         # -- Redis host
-        host: "{{ if and .Values.global .Values.global.redis }}{{ tpl (.Values.global.redis.host | default \"redis.tools.svc.cluster.local\") . }}{{ else }}redis.tools.svc.cluster.local{{ end }}"
+        host: "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}"
         # -- Redis port
         port: '{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}'
 

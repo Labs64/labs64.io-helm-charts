@@ -51,26 +51,51 @@ below for what each module needs.
 | Module | Purpose | Infra required (BYO) | Gateway routes (opt-in) | Install |
 |---|---|---|---|---|
 | auditflow | Audit logging | RabbitMQ | `/auditflow/api` (protected), `/auditflow/v3/api-docs` (public) | `helm install my-auditflow labs64io-pub/auditflow` |
-| checkout | Checkout API + UI (`ui.enabled`) | RabbitMQ, PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public), `/checkout` UI (protected) | `helm install my-checkout labs64io-pub/checkout` |
+| checkout | Checkout API + UI (`ui.enabled`) | RabbitMQ, PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public), `/checkout` UI (public — static assets, no Bearer token on plain navigation) | `helm install my-checkout labs64io-pub/checkout` |
 | payment-gateway | Payments API | RabbitMQ, PostgreSQL, Redis | `/payment-gateway/api` (protected), `/payment-gateway/v3/api-docs` (public) | `helm install my-payments labs64io-pub/payment-gateway` |
-| customer-portal | Customer portal UI (no backend yet; `ui.enabled`) | - | `/customer-portal` (protected) | `helm install my-portal labs64io-pub/customer-portal` |
+| customer-portal | Customer portal UI (no backend yet; `ui.enabled`) | - | `/customer-portal` (public — static assets, no Bearer token on plain navigation) | `helm install my-portal labs64io-pub/customer-portal` |
 | api-gateway | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (auth, rate limit, headers) | - | n/a | `helm install api-gateway labs64io-pub/api-gateway` |
 | authz-pdp | Cerbos PDP — central authorization decision point | - | n/a | `helm install authz-pdp labs64io-pub/authz-pdp` |
 | api-docs | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install api-docs labs64io-pub/api-docs` |
 
-Gateway integration (`gateway.enabled: true`, Gateway API `HTTPRoute`) requires Traefik v3
-+ Gateway API CRDs plus the `api-gateway` chart (ForwardAuth + shared middlewares). There is
-no legacy `Ingress` fallback — every module routes exclusively through Gateway API.
+Prefer Gateway API (`gateway.enabled: true`, Traefik v3 + Gateway API CRDs + the
+`api-gateway` chart for ForwardAuth/shared middlewares) — it's the only path that enforces
+ForwardAuth/Cerbos authorization and strips inbound `X-Auth-*` headers. If the cluster has no
+Gateway API CRDs, every chart falls back to a plain `networking.k8s.io/v1` Ingress
+(`gateway.annotations`, `gateway.ingressClassName` configure it) — but **only for routes marked
+`public: true`**; a protected route (e.g. `/checkout/api`) has no Ingress equivalent for
+ForwardAuth/Cerbos enforcement, so the chart fails the render rather than silently exposing it.
+Install the Gateway API CRDs if you need protected routes on a cluster that lacks them.
 
 Local testing: `just install-tool-mock-oidc` (dev-only M2M tokens),
 `just install-app <module>`, `helm test labs64io-<module> -n labs64io`.
+
+### One-click full stack (umbrella chart)
+
+`labs64io-ecosystem` is an umbrella chart that installs every module plus optional bundled
+PostgreSQL/RabbitMQ/Redis (`postgresql.enabled` / `rabbitmq.enabled` / `redis.enabled`, on by
+default) with credentials pre-wired end-to-end via a shared `Secret`. Cherry-pick within it
+with `--set <module>.enabled=false`:
+
+```
+helm install labs64io labs64io-pub/labs64io-ecosystem
+```
+
+Use the umbrella chart for a full local/demo stack; install individual module charts directly
+(table above) to cherry-pick just what you need against your own infrastructure.
 
 ### Provisioning profiles
 
 | Profile | File | Use case |
 |---|---|---|
 | shared local | `overrides/<module>/values.local.yaml` | dev cluster with the shared toolset (`just up`) |
+| standalone / BYO | `charts/<module>/values.standalone.yaml` (checkout, payment-gateway, auditflow) | install the module alone, pointed at your own PostgreSQL/RabbitMQ/Redis |
 | BYO / production | `overrides/<module>/values.prod-example.yaml` | copy & adapt: your infrastructure, credentials via `secrets.data` (ESO recommended) |
+
+Network policies also accept `networkPolicy.ingressControllerLabels` (pod-selector labels for a
+non-Traefik ingress controller, e.g. `app.kubernetes.io/name: nginx`) and
+`networkPolicy.observabilityNamespace` (default `monitoring`) when your cluster's naming differs
+from the defaults.
 
 ### Capability requirements (bring-your-own infrastructure)
 

@@ -57,18 +57,21 @@ global:
     enabled: true
     name: "labs64io-shared-secret"
   
-  # External dependencies
+  # External dependencies. Plain, fixed hostnames — the bundled Bitnami subcharts below are
+  # pinned to matching `fullnameOverride`s, so these never need release-name templating (a
+  # `{{ .Release.Name }}-postgresql`-style string here would need a second `tpl` pass wherever
+  # it's consumed, which is exactly the class of bug this fixed-naming setup avoids).
   postgresql:
-    host: '{{ .Release.Name }}-postgresql'
+    host: "labs64io-postgresql"
     port: 5432
     username: "labs64"
     database: "labs64io"
   rabbitmq:
-    host: '{{ .Release.Name }}-rabbitmq'
+    host: "labs64io-rabbitmq"
     port: 5672
     username: "labs64"
   redis:
-    host: '{{ .Release.Name }}-redis-master'
+    host: "labs64io-redis-master"
     port: 6379
 
 secrets:
@@ -86,6 +89,9 @@ secrets:
 # @schema
 postgresql:
   enabled: true
+  # -- Pinned so `global.postgresql.host` above can be a plain string (standalone
+  # architecture: no "-primary" suffix on the resulting service name)
+  fullnameOverride: "labs64io-postgresql"
   # @schema
   # type: object
   # additionalProperties: true
@@ -108,6 +114,8 @@ postgresql:
 # @schema
 rabbitmq:
   enabled: true
+  # -- Pinned so `global.rabbitmq.host` above can be a plain string
+  fullnameOverride: "labs64io-rabbitmq"
   # @schema
   # type: object
   # additionalProperties: true
@@ -124,6 +132,9 @@ rabbitmq:
 redis:
   enabled: true
   architecture: standalone
+  # -- Pinned so `global.redis.host` above can be a plain string (standalone architecture:
+  # the primary/master service is named "<fullnameOverride>-master")
+  fullnameOverride: "labs64io-redis"
   # @schema
   # type: object
   # additionalProperties: true
