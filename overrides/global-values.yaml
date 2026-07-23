@@ -1,5 +1,11 @@
 global:
-  domain: gateway.localhost
+  # Root domain only — chart-libs' _gateway.tpl prepends "gateway." itself
+  # (`printf "gateway.%s" $domain`) to build the shared Gateway hostname, the same way
+  # Grafana/dashboard/mock-oidc each get their own subdomain on this root. Setting this to
+  # "gateway.localhost" (as opposed to "localhost") doubles up to "gateway.gateway.localhost",
+  # which every HTTPRoute would then render with — and since Traefik has no matching listener
+  # for that host, every request 404s at the edge instead of reaching the app.
+  domain: localhost
   environment: local
   postgresql:
     host: "postgresql.tools.svc.cluster.local"
@@ -8,5 +14,9 @@ global:
     host: "rabbitmq.tools.svc.cluster.local"
     port: 5672
   redis:
-    host: "redis.tools.svc.cluster.local"
+    # Bitnami redis is installed with `architecture: replication` (overrides/redis/values.local.yaml),
+    # which names its services redis-master/redis-replicas/redis-headless — there is no plain
+    # "redis" service, so that hostname never resolves (DataRedisReactiveHealthIndicator DOWN,
+    # NXDOMAIN). Point at the master, which serves both reads and writes.
+    host: "redis-master.tools.svc.cluster.local"
     port: 6379

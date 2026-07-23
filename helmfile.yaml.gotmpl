@@ -147,6 +147,7 @@ releases:
     chart: ./charts/authz-pdp
     values:
       - ./charts/authz-pdp/values.yaml
+      - ./overrides/global-values.yaml
       - ./overrides/authz-pdp/values.{{ .Environment.Name }}.yaml
     labels:
       layer: apps
@@ -158,6 +159,7 @@ releases:
     chart: ./charts/api-gateway
     values:
       - ./charts/api-gateway/values.yaml
+      - ./overrides/global-values.yaml
       - ./overrides/api-gateway/values.{{ .Environment.Name }}.yaml
     labels:
       layer: apps
@@ -169,6 +171,7 @@ releases:
     chart: ./charts/api-docs
     values:
       - ./charts/api-docs/values.yaml
+      - ./overrides/global-values.yaml
       - ./overrides/api-docs/values.{{ .Environment.Name }}.yaml
     labels:
       layer: apps
@@ -180,6 +183,7 @@ releases:
     chart: ./charts/auditflow
     values:
       - ./charts/auditflow/values.yaml
+      - ./overrides/global-values.yaml
       - ./overrides/auditflow/values.{{ .Environment.Name }}.yaml
       # Static local secrets file (see `just generate-secrets`). Not SOPS-encrypted, so a
       # plain conditional value file rather than helmfile's `secrets:` (SOPS) mechanism.
@@ -197,6 +201,7 @@ releases:
     chart: ./charts/checkout
     values:
       - ./charts/checkout/values.yaml
+      - ./overrides/global-values.yaml
       - ./overrides/checkout/values.{{ .Environment.Name }}.yaml
       {{- if isFile (printf "./overrides/checkout/values.secrets.%s.yaml" .Environment.Name) }}
       - ./overrides/checkout/values.secrets.{{ .Environment.Name }}.yaml
@@ -212,6 +217,7 @@ releases:
     chart: ./charts/payment-gateway
     values:
       - ./charts/payment-gateway/values.yaml
+      - ./overrides/global-values.yaml
       - ./overrides/payment-gateway/values.{{ .Environment.Name }}.yaml
       {{- if isFile (printf "./overrides/payment-gateway/values.secrets.%s.yaml" .Environment.Name) }}
       - ./overrides/payment-gateway/values.secrets.{{ .Environment.Name }}.yaml
@@ -228,6 +234,7 @@ releases:
     chart: ./charts/customer-portal
     values:
       - ./charts/customer-portal/values.yaml
+      - ./overrides/global-values.yaml
       - ./overrides/customer-portal/values.{{ .Environment.Name }}.yaml
     labels:
       layer: apps

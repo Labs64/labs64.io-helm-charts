@@ -108,6 +108,7 @@ install-app app:
       "--namespace" "{{NAMESPACE_LABS64IO}}"
       "--create-namespace"
       "-f" "./charts/{{app}}/values.yaml"
+      "-f" "./overrides/global-values.yaml"
       "-f" "./overrides/{{app}}/values.{{ENV}}.yaml"
     )
     if [ -f "./overrides/{{app}}/values.secrets.{{ENV}}.yaml" ]; then
@@ -226,8 +227,17 @@ uninstall-tool-mock-oidc:
 ## 📊 Monitoring Tools ##
 
 # Install all monitoring tools
-install-monitoring:
+install-monitoring: install-monitoring-crds
     helmfile -e {{ENV}} apply -l layer=monitoring
+
+# Pre-install kube-prometheus-stack's CRDs (Prometheus/PrometheusRule/ServiceMonitor/etc.).
+# Helm only applies a chart's bundled crds/ during actual install/upgrade, but helmfile's
+# helm-diff plugin renders+diffs first (even for a brand-new release) and needs those types
+# already registered to resolve REST mappings — without this, `install-monitoring` fails with
+# "no matches for kind Prometheus/PrometheusRule/ServiceMonitor in version monitoring.coreos.com/v1"
+# on a fresh cluster. Mirrors the Traefik/Gateway API CRD pre-install in `install-crds`.
+install-monitoring-crds:
+    helm show crds prometheus-community/kube-prometheus-stack --version {{PROMETHEUS_STACK_CHART_VERSION}} | kubectl apply --server-side -f -
 
 # Uninstall all monitoring tools
 uninstall-monitoring: uninstall-tool-grafana uninstall-tool-tempo uninstall-tool-loki uninstall-tool-prometheus uninstall-tool-opentelemetry uninstall-tool-metrics-server
