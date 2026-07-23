@@ -95,7 +95,7 @@ gateway:
   # @schema
   routes: []
   #  - path: /swagger-ui
-  #    service: { name: labs64io-swagger-ui, port: 8080 }
+  #    service: { name: labs64io-api-docs, port: 8080 }
   #    stripPrefix: true
   #  - path: /
   #    pathType: Exact

@@ -1245,7 +1245,7 @@
         },
         "gateway": {
           "additionalProperties": false,
-          "description": "Gateway routes published by this module (rendered by chart-libs.gateway-routes)",
+          "description": "Gateway routes published by this module (rendered by chart-libs.ui-gateway-routes)",
           "properties": {
             "enabled": {
               "default": false,
@@ -1305,11 +1305,17 @@
                         "default": 8080,
                         "title": "port",
                         "type": "integer"
+                      },
+                      "public": {
+                        "default": true,
+                        "title": "public",
+                        "type": "boolean"
                       }
                     },
                     "required": [
                       "path",
-                      "port"
+                      "port",
+                      "public"
                     ],
                     "type": "object"
                   }

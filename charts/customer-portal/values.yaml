@@ -98,9 +98,13 @@ ui:
       compress: gateway-common-compress
     # -- Routes exposed by this module
     routes:
-      # -- Customer Portal UI (protected)
+      # -- Customer Portal UI static assets. Public: a plain browser navigation can't
+      # attach a Bearer token, and the auth-proxy's ForwardAuth policy set is generated
+      # from module OpenAPI specs, so it has no entry for a bare UI path anyway (would
+      # 403 regardless). This module has no backend API of its own yet.
       - path: ""
         port: 8080
+        public: true
   podDisruptionBudget:
     enabled: false
     minAvailable: 1

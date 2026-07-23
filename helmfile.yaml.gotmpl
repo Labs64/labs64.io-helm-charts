@@ -54,7 +54,8 @@ releases:
     chart: bitnami/rabbitmq
     version: 16.0.14
     values:
-      - overrides/rabbitmq/values.secrets.local.yaml
+      - overrides/rabbitmq/values.{{ .Environment.Name }}.yaml
+      - overrides/rabbitmq/values.secrets.{{ .Environment.Name }}.yaml
     labels:
       layer: infra
 

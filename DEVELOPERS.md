@@ -169,8 +169,10 @@ Before building images, you must ensure the local Docker registry (`localhost:50
 k3d cluster create --config k3d/labs64io.yaml
 
 # 2. Build and push all images
-# From labs64.io-helm-charts/
-just build-images
+# From the workspace root (one level up from labs64.io-helm-charts/) — this recipe
+# lives in the top-level justfile, not this repo's, and builds every sibling module
+# repo via scripts/build-images.sh in a containerized builder.
+cd .. && just build
 ```
 
 ### Build individually
@@ -226,7 +228,7 @@ This creates a k3d cluster, installs Traefik, the mock OIDC provider, all necess
 **Important:** Before running `just up`, you must create the cluster and push all module images to the local registry.
 ```bash
 k3d cluster create --config k3d/labs64io.yaml
-just build-images
+(cd .. && just build)   # workspace-root recipe — see "Building module images" above
 just up
 ```
 
@@ -301,7 +303,7 @@ kubectl get pods -n tools
 
 **Build images (Required if not available in localhost:5005):**
 ```bash
-just build-images
+(cd .. && just build)   # workspace-root recipe — see "Building module images" above
 ```
 
 ### Unified secret management

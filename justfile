@@ -137,6 +137,10 @@ install-tools: install-crds
     helmfile -e {{ENV}} apply -l layer=infra
     kubectl apply -f overrides/traefik/dashboard-httproute.yaml
     kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
+    # The ClusterSecretStore goes through ESO's validating webhook — wait for it to be
+    # ready first, since `helmfile apply` above returns as soon as objects are applied,
+    # not once the webhook deployment is actually serving.
+    kubectl -n {{NAMESPACE_TOOLS}} wait --for=condition=available --timeout=120s deployment/external-secrets-webhook
     kubectl apply -f overrides/eso/cluster-secret-store.yaml
 
 # Uninstall all core tools
@@ -171,20 +175,20 @@ uninstall-tool-external-secrets:
     kubectl delete -f overrides/eso/cluster-secret-store.yaml --ignore-not-found
     helm uninstall external-secrets --namespace {{NAMESPACE_TOOLS}} || true
 
-# install RabbitMQ (official image)
+# install RabbitMQ (official image; standalone, bypasses helmfile/the bitnami chart)
 install-tool-rabbitmq:
 	@echo "Installing RabbitMQ (official image)..."
-	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/values.secrets.local.yaml
+	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq-secret.yaml
 	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq.yaml
 	@echo "Waiting for RabbitMQ to be ready..."
 	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
 	@echo "Username      : labs64"
-	@echo "Credentials   : from overrides/rabbitmq/values.secrets.local.yaml (rabbitmq-secret)"
+	@echo "Credentials   : from overrides/rabbitmq/rabbitmq-secret.yaml (rabbitmq-secret)"
 
 # uninstall RabbitMQ
 uninstall-tool-rabbitmq:
 	kubectl delete -f overrides/rabbitmq/rabbitmq.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-	kubectl delete -f overrides/rabbitmq/values.secrets.local.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete -f overrides/rabbitmq/rabbitmq-secret.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
 	kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
 
 # install PostgreSQL

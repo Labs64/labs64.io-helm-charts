@@ -1,4 +1,1 @@
-{{- if .Values.ui.enabled }}
-{{ include "chart-libs.gateway-routes" . }}
-
-{{- end }}
+{{ include "chart-libs.ui-gateway-routes" . }}

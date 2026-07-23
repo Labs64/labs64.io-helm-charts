@@ -385,7 +385,7 @@ ui:
         # -- Primary API base URL — replace <HOST> with your domain/host.
         VITE_API_URL: https://<HOST>/checkout/api/v1
   
-  # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
+  # -- Gateway routes published by this module (rendered by chart-libs.ui-gateway-routes)
   gateway:
     # -- Publish this module's routes on the Traefik gateway
     enabled: false
@@ -402,9 +402,13 @@ ui:
       compress: gateway-common-compress
     # -- Routes exposed by this module
     routes:
-      # -- Checkout UI (protected)
+      # -- Checkout UI static assets. Public: a plain browser navigation can't attach a
+      # Bearer token, and the auth-proxy's ForwardAuth policy set is generated from module
+      # OpenAPI specs, so it has no entry for a bare UI path anyway (would 403 regardless).
+      # The actual protected surface is the checkout-be API the SPA calls afterward.
       - path: ""
         port: 8080
+        public: true
   # -- PodDisruptionBudget (rendered by chart-libs.pdb)
   podDisruptionBudget:
     enabled: false

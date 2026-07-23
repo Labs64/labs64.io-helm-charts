@@ -11,7 +11,7 @@ gateway:
     # -- Swagger UI served under /swagger-ui (public — no auth required)
     - path: /swagger-ui
       service:
-        name: labs64io-swagger-ui
+        name: labs64io-api-docs
         port: 8080
       stripPrefix: true
     # -- Root path convenience redirect to the Swagger UI. Exact match so module

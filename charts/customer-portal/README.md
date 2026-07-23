@@ -38,8 +38,8 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | ui.gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
 | ui.gateway.parentRefs | list | `[{"name":"labs64io-gateway","namespace":"tools"}]` | Gateway API parent Gateway(s) this module's HTTPRoute attaches to |
 | ui.gateway.prefix | string | `"/customer-portal"` | External path prefix; customer-portal-ui serves under /customer-portal |
-| ui.gateway.routes | list | `[{"path":"","port":8080}]` | Routes exposed by this module |
-| ui.gateway.routes[0] | object | `{"path":"","port":8080}` | Customer Portal UI (protected) |
+| ui.gateway.routes | list | `[{"path":"","port":8080,"public":true}]` | Routes exposed by this module |
+| ui.gateway.routes[0] | object | `{"path":"","port":8080,"public":true}` | Customer Portal UI static assets. Public: a plain browser navigation can't attach a Bearer token, and the auth-proxy's ForwardAuth policy set is generated from module OpenAPI specs, so it has no entry for a bare UI path anyway (would 403 regardless). This module has no backend API of its own yet. |
 | ui.gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common) |
 | ui.image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/customer-portal-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | ui.image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |

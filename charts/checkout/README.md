@@ -113,12 +113,12 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | ui.chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | ui.enabled | bool | `true` |  |
 | ui.fullnameOverride | string | `""` |  |
-| ui.gateway | object | `{"enabled":false,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"/checkout","routes":[{"path":"","port":8080}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
+| ui.gateway | object | `{"enabled":false,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"/checkout","routes":[{"path":"","port":8080,"public":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.ui-gateway-routes) |
 | ui.gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
 | ui.gateway.parentRefs | list | `[{"name":"labs64io-gateway","namespace":"tools"}]` | Gateway API parent Gateway(s) this module's HTTPRoute attaches to |
 | ui.gateway.prefix | string | `"/checkout"` | External path prefix; checkout-ui serves under /checkout |
-| ui.gateway.routes | list | `[{"path":"","port":8080}]` | Routes exposed by this module |
-| ui.gateway.routes[0] | object | `{"path":"","port":8080}` | Checkout UI (protected) |
+| ui.gateway.routes | list | `[{"path":"","port":8080,"public":true}]` | Routes exposed by this module |
+| ui.gateway.routes[0] | object | `{"path":"","port":8080,"public":true}` | Checkout UI static assets. Public: a plain browser navigation can't attach a Bearer token, and the auth-proxy's ForwardAuth policy set is generated from module OpenAPI specs, so it has no entry for a bare UI path anyway (would 403 regardless). The actual protected surface is the checkout-be API the SPA calls afterward. |
 | ui.gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common) |
 | ui.image | object | `{"pullPolicy":"IfNotPresent","repository":"labs64/checkout-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | ui.image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |

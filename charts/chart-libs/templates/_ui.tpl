@@ -192,28 +192,202 @@ data:
 {{- end }}
 
 {{/*
-UI NetworkPolicy macro.
+UI NetworkPolicy macro. Independent of chart-libs.networkpolicy (not a passthrough) —
+that macro's podSelector/name resolve to the *backend* workload, so calling it here
+produced an exact duplicate of the backend's NetworkPolicy (same name, same
+backend-pod selector) while leaving the actual UI pod with no NetworkPolicy at all
+(default-allow egress). Scoped to .Values.ui.networkPolicy; the UI is a static
+frontend with no broker/database/PDP dependency of its own, so egress is DNS
+(+ optional OTLP) only, no toolsEgress.
 */}}
 {{- define "chart-libs.ui-networkpolicy" -}}
-{{- if and .Values.ui .Values.ui.enabled }}
-{{ include "chart-libs.networkpolicy" . }}
+{{- if and .Values.ui .Values.ui.enabled .Values.ui.networkPolicy .Values.ui.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-ui
+  labels:
+    helm.sh/chart: {{ include "chart-libs.chart" . }}
+    app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: "Labs64.IO"
+    app.kubernetes.io/component: ui
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: {{ .Values.ui.networkPolicy.gatewayNamespace | default "tools" }}
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+        - podSelector: {}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: {{ .Values.ui.service.port }}
+    {{- with .Values.ui.networkPolicy.extraIngress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- if and .Values.observability .Values.observability.enabled }}
+    # OTLP export to the OpenTelemetry Collector (traces/logs)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 4317
+        - protocol: TCP
+          port: 4318
+    {{- end }}
+    {{- if .Values.ui.networkPolicy.egress }}
+    {{- toYaml .Values.ui.networkPolicy.egress | nindent 4 }}
+    {{- end }}
 {{- end }}
 {{- end }}
 
 {{/*
-UI Gateway Routes macro.
+UI Gateway Routes macro. Independent of chart-libs.gateway-routes (not a passthrough)
+— that macro's HTTPRoute name and backendRefs resolve to the *backend* workload/values
+(.Values.gateway), so calling it here produced an exact duplicate of the backend's
+HTTPRoute (same name, same backend Service target) while the UI Service was never
+actually exposed. Scoped to .Values.ui.gateway, named "<fullname>-ui-gateway", and
+backendRefs default to the UI Service ("<fullname>-ui").
 */}}
 {{- define "chart-libs.ui-gateway-routes" -}}
-{{- if and .Values.ui .Values.ui.enabled }}
-{{ include "chart-libs.gateway-routes" . }}
+{{- if and .Values.ui .Values.ui.enabled .Values.ui.gateway .Values.ui.gateway.enabled }}
+{{- $fullname := include "chart-libs.fullname" . -}}
+{{- $uiFullname := printf "%s-ui" $fullname -}}
+{{- $prefix := .Values.ui.gateway.prefix | default (printf "/%s" .Chart.Name) -}}
+{{- $host := include "chart-libs.gatewayHost" . -}}
+{{- $mw := .Values.ui.gateway.sharedMiddlewares -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ $fullname }}-ui-gateway
+  labels:
+    helm.sh/chart: {{ include "chart-libs.chart" . }}
+    app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: "Labs64.IO"
+    app.kubernetes.io/component: ui
+spec:
+  parentRefs:
+    {{- toYaml .Values.ui.gateway.parentRefs | nindent 4 }}
+  hostnames:
+    - {{ $host | quote }}
+  rules:
+    {{- range $route := .Values.ui.gateway.routes }}
+    - matches:
+        - path:
+            type: PathPrefix
+            value: {{ printf "%s%s" $prefix $route.path | default "/" | quote }}
+      filters:
+        {{- if $route.redirectTo }}
+        - type: RequestRedirect
+          requestRedirect:
+            path:
+              type: ReplaceFullPath
+              replaceFullPath: {{ $route.redirectTo | quote }}
+            statusCode: 302
+        {{- end }}
+        - type: RequestHeaderModifier
+          requestHeaderModifier:
+            remove:
+              - X-Auth-User
+              - X-Auth-Scopes
+              - X-Auth-Tenant
+        {{- if not $route.public }}
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $mw.auth }}
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $mw.rateLimit }}
+        {{- end }}
+        {{- if $mw.buffering }}
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $mw.buffering }}
+        {{- end }}
+        - type: ResponseHeaderModifier
+          responseHeaderModifier:
+            set:
+              {{- include "chart-libs.securityHeaders" $ | nindent 14 }}
+        {{- if $mw.compress }}
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: {{ $mw.compress }}
+        {{- end }}
+        {{- if $route.stripPath }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+        {{- else if $route.stripPrefix }}
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: {{ $route.path | default "/" | quote }}
+        {{- end }}
+      {{- if not $route.redirectTo }}
+      backendRefs:
+        - name: {{ $route.service | default $uiFullname }}
+          port: {{ $route.port }}
+      {{- end }}
+    {{- end }}
 {{- end }}
 {{- end }}
 
 {{/*
-UI Secret macro.
+UI Secret macro. Always renders (like chart-libs.secret does for the backend) whenever
+the UI is enabled — the UI Deployment's envFrom.secretRef references this object
+unconditionally, so it must exist even with empty stringData when .Values.ui.secrets
+is unset.
 */}}
 {{- define "chart-libs.ui-secret" -}}
-{{- if and .Values.ui .Values.ui.enabled .Values.ui.secrets .Values.ui.secrets.data }}
+{{- if and .Values.ui .Values.ui.enabled }}
 apiVersion: v1
 kind: Secret
 metadata:
@@ -230,8 +404,10 @@ metadata:
     app.kubernetes.io/component: ui
 type: Opaque
 stringData:
+{{- if and .Values.ui.secrets .Values.ui.secrets.data }}
 {{- range $key, $value := .Values.ui.secrets.data }}
   {{ $key }}: {{ $value | quote }}
+{{- end }}
 {{- end }}
 {{- end }}
 {{- end }}
