@@ -67,6 +67,46 @@ Gateway API CRDs, every chart falls back to a plain `networking.k8s.io/v1` Ingre
 ForwardAuth/Cerbos enforcement, so the chart fails the render rather than silently exposing it.
 Install the Gateway API CRDs if you need protected routes on a cluster that lacks them.
 
+### Gateway API setup
+
+None of these charts create the Gateway API `Gateway` resource itself — every module's
+`gateway.parentRefs` just points at one by name (`labs64io-gateway` in namespace `tools` by
+default). That's intentional: the Gateway is infrastructure-owned and shared across every
+module, the same way the database/broker are. The [Gateway API CRDs](https://gateway-api.sigs.k8s.io/guides/#installing-gateway-api)
+and a `GatewayClass`/`Gateway` need to exist before any `gateway.enabled: true` route can
+actually receive traffic — until they do, the HTTPRoute renders fine but sits at
+`Accepted: False`.
+
+The [Traefik chart](https://github.com/traefik/traefik-helm-chart) can provision both directly.
+Minimal values to reproduce the setup every module's defaults expect:
+
+```yaml
+providers:
+  kubernetesGateway:
+    enabled: true
+
+gatewayClass:
+  enabled: true
+
+gateway:
+  enabled: true
+  name: labs64io-gateway
+  namespace: tools
+  listeners:
+    web:
+      port: 8000
+      protocol: HTTP
+      namespacePolicy:
+        from: All   # modules install into any namespace; the listener must accept routes from all of them
+```
+
+```
+helm install traefik traefik/traefik -n tools --create-namespace -f traefik-values.yaml
+```
+
+Point your DNS/`/etc/hosts` (or an `Ingress`/`LoadBalancer` in front of Traefik) at that
+Service, and every module's `gateway.parentRefs` will resolve without any further change.
+
 Local testing: `just install-tool-mock-oidc` (dev-only M2M tokens),
 `just install-app <module>`, `helm test labs64io-<module> -n labs64io`.
 
@@ -82,7 +122,8 @@ helm install labs64io labs64io-pub/labs64io-ecosystem
 ```
 
 Use the umbrella chart for a full local/demo stack; install individual module charts directly
-(table above) to cherry-pick just what you need against your own infrastructure.
+(table above) to cherry-pick just what you need against your own infrastructure. It does not
+bundle Traefik or a `Gateway` — see [Gateway API setup](#gateway-api-setup) above for that.
 
 ### Provisioning profiles
 

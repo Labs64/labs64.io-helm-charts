@@ -1,0 +1,10 @@
+preflight {{ .Chart.Version }} has been installed as "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+This chart runs a one-shot Job that checks connectivity to whatever infrastructure you enabled
+under `checks:` (AMQP broker, PostgreSQL, Redis, OIDC) and exits — it does not stay running.
+
+Wait for it and check the result:
+  kubectl wait --for=condition=complete job/{{ .Release.Name }} -n {{ .Release.Namespace }} --timeout=120s \
+    || kubectl logs job/{{ .Release.Name }} -n {{ .Release.Namespace }} --all-containers
+
+Each enabled check runs as one container; the Job succeeds only if all of them pass.

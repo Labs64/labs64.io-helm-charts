@@ -1,0 +1,48 @@
+labs64io-ecosystem {{ .Chart.Version }} has been installed as "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+Enabled modules:
+{{- if index .Values "api-gateway" "enabled" }}
+  - api-gateway   ({{ .Release.Name }}-api-gateway)
+{{- end }}
+{{- if index .Values "authz-pdp" "enabled" }}
+  - authz-pdp     ({{ .Release.Name }}-authz-pdp)
+{{- end }}
+{{- if .Values.checkout.enabled }}
+  - checkout      ({{ .Release.Name }}-checkout)
+{{- end }}
+{{- if index .Values "payment-gateway" "enabled" }}
+  - payment-gateway ({{ .Release.Name }}-payment-gateway)
+{{- end }}
+{{- if .Values.auditflow.enabled }}
+  - auditflow     ({{ .Release.Name }}-auditflow)
+{{- end }}
+{{- if index .Values "api-docs" "enabled" }}
+  - api-docs      ({{ .Release.Name }}-api-docs)
+{{- end }}
+{{- if index .Values "customer-portal" "enabled" }}
+  - customer-portal ({{ .Release.Name }}-customer-portal)
+{{- end }}
+
+Bundled infrastructure:
+{{- if .Values.postgresql.enabled }}
+  - PostgreSQL ({{ .Release.Name }}-postgresql)
+{{- end }}
+{{- if .Values.rabbitmq.enabled }}
+  - RabbitMQ   ({{ .Release.Name }}-rabbitmq)
+{{- end }}
+{{- if .Values.redis.enabled }}
+  - Redis      ({{ .Release.Name }}-redis)
+{{- end }}
+Credentials are pre-wired end-to-end via the shared Secret "{{ .Values.global.sharedSecret.name }}"
+(dev-grade defaults in `secrets.*Password` — change them before using this anywhere but local/demo).
+
+This chart does NOT include Traefik or a Gateway API `Gateway` resource — that's
+infrastructure-owned, shared across the whole ecosystem, and lives outside this repo's
+published charts. Any module installed with `gateway.enabled: true` needs a Gateway named
+"labs64io-gateway" in namespace "tools" to actually receive traffic; see the "Gateway API
+setup" section of the chart repo's README.
+
+Check rollout status per module:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Cherry-pick out a module you don't want: `helm upgrade {{ .Release.Name }} <repo>/labs64io-ecosystem --reuse-values --set <module>.enabled=false`
