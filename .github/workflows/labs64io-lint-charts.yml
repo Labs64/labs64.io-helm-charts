@@ -11,6 +11,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Full history needed to diff each chart against the PR base ref below.
+          fetch-depth: 0
 
       - name: Install Helm
         uses: azure/setup-helm@v4.3.0
@@ -19,6 +22,56 @@ jobs:
 
       - name: Install helm-schema plugin
         run: helm plugin install https://github.com/dadav/helm-schema
+
+      - name: Enforce chart version bump
+        # chart-releaser skips re-publishing a chart whose Chart.yaml version already has a
+        # release tag (skip_existing: true) — silently, with no error. A chart whose files
+        # changed but whose version didn't move (or moved backwards) would simply never reach
+        # the public repo. Every chart with a diff against the PR base must bump `version:`.
+        run: |
+          set -euo pipefail
+          BASE="origin/${{ github.event.pull_request.base.ref || 'master' }}"
+          git fetch origin "${{ github.event.pull_request.base.ref || 'master' }}" --depth=1 2>/dev/null || true
+          FAILED=0
+          for chart_dir in charts/*/; do
+            [ -f "$chart_dir/Chart.yaml" ] || continue
+            chart_name=$(basename "$chart_dir")
+
+            if git diff --quiet "$BASE" -- "$chart_dir" 2>/dev/null; then
+              continue
+            fi
+
+            old_version=$(git show "$BASE:$chart_dir/Chart.yaml" 2>/dev/null | sed -n -E 's/^version: *//p' || echo "")
+            new_version=$(sed -n -E 's/^version: *//p' "$chart_dir/Chart.yaml")
+
+            if [ -z "$old_version" ]; then
+              echo "NEW CHART: $chart_name ($new_version) — no version check needed"
+              continue
+            fi
+
+            if [ "$old_version" = "$new_version" ]; then
+              echo "FAIL: $chart_name changed but version was not bumped (still $new_version)"
+              FAILED=1
+              continue
+            fi
+
+            newer=$(printf '%s\n%s\n' "$old_version" "$new_version" | sort -V | tail -1)
+            if [ "$newer" != "$new_version" ] || [ "$old_version" = "$new_version" ]; then
+              echo "FAIL: $chart_name version $old_version -> $new_version is not an increase"
+              FAILED=1
+              continue
+            fi
+
+            echo "PASS: $chart_name $old_version -> $new_version"
+          done
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo ""
+            echo "One or more changed charts did not get a version bump. Bump Chart.yaml's"
+            echo "'version:' (and, for library-chart consumers, the pinned chart-libs"
+            echo "dependency version) or the release pipeline will silently skip publishing it."
+            exit 1
+          fi
 
       - name: Build chart dependencies
         # Vendored deps (charts/*/charts/) are gitignored, so a fresh checkout is

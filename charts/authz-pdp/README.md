@@ -1,6 +1,6 @@
 # authz-pdp
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.51.0](https://img.shields.io/badge/AppVersion-0.51.0-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.51.0](https://img.shields.io/badge/AppVersion-0.51.0-informational?style=flat-square)
 
 Labs64.IO :: Cerbos PDP — central authorization decision point
 
@@ -21,7 +21,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.1.0 |
+| file://../chart-libs | chart-libs | 0.2.0 |
 
 ## Values
 

@@ -1,7 +1,7 @@
 apiVersion: v2
 name: labs64io-ecosystem
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: 0.0.1
 description: "Labs64.IO :: Umbrella Chart for entire Ecosystem"
 home: https://labs64.io
