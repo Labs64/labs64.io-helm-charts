@@ -1,7 +1,13 @@
+enabled: true
+
 externalSecrets:
   enabled: false
   storeName: local-kubernetes-store
 # -- Global values shared across Labs64.IO charts
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 global:
   # -- Base domain; swagger-ui is exposed as gateway.<domain>
   domain: localhost

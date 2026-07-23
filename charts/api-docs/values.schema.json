@@ -49,6 +49,11 @@
       "title": "chart-libs",
       "type": "object"
     },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
     "env": {
       "items": {
         "required": []
@@ -139,7 +144,7 @@
       "type": "object"
     },
     "global": {
-      "additionalProperties": false,
+      "additionalProperties": true,
       "description": "Global values shared across Labs64.IO charts",
       "properties": {
         "domain": {
@@ -715,8 +720,8 @@
     }
   },
   "required": [
+    "enabled",
     "externalSecrets",
-    "global",
     "replicaCount",
     "image",
     "imagePullSecrets",

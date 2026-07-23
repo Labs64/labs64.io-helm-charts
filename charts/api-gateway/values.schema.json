@@ -190,6 +190,11 @@
       "title": "compress",
       "type": "object"
     },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
     "env": {
       "items": {
         "anyOf": [
@@ -1331,6 +1336,7 @@
     }
   },
   "required": [
+    "enabled",
     "externalSecrets",
     "replicaCount",
     "image",

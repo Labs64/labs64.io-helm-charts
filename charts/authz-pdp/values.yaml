@@ -1,3 +1,5 @@
+enabled: true
+
 # -- Cerbos PDP replicas. On the hot path of every @Authorize / edge decision —
 # keep at least 2 for HA.
 replicaCount: 2

@@ -8,6 +8,11 @@
       "title": "chart-libs",
       "type": "object"
     },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
     "global": {
       "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
       "required": [],
@@ -550,6 +555,7 @@
     }
   },
   "required": [
+    "enabled",
     "ui"
   ],
   "type": "object"

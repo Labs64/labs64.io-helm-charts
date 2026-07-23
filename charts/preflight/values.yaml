@@ -1,3 +1,5 @@
+enabled: true
+
 # -- Connectivity checks to run; enable only what your modules need.
 checks:
   # -- AMQP broker reachability (TCP connect)

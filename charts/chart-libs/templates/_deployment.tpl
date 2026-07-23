@@ -83,6 +83,12 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           envFrom:
+            {{- if and .Values.global .Values.global.sharedConfig .Values.global.sharedConfig.enabled }}
+            - configMapRef:
+                name: {{ .Values.global.sharedConfig.name }}
+            - secretRef:
+                name: {{ .Values.global.sharedSecret.name }}
+            {{- end }}
             - configMapRef:
                 name: {{ include "chart-libs.fullname" . }}
             - secretRef:

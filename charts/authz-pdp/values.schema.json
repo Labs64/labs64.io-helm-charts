@@ -52,6 +52,11 @@
       "title": "config",
       "type": "object"
     },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
     "env": {
       "items": {
         "required": []
@@ -499,6 +504,7 @@
     }
   },
   "required": [
+    "enabled",
     "replicaCount",
     "image",
     "imagePullSecrets",

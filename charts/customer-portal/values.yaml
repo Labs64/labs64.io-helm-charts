@@ -1,3 +1,5 @@
+enabled: true
+
 ui:
   enabled: true
   # Default values for customer-portal-ui.

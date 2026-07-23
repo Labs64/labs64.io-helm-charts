@@ -1,0 +1,23 @@
+{{- if and .Values.global .Values.global.sharedConfig .Values.global.sharedConfig.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.global.sharedConfig.name | default "labs64io-shared-config" }}
+  labels:
+    app.kubernetes.io/name: labs64io-ecosystem
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  # Database coordinates (modules must construct their own SPRING_DATASOURCE_URL to preserve db-per-service isolation)
+  SPRING_DATASOURCE_HOST: {{ .Values.global.postgresql.host | quote }}
+  SPRING_DATASOURCE_PORT: {{ .Values.global.postgresql.port | quote }}
+  
+  # RabbitMQ coordinates
+  SPRING_RABBITMQ_HOST: {{ .Values.global.rabbitmq.host | quote }}
+  SPRING_RABBITMQ_PORT: {{ .Values.global.rabbitmq.port | quote }}
+  SPRING_RABBITMQ_USERNAME: {{ .Values.global.rabbitmq.username | quote }}
+  
+  # Redis coordinates
+  SPRING_DATA_REDIS_HOST: {{ .Values.global.redis.host | quote }}
+  SPRING_DATA_REDIS_PORT: {{ .Values.global.redis.port | quote }}
+{{- end }}

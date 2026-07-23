@@ -123,70 +123,7 @@
         "spring": {
           "additionalProperties": false,
           "description": "Spring configuration",
-          "properties": {
-            "data": {
-              "additionalProperties": false,
-              "description": "Redis connection params (backing store for the idempotency/dedup service; auditflow.idempotency.store=redis)",
-              "properties": {
-                "redis": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "host": {
-                      "default": "redis-master.tools.svc.cluster.local",
-                      "description": "Redis host; defaults to the shared tools Redis. Override for your own Redis in non-local installs.",
-                      "title": "host",
-                      "type": "string"
-                    },
-                    "port": {
-                      "default": 6379,
-                      "description": "Redis port; default: 6379",
-                      "title": "port",
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "host",
-                    "port"
-                  ],
-                  "title": "redis",
-                  "type": "object"
-                }
-              },
-              "required": [
-                "redis"
-              ],
-              "title": "data",
-              "type": "object"
-            },
-            "rabbitmq": {
-              "additionalProperties": false,
-              "description": "RabbitMQ connection params",
-              "properties": {
-                "host": {
-                  "default": "rabbitmq.tools.svc.cluster.local",
-                  "description": "RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host",
-                  "title": "host",
-                  "type": "string"
-                },
-                "port": {
-                  "default": 5672,
-                  "description": "RabbitMQ port; default: 5672",
-                  "title": "port",
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "host",
-                "port"
-              ],
-              "title": "rabbitmq",
-              "type": "object"
-            }
-          },
-          "required": [
-            "rabbitmq",
-            "data"
-          ],
+          "required": [],
           "title": "spring",
           "type": "object"
         },
@@ -370,6 +307,11 @@
       "required": [],
       "title": "chart-libs",
       "type": "object"
+    },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
     },
     "env": {
       "description": "Environment variables to add to the container",
@@ -1981,6 +1923,7 @@
     }
   },
   "required": [
+    "enabled",
     "externalSecrets",
     "replicaCount",
     "image",

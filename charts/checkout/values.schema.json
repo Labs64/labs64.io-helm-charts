@@ -20,53 +20,7 @@
         "spring": {
           "additionalProperties": false,
           "description": "Spring configuration",
-          "properties": {
-            "datasource": {
-              "additionalProperties": false,
-              "description": "PostgreSQL connection params",
-              "properties": {
-                "url": {
-                  "default": "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout",
-                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL",
-                  "title": "url",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "url"
-              ],
-              "title": "datasource",
-              "type": "object"
-            },
-            "rabbitmq": {
-              "additionalProperties": false,
-              "description": "RabbitMQ connection params",
-              "properties": {
-                "host": {
-                  "default": "rabbitmq.tools.svc.cluster.local",
-                  "description": "RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host",
-                  "title": "host",
-                  "type": "string"
-                },
-                "port": {
-                  "default": 5672,
-                  "description": "RabbitMQ port; default: 5672",
-                  "title": "port",
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "host",
-                "port"
-              ],
-              "title": "rabbitmq",
-              "type": "object"
-            }
-          },
-          "required": [
-            "rabbitmq",
-            "datasource"
-          ],
+          "required": [],
           "title": "spring",
           "type": "object"
         }
@@ -117,6 +71,11 @@
       "required": [],
       "title": "chart-libs",
       "type": "object"
+    },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
     },
     "env": {
       "items": {
@@ -1728,6 +1687,7 @@
     }
   },
   "required": [
+    "enabled",
     "externalSecrets",
     "replicaCount",
     "image",

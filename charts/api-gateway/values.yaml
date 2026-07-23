@@ -1,3 +1,5 @@
+enabled: true
+
 externalSecrets:
   enabled: false
   storeName: local-kubernetes-store

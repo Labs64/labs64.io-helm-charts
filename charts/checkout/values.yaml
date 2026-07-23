@@ -1,3 +1,5 @@
+enabled: true
+
 externalSecrets:
   enabled: false
   storeName: local-kubernetes-store
@@ -197,18 +199,8 @@ secrets:
 # -- Additional application properties
 applicationYaml:
   # -- Spring configuration
-  spring:
-    # -- RabbitMQ connection params
-    rabbitmq:
-      # -- RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host
-      host: "rabbitmq.tools.svc.cluster.local"
-      # -- RabbitMQ port; default: 5672
-      port: 5672
+  spring: {}
 
-    # -- PostgreSQL connection params
-    datasource:
-      # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
-      url: "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout"
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
   # -- Publish this module's routes on the Traefik gateway
