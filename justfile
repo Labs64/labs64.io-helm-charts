@@ -229,6 +229,8 @@ uninstall-tool-mock-oidc:
 # Install all monitoring tools
 install-monitoring: install-monitoring-crds
     helmfile -e {{ENV}} apply -l layer=monitoring
+    kubectl apply -f overrides/grafana/grafana-httproute.yaml
+    kubectl apply -f overrides/grafana/grafana-dashboards.yaml
 
 # Pre-install kube-prometheus-stack's CRDs (Prometheus/PrometheusRule/ServiceMonitor/etc.).
 # Helm only applies a chart's bundled crds/ during actual install/upgrade, but helmfile's
