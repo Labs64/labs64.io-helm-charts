@@ -18,13 +18,15 @@ applicationYaml:
   spring:
     rabbitmq:
       host: rabbitmq.infra.example.com
-      port: 5672
+      # Quoted: the chart schema types these ports as strings (chart defaults are
+      # Helm-templated string expressions). An unquoted number fails values.schema.json.
+      port: "5672"
     datasource:
       url: jdbc:postgresql://postgres.infra.example.com:5432/payment_gateway
     data:
       redis:
         host: redis.infra.example.com
-        port: 6379
+        port: "6379"
 
 secrets:
   data:

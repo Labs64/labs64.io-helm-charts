@@ -1,15 +1,16 @@
 # PRODUCTION EXAMPLE (BYO infrastructure) - copy and adapt; do not use as-is.
-# Bundled deps stay off; point applicationYaml at your infrastructure and
-# deliver credentials via secrets.data (preferably sourced through
-# External Secrets Operator or your secret-management tooling).
+# customer-portal is a UI-only (nginx) frontend chart: all deployment knobs live
+# under `ui.*` (not top-level like the backend module charts). Keep that nesting
+# or the values fail this chart's values.schema.json.
 global:
   domain: example.com
 
-gateway:
-  enabled: true
+ui:
+  gateway:
+    enabled: true
 
-networkPolicy:
-  enabled: true
+  networkPolicy:
+    enabled: true
 
-podDisruptionBudget:
-  enabled: true
+  podDisruptionBudget:
+    enabled: true

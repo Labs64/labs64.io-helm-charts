@@ -23,7 +23,9 @@ applicationYaml:
   spring:
     rabbitmq:
       host: rabbitmq.infra.example.com
-      port: 5672
+      # Quoted: the chart schema types this port as a string (chart defaults are
+      # Helm-templated string expressions). An unquoted number fails values.schema.json.
+      port: "5672"
 
 secrets:
   data:
