@@ -1,3 +1,12 @@
 global:
   domain: gateway.localhost
   environment: local
+  postgresql:
+    host: "postgresql.tools.svc.cluster.local"
+    port: 5432
+  rabbitmq:
+    host: "rabbitmq.tools.svc.cluster.local"
+    port: 5672
+  redis:
+    host: "redis.tools.svc.cluster.local"
+    port: 6379

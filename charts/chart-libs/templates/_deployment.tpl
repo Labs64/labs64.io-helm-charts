@@ -86,6 +86,8 @@ spec:
             {{- if and .Values.global .Values.global.sharedConfig .Values.global.sharedConfig.enabled }}
             - configMapRef:
                 name: {{ .Values.global.sharedConfig.name }}
+            {{- end }}
+            {{- if and .Values.global .Values.global.sharedSecret .Values.global.sharedSecret.enabled }}
             - secretRef:
                 name: {{ .Values.global.sharedSecret.name }}
             {{- end }}

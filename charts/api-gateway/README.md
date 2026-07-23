@@ -44,6 +44,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | compress.enabled | bool | `true` | Enable the shared compress middleware |
 | compress.excludedContentTypes | list | `["image/png","image/jpeg","image/gif","image/webp","application/grpc"]` | Content types excluded from compression (already-compressed formats) |
 | compress.minResponseBodyBytes | int | `1024` | Do not compress responses below this size (bytes) |
+| enabled | bool | `true` |  |
 | env[0] | object | `{"name":"OIDC_DISCOVERY_URL","value":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"}` | OIDC discovery URL. Override per environment:   production: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration   local dev:  http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration |
 | env[1] | object | `{"name":"OIDC_AUDIENCE","value":"account"}` | Audience for the auth proxy. |
 | env[2] | object | `{"name":"LOG_LEVEL","value":"INFO"}` | Log level for the auth proxy. |

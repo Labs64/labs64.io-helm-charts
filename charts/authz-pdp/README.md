@@ -31,6 +31,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 | autoscaling.enabled | bool | `false` |  |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
 | config | object | `{"auditEnabled":false,"schemaEnforcement":"reject"}` | Cerbos server config (rendered into a ConfigMap). Policies are served from the disk store mounted from the policies/schemas ConfigMaps; schema enforcement rejects requests whose attributes violate the JSON schemas (fail closed). |
+| enabled | bool | `true` |  |
 | env | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/cerbos/cerbos","tag":""}` | Cerbos container image (third-party; keeps its own non-root user). |

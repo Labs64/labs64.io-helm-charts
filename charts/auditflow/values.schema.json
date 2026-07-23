@@ -123,7 +123,85 @@
         "spring": {
           "additionalProperties": false,
           "description": "Spring configuration",
-          "required": [],
+          "properties": {
+            "data": {
+              "additionalProperties": false,
+              "properties": {
+                "redis": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "host": {
+                      "default": "{{ if and .Values.global .Values.global.redis }}{{ tpl (.Values.global.redis.host | default \"redis.tools.svc.cluster.local\") . }}{{ else }}redis.tools.svc.cluster.local{{ end }}",
+                      "description": "Redis host",
+                      "title": "host",
+                      "type": "string"
+                    },
+                    "port": {
+                      "default": "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}",
+                      "description": "Redis port",
+                      "title": "port",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "host",
+                    "port"
+                  ],
+                  "title": "redis",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "redis"
+              ],
+              "title": "data",
+              "type": "object"
+            },
+            "datasource": {
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "default": "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ tpl (.Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\") . }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/auditflow",
+                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL",
+                  "title": "url",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ],
+              "title": "datasource",
+              "type": "object"
+            },
+            "rabbitmq": {
+              "additionalProperties": false,
+              "properties": {
+                "host": {
+                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ tpl (.Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\") . }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}",
+                  "description": "RabbitMQ host",
+                  "title": "host",
+                  "type": "string"
+                },
+                "port": {
+                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}",
+                  "description": "RabbitMQ port",
+                  "title": "port",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "host",
+                "port"
+              ],
+              "title": "rabbitmq",
+              "type": "object"
+            }
+          },
+          "required": [
+            "datasource",
+            "rabbitmq",
+            "data"
+          ],
           "title": "spring",
           "type": "object"
         },

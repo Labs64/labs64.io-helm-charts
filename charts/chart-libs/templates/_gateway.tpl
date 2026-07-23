@@ -24,6 +24,7 @@ Usage (wrapper template in the module chart):
 {{- $prefix := .Values.gateway.prefix | default (printf "/%s" .Chart.Name) -}}
 {{- $host := include "chart-libs.gatewayHost" . -}}
 {{- $mw := .Values.gateway.sharedMiddlewares -}}
+{{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -114,6 +115,7 @@ spec:
           port: {{ $route.port }}
       {{- end }}
     {{- end }}
+{{- end }}
 {{- end }}
 {{- end }}
 

@@ -25,6 +25,7 @@ Labs64.IO :: Preflight - verify tenant infrastructure (broker, database, cache, 
 | checks.postgresql | object | `{"database":"postgres","enabled":false,"host":"postgres.infra.example.com","password":"","port":5432,"username":""}` | PostgreSQL connectivity and login (SELECT 1) |
 | checks.rabbitmq | object | `{"enabled":false,"host":"rabbitmq.infra.example.com","port":5672}` | AMQP broker reachability (TCP connect) |
 | checks.redis | object | `{"enabled":false,"host":"redis.infra.example.com","password":"","port":6379}` | Redis connectivity (PING) |
+| enabled | bool | `true` |  |
 | images | object | `{"busybox":"busybox:1.36","curl":"curlimages/curl:8.10.1","postgresql":"bitnamilegacy/postgresql:17.6.0-debian-12-r4","redis":"bitnamilegacy/redis:7.4.3-debian-12-r0"}` | Images used by the check containers |
 
 ----------------------------------------------

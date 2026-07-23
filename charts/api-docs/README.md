@@ -29,6 +29,7 @@ Labs64.IO :: Swagger UI
 | affinity | object | `{}` |  |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
+| enabled | bool | `true` |  |
 | env | list | `[]` |  |
 | externalSecrets.enabled | bool | `false` |  |
 | externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
@@ -37,7 +38,7 @@ Labs64.IO :: Swagger UI
 | gateway.enabled | bool | `true` | Enable the swagger-ui HTTPRoute |
 | gateway.parentRefs | list | `[{"name":"labs64io-gateway","namespace":"tools"}]` | Gateway(s) this HTTPRoute attaches to |
 | gateway.routes | list | `[]` | Routes. Each: path, optional pathType (default PathPrefix), service{name,port}; stripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path. @schema type: array @schema |
-| global | object | `{"domain":"localhost"}` | Global values shared across Labs64.IO charts |
+| global | object | `{"domain":"localhost"}` | Global values shared across Labs64.IO charts @schema type: object additionalProperties: true @schema |
 | global.domain | string | `"localhost"` | Base domain; swagger-ui is exposed as gateway.<domain> |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"swaggerapi/swagger-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |

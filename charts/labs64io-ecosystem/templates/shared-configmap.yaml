@@ -9,15 +9,15 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
   # Database coordinates (modules must construct their own SPRING_DATASOURCE_URL to preserve db-per-service isolation)
-  SPRING_DATASOURCE_HOST: {{ .Values.global.postgresql.host | quote }}
+  SPRING_DATASOURCE_HOST: {{ tpl .Values.global.postgresql.host . | quote }}
   SPRING_DATASOURCE_PORT: {{ .Values.global.postgresql.port | quote }}
   
   # RabbitMQ coordinates
-  SPRING_RABBITMQ_HOST: {{ .Values.global.rabbitmq.host | quote }}
+  SPRING_RABBITMQ_HOST: {{ tpl .Values.global.rabbitmq.host . | quote }}
   SPRING_RABBITMQ_PORT: {{ .Values.global.rabbitmq.port | quote }}
   SPRING_RABBITMQ_USERNAME: {{ .Values.global.rabbitmq.username | quote }}
   
   # Redis coordinates
-  SPRING_DATA_REDIS_HOST: {{ .Values.global.redis.host | quote }}
+  SPRING_DATA_REDIS_HOST: {{ tpl .Values.global.redis.host . | quote }}
   SPRING_DATA_REDIS_PORT: {{ .Values.global.redis.port | quote }}
 {{- end }}

@@ -1,0 +1,431 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "api-docs": {
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "api-docs",
+      "type": "object"
+    },
+    "api-gateway": {
+      "additionalProperties": true,
+      "description": "Sub-charts Toggles",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "api-gateway",
+      "type": "object"
+    },
+    "auditflow": {
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "auditflow",
+      "type": "object"
+    },
+    "authz-pdp": {
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "authz-pdp",
+      "type": "object"
+    },
+    "checkout": {
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "checkout",
+      "type": "object"
+    },
+    "customer-portal": {
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "customer-portal",
+      "type": "object"
+    },
+    "global": {
+      "additionalProperties": true,
+      "description": "Global Configuration Shared Across Ecosystem",
+      "properties": {
+        "postgresql": {
+          "additionalProperties": false,
+          "description": "External dependencies",
+          "properties": {
+            "database": {
+              "default": "labs64io",
+              "title": "database",
+              "type": "string"
+            },
+            "host": {
+              "default": "{{ .Release.Name }}-postgresql",
+              "title": "host",
+              "type": "string"
+            },
+            "port": {
+              "default": 5432,
+              "title": "port",
+              "type": "integer"
+            },
+            "username": {
+              "default": "labs64",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host",
+            "port",
+            "username",
+            "database"
+          ],
+          "title": "postgresql",
+          "type": "object"
+        },
+        "rabbitmq": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "default": "{{ .Release.Name }}-rabbitmq",
+              "title": "host",
+              "type": "string"
+            },
+            "port": {
+              "default": 5672,
+              "title": "port",
+              "type": "integer"
+            },
+            "username": {
+              "default": "labs64",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "host",
+            "port",
+            "username"
+          ],
+          "title": "rabbitmq",
+          "type": "object"
+        },
+        "redis": {
+          "additionalProperties": false,
+          "properties": {
+            "host": {
+              "default": "{{ .Release.Name }}-redis-master",
+              "title": "host",
+              "type": "string"
+            },
+            "port": {
+              "default": 6379,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "host",
+            "port"
+          ],
+          "title": "redis",
+          "type": "object"
+        },
+        "sharedConfig": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "labs64io-shared-config",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "name"
+          ],
+          "title": "sharedConfig",
+          "type": "object"
+        },
+        "sharedSecret": {
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "labs64io-shared-secret",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "name"
+          ],
+          "title": "sharedSecret",
+          "type": "object"
+        }
+      },
+      "required": [
+        "sharedConfig",
+        "sharedSecret",
+        "postgresql",
+        "rabbitmq",
+        "redis"
+      ],
+      "title": "global",
+      "type": "object"
+    },
+    "payment-gateway": {
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "payment-gateway",
+      "type": "object"
+    },
+    "postgresql": {
+      "additionalProperties": true,
+      "description": "Opt-In Infrastructure (Enabled by default for one-click dev deployments)",
+      "properties": {
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "database": {
+              "default": "labs64io",
+              "title": "database",
+              "type": "string"
+            },
+            "existingSecret": {
+              "default": "labs64io-shared-secret",
+              "title": "existingSecret",
+              "type": "string"
+            },
+            "secretKeys": {
+              "additionalProperties": true,
+              "properties": {
+                "adminPasswordKey": {
+                  "default": "SPRING_DATASOURCE_PASSWORD",
+                  "title": "adminPasswordKey",
+                  "type": "string"
+                },
+                "userPasswordKey": {
+                  "default": "SPRING_DATASOURCE_PASSWORD",
+                  "title": "userPasswordKey",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "adminPasswordKey",
+                "userPasswordKey"
+              ],
+              "title": "secretKeys",
+              "type": "object"
+            },
+            "username": {
+              "default": "labs64",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "username",
+            "database",
+            "existingSecret"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "postgresql",
+      "type": "object"
+    },
+    "rabbitmq": {
+      "additionalProperties": true,
+      "properties": {
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "existingPasswordSecret": {
+              "default": "labs64io-shared-secret",
+              "title": "existingPasswordSecret",
+              "type": "string"
+            },
+            "existingSecretPasswordKey": {
+              "default": "SPRING_RABBITMQ_PASSWORD",
+              "title": "existingSecretPasswordKey",
+              "type": "string"
+            },
+            "username": {
+              "default": "labs64",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "username",
+            "existingPasswordSecret",
+            "existingSecretPasswordKey"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "rabbitmq",
+      "type": "object"
+    },
+    "redis": {
+      "additionalProperties": true,
+      "properties": {
+        "architecture": {
+          "default": "standalone",
+          "title": "architecture",
+          "type": "string"
+        },
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "existingSecret": {
+              "default": "labs64io-shared-secret",
+              "title": "existingSecret",
+              "type": "string"
+            },
+            "existingSecretPasswordKey": {
+              "default": "SPRING_DATA_REDIS_PASSWORD",
+              "title": "existingSecretPasswordKey",
+              "type": "string"
+            }
+          },
+          "required": [
+            "existingSecret",
+            "existingSecretPasswordKey"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "architecture"
+      ],
+      "title": "redis",
+      "type": "object"
+    },
+    "secrets": {
+      "additionalProperties": false,
+      "properties": {
+        "postgresqlPassword": {
+          "default": "labs64_dev_password",
+          "description": "Base64 encoded secrets injected into labs64io-shared-secret.\nOut of the box, we use a default dev password so Bitnami and Java apps sync up.\nChange these in production!",
+          "title": "postgresqlPassword",
+          "type": "string"
+        },
+        "rabbitmqPassword": {
+          "default": "labs64_dev_password",
+          "title": "rabbitmqPassword",
+          "type": "string"
+        },
+        "redisPassword": {
+          "default": "labs64_dev_password",
+          "title": "redisPassword",
+          "type": "string"
+        }
+      },
+      "required": [
+        "postgresqlPassword",
+        "rabbitmqPassword",
+        "redisPassword"
+      ],
+      "title": "secrets",
+      "type": "object"
+    }
+  },
+  "required": [
+    "secrets"
+  ],
+  "type": "object"
+}

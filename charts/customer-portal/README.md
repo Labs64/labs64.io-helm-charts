@@ -28,6 +28,7 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | chart-libs | object | `{}` |  |
+| enabled | bool | `true` |  |
 | ui.application.runtimeEnv.enabled | bool | `true` | Enable loading a runtime config file (env.json). |
 | ui.application.runtimeEnv.env | object | `{"VITE_API_URL":"https://<HOST>/customer-portal/api/v1"}` | Key-value pairs written into env.json. |
 | ui.application.runtimeEnv.env.VITE_API_URL | string | `"https://<HOST>/customer-portal/api/v1"` | Primary API base URL — replace <HOST> with your domain/host. |

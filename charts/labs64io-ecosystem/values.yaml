@@ -1,30 +1,48 @@
-enabled: true
-
 # Labs64.IO Ecosystem Umbrella Chart Configuration
 
 # Sub-charts Toggles
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 api-gateway:
   enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 authz-pdp:
   enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 checkout:
   enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 payment-gateway:
   enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 auditflow:
   enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 api-docs:
   enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 customer-portal:
   enabled: true
-
-# Opt-In Infrastructure
-postgresql:
-  enabled: false
-rabbitmq:
-  enabled: false
-redis:
-  enabled: false
 
 # Global Configuration Shared Across Ecosystem
 # @schema
@@ -39,22 +57,77 @@ global:
     enabled: true
     name: "labs64io-shared-secret"
   
-  # External dependencies (can be overridden to point to Bitnami subcharts if enabled)
+  # External dependencies
   postgresql:
-    host: "postgresql.tools.svc.cluster.local"
+    host: '{{ .Release.Name }}-postgresql'
     port: 5432
     username: "labs64"
     database: "labs64io"
   rabbitmq:
-    host: "rabbitmq.tools.svc.cluster.local"
+    host: '{{ .Release.Name }}-rabbitmq'
     port: 5672
     username: "labs64"
   redis:
-    host: "redis-master.tools.svc.cluster.local"
+    host: '{{ .Release.Name }}-redis-master'
     port: 6379
 
 secrets:
-  # Base64 encoded secrets injected into labs64io-shared-secret
-  postgresqlPassword: ""
-  rabbitmqPassword: ""
-  redisPassword: ""
+  # Base64 encoded secrets injected into labs64io-shared-secret.
+  # Out of the box, we use a default dev password so Bitnami and Java apps sync up.
+  # Change these in production!
+  postgresqlPassword: "labs64_dev_password"
+  rabbitmqPassword: "labs64_dev_password"
+  redisPassword: "labs64_dev_password"
+
+# Opt-In Infrastructure (Enabled by default for one-click dev deployments)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+postgresql:
+  enabled: true
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    username: "labs64"
+    database: "labs64io"
+    existingSecret: "labs64io-shared-secret"
+    # @schema
+    # type: object
+    # additionalProperties: true
+    # @schema
+    secretKeys:
+      adminPasswordKey: "SPRING_DATASOURCE_PASSWORD"
+      userPasswordKey: "SPRING_DATASOURCE_PASSWORD"
+
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+rabbitmq:
+  enabled: true
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    username: "labs64"
+    existingPasswordSecret: "labs64io-shared-secret"
+    existingSecretPasswordKey: "SPRING_RABBITMQ_PASSWORD"
+
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+redis:
+  enabled: true
+  architecture: standalone
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    existingSecret: "labs64io-shared-secret"
+    existingSecretPasswordKey: "SPRING_DATA_REDIS_PASSWORD"
