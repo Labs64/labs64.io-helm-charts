@@ -143,18 +143,21 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
-# -- Additional volumes on the output Deployment definition.
-volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
+# -- Additional volumes on the output Deployment definition. Mounts the swagger-config
+# ConfigMap (rendered from `swaggerUI` below) into the image's webroot so CONFIG_URL (see
+# `env` below) can serve it — without this, the container falls back to its baked-in
+# petstore.swagger.io demo config and the ConfigMap is never actually consumed.
+volumes:
+  - name: swagger-config
+    configMap:
+      name: '{{ include "chart-libs.fullname" . }}-swagger-config'
 
 # -- Additional volumeMounts on the output Deployment definition.
-volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
+volumeMounts:
+  - name: swagger-config
+    mountPath: /usr/share/nginx/html/swagger-config.yaml
+    subPath: swagger-config.yaml
+    readOnly: true
 
 nodeSelector: {}
 
@@ -162,7 +165,16 @@ tolerations: []
 
 affinity: {}
 
-env: []
+# -- CONFIG_URL tells the swagger-ui image's configurator script (/docker-entrypoint.d/40-swagger-ui.sh)
+# to fetch this path client-side (browser-side, not container-side) for its full config
+# (dom_id/urls/validatorUrl), instead of using its built-in petstore.swagger.io demo. Deliberately
+# relative (no leading slash): the page is only reachable behind the gateway's /swagger-ui prefix,
+# which the HTTPRoute strips before forwarding — a root-absolute "/swagger-config.yaml" would miss
+# that route entirely (404 at the gateway, never reaching this container). Must stay in sync with
+# the volumeMount path above.
+env:
+  - name: CONFIG_URL
+    value: swagger-config.yaml
 envFrom: []
 
 # -- Swagger UI configuration (ref: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)
