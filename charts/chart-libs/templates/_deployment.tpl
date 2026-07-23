@@ -95,6 +95,9 @@ spec:
                 name: {{ include "chart-libs.fullname" . }}
             - secretRef:
                 name: {{ include "chart-libs.fullname" . }}
+            {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             {{- if eq .Values.applicationType "java" }}
             - name: config-additional-location

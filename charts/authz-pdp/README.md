@@ -33,6 +33,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 | config | object | `{"auditEnabled":false,"schemaEnforcement":"reject"}` | Cerbos server config (rendered into a ConfigMap). Policies are served from the disk store mounted from the policies/schemas ConfigMaps; schema enforcement rejects requests whose attributes violate the JSON schemas (fail closed). |
 | enabled | bool | `true` |  |
 | env | list | `[]` |  |
+| envFrom | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/cerbos/cerbos","tag":""}` | Cerbos container image (third-party; keeps its own non-root user). |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
@@ -42,7 +43,9 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 | livenessProbe.initialDelaySeconds | int | `10` |  |
 | livenessProbe.periodSeconds | int | `15` |  |
 | nameOverride | string | `""` |  |
-| networkPolicy | object | `{"enabled":true,"gatewayNamespace":"tools"}` | Restrict ingress to same-namespace callers (authproxy + module apps). The chart-libs helper allows all same-namespace pods on all ports; no egress needed. |
+| networkPolicy | object | `{"enabled":true,"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring"}` | Restrict ingress to same-namespace callers (authproxy + module apps). The chart-libs helper allows all same-namespace pods on all ports; no egress needed. |
+| networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
+| networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
 | podDisruptionBudget.enabled | bool | `true` |  |

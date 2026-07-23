@@ -93,11 +93,24 @@
         "gateway": {
           "additionalProperties": false,
           "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "description": "Annotations for fallback Ingress",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
             "enabled": {
               "default": false,
               "description": "Publish this module's routes on the Traefik gateway",
               "title": "enabled",
               "type": "boolean"
+            },
+            "ingressClassName": {
+              "default": "",
+              "description": "Ingress Class Name for fallback Ingress",
+              "title": "ingressClassName",
+              "type": "string"
             },
             "parentRefs": {
               "description": "Gateway API parent Gateway(s) this module's HTTPRoute attaches to",
@@ -202,6 +215,8 @@
           },
           "required": [
             "enabled",
+            "annotations",
+            "ingressClassName",
             "prefix",
             "parentRefs",
             "sharedMiddlewares",
@@ -275,11 +290,25 @@
               "description": "Namespace where Traefik runs",
               "title": "gatewayNamespace",
               "type": "string"
+            },
+            "ingressControllerLabels": {
+              "additionalProperties": true,
+              "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+              "required": [],
+              "title": "ingressControllerLabels",
+              "type": "object"
+            },
+            "observabilityNamespace": {
+              "default": "monitoring",
+              "description": "Namespace the observability/OTel collector runs in",
+              "title": "observabilityNamespace",
+              "type": "string"
             }
           },
           "required": [
             "enabled",
             "gatewayNamespace",
+            "observabilityNamespace",
             "extraIngress"
           ],
           "title": "networkPolicy",

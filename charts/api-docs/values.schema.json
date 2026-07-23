@@ -61,6 +61,13 @@
       "title": "env",
       "type": "array"
     },
+    "envFrom": {
+      "items": {
+        "required": []
+      },
+      "title": "envFrom",
+      "type": "array"
+    },
     "externalSecrets": {
       "additionalProperties": false,
       "properties": {
@@ -282,11 +289,25 @@
           "description": "Namespace where Traefik runs",
           "title": "gatewayNamespace",
           "type": "string"
+        },
+        "ingressControllerLabels": {
+          "additionalProperties": true,
+          "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+          "required": [],
+          "title": "ingressControllerLabels",
+          "type": "object"
+        },
+        "observabilityNamespace": {
+          "default": "monitoring",
+          "description": "Namespace the observability/OTel collector runs in",
+          "title": "observabilityNamespace",
+          "type": "string"
         }
       },
       "required": [
         "enabled",
         "gatewayNamespace",
+        "observabilityNamespace",
         "extraIngress"
       ],
       "title": "networkPolicy",
@@ -746,6 +767,7 @@
     "tolerations",
     "affinity",
     "env",
+    "envFrom",
     "swaggerUI",
     "networkPolicy"
   ],

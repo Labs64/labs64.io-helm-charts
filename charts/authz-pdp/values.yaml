@@ -86,6 +86,15 @@ autoscaling:
 networkPolicy:
   enabled: true
   gatewayNamespace: tools
+  # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard
+  # (app.kubernetes.io/name: traefik) when empty
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  ingressControllerLabels: {}
+  # -- Namespace the observability/OTel collector runs in
+  observabilityNamespace: monitoring
 
 podDisruptionBudget:
   enabled: true
@@ -99,6 +108,7 @@ affinity: {}
 volumes: []
 volumeMounts: []
 env: []
+envFrom: []
 
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema

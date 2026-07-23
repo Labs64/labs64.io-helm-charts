@@ -1,0 +1,46 @@
+# ------------------------------------------------------------------------------
+# STANDALONE DEPLOYMENT PROFILE
+# ------------------------------------------------------------------------------
+# Use this configuration file when deploying the AuditFlow microservice
+# as an isolated, standalone installation WITHOUT the labs64io-ecosystem umbrella chart.
+#
+# Usage:
+# helm install auditflow labs64io/auditflow -f values.standalone.yaml
+# ------------------------------------------------------------------------------
+
+# 1. Bring Your Own Infrastructure (BYOI)
+# ------------------------------------------------------------------------------
+global:
+  postgresql:
+    host: "my-external-postgres.database.svc.cluster.local"
+    port: 5432
+  rabbitmq:
+    host: "my-external-rabbitmq.messaging.svc.cluster.local"
+    port: 5672
+
+  # 2. Shared Secrets / Credentials
+  # ------------------------------------------------------------------------------
+  sharedSecret:
+    enabled: false
+
+# Credentials go here, NOT under `applicationYaml` — that block renders into a plain
+# ConfigMap, so putting real passwords there would leak them in cleartext. `secrets.data`
+# renders into a Secret (stringData) and is injected via envFrom.
+secrets:
+  data:
+    SPRING_DATASOURCE_USERNAME: "audit"
+    SPRING_DATASOURCE_PASSWORD: "my-secure-postgres-password"
+    SPRING_RABBITMQ_USERNAME: "user"
+    SPRING_RABBITMQ_PASSWORD: "my-secure-rabbitmq-password"
+
+# 3. Routing Agnosticism
+# ------------------------------------------------------------------------------
+# AuditFlow's default route (/api/v1) is protected — it relies on the Gateway API's
+# ForwardAuth/Cerbos enforcement, which plain Ingress cannot replicate. Leave gateway
+# disabled (route via your own Ingress/port-forward instead) unless you install the
+# Gateway API CRDs, or the chart will refuse to render (fail-fast, rather than silently
+# exposing the API with no authorization).
+gateway:
+  enabled: false
+  # annotations:
+  #   nginx.ingress.kubernetes.io/rewrite-target: /$2

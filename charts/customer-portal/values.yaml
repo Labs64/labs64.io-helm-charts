@@ -87,6 +87,10 @@ ui:
   gateway:
     # -- Publish this module's routes on the Traefik gateway
     enabled: false
+    # -- Annotations for fallback Ingress
+    annotations: {}
+    # -- Ingress Class Name for fallback Ingress
+    ingressClassName: ""
     # -- External path prefix; customer-portal-ui serves under /customer-portal
     prefix: "/customer-portal"
     # -- Gateway API parent Gateway(s) this module's HTTPRoute attaches to
@@ -115,6 +119,15 @@ ui:
     enabled: false
     # -- Namespace where Traefik runs
     gatewayNamespace: tools
+    # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard
+    # (app.kubernetes.io/name: traefik) when empty
+    # @schema
+    # type: object
+    # additionalProperties: true
+    # @schema
+    ingressControllerLabels: {}
+    # -- Namespace the observability/OTel collector runs in
+    observabilityNamespace: monitoring
     # -- Additional raw ingress rules
     extraIngress: []
   

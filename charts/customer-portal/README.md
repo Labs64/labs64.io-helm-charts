@@ -36,7 +36,9 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | ui.application.runtimeEnv.strict | bool | `true` | Strict mode: if true, the container must not start when env.json is missing/invalid. |
 | ui.enabled | bool | `true` |  |
 | ui.fullnameOverride | string | `""` |  |
+| ui.gateway.annotations | object | `{}` | Annotations for fallback Ingress |
 | ui.gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
+| ui.gateway.ingressClassName | string | `""` | Ingress Class Name for fallback Ingress |
 | ui.gateway.parentRefs | list | `[{"name":"labs64io-gateway","namespace":"tools"}]` | Gateway API parent Gateway(s) this module's HTTPRoute attaches to |
 | ui.gateway.prefix | string | `"/customer-portal"` | External path prefix; customer-portal-ui serves under /customer-portal |
 | ui.gateway.routes | list | `[{"path":"","port":8080,"public":true}]` | Routes exposed by this module |
@@ -50,6 +52,8 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | ui.networkPolicy.enabled | bool | `false` |  |
 | ui.networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | ui.networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
+| ui.networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
+| ui.networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | ui.podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. |
 | ui.podDisruptionBudget.enabled | bool | `false` |  |
 | ui.podDisruptionBudget.minAvailable | int | `1` |  |

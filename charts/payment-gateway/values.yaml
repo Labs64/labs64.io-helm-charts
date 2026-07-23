@@ -165,6 +165,7 @@ tolerations: []
 affinity: {}
 
 env: []
+envFrom: []
 
 # -- Secret data to be used as environment variables (delivered via envFrom).
 # External installs supply broker/database/cache credentials here, e.g.
@@ -209,6 +210,9 @@ applicationYaml:
   spring:
     datasource:
       # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
+      # Username/password are NOT set here — this block renders into a plain ConfigMap.
+      # Set credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`
+      # (a Secret, injected via envFrom) instead — see `secrets.data` below.
       url: "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ tpl (.Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\") . }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"
     rabbitmq:
       # -- RabbitMQ host
@@ -228,6 +232,10 @@ applicationYaml:
 gateway:
   # -- Publish this module's routes on the Traefik gateway
   enabled: false
+  # -- Annotations for fallback Ingress
+  annotations: {}
+  # -- Ingress Class Name for fallback Ingress
+  ingressClassName: ""
   # -- External path prefix; defaults to /<chart-name>
   prefix: ""
   # -- Gateway API parent Gateway(s) this module's HTTPRoute attaches to
@@ -280,6 +288,15 @@ networkPolicy:
   enabled: false
   # -- Namespace where Traefik runs
   gatewayNamespace: tools
+  # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard
+  # (app.kubernetes.io/name: traefik) when empty
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  ingressControllerLabels: {}
+  # -- Namespace the observability/OTel collector runs in
+  observabilityNamespace: monitoring
   # -- Additional raw ingress rules
   extraIngress: []
   # -- Tools-namespace destinations this service needs (name + port pairs); rendered as

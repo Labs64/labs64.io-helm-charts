@@ -29,7 +29,11 @@ spec:
               kubernetes.io/metadata.name: {{ .Values.networkPolicy.gatewayNamespace | default "tools" }}
           podSelector:
             matchLabels:
+              {{- if .Values.networkPolicy.ingressControllerLabels }}
+              {{- toYaml .Values.networkPolicy.ingressControllerLabels | nindent 14 }}
+              {{- else }}
               app.kubernetes.io/name: traefik
+              {{- end }}
         - podSelector: {}
     - from:
         - namespaceSelector:
@@ -71,7 +75,7 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: monitoring
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.observabilityNamespace | default "monitoring" }}
       ports:
         - protocol: TCP
           port: 4317

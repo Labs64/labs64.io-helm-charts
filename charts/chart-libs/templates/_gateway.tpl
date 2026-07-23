@@ -115,6 +115,47 @@ spec:
           port: {{ $route.port }}
       {{- end }}
     {{- end }}
+{{- else }}
+{{- /* Gateway API isn't available: fall back to a plain networking.k8s.io/v1 Ingress.
+       Ingress has no equivalent to the HTTPRoute's ForwardAuth/Cerbos ExtensionRef or its
+       X-Auth-* header stripping, so a non-public route served this way would trust
+       client-forged X-Auth-* headers straight through to the backend with zero
+       authorization. Only `public: true` routes may be served this way; any other route
+       fails the render rather than silently shipping an open backend. */}}
+{{- range $route := .Values.gateway.routes }}
+{{- if and (not $route.redirectTo) (not $route.public) }}
+{{- fail (printf "chart-libs.gateway-routes: route %q on %q is not public and requires the Gateway API (ForwardAuth/Cerbos enforcement has no Ingress equivalent). Install the Gateway API CRDs, or mark this route `public: true` only if it truly needs no authorization." $route.path $fullname) }}
+{{- end }}
+{{- end }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullname }}-ingress
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+  {{- if .Values.gateway.annotations }}
+  annotations:
+    {{- toYaml .Values.gateway.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.gateway.ingressClassName }}
+  ingressClassName: {{ .Values.gateway.ingressClassName | quote }}
+  {{- end }}
+  rules:
+    - host: {{ $host | quote }}
+      http:
+        paths:
+          {{- range $route := .Values.gateway.routes }}
+          {{- if and (not $route.redirectTo) $route.public }}
+          - path: {{ printf "%s%s" $prefix $route.path | default "/" | quote }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $route.service | default $fullname }}
+                port:
+                  number: {{ $route.port }}
+          {{- end }}
+          {{- end }}
 {{- end }}
 {{- end }}
 {{- end }}

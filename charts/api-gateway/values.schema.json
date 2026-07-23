@@ -644,6 +644,19 @@
           "title": "gatewayNamespace",
           "type": "string"
         },
+        "ingressControllerLabels": {
+          "additionalProperties": true,
+          "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+          "required": [],
+          "title": "ingressControllerLabels",
+          "type": "object"
+        },
+        "observabilityNamespace": {
+          "default": "monitoring",
+          "description": "Namespace the observability/OTel collector runs in",
+          "title": "observabilityNamespace",
+          "type": "string"
+        },
         "toolsEgress": {
           "description": "Tools-namespace destinations this service needs (name + port pairs); rendered as\nscoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve\ndatabase-per-service isolation.",
           "items": {
@@ -678,6 +691,7 @@
       "required": [
         "enabled",
         "gatewayNamespace",
+        "observabilityNamespace",
         "extraIngress",
         "toolsEgress",
         "egress"

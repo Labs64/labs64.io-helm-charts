@@ -163,6 +163,7 @@ tolerations: []
 affinity: {}
 
 env: []
+envFrom: []
 
 # -- Swagger UI configuration (ref: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)
 swaggerUI:
@@ -178,6 +179,15 @@ networkPolicy:
   enabled: false
   # -- Namespace where Traefik runs
   gatewayNamespace: tools
+  # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard
+  # (app.kubernetes.io/name: traefik) when empty
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  ingressControllerLabels: {}
+  # -- Namespace the observability/OTel collector runs in
+  observabilityNamespace: monitoring
   # -- Additional raw ingress rules
   extraIngress: []
 

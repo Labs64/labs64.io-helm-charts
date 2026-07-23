@@ -59,7 +59,7 @@
               "properties": {
                 "url": {
                   "default": "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ tpl (.Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\") . }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/checkout",
-                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL",
+                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL\nUsername/password are NOT set here — this block renders into a plain ConfigMap.\nSet credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`\n(a Secret, injected via envFrom) instead — see `secrets.data` below.",
                   "title": "url",
                   "type": "string"
                 }
@@ -162,6 +162,13 @@
       "title": "env",
       "type": "array"
     },
+    "envFrom": {
+      "items": {
+        "required": []
+      },
+      "title": "envFrom",
+      "type": "array"
+    },
     "externalSecrets": {
       "additionalProperties": false,
       "properties": {
@@ -192,6 +199,13 @@
       "additionalProperties": false,
       "description": "Gateway routes published by this module (rendered by chart-libs.gateway-routes)",
       "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for fallback Ingress",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
         "authPolicy": {
           "additionalProperties": false,
           "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/api-gateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
@@ -221,6 +235,12 @@
           "description": "Publish this module's routes on the Traefik gateway",
           "title": "enabled",
           "type": "boolean"
+        },
+        "ingressClassName": {
+          "default": "",
+          "description": "Ingress Class Name for fallback Ingress",
+          "title": "ingressClassName",
+          "type": "string"
         },
         "parentRefs": {
           "description": "Gateway API parent Gateway(s) this module's HTTPRoute attaches to",
@@ -357,6 +377,8 @@
       },
       "required": [
         "enabled",
+        "annotations",
+        "ingressClassName",
         "prefix",
         "parentRefs",
         "sharedMiddlewares",
@@ -640,6 +662,19 @@
           "title": "gatewayNamespace",
           "type": "string"
         },
+        "ingressControllerLabels": {
+          "additionalProperties": true,
+          "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+          "required": [],
+          "title": "ingressControllerLabels",
+          "type": "object"
+        },
+        "observabilityNamespace": {
+          "default": "monitoring",
+          "description": "Namespace the observability/OTel collector runs in",
+          "title": "observabilityNamespace",
+          "type": "string"
+        },
         "toolsEgress": {
           "description": "Tools-namespace destinations this service needs (name + port pairs); rendered as\nscoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve\ndatabase-per-service isolation.",
           "items": {
@@ -694,6 +729,7 @@
       "required": [
         "enabled",
         "gatewayNamespace",
+        "observabilityNamespace",
         "extraIngress",
         "toolsEgress",
         "egress"
@@ -1284,11 +1320,24 @@
           "additionalProperties": false,
           "description": "Gateway routes published by this module (rendered by chart-libs.ui-gateway-routes)",
           "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "description": "Annotations for fallback Ingress",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
             "enabled": {
               "default": false,
               "description": "Publish this module's routes on the Traefik gateway",
               "title": "enabled",
               "type": "boolean"
+            },
+            "ingressClassName": {
+              "default": "",
+              "description": "Ingress Class Name for fallback Ingress",
+              "title": "ingressClassName",
+              "type": "string"
             },
             "parentRefs": {
               "description": "Gateway API parent Gateway(s) this module's HTTPRoute attaches to",
@@ -1393,6 +1442,8 @@
           },
           "required": [
             "enabled",
+            "annotations",
+            "ingressClassName",
             "prefix",
             "parentRefs",
             "sharedMiddlewares",
@@ -1467,11 +1518,25 @@
               "description": "Namespace where Traefik runs",
               "title": "gatewayNamespace",
               "type": "string"
+            },
+            "ingressControllerLabels": {
+              "additionalProperties": true,
+              "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+              "required": [],
+              "title": "ingressControllerLabels",
+              "type": "object"
+            },
+            "observabilityNamespace": {
+              "default": "monitoring",
+              "description": "Namespace the observability/OTel collector runs in",
+              "title": "observabilityNamespace",
+              "type": "string"
             }
           },
           "required": [
             "enabled",
             "gatewayNamespace",
+            "observabilityNamespace",
             "extraIngress"
           ],
           "title": "networkPolicy",
@@ -1794,6 +1859,7 @@
     "tolerations",
     "affinity",
     "env",
+    "envFrom",
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",
