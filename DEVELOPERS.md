@@ -2,24 +2,6 @@
 
 Step-by-step guide to spin up the full Labs64.IO stack on a local Kubernetes cluster, deploy all modules, and run regression tests.
 
-## Prerequisites
-
-Install these tools before starting:
-
-| Tool | Version | Purpose |
-|------|---------|---------|
-| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | latest | Container runtime |
-| [k3d](https://k3d.io/) | v5.x+ | Local k3s (lightweight Kubernetes) |
-| [Helm](https://helm.sh/) | v3.x+ | Kubernetes package manager |
-| [Helmfile](https://helmfile.io/) | v1.x+ | Declarative multi-release orchestration (`just up`/`install-tools`/`install-all-apps`) |
-| [kubectl](https://kubernetes.io/docs/tasks/tools/) | v1.28+ | Kubernetes CLI |
-| [just](https://github.com/casey/just) | latest | Task runner (each repo has a justfile) |
-| [curl](https://curl.se/) | latest | API testing |
-
-Optional (for building images locally):
-- Java 25 (Temurin) + Maven 3.6.3+ — for Java backends
-- Node.js 22+ — for Vue frontends
-
 ## Architecture Overview
 
 The diagram below outlines the local Kubernetes (`k3d`) setup for the Labs64.IO microservices ecosystem. It covers the configuration artifacts, third-party (3PP) infrastructure dependencies, and the proprietary Labs64 modules.

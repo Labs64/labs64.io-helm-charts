@@ -300,6 +300,6 @@ it on or off. Signals flow through an OpenTelemetry Collector to Tempo (traces),
 See **[OBSERVABILITY.md](OBSERVABILITY.md)** for the full model, the env-variable contract, and
 how to make a new module observable.
 
-## Star History
+## License
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Labs64/labs64.io-helm-charts&type=Date)](https://www.star-history.com/#Labs64/labs64.io-helm-charts&Date)
+The core of the *Labs64.IO Ecosystem* is entirely open source and free forever. Community modules are licensed under [Apache License 2.0](LICENSE).
