@@ -311,18 +311,18 @@ kubectl get pods -n tools
 Every chart with a `secret.yaml` supports two mutually-exclusive modes, toggled by
 `externalSecrets.enabled`:
 
-- **`false` (default, local):** a plain `Secret` rendered from `.Values.secrets.data` only
+- **`false` (default, Local Development / BYO Infra):** a plain `Secret` rendered from `.Values.secrets.data` only
   — infrastructure is decoupled from every application chart, so there is no bundled-dep
   credential fallback; broker/database credentials must always be supplied explicitly.
   Populated locally via `values.secrets.local.yaml`
   (below) — never committed.
-- **`true` (opt-in locally, intended default for staging/prod):** an `ExternalSecret`
+- **`true` (opt-in locally, intended default for AWS QA / Staging / Prod Environment):** an `ExternalSecret`
   (`chart-libs.externalsecret`) that ESO resolves against a `ClusterSecretStore` — the
   same object shape in every environment, only the backing store differs. Locally that
   store is the `kubernetes`-provider `local-kubernetes-store` (installed by
   `just install-tools`), which replicates a same-named Secret out of the `tools`
-  namespace; a real environment would point `externalSecrets.storeName` at a
-  ClusterSecretStore backed by AWS Secrets Manager, Vault, etc. See `overrides/<app>/values.prod-example.yaml`
+  namespace; the AWS QA environment points `externalSecrets.storeName` at a
+  ClusterSecretStore backed by AWS Secrets Manager. See `overrides/<app>/values.prod-example.yaml`
   for a documented example per app.
 
 **Local secrets (default mode):** before installing the modules, make sure you have the

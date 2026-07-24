@@ -17,7 +17,7 @@ database credentials or connect to another service's database.
 
 ## Deployment Modes
 
-### Local development (shared infrastructure)
+### Local Development (shared infrastructure)
 
 All services connect to shared instances in the `tools` namespace:
 
@@ -31,10 +31,9 @@ Each service uses its own **logical database name** on the shared PostgreSQL
 instance — this is the database-per-service pattern enforced at the
 application level.
 
-### Production
+### AWS QA / Staging / Prod Environment & Users' Own Infrastructure (BYO Infra)
 
-Point `applicationYaml` at your own infrastructure. Each service needs its own
-database credentials via `secrets.data`:
+Infrastructure is decoupled from application charts. Point `applicationYaml` at your own infrastructure (e.g. Terraform-provisioned AWS RDS/Elasticache for AWS QA, or your custom databases for BYO Infra). Each service needs its own database credentials via `secrets.data`:
 
 ```yaml
 secrets:

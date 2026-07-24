@@ -184,21 +184,21 @@ secrets:
   data: {}
 
 # -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead.
+# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own broker instead.
 # @schema
 # type: object
 # additionalProperties: true
 # @schema
 
 # -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for production; point applicationYaml at your own database instead.
+# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own database instead.
 # @schema
 # type: object
 # additionalProperties: true
 # @schema
 
 # -- Optional bundled Redis (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for production; point applicationYaml at your own Redis instead.
+# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own Redis instead.
 # @schema
 # type: object
 # additionalProperties: true

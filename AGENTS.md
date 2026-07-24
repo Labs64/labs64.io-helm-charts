@@ -16,7 +16,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | `charts/preflight/` | Infrastructure readiness checks |
 | `charts/chart-libs/` | Shared Helm library (all charts depend on this) |
 | `helmfile.yaml.gotmpl` | Helmfile state — infra/monitoring/app releases for local + CI deployments |
-| `overrides/` | Per-module values files for different profiles; `overrides/eso/` holds the local `ClusterSecretStore` + RBAC for External Secrets Operator |
+| `overrides/` | Per-module values files for the different [Deployment Modes](#deployment-modes) below; `overrides/eso/` holds the local `ClusterSecretStore` + RBAC for External Secrets Operator |
 | `DEVELOPERS.md` | Local development setup guide with architecture diagram |
 | `OBSERVABILITY.md` | Canonical observability model for the whole ecosystem (infrastructure-owned instrumentation) |
 
@@ -26,15 +26,16 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 2. **All module charts depend on `chart-libs`** — do not break this dependency.
 3. **Credentials are Kubernetes Secrets** — never ConfigMaps for sensitive data.
 4. **Observability is infrastructure-owned** — toggle it via `observability.enabled` (env/annotation injection only); never add OTel SDK deps to services. See [`OBSERVABILITY.md`](OBSERVABILITY.md).
-5. **Local + CI deployments go through Helmfile** (`helmfile.yaml.gotmpl`, drives `just up`/`install-tools`/`install-all-apps`) — do not reintroduce raw per-tool `helm upgrade --install` calls into that path; ArgoCD (`labs64.io-devops`) remains the separate GitOps path for real environments.
-6. **Secret management is unified via `externalSecrets.enabled`** on every chart with a `secret.yaml`: `false` (default) renders a plain `Secret` from `.Values.secrets.data`; `true` renders an `ExternalSecret` resolved through a `ClusterSecretStore` (local: `overrides/eso/cluster-secret-store.yaml`'s `kubernetes`-provider store; real environments: point `externalSecrets.storeName` at a real backend). Same object shape everywhere — only the backing store differs.
+5. **Local + CI deployments go through Helmfile** (`helmfile.yaml.gotmpl`, drives `just up`/`install-tools`/`install-all-apps`) — do not reintroduce raw per-tool `helm upgrade --install` calls into that path; ArgoCD (`labs64.io-devops`) remains the separate GitOps path for the AWS QA / Staging / Prod Environment (see [Deployment Modes](#deployment-modes) below).
+6. **Secret management is unified via `externalSecrets.enabled`** on every chart with a `secret.yaml`: `false` (default) renders a plain `Secret` from `.Values.secrets.data`; `true` renders an `ExternalSecret` resolved through a `ClusterSecretStore` (local: `overrides/eso/cluster-secret-store.yaml`'s `kubernetes`-provider store; AWS QA / Staging / Prod Environment: point `externalSecrets.storeName` at a real backend like AWS Secrets Manager). Same object shape everywhere — only the backing store differs.
 
-## Provisioning profiles
+## Deployment Modes
 
-| Profile | File pattern | Use case |
+| Mode | File pattern | Use case |
 |---------|-------------|----------|
-| Local | `overrides/<module>/values.local.yaml` | Dev cluster with shared toolset |
-| Production | `overrides/<module>/values.prod-example.yaml` | Copy & adapt for your infrastructure |
+| Local Development | `overrides/<module>/values.local.yaml` | Dev cluster with shared toolset via Helmfile (`just up`) |
+| AWS QA / Staging / Prod Environment | ArgoCD + Terraform | GitOps-driven deployment connecting to Terraform-provisioned AWS infra |
+| Users' Own Infrastructure (BYO Infra) | `overrides/<module>/values.prod-example.yaml` | Copy & adapt for your own infrastructure and external services |
 
 Infrastructure is decoupled from application charts — no module chart bundles RabbitMQ/PostgreSQL/Redis
 as a dependency anymore; every app connects to externally-provisioned infra via `applicationYaml`
