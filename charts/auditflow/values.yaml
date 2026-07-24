@@ -522,7 +522,7 @@ extraContainers: |
         - name: OTEL_SERVICE_NAME
           value: "auditflow-transformer"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: '{{ $.Values.observability.otlpEndpoint | quote }}'
+          value: {{ $.Values.observability.otlpEndpoint | quote }}
         - name: OTEL_EXPORTER_OTLP_PROTOCOL
           value: "http/protobuf"
         - name: OTEL_PYTHON_LOG_CORRELATION
@@ -576,7 +576,7 @@ extraContainers: |
         - name: OTEL_SERVICE_NAME
           value: "auditflow-sink"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: '{{ $.Values.observability.otlpEndpoint | quote }}'
+          value: {{ $.Values.observability.otlpEndpoint | quote }}
         - name: OTEL_EXPORTER_OTLP_PROTOCOL
           value: "http/protobuf"
         - name: OTEL_PYTHON_LOG_CORRELATION
