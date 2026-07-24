@@ -44,7 +44,7 @@ up: generate-secrets cluster-up
     @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
 
 # start local environment with monitoring stack + module telemetry enabled
-up-full: up install-monitoring enable-observability
+up-otel: up install-monitoring enable-observability
 
 # reset the environment (uninstall all apps, monitoring, and tools) without destroying the cluster
 reset: uninstall-all-apps uninstall-monitoring uninstall-tools
