@@ -36,8 +36,7 @@ Usage inside a container's env: list:
   valueFrom:
     fieldRef:
       fieldPath: status.hostIP
-- name: JAVA_TOOL_OPTIONS
-  value: "-javaagent:/otel/opentelemetry-javaagent.jar"
+
 - name: OTEL_SERVICE_NAME
   value: {{ include "chart-libs.fullname" . }}
 - name: OTEL_EXPORTER_OTLP_ENDPOINT

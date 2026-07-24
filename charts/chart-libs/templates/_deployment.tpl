@@ -74,6 +74,8 @@ spec:
           {{- if eq .Values.applicationType "java" }}
             - name: SPRING_CONFIG_IMPORT
               value: "optional:file:/opt/application-config/application.yaml"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=75.0 -XX:TieredStopAtLevel=1 -noverify{{ if and .Values.observability .Values.observability.enabled }} -javaagent:/otel/opentelemetry-javaagent.jar{{ end }}"
           {{- include "chart-libs.gracefulShutdown.springEnv" . | nindent 12 }}
           {{- include "chart-libs.observability.javaEnv" . | nindent 12 }}
           {{- else if eq .Values.applicationType "python" }}
