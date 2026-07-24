@@ -1,0 +1,1392 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "affinity": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "affinity",
+      "type": "object"
+    },
+    "applicationType": {
+      "default": "python",
+      "description": "Security response headers are now emitted as a native Gateway API\nResponseHeaderModifier filter on each HTTPRoute rule; the canonical values live\nin the chart-libs \"chart-libs.securityHeaders\" helper. (The former Traefik\nsecurity-headers Middleware has been removed.)",
+      "title": "applicationType",
+      "type": "string"
+    },
+    "authProxy": {
+      "additionalProperties": false,
+      "description": "ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container)",
+      "properties": {
+        "address": {
+          "default": "",
+          "description": "Full URL override for the /auth endpoint; when empty the address is derived as http://\u003cserviceName\u003e.\u003crelease-namespace\u003e.svc.cluster.local:\u003cport\u003e/auth",
+          "title": "address",
+          "type": "string"
+        },
+        "authResponseHeaders": {
+          "description": "Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through)",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "authResponseHeaders",
+          "type": "array"
+        },
+        "port": {
+          "default": 8081,
+          "description": "Service port of the authproxy container",
+          "title": "port",
+          "type": "integer"
+        },
+        "serviceName": {
+          "default": "gateway-common",
+          "description": "Service name backing the ForwardAuth address. Must match fullnameOverride above\nsince the authproxy Service is rendered by this same chart.",
+          "title": "serviceName",
+          "type": "string"
+        },
+        "trustForwardHeader": {
+          "default": true,
+          "description": "Trust X-Forwarded-* headers from the proxy",
+          "title": "trustForwardHeader",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "address",
+        "serviceName",
+        "port",
+        "trustForwardHeader",
+        "authResponseHeaders"
+      ],
+      "title": "authProxy",
+      "type": "object"
+    },
+    "autoscaling": {
+      "additionalProperties": false,
+      "description": "This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "maxReplicas": {
+          "default": 3,
+          "title": "maxReplicas",
+          "type": "integer"
+        },
+        "minReplicas": {
+          "default": 1,
+          "title": "minReplicas",
+          "type": "integer"
+        },
+        "targetCPUUtilizationPercentage": {
+          "default": 80,
+          "title": "targetCPUUtilizationPercentage",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minReplicas",
+        "maxReplicas",
+        "targetCPUUtilizationPercentage"
+      ],
+      "title": "autoscaling",
+      "type": "object"
+    },
+    "buffering": {
+      "additionalProperties": false,
+      "description": "Buffering middleware configuration (limits payload sizes to prevent OOM / large event attacks)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable the shared buffering middleware",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "maxRequestBodyBytes": {
+          "default": 2621440,
+          "description": "Maximum allowed request body size in bytes (default 2.5MB)",
+          "title": "maxRequestBodyBytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "maxRequestBodyBytes"
+      ],
+      "title": "buffering",
+      "type": "object"
+    },
+    "chart-libs": {
+      "additionalProperties": true,
+      "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
+      "required": [],
+      "title": "chart-libs",
+      "type": "object"
+    },
+    "compress": {
+      "additionalProperties": false,
+      "description": "Response-compression middleware (edge optimization for all modules routed through Traefik)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "Enable the shared compress middleware",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "excludedContentTypes": {
+          "description": "Content types excluded from compression (already-compressed formats)",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "excludedContentTypes",
+          "type": "array"
+        },
+        "minResponseBodyBytes": {
+          "default": 1024,
+          "description": "Do not compress responses below this size (bytes)",
+          "title": "minResponseBodyBytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minResponseBodyBytes",
+        "excludedContentTypes"
+      ],
+      "title": "compress",
+      "type": "object"
+    },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
+    "env": {
+      "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "OIDC_DISCOVERY_URL",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "OIDC_AUDIENCE",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "account",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "LOG_LEVEL",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "INFO",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "TOKEN_SCOPES_CLAIM_PATHS",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "scope,realm_access.roles,resource_access.{audience}.roles",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "TOKEN_TENANT_CLAIM_PATH",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "tenant",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "CERBOS_URL",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "http://labs64io-authz-pdp:3592",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "ROUTES_DIR",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "/app/routes",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "STATIC_ROUTES_FILE",
+                "title": "name",
+                "type": "string"
+              },
+              "value": {
+                "default": "/opt/application-config/static_routes.yaml",
+                "title": "value",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "value"
+            ],
+            "type": "object"
+          }
+        ],
+        "required": []
+      },
+      "title": "env",
+      "type": "array"
+    },
+    "externalSecrets": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "storeName": {
+          "default": "local-kubernetes-store",
+          "title": "storeName",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "storeName"
+      ],
+      "title": "externalSecrets",
+      "type": "object"
+    },
+    "extraConfigChecksums": {
+      "description": "Roll the ACS whenever the generated routes / static-route ConfigMaps change\n(checksum/config already covers configmap.yaml; these are the extra dynamically\ngenerated ConfigMaps this chart mounts).",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ],
+        "required": []
+      },
+      "title": "extraConfigChecksums",
+      "type": "array"
+    },
+    "fullnameOverride": {
+      "default": "gateway-common",
+      "description": "Fixed resource-name prefix (instead of the default \"\u003crelease\u003e-api-gateway\") so\nmodule charts can reference the shared middlewares by a stable name regardless of\nrelease name. Also fixes the name of this chart's own Deployment/Service, which is\nwhy authProxy.serviceName below must match this value.",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "This sets the pull policy for images.",
+          "title": "pullPolicy",
+          "type": "string"
+        },
+        "repository": {
+          "default": "labs64/traefik-authproxy",
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "description": "Overrides the image tag whose default is the chart appVersion.",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "pullPolicy",
+        "tag"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "description": "This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/",
+      "items": {
+        "required": []
+      },
+      "title": "imagePullSecrets",
+      "type": "array"
+    },
+    "lifecycle": {
+      "additionalProperties": false,
+      "properties": {
+        "preStopDrainSeconds": {
+          "default": 5,
+          "description": "preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables",
+          "title": "preStopDrainSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preStopDrainSeconds"
+      ],
+      "title": "lifecycle",
+      "type": "object"
+    },
+    "livenessProbe": {
+      "additionalProperties": false,
+      "description": "This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "properties": {
+        "failureThreshold": {
+          "default": 3,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/health",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8081,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "default": 30,
+          "title": "initialDelaySeconds",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "default": 10,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "initialDelaySeconds",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "livenessProbe",
+      "type": "object"
+    },
+    "nameOverride": {
+      "default": "",
+      "description": "This is to override the chart name.",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "networkPolicy": {
+      "additionalProperties": false,
+      "description": "NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)",
+      "properties": {
+        "egress": {
+          "description": "Egress rules enforcing database-per-service isolation.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
+                              "default": 3592,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "authz-pdp",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "egress",
+          "type": "array"
+        },
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "extraIngress": {
+          "description": "Additional raw ingress rules",
+          "items": {
+            "required": []
+          },
+          "title": "extraIngress",
+          "type": "array"
+        },
+        "gatewayNamespace": {
+          "default": "tools",
+          "description": "Namespace where Traefik runs",
+          "title": "gatewayNamespace",
+          "type": "string"
+        },
+        "ingressControllerLabels": {
+          "additionalProperties": true,
+          "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+          "required": [],
+          "title": "ingressControllerLabels",
+          "type": "object"
+        },
+        "observabilityNamespace": {
+          "default": "monitoring",
+          "description": "Namespace the observability/OTel collector runs in",
+          "title": "observabilityNamespace",
+          "type": "string"
+        },
+        "toolsEgress": {
+          "description": "Tools-namespace destinations this service needs (name + port pairs); rendered as\nscoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve\ndatabase-per-service isolation.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "mock-oidc",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "toolsEgress",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "gatewayNamespace",
+        "observabilityNamespace",
+        "extraIngress",
+        "toolsEgress",
+        "egress"
+      ],
+      "title": "networkPolicy",
+      "type": "object"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "observability": {
+      "additionalProperties": false,
+      "description": "Observability is infrastructure-owned: the same image runs with or without it.\nWhen enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI\n(traces + correlated logs + metrics via OTLP).",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable runtime auto-instrumentation (traces + logs + metrics via OTLP)",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "otlpEndpoint": {
+          "default": "http://$(NODE_IP):4318",
+          "description": "OTLP endpoint of the OpenTelemetry Collector",
+          "title": "otlpEndpoint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "otlpEndpoint"
+      ],
+      "title": "observability",
+      "type": "object"
+    },
+    "podAnnotations": {
+      "additionalProperties": false,
+      "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+      "required": [],
+      "title": "podAnnotations",
+      "type": "object"
+    },
+    "podDisruptionBudget": {
+      "additionalProperties": false,
+      "description": "PodDisruptionBudget (rendered by chart-libs.pdb)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "minAvailable": {
+          "default": 1,
+          "title": "minAvailable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minAvailable"
+      ],
+      "title": "podDisruptionBudget",
+      "type": "object"
+    },
+    "podLabels": {
+      "additionalProperties": false,
+      "description": "This is for setting Kubernetes Labels to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+      "required": [],
+      "title": "podLabels",
+      "type": "object"
+    },
+    "podSecurityContext": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "podSecurityContext",
+      "type": "object"
+    },
+    "rateLimit": {
+      "additionalProperties": false,
+      "description": "Rate limit middleware configuration",
+      "properties": {
+        "average": {
+          "default": 100,
+          "description": "Average requests per second",
+          "title": "average",
+          "type": "integer"
+        },
+        "burst": {
+          "default": 50,
+          "description": "Burst size",
+          "title": "burst",
+          "type": "integer"
+        },
+        "perUser": {
+          "default": true,
+          "description": "Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent",
+          "title": "perUser",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "average",
+        "burst",
+        "perUser"
+      ],
+      "title": "rateLimit",
+      "type": "object"
+    },
+    "readinessProbe": {
+      "additionalProperties": false,
+      "description": "This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "properties": {
+        "failureThreshold": {
+          "default": 3,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/health/ready",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8081,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "default": 10,
+          "title": "initialDelaySeconds",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "default": 5,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "initialDelaySeconds",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "readinessProbe",
+      "type": "object"
+    },
+    "replicaCount": {
+      "default": 2,
+      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/\nThe authproxy sits on the hot path of every protected request - keep at least 2 replicas.",
+      "title": "replicaCount",
+      "type": "integer"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "properties": {
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "200m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "512Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
+          "type": "object"
+        },
+        "requests": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "100m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "512Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "requests",
+          "type": "object"
+        }
+      },
+      "required": [
+        "limits",
+        "requests"
+      ],
+      "title": "resources",
+      "type": "object"
+    },
+    "secrets": {
+      "additionalProperties": false,
+      "description": "Secret data to be used as environment variables (delivered via envFrom)",
+      "properties": {
+        "data": {
+          "additionalProperties": true,
+          "required": [],
+          "title": "data",
+          "type": "object"
+        }
+      },
+      "required": [],
+      "title": "secrets",
+      "type": "object"
+    },
+    "securityContext": {
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "additionalProperties": false,
+          "properties": {
+            "drop": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "drop",
+              "type": "array"
+            }
+          },
+          "required": [
+            "drop"
+          ],
+          "title": "capabilities",
+          "type": "object"
+        },
+        "runAsGroup": {
+          "default": 1064,
+          "title": "runAsGroup",
+          "type": "integer"
+        },
+        "runAsNonRoot": {
+          "default": true,
+          "title": "runAsNonRoot",
+          "type": "boolean"
+        },
+        "runAsUser": {
+          "default": 1064,
+          "title": "runAsUser",
+          "type": "integer"
+        },
+        "seccompProfile": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "default": "RuntimeDefault",
+              "title": "type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "title": "seccompProfile",
+          "type": "object"
+        }
+      },
+      "required": [
+        "capabilities",
+        "runAsNonRoot",
+        "runAsUser",
+        "runAsGroup",
+        "seccompProfile"
+      ],
+      "title": "securityContext",
+      "type": "object"
+    },
+    "service": {
+      "additionalProperties": false,
+      "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
+      "properties": {
+        "port": {
+          "default": 8081,
+          "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports",
+          "title": "port",
+          "type": "integer"
+        },
+        "type": {
+          "default": "ClusterIP",
+          "description": "This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types",
+          "title": "type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "port"
+      ],
+      "title": "service",
+      "type": "object"
+    },
+    "serviceAccount": {
+      "additionalProperties": false,
+      "description": "This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/",
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations to add to the service account",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "automount": {
+          "default": true,
+          "description": "Automatically mount a ServiceAccount's API credentials?",
+          "title": "automount",
+          "type": "boolean"
+        },
+        "create": {
+          "default": true,
+          "description": "Specifies whether a service account should be created",
+          "title": "create",
+          "type": "boolean"
+        },
+        "name": {
+          "default": "",
+          "description": "The name of the service account to use.\nIf not set and create is true, a name is generated using the fullname template",
+          "title": "name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "create",
+        "automount",
+        "annotations",
+        "name"
+      ],
+      "title": "serviceAccount",
+      "type": "object"
+    },
+    "startupProbe": {
+      "additionalProperties": false,
+      "description": "Startup probe (rendered by chart-libs.startupProbe): guards cold start so the\nliveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds.",
+      "properties": {
+        "failureThreshold": {
+          "default": 20,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/health/ready",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8081,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 3,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "failureThreshold",
+        "periodSeconds",
+        "timeoutSeconds"
+      ],
+      "title": "startupProbe",
+      "type": "object"
+    },
+    "staticPolicies": {
+      "description": "Static prefix policies for gateway surfaces without an OpenAPI spec\n(UI bundles). Rendered into static_routes.yaml; `id` MUST match an action in\nthe Cerbos static_api policy (charts/authz-pdp/policies/static_api.yaml) — that\npolicy makes the decision, this only carries the routing prefix. Longest prefix\nwins; consulted only when no module route matches.\nTODO: remove after the corresponding modules will be using OpenAPI",
+      "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "default": "checkout-ui",
+                "title": "id",
+                "type": "string"
+              },
+              "prefix": {
+                "default": "/checkout-ui",
+                "title": "prefix",
+                "type": "string"
+              },
+              "public": {
+                "default": false,
+                "title": "public",
+                "type": "boolean"
+              },
+              "scopes": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "required": []
+                },
+                "title": "scopes",
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "prefix",
+              "public",
+              "scopes"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "default": "customer-portal-ui",
+                "title": "id",
+                "type": "string"
+              },
+              "prefix": {
+                "default": "/customer-portal-ui",
+                "title": "prefix",
+                "type": "string"
+              },
+              "public": {
+                "default": false,
+                "title": "public",
+                "type": "boolean"
+              },
+              "scopes": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "required": []
+                },
+                "title": "scopes",
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "prefix",
+              "public",
+              "scopes"
+            ],
+            "type": "object"
+          }
+        ],
+        "required": []
+      },
+      "title": "staticPolicies",
+      "type": "array"
+    },
+    "terminationGracePeriodSeconds": {
+      "default": 45,
+      "description": "Graceful shutdown: drain on rolling updates / scale-in (uvicorn handles SIGTERM;\npreStop gives Traefik/kube-proxy time to deregister the pod first).",
+      "title": "terminationGracePeriodSeconds",
+      "type": "integer"
+    },
+    "tolerations": {
+      "items": {
+        "required": []
+      },
+      "title": "tolerations",
+      "type": "array"
+    },
+    "volumeMounts": {
+      "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/app/routes",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "routes",
+                "title": "name",
+                "type": "string"
+              },
+              "readOnly": {
+                "default": true,
+                "title": "readOnly",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath",
+              "readOnly"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/opt/application-config",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "static-policies",
+                "title": "name",
+                "type": "string"
+              },
+              "readOnly": {
+                "default": true,
+                "title": "readOnly",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath",
+              "readOnly"
+            ],
+            "type": "object"
+          }
+        ],
+        "required": []
+      },
+      "title": "volumeMounts",
+      "type": "array"
+    },
+    "volumes": {
+      "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "configMap": {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "{{ include \"chart-libs.fullname\" . }}-routes",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "title": "configMap",
+                "type": "object"
+              },
+              "name": {
+                "default": "routes",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "configMap"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "configMap": {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "{{ include \"chart-libs.fullname\" . }}-static-policies",
+                    "title": "name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "title": "configMap",
+                "type": "object"
+              },
+              "name": {
+                "default": "static-policies",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "configMap"
+            ],
+            "type": "object"
+          }
+        ],
+        "required": []
+      },
+      "title": "volumes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "enabled",
+    "externalSecrets",
+    "replicaCount",
+    "image",
+    "imagePullSecrets",
+    "secrets",
+    "nameOverride",
+    "fullnameOverride",
+    "serviceAccount",
+    "podAnnotations",
+    "podLabels",
+    "podSecurityContext",
+    "securityContext",
+    "service",
+    "resources",
+    "livenessProbe",
+    "readinessProbe",
+    "startupProbe",
+    "terminationGracePeriodSeconds",
+    "lifecycle",
+    "observability",
+    "autoscaling",
+    "volumes",
+    "volumeMounts",
+    "nodeSelector",
+    "tolerations",
+    "affinity",
+    "env",
+    "staticPolicies",
+    "podDisruptionBudget",
+    "networkPolicy",
+    "authProxy",
+    "rateLimit",
+    "buffering",
+    "compress",
+    "applicationType",
+    "extraConfigChecksums"
+  ],
+  "type": "object"
+}

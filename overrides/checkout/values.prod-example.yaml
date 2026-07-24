@@ -18,7 +18,9 @@ applicationYaml:
   spring:
     rabbitmq:
       host: rabbitmq.infra.example.com
-      port: 5672
+      # Quoted: the chart schema types this port as a string (chart defaults are
+      # Helm-templated string expressions). An unquoted number fails values.schema.json.
+      port: "5672"
     datasource:
       url: jdbc:postgresql://postgres.infra.example.com:5432/checkout
 
@@ -28,3 +30,12 @@ secrets:
     SPRING_RABBITMQ_PASSWORD: <your-broker-password>
     SPRING_DATASOURCE_USERNAME: <your-db-username>
     SPRING_DATASOURCE_PASSWORD: <your-db-password>
+
+# RECOMMENDED for production: replace the inline secrets.data above with an
+# ExternalSecret sourced from your real secret backend (AWS Secrets Manager, Vault,
+# etc.) via a ClusterSecretStore you define — do not reuse the local dev
+# "local-kubernetes-store" (kubernetes-provider) outside of local/CI.
+# externalSecrets:
+#   enabled: true
+#   storeName: <your-clustersecretstore-name>
+#   secretKey: <key/path in your backend containing this app's secret map>

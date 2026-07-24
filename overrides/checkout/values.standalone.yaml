@@ -1,7 +1,0 @@
-# Standalone/eval profile: bundled infra, no gateway stack required.
-# Install: helm upgrade --install my-checkout ./charts/checkout -f ./charts/checkout/values.yaml -f ./overrides/checkout/values.standalone.yaml
-rabbitmq:
-  enabled: true
-
-postgresql:
-  enabled: true

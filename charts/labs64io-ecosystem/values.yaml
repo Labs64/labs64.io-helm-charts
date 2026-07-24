@@ -1,0 +1,144 @@
+# Labs64.IO Ecosystem Umbrella Chart Configuration
+
+# Sub-charts Toggles
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+api-gateway:
+  enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+authz-pdp:
+  enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+checkout:
+  enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+payment-gateway:
+  enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+auditflow:
+  enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+api-docs:
+  enabled: true
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+customer-portal:
+  enabled: true
+
+# Global Configuration Shared Across Ecosystem
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+global:
+  sharedConfig:
+    enabled: true
+    name: "labs64io-shared-config"
+  sharedSecret:
+    enabled: true
+    name: "labs64io-shared-secret"
+  
+  # External dependencies. Plain, fixed hostnames — the bundled Bitnami subcharts below are
+  # pinned to matching `fullnameOverride`s, so these never need release-name templating (a
+  # `{{ .Release.Name }}-postgresql`-style string here would need a second `tpl` pass wherever
+  # it's consumed, which is exactly the class of bug this fixed-naming setup avoids).
+  postgresql:
+    host: "labs64io-postgresql"
+    port: 5432
+    username: "labs64"
+    database: "labs64io"
+  rabbitmq:
+    host: "labs64io-rabbitmq"
+    port: 5672
+    username: "labs64"
+  redis:
+    host: "labs64io-redis-master"
+    port: 6379
+
+secrets:
+  # Base64 encoded secrets injected into labs64io-shared-secret.
+  # Out of the box, we use a default dev password so Bitnami and Java apps sync up.
+  # Change these in production!
+  postgresqlPassword: "labs64_dev_password"
+  rabbitmqPassword: "labs64_dev_password"
+  redisPassword: "labs64_dev_password"
+
+# Opt-In Infrastructure (Enabled by default for one-click dev deployments)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+postgresql:
+  enabled: true
+  # -- Pinned so `global.postgresql.host` above can be a plain string (standalone
+  # architecture: no "-primary" suffix on the resulting service name)
+  fullnameOverride: "labs64io-postgresql"
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    username: "labs64"
+    database: "labs64io"
+    existingSecret: "labs64io-shared-secret"
+    # @schema
+    # type: object
+    # additionalProperties: true
+    # @schema
+    secretKeys:
+      adminPasswordKey: "SPRING_DATASOURCE_PASSWORD"
+      userPasswordKey: "SPRING_DATASOURCE_PASSWORD"
+
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+rabbitmq:
+  enabled: true
+  # -- Pinned so `global.rabbitmq.host` above can be a plain string
+  fullnameOverride: "labs64io-rabbitmq"
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    username: "labs64"
+    existingPasswordSecret: "labs64io-shared-secret"
+    existingSecretPasswordKey: "SPRING_RABBITMQ_PASSWORD"
+
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+redis:
+  enabled: true
+  architecture: standalone
+  # -- Pinned so `global.redis.host` above can be a plain string (standalone architecture:
+  # the primary/master service is named "<fullnameOverride>-master")
+  fullnameOverride: "labs64io-redis"
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    existingSecret: "labs64io-shared-secret"
+    existingSecretPasswordKey: "SPRING_DATA_REDIS_PASSWORD"

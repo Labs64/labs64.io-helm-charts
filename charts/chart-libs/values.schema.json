@@ -1,4 +1,21 @@
 {
-  "required": [],
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    }
+  },
+  "required": [
+    "enabled"
+  ],
   "type": "object"
 }

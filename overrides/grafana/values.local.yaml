@@ -19,18 +19,18 @@ datasources:
       - name: Prometheus
         type: prometheus
         uid: Prometheus
-        url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        url: http://prometheus-kube-prometheus-prometheus:9090
         access: proxy
         isDefault: true
       - name: Loki
         type: loki
         uid: Loki
-        url: http://loki.monitoring.svc.cluster.local:3100
+        url: http://loki:3100
         access: proxy
       - name: Tempo
         type: tempo
         uid: Tempo
-        url: http://tempo.monitoring.svc.cluster.local:3200
+        url: http://tempo:3200
         access: proxy
 
 plugins: []

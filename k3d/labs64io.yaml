@@ -1,7 +1,11 @@
 # k3d cluster for Labs64.IO local development.
 # Creates a local registry on localhost:5005 (matches the justfile docker recipes)
 # and maps 80/443 so *.localhost hosts resolve to Traefik.
-# k3s' embedded Traefik is disabled - the toolset installs its own pinned Traefik.
+# k3s' embedded Traefik and metrics-server are disabled - the toolset installs its
+# own pinned Traefik, and `just install-monitoring` installs metrics-server via Helm
+# (k3s' built-in one is an unmanaged addon that collides with the Helm-owned release:
+# "ServiceAccount metrics-server ... exists and cannot be imported into the current
+# release").
 apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
@@ -29,6 +33,9 @@ options:
   k3s:
     extraArgs:
       - arg: --disable=traefik
+        nodeFilters:
+          - server:*
+      - arg: --disable=metrics-server
         nodeFilters:
           - server:*
       - arg: --tls-san=host.docker.internal

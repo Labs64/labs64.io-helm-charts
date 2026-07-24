@@ -63,6 +63,20 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
+Create the name of the UI service account to use. Mirrors chart-libs.serviceAccountName
+but scoped to .Values.ui.serviceAccount — falling back to "default" (not the backend's
+own service account) when ui.serviceAccount.create is false, since the UI pod must never
+silently inherit the backend's (potentially more privileged) identity.
+*/}}
+{{- define "chart-libs.ui-serviceAccountName" -}}
+{{- if and .Values.ui .Values.ui.serviceAccount .Values.ui.serviceAccount.create }}
+{{- default (printf "%s-ui" (include "chart-libs.fullname" .)) .Values.ui.serviceAccount.name }}
+{{- else }}
+{{- default "default" .Values.ui.serviceAccount.name }}
+{{- end }}
+{{- end }}
+
+{{/*
 Return the appropriate apiVersion for RBAC resources
 */}}
 {{- define "chart-libs.rbac.apiVersion" -}}
@@ -70,19 +84,6 @@ Return the appropriate apiVersion for RBAC resources
 rbac.authorization.k8s.io/v1
 {{- else -}}
 rbac.authorization.k8s.io/v1beta1
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return the appropriate apiVersion for ingress
-*/}}
-{{- define "chart-libs.ingress.apiVersion" -}}
-{{- if .Capabilities.APIVersions.Has "networking.k8s.io/v1" -}}
-networking.k8s.io/v1
-{{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" -}}
-networking.k8s.io/v1beta1
-{{- else -}}
-extensions/v1beta1
 {{- end -}}
 {{- end -}}
 

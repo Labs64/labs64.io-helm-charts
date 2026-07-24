@@ -10,14 +10,14 @@ database credentials or connect to another service's database.
 | checkout | `checkout` | — | yes | Transaction processing |
 | payment-gateway | `payment_gateway` | yes | yes | Billing + idempotency cache |
 | auditflow | — | yes | yes | Idempotency/dedup store |
-| traefik-authproxy | — | — | — | Stateless |
-| checkout-ui | — | — | — | Stateless |
-| customer-portal-ui | — | — | — | Stateless |
-| swagger-ui | — | — | — | Stateless |
+| api-gateway | — | — | — | Stateless |
+| authz-pdp | — | — | — | Stateless (policies mounted via ConfigMap) |
+| customer-portal | — | — | — | Stateless |
+| api-docs | — | — | — | Stateless |
 
 ## Deployment Modes
 
-### Local development (shared infrastructure)
+### Local Development (shared infrastructure)
 
 All services connect to shared instances in the `tools` namespace:
 
@@ -31,16 +31,9 @@ Each service uses its own **logical database name** on the shared PostgreSQL
 instance — this is the database-per-service pattern enforced at the
 application level.
 
-### Standalone (bundled subcharts)
+### AWS QA / Staging / Prod Environment & Users' Own Infrastructure (BYO Infra)
 
-Each service chart includes optional Bitnami subcharts (`postgresql.enabled`,
-`redis.enabled`, `rabbitmq.enabled`). When enabled, the service gets its own
-dedicated database instance — no sharing.
-
-### Production
-
-Point `applicationYaml` at your own infrastructure. Each service needs its own
-database credentials via `secrets.data`:
+Infrastructure is decoupled from application charts. Point `applicationYaml` at your own infrastructure (e.g. Terraform-provisioned AWS RDS/Elasticache for AWS QA, or your custom databases for BYO Infra). Each service needs its own database credentials via `secrets.data`:
 
 ```yaml
 secrets:

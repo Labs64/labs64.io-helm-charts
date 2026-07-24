@@ -1,3 +1,8 @@
+enabled: true
+
+externalSecrets:
+  enabled: false
+  storeName: local-kubernetes-store
 # -- Global values shared across Labs64.IO charts and Bitnami subcharts
 # @schema
 # type: object
@@ -71,23 +76,6 @@ service:
   type: ClusterIP
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8080
-
-# -- This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
-ingress:
-  enabled: false
-  className: "nginx"
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: localhost
-      paths:
-        - path: /
-          pathType: Prefix
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
 
 resources:
   limits:
@@ -177,6 +165,7 @@ tolerations: []
 affinity: {}
 
 env: []
+envFrom: []
 
 # -- Secret data to be used as environment variables (delivered via envFrom).
 # External installs supply broker/database/cache credentials here, e.g.
@@ -195,117 +184,72 @@ secrets:
   data: {}
 
 # -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for production; point applicationYaml at your own broker instead.
+# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own broker instead.
 # @schema
 # type: object
 # additionalProperties: true
 # @schema
-rabbitmq:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/rabbitmq
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    username: labs64
-    password: labs64pw
 
 # -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for production; point applicationYaml at your own database instead.
+# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own database instead.
 # @schema
 # type: object
 # additionalProperties: true
 # @schema
-postgresql:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/postgresql
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    username: labs64
-    password: labs64pw
-    database: payment_gateway
 
 # -- Optional bundled Redis (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for production; point applicationYaml at your own Redis instead.
+# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own Redis instead.
 # @schema
 # type: object
 # additionalProperties: true
 # @schema
-redis:
-  enabled: false
-  # -- docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  image:
-    repository: bitnamilegacy/redis
-  architecture: standalone
-  # @schema
-  # type: object
-  # additionalProperties: true
-  # @schema
-  auth:
-    password: labs64pw
 
 # -- Additional application properties
 applicationYaml:
   # -- Spring configuration
   spring:
-    # -- RabbitMQ connection params
-    rabbitmq:
-      # -- RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host
-      host: '{{ ternary (printf "%s-rabbitmq" .Release.Name) "rabbitmq.tools.svc.cluster.local" .Values.rabbitmq.enabled }}'
-      # -- RabbitMQ port; default: 5672
-      port: 5672
-
-    # -- PostgreSQL connection params
     datasource:
       # -- JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL
-      url: '{{ ternary (printf "jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/payment_gateway" .Release.Name .Release.Namespace) "jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/payment_gateway" .Values.postgresql.enabled }}'
-
-    # -- Redis connection params
+      # Username/password are NOT set here — this block renders into a plain ConfigMap.
+      # Set credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`
+      # (a Secret, injected via envFrom) instead — see `secrets.data` below.
+      url: "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"
+    rabbitmq:
+      # -- RabbitMQ host
+      host: "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}"
+      # -- RabbitMQ port
+      port: '{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}'
     data:
       redis:
-        # -- Redis host; resolves to the bundled subchart when redis.enabled, else set your Redis host
-        host: '{{ ternary (printf "%s-redis-master" .Release.Name) "redis-master.tools.svc.cluster.local" .Values.redis.enabled }}'
-        # -- Redis port; default: 6379
-        port: 6379
+        # -- Redis host
+        host: "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}"
+        # -- Redis port
+        port: '{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}'
+
+
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:
   # -- Publish this module's routes on the Traefik gateway
   enabled: false
+  # -- Annotations for fallback Ingress
+  annotations: {}
+  # -- Ingress Class Name for fallback Ingress
+  ingressClassName: ""
   # -- External path prefix; defaults to /<chart-name>
   prefix: ""
   # -- Gateway API parent Gateway(s) this module's HTTPRoute attaches to
   parentRefs:
     - name: labs64io-gateway
       namespace: tools
-  # -- Names of the shared middlewares provided by the gateway-common chart
+  # -- Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)
   sharedMiddlewares:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
     compress: gateway-common-compress
   # -- Auth-policy publication. NOTE: the traefik-authproxy no longer
   # live-discovers per-module policies via /.well-known/auth-policy — it loads a
-  # generated routes manifest (charts/traefik-authproxy/routes/) and asks the
+  # generated routes manifest (charts/api-gateway/routes/) and asks the
   # central Cerbos PDP for every decision. This block is retained for backward
   # compatibility and is a no-op for edge enforcement.
   authPolicy:
@@ -344,52 +288,37 @@ networkPolicy:
   enabled: false
   # -- Namespace where Traefik runs
   gatewayNamespace: tools
+  # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard
+  # (app.kubernetes.io/name: traefik) when empty
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  ingressControllerLabels: {}
+  # -- Namespace the observability/OTel collector runs in
+  observabilityNamespace: monitoring
   # -- Additional raw ingress rules
   extraIngress: []
+  # -- Tools-namespace destinations this service needs (name + port pairs); rendered as
+  # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
+  # database-per-service isolation.
+  toolsEgress:
+    - name: rabbitmq
+      port: 5672
+    - name: postgresql
+      port: 5432
+    - name: redis
+      port: 6379
   # -- Egress rules enforcing database-per-service isolation.
   egress:
     # Cerbos PDP: @Authorize decisions over gRPC.
     - to:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/name: cerbos
+              app.kubernetes.io/name: authz-pdp
       ports:
         - protocol: TCP
           port: 3593
-    # RabbitMQ
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tools
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: rabbitmq
-      ports:
-        - protocol: TCP
-          port: 5672
-    # PostgreSQL
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tools
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: postgresql
-      ports:
-        - protocol: TCP
-          port: 5432
-    # Redis
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tools
-          podSelector:
-            matchLabels:
-              app.kubernetes.io/name: redis
-      ports:
-        - protocol: TCP
-          port: 6379
-
 # -- SLO recording rules and dashboards (rendered by chart-libs.slo.*)
 slo:
   enabled: true
@@ -411,3 +340,4 @@ tests:
   enabled: true
   # -- Health endpoint probed by `helm test`
   healthPath: /actuator/health
+applicationType: java

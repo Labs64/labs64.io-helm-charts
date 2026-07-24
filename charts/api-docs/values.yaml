@@ -1,0 +1,211 @@
+enabled: true
+
+externalSecrets:
+  enabled: false
+  storeName: local-kubernetes-store
+# -- Global values shared across Labs64.IO charts
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+global:
+  # -- Base domain; swagger-ui is exposed as gateway.<domain>
+  domain: localhost
+
+# -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: swaggerapi/swagger-ui
+  # -- This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+
+# -- Secret data to be used as environment variables (delivered via envFrom)
+secrets:
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  data: {}
+
+# -- This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# -- This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# RBAC configuration (create RBAC resources: Role, RoleBinding)
+rbac:
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources: ["pods", "services", "endpoints"]
+      verbs: ["get", "list", "watch"]
+
+# -- This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# -- This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  runAsNonRoot: true
+  runAsUser: 1064
+  runAsGroup: 1064
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # -- This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 8080
+
+# -- Gateway API HTTPRoute for swagger-ui (public docs aggregator; module API
+# routes are owned by the module charts). No auth — faithful to prior behavior.
+gateway:
+  # -- Enable the swagger-ui HTTPRoute
+  enabled: true
+  # -- Gateway(s) this HTTPRoute attaches to
+  parentRefs:
+    - name: labs64io-gateway
+      namespace: tools
+  # -- Routes. Each: path, optional pathType (default PathPrefix), service{name,port};
+  # stripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path.
+  # @schema
+  # type: array
+  # @schema
+  routes: []
+  #  - path: /swagger-ui
+  #    service: { name: labs64io-api-docs, port: 8080 }
+  #    stripPrefix: true
+  #  - path: /
+  #    pathType: Exact
+  #    redirectTo: /swagger-ui/
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+# -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+  timeoutSeconds: 2
+
+# -- This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+readinessProbe:
+  httpGet:
+    path: /
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  failureThreshold: 3
+  timeoutSeconds: 2
+
+# -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional volumes on the output Deployment definition. Mounts the swagger-config
+# ConfigMap (rendered from `swaggerUI` below) into the image's webroot so CONFIG_URL (see
+# `env` below) can serve it — without this, the container falls back to its baked-in
+# petstore.swagger.io demo config and the ConfigMap is never actually consumed.
+volumes:
+  - name: swagger-config
+    configMap:
+      name: '{{ include "chart-libs.fullname" . }}-swagger-config'
+
+# -- Additional volumeMounts on the output Deployment definition.
+volumeMounts:
+  - name: swagger-config
+    mountPath: /usr/share/nginx/html/swagger-config.yaml
+    subPath: swagger-config.yaml
+    readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# -- CONFIG_URL tells the swagger-ui image's configurator script (/docker-entrypoint.d/40-swagger-ui.sh)
+# to fetch this path client-side (browser-side, not container-side) for its full config
+# (dom_id/urls/validatorUrl), instead of using its built-in petstore.swagger.io demo. Deliberately
+# relative (no leading slash): the page is only reachable behind the gateway's /swagger-ui prefix,
+# which the HTTPRoute strips before forwarding — a root-absolute "/swagger-config.yaml" would miss
+# that route entirely (404 at the gateway, never reaching this container). Must stay in sync with
+# the volumeMount path above.
+env:
+  - name: CONFIG_URL
+    value: swagger-config.yaml
+envFrom: []
+
+# -- Swagger UI configuration (ref: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)
+swaggerUI:
+  # -- An array of API definition objects used by Topbar plugin. When used and Topbar plugin is enabled, the url parameter will not be parsed. Names and URLs must be unique among all items in this array, since they’re used as identifiers.
+  urls: []
+  # -- The ID of a DOM element inside which SwaggerUI will put its user interface.
+  dom_id: '#swagger-ui'
+  # -- By default, Swagger UI attempts to validate specs against swagger.io’s online validator. You can use this parameter to set a different validator URL, for example for locally deployed validators. Setting it to either none, 127.0.0.1 or localhost will disable validation.
+  validatorUrl: https://validator.swagger.io/validator
+
+# -- NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)
+networkPolicy:
+  enabled: false
+  # -- Namespace where Traefik runs
+  gatewayNamespace: tools
+  # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard
+  # (app.kubernetes.io/name: traefik) when empty
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  ingressControllerLabels: {}
+  # -- Namespace the observability/OTel collector runs in
+  observabilityNamespace: monitoring
+  # -- Additional raw ingress rules
+  extraIngress: []
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}

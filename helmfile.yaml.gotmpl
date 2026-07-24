@@ -1,0 +1,242 @@
+repositories:
+  - name: labs64io-pub
+    url: https://labs64.github.io/labs64.io-helm-charts
+  - name: traefik
+    url: https://traefik.github.io/charts
+  - name: metrics-server
+    url: https://kubernetes-sigs.github.io/metrics-server/
+  - name: bitnami
+    url: https://charts.bitnami.com/bitnami
+  - name: open-telemetry
+    url: https://open-telemetry.github.io/opentelemetry-helm-charts
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+  - name: prometheus-community
+    url: https://prometheus-community.github.io/helm-charts
+  - name: external-secrets
+    url: https://charts.external-secrets.io
+
+environments:
+  # CI targets this same "local" profile (a self-hosted runner attached to its own
+  # k3d cluster) — see labs64.io-tests' regression-suite workflow. A distinct
+  # "staging"/"prod" environment belongs to the ArgoCD/Terraform GitOps path
+  # (labs64.io-devops), not Helmfile; add one here only once real per-app
+  # values.<env>.yaml files exist for it.
+  local:
+    values:
+      - overrides/global-values.yaml
+
+---
+releases:
+  # === INFRASTRUCTURE ===
+  - name: traefik
+    namespace: tools
+    chart: traefik/traefik
+    version: 41.0.1
+    values:
+      - overrides/traefik/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: infra
+    needs: []
+
+  - name: external-secrets
+    namespace: tools
+    chart: external-secrets/external-secrets
+    version: 0.12.1
+    set:
+      - name: installCRDs
+        value: true
+    labels:
+      layer: infra
+
+  - name: rabbitmq
+    namespace: tools
+    chart: bitnami/rabbitmq
+    version: 16.0.14
+    values:
+      - overrides/rabbitmq/values.{{ .Environment.Name }}.yaml
+      - overrides/rabbitmq/values.secrets.{{ .Environment.Name }}.yaml
+    labels:
+      layer: infra
+
+  - name: postgresql
+    namespace: tools
+    chart: bitnami/postgresql
+    version: 18.7.11
+    values:
+      - overrides/postgresql/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: infra
+
+  - name: redis
+    namespace: tools
+    chart: bitnami/redis
+    version: 27.0.13
+    values:
+      - overrides/redis/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: infra
+
+  # === MONITORING ===
+  - name: metrics-server
+    namespace: kube-system
+    chart: metrics-server/metrics-server
+    version: 3.13.1
+    values:
+      - overrides/metrics-server/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: monitoring
+
+  - name: opentelemetry-operator
+    namespace: monitoring
+    chart: open-telemetry/opentelemetry-operator
+    version: 0.119.0
+    values:
+      - overrides/opentelemetry/values-operator.{{ .Environment.Name }}.yaml
+    labels:
+      layer: monitoring
+
+  - name: opentelemetry-collector
+    namespace: monitoring
+    chart: open-telemetry/opentelemetry-collector
+    version: 0.165.0
+    values:
+      - overrides/opentelemetry/values-collector.{{ .Environment.Name }}.yaml
+    labels:
+      layer: monitoring
+
+  - name: prometheus
+    namespace: monitoring
+    chart: prometheus-community/kube-prometheus-stack
+    version: 87.15.1
+    values:
+      - overrides/prometheus/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: monitoring
+
+  - name: loki
+    namespace: monitoring
+    chart: grafana/loki
+    version: 6.24.0
+    values:
+      - overrides/loki/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: monitoring
+
+  - name: tempo
+    namespace: monitoring
+    chart: grafana/tempo
+    version: 1.24.4
+    values:
+      - overrides/tempo/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: monitoring
+
+  - name: grafana
+    namespace: monitoring
+    chart: grafana/grafana
+    version: 10.5.15
+    values:
+      - overrides/grafana/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: monitoring
+
+  # === LABS64IO APPS ===
+  - name: labs64io-authz-pdp
+    namespace: labs64io
+    chart: ./charts/authz-pdp
+    values:
+      - ./charts/authz-pdp/values.yaml
+      - ./overrides/global-values.yaml
+      - ./overrides/authz-pdp/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: apps
+    needs:
+      - tools/traefik
+
+  - name: labs64io-api-gateway
+    namespace: labs64io
+    chart: ./charts/api-gateway
+    values:
+      - ./charts/api-gateway/values.yaml
+      - ./overrides/global-values.yaml
+      - ./overrides/api-gateway/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: apps
+    needs:
+      - tools/traefik
+
+  - name: labs64io-api-docs
+    namespace: labs64io
+    chart: ./charts/api-docs
+    values:
+      - ./charts/api-docs/values.yaml
+      - ./overrides/global-values.yaml
+      - ./overrides/api-docs/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: apps
+    needs:
+      - tools/traefik
+
+  - name: labs64io-auditflow
+    namespace: labs64io
+    chart: ./charts/auditflow
+    values:
+      - ./charts/auditflow/values.yaml
+      - ./overrides/global-values.yaml
+      - ./overrides/auditflow/values.{{ .Environment.Name }}.yaml
+      # Static local secrets file (see `just generate-secrets`). Not SOPS-encrypted, so a
+      # plain conditional value file rather than helmfile's `secrets:` (SOPS) mechanism.
+      # Absent once externalSecrets.enabled replaces it for an environment.
+      {{- if isFile (printf "./overrides/auditflow/values.secrets.%s.yaml" .Environment.Name) }}
+      - ./overrides/auditflow/values.secrets.{{ .Environment.Name }}.yaml
+      {{- end }}
+    labels:
+      layer: apps
+    needs:
+      - tools/rabbitmq
+
+  - name: labs64io-checkout
+    namespace: labs64io
+    chart: ./charts/checkout
+    values:
+      - ./charts/checkout/values.yaml
+      - ./overrides/global-values.yaml
+      - ./overrides/checkout/values.{{ .Environment.Name }}.yaml
+      {{- if isFile (printf "./overrides/checkout/values.secrets.%s.yaml" .Environment.Name) }}
+      - ./overrides/checkout/values.secrets.{{ .Environment.Name }}.yaml
+      {{- end }}
+    labels:
+      layer: apps
+    needs:
+      - tools/rabbitmq
+      - tools/postgresql
+
+  - name: labs64io-payment-gateway
+    namespace: labs64io
+    chart: ./charts/payment-gateway
+    values:
+      - ./charts/payment-gateway/values.yaml
+      - ./overrides/global-values.yaml
+      - ./overrides/payment-gateway/values.{{ .Environment.Name }}.yaml
+      {{- if isFile (printf "./overrides/payment-gateway/values.secrets.%s.yaml" .Environment.Name) }}
+      - ./overrides/payment-gateway/values.secrets.{{ .Environment.Name }}.yaml
+      {{- end }}
+    labels:
+      layer: apps
+    needs:
+      - tools/rabbitmq
+      - tools/postgresql
+      - tools/redis
+
+  - name: labs64io-customer-portal
+    namespace: labs64io
+    chart: ./charts/customer-portal
+    values:
+      - ./charts/customer-portal/values.yaml
+      - ./overrides/global-values.yaml
+      - ./overrides/customer-portal/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: apps
+    needs:
+      - tools/traefik

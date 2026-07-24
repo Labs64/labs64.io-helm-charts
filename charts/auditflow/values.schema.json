@@ -9,6 +9,11 @@
       "title": "affinity",
       "type": "object"
     },
+    "applicationType": {
+      "default": "java",
+      "title": "applicationType",
+      "type": "string"
+    },
     "applicationYaml": {
       "additionalProperties": false,
       "description": "Additional application properties",
@@ -121,22 +126,21 @@
           "properties": {
             "data": {
               "additionalProperties": false,
-              "description": "Redis connection params (backing store for the idempotency/dedup service; auditflow.idempotency.store=redis)",
               "properties": {
                 "redis": {
                   "additionalProperties": false,
                   "properties": {
                     "host": {
-                      "default": "redis-master.tools.svc.cluster.local",
-                      "description": "Redis host; defaults to the shared tools Redis. Override for your own Redis in non-local installs.",
+                      "default": "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}",
+                      "description": "Redis host",
                       "title": "host",
                       "type": "string"
                     },
                     "port": {
-                      "default": 6379,
-                      "description": "Redis port; default: 6379",
+                      "default": "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}",
+                      "description": "Redis port",
                       "title": "port",
-                      "type": "integer"
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -153,21 +157,36 @@
               "title": "data",
               "type": "object"
             },
+            "datasource": {
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "default": "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/auditflow",
+                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL\nUsername/password are NOT set here — this block renders into a plain ConfigMap.\nSet credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`\n(a Secret, injected via envFrom) instead — see `secrets.data` below.",
+                  "title": "url",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ],
+              "title": "datasource",
+              "type": "object"
+            },
             "rabbitmq": {
               "additionalProperties": false,
-              "description": "RabbitMQ connection params",
               "properties": {
                 "host": {
-                  "default": "{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}",
-                  "description": "RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host",
+                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}",
+                  "description": "RabbitMQ host",
                   "title": "host",
                   "type": "string"
                 },
                 "port": {
-                  "default": 5672,
-                  "description": "RabbitMQ port; default: 5672",
+                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}",
+                  "description": "RabbitMQ port",
                   "title": "port",
-                  "type": "integer"
+                  "type": "string"
                 }
               },
               "required": [
@@ -179,6 +198,7 @@
             }
           },
           "required": [
+            "datasource",
             "rabbitmq",
             "data"
           ],
@@ -366,6 +386,11 @@
       "title": "chart-libs",
       "type": "object"
     },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
     "env": {
       "description": "Environment variables to add to the container",
       "items": {
@@ -373,6 +398,39 @@
       },
       "title": "env",
       "type": "array"
+    },
+    "envFrom": {
+      "items": {
+        "required": []
+      },
+      "title": "envFrom",
+      "type": "array"
+    },
+    "externalSecrets": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "storeName": {
+          "default": "local-kubernetes-store",
+          "title": "storeName",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "storeName"
+      ],
+      "title": "externalSecrets",
+      "type": "object"
+    },
+    "extraContainers": {
+      "default": "- name: auditflow-transformer\n  image: '{{ .Values.transformer.image.repository }}:{{ .Values.transformer.image.tag | default .Chart.AppVersion }}'\n  imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'\n  ports:\n    - name: http-trn\n      containerPort: {{ .Values.transformer.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-transformer\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-transformer\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: '{{ $.Values.observability.otlpEndpoint | quote }}'\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-trn\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-trn\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n\n- name: auditflow-sink\n  image: '{{ .Values.sink.image.repository }}:{{ .Values.sink.image.tag | default .Chart.AppVersion }}'\n  imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'\n  ports:\n    - name: http-snk\n      containerPort: {{ .Values.sink.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-sink\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-sink\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: '{{ $.Values.observability.otlpEndpoint | quote }}'\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-snk\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-snk\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n",
+      "title": "extraContainers",
+      "type": "string"
     },
     "fullnameOverride": {
       "default": "",
@@ -383,9 +441,16 @@
       "additionalProperties": false,
       "description": "Gateway routes published by this module (rendered by chart-libs.gateway-routes)",
       "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for fallback Ingress",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
         "authPolicy": {
           "additionalProperties": false,
-          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/traefik-authproxy/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
+          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/api-gateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
           "properties": {
             "basePath": {
               "default": "",
@@ -412,6 +477,12 @@
           "description": "Publish this module's routes on the Traefik gateway",
           "title": "enabled",
           "type": "boolean"
+        },
+        "ingressClassName": {
+          "default": "",
+          "description": "Ingress Class Name for fallback Ingress",
+          "title": "ingressClassName",
+          "type": "string"
         },
         "parentRefs": {
           "description": "Gateway API parent Gateway(s) this module's HTTPRoute attaches to",
@@ -519,7 +590,7 @@
         },
         "sharedMiddlewares": {
           "additionalProperties": false,
-          "description": "Names of the shared middlewares provided by the gateway-common chart",
+          "description": "Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)",
           "properties": {
             "auth": {
               "default": "gateway-common-auth",
@@ -554,6 +625,8 @@
       },
       "required": [
         "enabled",
+        "annotations",
+        "ingressClassName",
         "prefix",
         "parentRefs",
         "sharedMiddlewares",
@@ -643,98 +716,6 @@
       },
       "title": "imagePullSecrets",
       "type": "array"
-    },
-    "ingress": {
-      "additionalProperties": false,
-      "description": "This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/",
-      "properties": {
-        "annotations": {
-          "additionalProperties": false,
-          "required": [],
-          "title": "annotations",
-          "type": "object"
-        },
-        "className": {
-          "default": "",
-          "title": "className",
-          "type": "string"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "hosts": {
-          "description": "kubernetes.io/ingress.class: nginx\nkubernetes.io/tls-acme: \"true\"",
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "host": {
-                    "default": "chart-example.local",
-                    "title": "host",
-                    "type": "string"
-                  },
-                  "paths": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "path": {
-                              "default": "/",
-                              "title": "path",
-                              "type": "string"
-                            },
-                            "pathType": {
-                              "default": "ImplementationSpecific",
-                              "title": "pathType",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "path",
-                            "pathType"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "paths",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "host",
-                  "paths"
-                ],
-                "type": "object"
-              }
-            ],
-            "required": []
-          },
-          "title": "hosts",
-          "type": "array"
-        },
-        "tls": {
-          "items": {
-            "required": []
-          },
-          "title": "tls",
-          "type": "array"
-        }
-      },
-      "required": [
-        "enabled",
-        "className",
-        "annotations",
-        "hosts",
-        "tls"
-      ],
-      "title": "ingress",
-      "type": "object"
     },
     "lifecycle": {
       "additionalProperties": false,
@@ -867,7 +848,7 @@
                                   "additionalProperties": false,
                                   "properties": {
                                     "app.kubernetes.io/name": {
-                                      "default": "cerbos",
+                                      "default": "authz-pdp",
                                       "title": "app.kubernetes.io/name",
                                       "type": "string"
                                     }
@@ -887,222 +868,6 @@
                             }
                           },
                           "required": [
-                            "podSelector"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "to",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "to",
-                  "ports"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "ports": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "port": {
-                              "default": 5672,
-                              "title": "port",
-                              "type": "integer"
-                            },
-                            "protocol": {
-                              "default": "TCP",
-                              "title": "protocol",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "protocol",
-                            "port"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "ports",
-                    "type": "array"
-                  },
-                  "to": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "namespaceSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "kubernetes.io/metadata.name": {
-                                      "default": "tools",
-                                      "title": "kubernetes.io/metadata.name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "kubernetes.io/metadata.name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "namespaceSelector",
-                              "type": "object"
-                            },
-                            "podSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "app.kubernetes.io/name": {
-                                      "default": "rabbitmq",
-                                      "title": "app.kubernetes.io/name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "app.kubernetes.io/name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "podSelector",
-                              "type": "object"
-                            }
-                          },
-                          "required": [
-                            "namespaceSelector",
-                            "podSelector"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "to",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "to",
-                  "ports"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "ports": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "port": {
-                              "default": 6379,
-                              "title": "port",
-                              "type": "integer"
-                            },
-                            "protocol": {
-                              "default": "TCP",
-                              "title": "protocol",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "protocol",
-                            "port"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "ports",
-                    "type": "array"
-                  },
-                  "to": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "namespaceSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "kubernetes.io/metadata.name": {
-                                      "default": "tools",
-                                      "title": "kubernetes.io/metadata.name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "kubernetes.io/metadata.name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "namespaceSelector",
-                              "type": "object"
-                            },
-                            "podSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "app.kubernetes.io/name": {
-                                      "default": "redis",
-                                      "title": "app.kubernetes.io/name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "app.kubernetes.io/name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "podSelector",
-                              "type": "object"
-                            }
-                          },
-                          "required": [
-                            "namespaceSelector",
                             "podSelector"
                           ],
                           "type": "object"
@@ -1236,12 +1001,77 @@
           "description": "Namespace where Traefik runs",
           "title": "gatewayNamespace",
           "type": "string"
+        },
+        "ingressControllerLabels": {
+          "additionalProperties": true,
+          "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+          "required": [],
+          "title": "ingressControllerLabels",
+          "type": "object"
+        },
+        "observabilityNamespace": {
+          "default": "monitoring",
+          "description": "Namespace the observability/OTel collector runs in",
+          "title": "observabilityNamespace",
+          "type": "string"
+        },
+        "toolsEgress": {
+          "description": "Tools-namespace destinations this service needs (name + port pairs); rendered as\nscoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve\ndatabase-per-service isolation.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "rabbitmq",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 5672,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "redis",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 6379,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "toolsEgress",
+          "type": "array"
         }
       },
       "required": [
         "enabled",
         "gatewayNamespace",
+        "observabilityNamespace",
         "extraIngress",
+        "toolsEgress",
         "egress"
       ],
       "title": "networkPolicy",
@@ -1361,59 +1191,6 @@
         "seccompProfile"
       ],
       "title": "podSecurityContext",
-      "type": "object"
-    },
-    "rabbitmq": {
-      "additionalProperties": true,
-      "description": "Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own broker instead.",
-      "properties": {
-        "auth": {
-          "additionalProperties": true,
-          "properties": {
-            "password": {
-              "default": "labs64pw",
-              "title": "password",
-              "type": "string"
-            },
-            "username": {
-              "default": "labs64",
-              "title": "username",
-              "type": "string"
-            }
-          },
-          "required": [
-            "username",
-            "password"
-          ],
-          "title": "auth",
-          "type": "object"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "image": {
-          "additionalProperties": true,
-          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
-          "properties": {
-            "repository": {
-              "default": "bitnamilegacy/rabbitmq",
-              "title": "repository",
-              "type": "string"
-            }
-          },
-          "required": [
-            "repository"
-          ],
-          "title": "image",
-          "type": "object"
-        }
-      },
-      "required": [
-        "enabled"
-      ],
-      "title": "rabbitmq",
       "type": "object"
     },
     "rbac": {
@@ -2260,6 +2037,8 @@
     }
   },
   "required": [
+    "enabled",
+    "externalSecrets",
     "replicaCount",
     "image",
     "transformer",
@@ -2274,7 +2053,6 @@
     "podSecurityContext",
     "securityContext",
     "service",
-    "ingress",
     "resources",
     "livenessProbe",
     "readinessProbe",
@@ -2289,6 +2067,7 @@
     "tolerations",
     "affinity",
     "env",
+    "envFrom",
     "observability",
     "tenants",
     "applicationYaml",
@@ -2296,7 +2075,9 @@
     "podDisruptionBudget",
     "networkPolicy",
     "slo",
-    "tests"
+    "tests",
+    "applicationType",
+    "extraContainers"
   ],
   "type": "object"
 }

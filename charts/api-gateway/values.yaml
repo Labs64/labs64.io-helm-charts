@@ -1,0 +1,326 @@
+enabled: true
+
+externalSecrets:
+  enabled: false
+  storeName: local-kubernetes-store
+# -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+# The authproxy sits on the hot path of every protected request - keep at least 2 replicas.
+replicaCount: 2
+
+# -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: labs64/traefik-authproxy
+  # -- This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+
+# -- Secret data to be used as environment variables (delivered via envFrom)
+secrets:
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  data: {}
+
+# -- This is to override the chart name.
+nameOverride: ""
+# -- Fixed resource-name prefix (instead of the default "<release>-api-gateway") so
+# module charts can reference the shared middlewares by a stable name regardless of
+# release name. Also fixes the name of this chart's own Deployment/Service, which is
+# why authProxy.serviceName below must match this value.
+fullnameOverride: gateway-common
+
+# -- This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+# -- This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  runAsNonRoot: true
+  runAsUser: 1064
+  runAsGroup: 1064
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # -- This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 8081
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+# -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8081
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 3
+  timeoutSeconds: 2
+
+# -- This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8081
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  failureThreshold: 3
+  timeoutSeconds: 2
+
+# -- Startup probe (rendered by chart-libs.startupProbe): guards cold start so the
+# liveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds.
+startupProbe:
+  httpGet:
+    path: /health/ready
+    port: 8081
+  failureThreshold: 20
+  periodSeconds: 3
+  timeoutSeconds: 2
+
+# -- Graceful shutdown: drain on rolling updates / scale-in (uvicorn handles SIGTERM;
+# preStop gives Traefik/kube-proxy time to deregister the pod first).
+terminationGracePeriodSeconds: 45
+lifecycle:
+  # -- preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables
+  preStopDrainSeconds: 5
+
+# -- Observability is infrastructure-owned: the same image runs with or without it.
+# When enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI
+# (traces + correlated logs + metrics via OTLP).
+observability:
+  # -- Enable runtime auto-instrumentation (traces + logs + metrics via OTLP)
+  enabled: false
+  # -- OTLP endpoint of the OpenTelemetry Collector
+  otlpEndpoint: "http://$(NODE_IP):4318"
+
+# -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# -- Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+env:
+  # -- OIDC discovery URL. Override per environment:
+  #   production: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  #   local dev:  http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
+  - name: OIDC_DISCOVERY_URL
+    value: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  # -- Audience for the auth proxy.
+  - name: OIDC_AUDIENCE
+    value: account
+  # -- Log level for the auth proxy.
+  - name: LOG_LEVEL
+    value: INFO
+  # -- Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to OIDC_AUDIENCE.
+  # Default: scope,realm_access.roles,resource_access.{audience}.roles.
+  - name: TOKEN_SCOPES_CLAIM_PATHS
+    value: "scope,realm_access.roles,resource_access.{audience}.roles"
+  # -- Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
+  - name: TOKEN_TENANT_CLAIM_PATH
+    value: "tenant"
+  # -- Central Cerbos PDP HTTP endpoint (the authorization decision).
+  - name: CERBOS_URL
+    value: http://labs64io-authz-pdp:3592
+  # -- Directory of generated <module>.routes.yaml manifests (mounted ConfigMap).
+  - name: ROUTES_DIR
+    value: /app/routes
+  # -- Static prefix policies file (rendered from .Values.staticPolicies).
+  - name: STATIC_ROUTES_FILE
+    value: /opt/application-config/static_routes.yaml
+
+# -- Static prefix policies for gateway surfaces without an OpenAPI spec
+# (UI bundles). Rendered into static_routes.yaml; `id` MUST match an action in
+# the Cerbos static_api policy (charts/authz-pdp/policies/static_api.yaml) — that
+# policy makes the decision, this only carries the routing prefix. Longest prefix
+# wins; consulted only when no module route matches.
+# TODO: remove after the corresponding modules will be using OpenAPI
+staticPolicies:
+  - id: checkout-ui
+    prefix: /checkout-ui
+    public: false
+    scopes:
+      - admin-role
+      - ecommerce-role
+  - id: customer-portal-ui
+    prefix: /customer-portal-ui
+    public: false
+    scopes:
+      - admin-role
+      - default-roles-labs64io
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}
+
+# -- PodDisruptionBudget (rendered by chart-libs.pdb)
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# -- NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)
+networkPolicy:
+  enabled: false
+  # -- Namespace where Traefik runs
+  gatewayNamespace: tools
+  # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard
+  # (app.kubernetes.io/name: traefik) when empty
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  ingressControllerLabels: {}
+  # -- Namespace the observability/OTel collector runs in
+  observabilityNamespace: monitoring
+  # -- Additional raw ingress rules
+  extraIngress: []
+  # -- Tools-namespace destinations this service needs (name + port pairs); rendered as
+  # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
+  # database-per-service isolation.
+  toolsEgress:
+    - name: mock-oidc
+      port: 8080
+  # -- Egress rules enforcing database-per-service isolation.
+  egress:
+    # Cerbos PDP: edge /auth decisions over the HTTP API (CerbosEdgeEngine).
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: authz-pdp
+      ports:
+        - protocol: TCP
+          port: 3592
+# -- ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container)
+authProxy:
+  # -- Full URL override for the /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth
+  address: ""
+  # -- Service name backing the ForwardAuth address. Must match fullnameOverride above
+  # since the authproxy Service is rendered by this same chart.
+  serviceName: gateway-common
+  # -- Service port of the authproxy container
+  port: 8081
+  # -- Trust X-Forwarded-* headers from the proxy
+  trustForwardHeader: true
+  # -- Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through)
+  authResponseHeaders:
+    - X-Auth-User
+    - X-Auth-Scopes
+    - X-Auth-Tenant
+    - X-Request-ID
+
+# -- Rate limit middleware configuration
+rateLimit:
+  # -- Average requests per second
+  average: 100
+  # -- Burst size
+  burst: 50
+  # -- Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent
+  perUser: true
+
+# -- Buffering middleware configuration (limits payload sizes to prevent OOM / large event attacks)
+buffering:
+  # -- Enable the shared buffering middleware
+  enabled: true
+  # -- Maximum allowed request body size in bytes (default 2.5MB)
+  maxRequestBodyBytes: 2621440
+
+
+# -- Response-compression middleware (edge optimization for all modules routed through Traefik)
+compress:
+  # -- Enable the shared compress middleware
+  enabled: true
+  # -- Do not compress responses below this size (bytes)
+  minResponseBodyBytes: 1024
+  # -- Content types excluded from compression (already-compressed formats)
+  excludedContentTypes:
+    - image/png
+    - image/jpeg
+    - image/gif
+    - image/webp
+    - application/grpc
+
+# -- Security response headers are now emitted as a native Gateway API
+# ResponseHeaderModifier filter on each HTTPRoute rule; the canonical values live
+# in the chart-libs "chart-libs.securityHeaders" helper. (The former Traefik
+# security-headers Middleware has been removed.)
+applicationType: python
+
+# -- Roll the ACS whenever the generated routes / static-route ConfigMaps change
+# (checksum/config already covers configmap.yaml; these are the extra dynamically
+# generated ConfigMaps this chart mounts).
+extraConfigChecksums:
+  - configmap-routes
+  - configmap-static-policies
+
+volumeMounts:
+  - name: routes
+    mountPath: /app/routes
+    readOnly: true
+  - name: static-policies
+    mountPath: /opt/application-config
+    readOnly: true
+
+volumes:
+  - name: routes
+    configMap:
+      name: '{{ include "chart-libs.fullname" . }}-routes'
+  - name: static-policies
+    configMap:
+      name: '{{ include "chart-libs.fullname" . }}-static-policies'

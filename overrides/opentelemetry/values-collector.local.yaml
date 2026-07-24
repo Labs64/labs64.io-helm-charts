@@ -136,11 +136,11 @@ config:
     debug:
       verbosity: detailed
     prometheusremotewrite:
-      endpoint: "http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090/api/v1/write"
+      endpoint: "http://prometheus-kube-prometheus-prometheus:9090/api/v1/write"
       tls:
         insecure: true
     otlp/tempo:
-      endpoint: "http://tempo.monitoring.svc.cluster.local:4317"
+      endpoint: "tempo.monitoring.svc.cluster.local:4317"
       tls:
         insecure: true
     otlphttp/loki:

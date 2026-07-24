@@ -1,0 +1,25 @@
+apiVersion: v2
+name: authz-pdp
+type: application
+version: 0.2.0
+appVersion: "0.51.0"
+description: "Labs64.IO :: Cerbos PDP — central authorization decision point"
+icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+home: https://labs64.io
+keywords:
+  - labs64io
+  - ecosystem
+  - cerbos
+  - authorization
+  - pdp
+  - security
+sources:
+  - https://github.com/Labs64/labs64.io-helm-charts
+  - https://github.com/cerbos/cerbos
+maintainers:
+  - name: labs64
+    email: info@labs64.com
+dependencies:
+  - name: chart-libs
+    version: 0.2.0
+    repository: file://../chart-libs

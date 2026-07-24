@@ -1,0 +1,49 @@
+apiVersion: v2
+name: labs64io-ecosystem
+type: application
+version: 0.2.0
+appVersion: 0.0.1
+description: "Labs64.IO :: Umbrella Chart for entire Ecosystem"
+home: https://labs64.io
+dependencies:
+  - name: api-gateway
+    version: ">=0.1.0"
+    repository: file://../api-gateway
+    condition: api-gateway.enabled
+  - name: authz-pdp
+    version: ">=0.1.0"
+    repository: file://../authz-pdp
+    condition: authz-pdp.enabled
+  - name: checkout
+    version: ">=0.1.0"
+    repository: file://../checkout
+    condition: checkout.enabled
+  - name: payment-gateway
+    version: ">=0.1.0"
+    repository: file://../payment-gateway
+    condition: payment-gateway.enabled
+  - name: auditflow
+    version: ">=0.1.0"
+    repository: file://../auditflow
+    condition: auditflow.enabled
+  - name: api-docs
+    version: ">=0.1.0"
+    repository: file://../api-docs
+    condition: api-docs.enabled
+  - name: customer-portal
+    version: ">=0.1.0"
+    repository: file://../customer-portal
+    condition: customer-portal.enabled
+  # Infrastructure Opt-In
+  - name: postgresql
+    version: 18.7.11
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: rabbitmq
+    version: 16.0.14
+    repository: https://charts.bitnami.com/bitnami
+    condition: rabbitmq.enabled
+  - name: redis
+    version: 27.0.13
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

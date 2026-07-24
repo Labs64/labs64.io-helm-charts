@@ -9,18 +9,12 @@ gateway:
 networkPolicy:
   enabled: true
 
-rabbitmq:
-  enabled: false
 
-postgresql:
-  enabled: false
 
-redis:
-  enabled: false
 
 # Authorization PEP -> central Cerbos PDP
 env:
   - name: LABS64_AUTH_AUTHZ_MODE
     value: SHADOW
   - name: LABS64_AUTH_AUTHZ_PDPADDRESS
-    value: labs64io-cerbos.labs64io.svc.cluster.local:3593
+    value: labs64io-authz-pdp.labs64io.svc.cluster.local:3593

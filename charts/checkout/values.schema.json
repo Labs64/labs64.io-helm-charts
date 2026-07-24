@@ -8,6 +8,11 @@
       "title": "affinity",
       "type": "object"
     },
+    "applicationType": {
+      "default": "java",
+      "title": "applicationType",
+      "type": "string"
+    },
     "applicationYaml": {
       "additionalProperties": false,
       "description": "Additional application properties",
@@ -16,13 +21,45 @@
           "additionalProperties": false,
           "description": "Spring configuration",
           "properties": {
+            "data": {
+              "additionalProperties": false,
+              "properties": {
+                "redis": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "host": {
+                      "default": "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}",
+                      "description": "Redis host",
+                      "title": "host",
+                      "type": "string"
+                    },
+                    "port": {
+                      "default": "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}",
+                      "description": "Redis port",
+                      "title": "port",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "host",
+                    "port"
+                  ],
+                  "title": "redis",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "redis"
+              ],
+              "title": "data",
+              "type": "object"
+            },
             "datasource": {
               "additionalProperties": false,
-              "description": "PostgreSQL connection params",
               "properties": {
                 "url": {
-                  "default": "{{ ternary (printf \"jdbc:postgresql://%s-postgresql.%s.svc.cluster.local:5432/checkout\" .Release.Name .Release.Namespace) \"jdbc:postgresql://postgresql.tools.svc.cluster.local:5432/checkout\" .Values.postgresql.enabled }}",
-                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL",
+                  "default": "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/checkout",
+                  "description": "JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL\nUsername/password are NOT set here — this block renders into a plain ConfigMap.\nSet credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`\n(a Secret, injected via envFrom) instead — see `secrets.data` below.",
                   "title": "url",
                   "type": "string"
                 }
@@ -35,19 +72,18 @@
             },
             "rabbitmq": {
               "additionalProperties": false,
-              "description": "RabbitMQ connection params",
               "properties": {
                 "host": {
-                  "default": "{{ ternary (printf \"%s-rabbitmq\" .Release.Name) \"rabbitmq.tools.svc.cluster.local\" .Values.rabbitmq.enabled }}",
-                  "description": "RabbitMQ host; resolves to the bundled subchart service when rabbitmq.enabled, else set your broker host",
+                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}",
+                  "description": "RabbitMQ host",
                   "title": "host",
                   "type": "string"
                 },
                 "port": {
-                  "default": 5672,
-                  "description": "RabbitMQ port; default: 5672",
+                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}",
+                  "description": "RabbitMQ port",
                   "title": "port",
-                  "type": "integer"
+                  "type": "string"
                 }
               },
               "required": [
@@ -59,8 +95,9 @@
             }
           },
           "required": [
+            "datasource",
             "rabbitmq",
-            "datasource"
+            "data"
           ],
           "title": "spring",
           "type": "object"
@@ -113,12 +150,45 @@
       "title": "chart-libs",
       "type": "object"
     },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
     "env": {
       "items": {
         "required": []
       },
       "title": "env",
       "type": "array"
+    },
+    "envFrom": {
+      "items": {
+        "required": []
+      },
+      "title": "envFrom",
+      "type": "array"
+    },
+    "externalSecrets": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "storeName": {
+          "default": "local-kubernetes-store",
+          "title": "storeName",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "storeName"
+      ],
+      "title": "externalSecrets",
+      "type": "object"
     },
     "fullnameOverride": {
       "default": "",
@@ -129,9 +199,16 @@
       "additionalProperties": false,
       "description": "Gateway routes published by this module (rendered by chart-libs.gateway-routes)",
       "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for fallback Ingress",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
         "authPolicy": {
           "additionalProperties": false,
-          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/traefik-authproxy/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
+          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/api-gateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
           "properties": {
             "basePath": {
               "default": "",
@@ -158,6 +235,12 @@
           "description": "Publish this module's routes on the Traefik gateway",
           "title": "enabled",
           "type": "boolean"
+        },
+        "ingressClassName": {
+          "default": "",
+          "description": "Ingress Class Name for fallback Ingress",
+          "title": "ingressClassName",
+          "type": "string"
         },
         "parentRefs": {
           "description": "Gateway API parent Gateway(s) this module's HTTPRoute attaches to",
@@ -265,7 +348,7 @@
         },
         "sharedMiddlewares": {
           "additionalProperties": false,
-          "description": "Names of the shared middlewares provided by the gateway-common chart",
+          "description": "Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)",
           "properties": {
             "auth": {
               "default": "gateway-common-auth",
@@ -294,6 +377,8 @@
       },
       "required": [
         "enabled",
+        "annotations",
+        "ingressClassName",
         "prefix",
         "parentRefs",
         "sharedMiddlewares",
@@ -383,98 +468,6 @@
       },
       "title": "imagePullSecrets",
       "type": "array"
-    },
-    "ingress": {
-      "additionalProperties": false,
-      "description": "This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/",
-      "properties": {
-        "annotations": {
-          "additionalProperties": false,
-          "required": [],
-          "title": "annotations",
-          "type": "object"
-        },
-        "className": {
-          "default": "nginx",
-          "title": "className",
-          "type": "string"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "hosts": {
-          "description": "kubernetes.io/ingress.class: nginx\nkubernetes.io/tls-acme: \"true\"",
-          "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "host": {
-                    "default": "localhost",
-                    "title": "host",
-                    "type": "string"
-                  },
-                  "paths": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "path": {
-                              "default": "/",
-                              "title": "path",
-                              "type": "string"
-                            },
-                            "pathType": {
-                              "default": "Prefix",
-                              "title": "pathType",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "path",
-                            "pathType"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "paths",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "host",
-                  "paths"
-                ],
-                "type": "object"
-              }
-            ],
-            "required": []
-          },
-          "title": "hosts",
-          "type": "array"
-        },
-        "tls": {
-          "items": {
-            "required": []
-          },
-          "title": "tls",
-          "type": "array"
-        }
-      },
-      "required": [
-        "enabled",
-        "className",
-        "annotations",
-        "hosts",
-        "tls"
-      ],
-      "title": "ingress",
-      "type": "object"
     },
     "lifecycle": {
       "additionalProperties": false,
@@ -607,7 +600,7 @@
                                   "additionalProperties": false,
                                   "properties": {
                                     "app.kubernetes.io/name": {
-                                      "default": "cerbos",
+                                      "default": "authz-pdp",
                                       "title": "app.kubernetes.io/name",
                                       "type": "string"
                                     }
@@ -627,222 +620,6 @@
                             }
                           },
                           "required": [
-                            "podSelector"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "to",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "to",
-                  "ports"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "ports": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "port": {
-                              "default": 5672,
-                              "title": "port",
-                              "type": "integer"
-                            },
-                            "protocol": {
-                              "default": "TCP",
-                              "title": "protocol",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "protocol",
-                            "port"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "ports",
-                    "type": "array"
-                  },
-                  "to": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "namespaceSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "kubernetes.io/metadata.name": {
-                                      "default": "tools",
-                                      "title": "kubernetes.io/metadata.name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "kubernetes.io/metadata.name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "namespaceSelector",
-                              "type": "object"
-                            },
-                            "podSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "app.kubernetes.io/name": {
-                                      "default": "rabbitmq",
-                                      "title": "app.kubernetes.io/name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "app.kubernetes.io/name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "podSelector",
-                              "type": "object"
-                            }
-                          },
-                          "required": [
-                            "namespaceSelector",
-                            "podSelector"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "to",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "to",
-                  "ports"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "ports": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "port": {
-                              "default": 5432,
-                              "title": "port",
-                              "type": "integer"
-                            },
-                            "protocol": {
-                              "default": "TCP",
-                              "title": "protocol",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "protocol",
-                            "port"
-                          ],
-                          "type": "object"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "ports",
-                    "type": "array"
-                  },
-                  "to": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "namespaceSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "kubernetes.io/metadata.name": {
-                                      "default": "tools",
-                                      "title": "kubernetes.io/metadata.name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "kubernetes.io/metadata.name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "namespaceSelector",
-                              "type": "object"
-                            },
-                            "podSelector": {
-                              "additionalProperties": false,
-                              "properties": {
-                                "matchLabels": {
-                                  "additionalProperties": false,
-                                  "properties": {
-                                    "app.kubernetes.io/name": {
-                                      "default": "postgresql",
-                                      "title": "app.kubernetes.io/name",
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "app.kubernetes.io/name"
-                                  ],
-                                  "title": "matchLabels",
-                                  "type": "object"
-                                }
-                              },
-                              "required": [
-                                "matchLabels"
-                              ],
-                              "title": "podSelector",
-                              "type": "object"
-                            }
-                          },
-                          "required": [
-                            "namespaceSelector",
                             "podSelector"
                           ],
                           "type": "object"
@@ -884,12 +661,77 @@
           "description": "Namespace where Traefik runs",
           "title": "gatewayNamespace",
           "type": "string"
+        },
+        "ingressControllerLabels": {
+          "additionalProperties": true,
+          "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+          "required": [],
+          "title": "ingressControllerLabels",
+          "type": "object"
+        },
+        "observabilityNamespace": {
+          "default": "monitoring",
+          "description": "Namespace the observability/OTel collector runs in",
+          "title": "observabilityNamespace",
+          "type": "string"
+        },
+        "toolsEgress": {
+          "description": "Tools-namespace destinations this service needs (name + port pairs); rendered as\nscoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve\ndatabase-per-service isolation.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "rabbitmq",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 5672,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "postgresql",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 5432,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "toolsEgress",
+          "type": "array"
         }
       },
       "required": [
         "enabled",
         "gatewayNamespace",
+        "observabilityNamespace",
         "extraIngress",
+        "toolsEgress",
         "egress"
       ],
       "title": "networkPolicy",
@@ -972,118 +814,6 @@
       "additionalProperties": false,
       "required": [],
       "title": "podSecurityContext",
-      "type": "object"
-    },
-    "postgresql": {
-      "additionalProperties": true,
-      "description": "Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own database instead.",
-      "properties": {
-        "auth": {
-          "additionalProperties": true,
-          "properties": {
-            "database": {
-              "default": "checkout",
-              "title": "database",
-              "type": "string"
-            },
-            "password": {
-              "default": "labs64pw",
-              "title": "password",
-              "type": "string"
-            },
-            "username": {
-              "default": "labs64",
-              "title": "username",
-              "type": "string"
-            }
-          },
-          "required": [
-            "username",
-            "password",
-            "database"
-          ],
-          "title": "auth",
-          "type": "object"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "image": {
-          "additionalProperties": true,
-          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
-          "properties": {
-            "repository": {
-              "default": "bitnamilegacy/postgresql",
-              "title": "repository",
-              "type": "string"
-            }
-          },
-          "required": [
-            "repository"
-          ],
-          "title": "image",
-          "type": "object"
-        }
-      },
-      "required": [
-        "enabled"
-      ],
-      "title": "postgresql",
-      "type": "object"
-    },
-    "rabbitmq": {
-      "additionalProperties": true,
-      "description": "Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.\nDev-grade credentials - NOT for production; point applicationYaml at your own broker instead.",
-      "properties": {
-        "auth": {
-          "additionalProperties": true,
-          "properties": {
-            "password": {
-              "default": "labs64pw",
-              "title": "password",
-              "type": "string"
-            },
-            "username": {
-              "default": "labs64",
-              "title": "username",
-              "type": "string"
-            }
-          },
-          "required": [
-            "username",
-            "password"
-          ],
-          "title": "auth",
-          "type": "object"
-        },
-        "enabled": {
-          "default": false,
-          "title": "enabled",
-          "type": "boolean"
-        },
-        "image": {
-          "additionalProperties": true,
-          "description": "docker.io/bitnami versioned tags were moved to bitnamilegacy; keep in sync with the subchart's default tag",
-          "properties": {
-            "repository": {
-              "default": "bitnamilegacy/rabbitmq",
-              "title": "repository",
-              "type": "string"
-            }
-          },
-          "required": [
-            "repository"
-          ],
-          "title": "image",
-          "type": "object"
-        }
-      },
-      "required": [
-        "enabled"
-      ],
-      "title": "rabbitmq",
       "type": "object"
     },
     "rbac": {
@@ -1508,6 +1238,580 @@
       "title": "tolerations",
       "type": "array"
     },
+    "ui": {
+      "additionalProperties": false,
+      "properties": {
+        "application": {
+          "additionalProperties": false,
+          "properties": {
+            "runtimeEnv": {
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "default": true,
+                  "description": "Enable loading a runtime config file (env.json).",
+                  "title": "enabled",
+                  "type": "boolean"
+                },
+                "env": {
+                  "additionalProperties": false,
+                  "description": "Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix).",
+                  "properties": {
+                    "VITE_API_URL": {
+                      "default": "https://\u003cHOST\u003e/checkout/api/v1",
+                      "description": "Primary API base URL — replace \u003cHOST\u003e with your domain/host.",
+                      "title": "VITE_API_URL",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "VITE_API_URL"
+                  ],
+                  "title": "env",
+                  "type": "object"
+                },
+                "path": {
+                  "default": "/usr/share/nginx/html/config/env.json",
+                  "description": "Absolute path in the container where env.json is mounted and served from (must match Nginx/Ingress config).",
+                  "title": "path",
+                  "type": "string"
+                },
+                "strict": {
+                  "default": true,
+                  "description": "Strict mode: if true, the container must not start when env.json is missing/invalid (e.g., ConfigMap not mounted).",
+                  "title": "strict",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "enabled",
+                "strict",
+                "path",
+                "env"
+              ],
+              "title": "runtimeEnv",
+              "type": "object"
+            }
+          },
+          "required": [
+            "runtimeEnv"
+          ],
+          "title": "application",
+          "type": "object"
+        },
+        "chart-libs": {
+          "additionalProperties": true,
+          "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
+          "required": [],
+          "title": "chart-libs",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "fullnameOverride": {
+          "default": "",
+          "title": "fullnameOverride",
+          "type": "string"
+        },
+        "gateway": {
+          "additionalProperties": false,
+          "description": "Gateway routes published by this module (rendered by chart-libs.ui-gateway-routes)",
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "description": "Annotations for fallback Ingress",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "enabled": {
+              "default": false,
+              "description": "Publish this module's routes on the Traefik gateway",
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "ingressClassName": {
+              "default": "",
+              "description": "Ingress Class Name for fallback Ingress",
+              "title": "ingressClassName",
+              "type": "string"
+            },
+            "parentRefs": {
+              "description": "Gateway API parent Gateway(s) this module's HTTPRoute attaches to",
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "default": "labs64io-gateway",
+                        "title": "name",
+                        "type": "string"
+                      },
+                      "namespace": {
+                        "default": "tools",
+                        "title": "namespace",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "namespace"
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "required": []
+              },
+              "title": "parentRefs",
+              "type": "array"
+            },
+            "prefix": {
+              "default": "/checkout",
+              "description": "External path prefix; checkout-ui serves under /checkout",
+              "title": "prefix",
+              "type": "string"
+            },
+            "routes": {
+              "description": "Routes exposed by this module",
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "path": {
+                        "default": "",
+                        "title": "path",
+                        "type": "string"
+                      },
+                      "port": {
+                        "default": 8080,
+                        "title": "port",
+                        "type": "integer"
+                      },
+                      "public": {
+                        "default": true,
+                        "title": "public",
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "path",
+                      "port",
+                      "public"
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "required": []
+              },
+              "title": "routes",
+              "type": "array"
+            },
+            "sharedMiddlewares": {
+              "additionalProperties": false,
+              "description": "Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)",
+              "properties": {
+                "auth": {
+                  "default": "gateway-common-auth",
+                  "title": "auth",
+                  "type": "string"
+                },
+                "compress": {
+                  "default": "gateway-common-compress",
+                  "title": "compress",
+                  "type": "string"
+                },
+                "rateLimit": {
+                  "default": "gateway-common-ratelimit",
+                  "title": "rateLimit",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "auth",
+                "rateLimit",
+                "compress"
+              ],
+              "title": "sharedMiddlewares",
+              "type": "object"
+            }
+          },
+          "required": [
+            "enabled",
+            "annotations",
+            "ingressClassName",
+            "prefix",
+            "parentRefs",
+            "sharedMiddlewares",
+            "routes"
+          ],
+          "title": "gateway",
+          "type": "object"
+        },
+        "image": {
+          "additionalProperties": false,
+          "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
+          "properties": {
+            "pullPolicy": {
+              "default": "IfNotPresent",
+              "description": "This sets the pull policy for images.",
+              "title": "pullPolicy",
+              "type": "string"
+            },
+            "repository": {
+              "default": "labs64/checkout-ui",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "",
+              "description": "Overrides the image tag whose default is the chart appVersion.",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "pullPolicy",
+            "tag"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "imagePullSecrets": {
+          "description": "This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/",
+          "items": {
+            "required": []
+          },
+          "title": "imagePullSecrets",
+          "type": "array"
+        },
+        "nameOverride": {
+          "default": "",
+          "description": "This is to override the chart name.",
+          "title": "nameOverride",
+          "type": "string"
+        },
+        "networkPolicy": {
+          "additionalProperties": false,
+          "description": "NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "extraIngress": {
+              "description": "Additional raw ingress rules",
+              "items": {
+                "required": []
+              },
+              "title": "extraIngress",
+              "type": "array"
+            },
+            "gatewayNamespace": {
+              "default": "tools",
+              "description": "Namespace where Traefik runs",
+              "title": "gatewayNamespace",
+              "type": "string"
+            },
+            "ingressControllerLabels": {
+              "additionalProperties": true,
+              "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+              "required": [],
+              "title": "ingressControllerLabels",
+              "type": "object"
+            },
+            "observabilityNamespace": {
+              "default": "monitoring",
+              "description": "Namespace the observability/OTel collector runs in",
+              "title": "observabilityNamespace",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "gatewayNamespace",
+            "observabilityNamespace",
+            "extraIngress"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
+        },
+        "podAnnotations": {
+          "additionalProperties": false,
+          "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+          "required": [],
+          "title": "podAnnotations",
+          "type": "object"
+        },
+        "podDisruptionBudget": {
+          "additionalProperties": false,
+          "description": "PodDisruptionBudget (rendered by chart-libs.pdb)",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "minAvailable": {
+              "default": 1,
+              "title": "minAvailable",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "enabled",
+            "minAvailable"
+          ],
+          "title": "podDisruptionBudget",
+          "type": "object"
+        },
+        "podLabels": {
+          "additionalProperties": false,
+          "description": "This is for setting Kubernetes Labels to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+          "required": [],
+          "title": "podLabels",
+          "type": "object"
+        },
+        "podSecurityContext": {
+          "additionalProperties": false,
+          "description": "Non-root pod security context. The image is nginx-unprivileged (UID 101), so the\nwhole pod runs unprivileged and listens on 8080.",
+          "properties": {
+            "fsGroup": {
+              "default": 101,
+              "title": "fsGroup",
+              "type": "integer"
+            },
+            "runAsGroup": {
+              "default": 101,
+              "title": "runAsGroup",
+              "type": "integer"
+            },
+            "runAsNonRoot": {
+              "default": true,
+              "title": "runAsNonRoot",
+              "type": "boolean"
+            },
+            "runAsUser": {
+              "default": 101,
+              "title": "runAsUser",
+              "type": "integer"
+            },
+            "seccompProfile": {
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "default": "RuntimeDefault",
+                  "title": "type",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "title": "seccompProfile",
+              "type": "object"
+            }
+          },
+          "required": [
+            "runAsNonRoot",
+            "runAsUser",
+            "runAsGroup",
+            "fsGroup",
+            "seccompProfile"
+          ],
+          "title": "podSecurityContext",
+          "type": "object"
+        },
+        "rbac": {
+          "additionalProperties": false,
+          "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
+          "properties": {
+            "create": {
+              "default": false,
+              "title": "create",
+              "type": "boolean"
+            },
+            "rules": {
+              "items": {
+                "required": []
+              },
+              "title": "rules",
+              "type": "array"
+            }
+          },
+          "required": [
+            "create",
+            "rules"
+          ],
+          "title": "rbac",
+          "type": "object"
+        },
+        "replicaCount": {
+          "default": 1,
+          "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/",
+          "title": "replicaCount",
+          "type": "integer"
+        },
+        "securityContext": {
+          "additionalProperties": false,
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "default": false,
+              "title": "allowPrivilegeEscalation",
+              "type": "boolean"
+            },
+            "capabilities": {
+              "additionalProperties": false,
+              "properties": {
+                "drop": {
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      }
+                    ],
+                    "required": []
+                  },
+                  "title": "drop",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "drop"
+              ],
+              "title": "capabilities",
+              "type": "object"
+            },
+            "readOnlyRootFilesystem": {
+              "default": false,
+              "title": "readOnlyRootFilesystem",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowPrivilegeEscalation",
+            "capabilities",
+            "readOnlyRootFilesystem"
+          ],
+          "title": "securityContext",
+          "type": "object"
+        },
+        "service": {
+          "additionalProperties": false,
+          "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
+          "properties": {
+            "port": {
+              "default": 8080,
+              "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports\nNon-privileged port served by nginx-unprivileged.",
+              "title": "port",
+              "type": "integer"
+            },
+            "type": {
+              "default": "ClusterIP",
+              "description": "This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types",
+              "title": "type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "port"
+          ],
+          "title": "service",
+          "type": "object"
+        },
+        "serviceAccount": {
+          "additionalProperties": false,
+          "description": "This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/",
+          "properties": {
+            "annotations": {
+              "additionalProperties": false,
+              "description": "Annotations to add to the service account",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "automount": {
+              "default": true,
+              "description": "Automatically mount a ServiceAccount's API credentials?",
+              "title": "automount",
+              "type": "boolean"
+            },
+            "create": {
+              "default": false,
+              "description": "Specifies whether a service account should be created",
+              "title": "create",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "",
+              "description": "The name of the service account to use.\nIf not set and create is true, a name is generated using the fullname template",
+              "title": "name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "create",
+            "automount",
+            "annotations",
+            "name"
+          ],
+          "title": "serviceAccount",
+          "type": "object"
+        },
+        "tests": {
+          "additionalProperties": false,
+          "description": "helm test hook (rendered by chart-libs.test-connection)",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "healthPath": {
+              "default": "/",
+              "description": "Health endpoint probed by `helm test`",
+              "title": "healthPath",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "healthPath"
+          ],
+          "title": "tests",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "replicaCount",
+        "image",
+        "imagePullSecrets",
+        "nameOverride",
+        "fullnameOverride",
+        "serviceAccount",
+        "rbac",
+        "podAnnotations",
+        "podLabels",
+        "podSecurityContext",
+        "securityContext",
+        "service",
+        "application",
+        "gateway",
+        "podDisruptionBudget",
+        "networkPolicy",
+        "tests"
+      ],
+      "title": "ui",
+      "type": "object"
+    },
     "volumeMounts": {
       "description": "Additional volumeMounts on the output Deployment definition.",
       "items": {
@@ -1526,6 +1830,8 @@
     }
   },
   "required": [
+    "enabled",
+    "externalSecrets",
     "replicaCount",
     "image",
     "imagePullSecrets",
@@ -1538,7 +1844,6 @@
     "podSecurityContext",
     "securityContext",
     "service",
-    "ingress",
     "resources",
     "livenessProbe",
     "readinessProbe",
@@ -1554,12 +1859,15 @@
     "tolerations",
     "affinity",
     "env",
+    "envFrom",
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",
     "networkPolicy",
     "slo",
-    "tests"
+    "tests",
+    "ui",
+    "applicationType"
   ],
   "type": "object"
 }

@@ -1,0 +1,25 @@
+{{- if and .Values.ui.enabled .Values.ui.tests .Values.ui.tests.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "chart-libs.fullname" . }}-ui-test-connection"
+  labels:
+    helm.sh/chart: {{ include "chart-libs.chart" . }}
+    app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: "Labs64.IO"
+    app.kubernetes.io/component: ui
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox:1.36
+      command: ['wget']
+      args: ['-qO-', '{{ include "chart-libs.fullname" . }}-ui:{{ .Values.ui.service.port }}{{ .Values.ui.tests.healthPath }}']
+  restartPolicy: Never
+{{- end }}

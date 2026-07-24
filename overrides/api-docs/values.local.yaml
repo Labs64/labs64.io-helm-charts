@@ -1,0 +1,31 @@
+global:
+  domain: localhost
+
+networkPolicy:
+  enabled: true
+
+gateway:
+
+  # -- Define HTTPRoute(s) for swagger-ui (module routes are owned by the module charts)
+  routes:
+    # -- Swagger UI served under /swagger-ui (public — no auth required)
+    - path: /swagger-ui
+      service:
+        name: labs64io-api-docs
+        port: 8080
+      stripPrefix: true
+    # -- Root path convenience redirect to the Swagger UI. Exact match so module
+    # PathPrefix routes always win over this catch-all.
+    - path: /
+      pathType: Exact
+      redirectTo: /swagger-ui/
+
+# -- Swagger UI Configuration (urls templated via global.domain)
+swaggerUI:
+  urls:
+    - url: http://gateway.{{ .Values.global.domain }}/auditflow/v3/api-docs
+      name: AuditFlow API
+    - url: http://gateway.{{ .Values.global.domain }}/checkout/v3/api-docs
+      name: Checkout API
+    - url: http://gateway.{{ .Values.global.domain }}/payment-gateway/v3/api-docs
+      name: Payment Gateway API
