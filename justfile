@@ -189,7 +189,7 @@ install-tool-rabbitmq:
 # uninstall RabbitMQ
 uninstall-tool-rabbitmq:
 	kubectl delete -f overrides/rabbitmq/rabbitmq.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-	kubectl delete -f overrides/rabbitmq/rabbitmq-secret.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
+	kubectl delete -f overrides/rabbitmq/rabbitmq-secret.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found || true
 	kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
 
 # install PostgreSQL
