@@ -90,7 +90,6 @@ livenessProbe:
   httpGet:
     path: /actuator/health/liveness
     port: 8080
-  initialDelaySeconds: 30
   periodSeconds: 10
   failureThreshold: 3
   timeoutSeconds: 2
@@ -100,7 +99,6 @@ readinessProbe:
   httpGet:
     path: /actuator/health/readiness
     port: 8080
-  initialDelaySeconds: 10
   periodSeconds: 5
   failureThreshold: 3
   timeoutSeconds: 2
@@ -112,8 +110,8 @@ startupProbe:
   httpGet:
     path: /actuator/health/liveness
     port: 8080
-  failureThreshold: 30
-  periodSeconds: 5
+  failureThreshold: 60
+  periodSeconds: 2
   timeoutSeconds: 2
 
 # -- Graceful shutdown: drain in-flight requests on rolling updates / scale-in.
