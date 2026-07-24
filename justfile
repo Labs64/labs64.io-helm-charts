@@ -418,7 +418,7 @@ logs app:
     kubectl logs -f -n {{NAMESPACE_LABS64IO}} -l app.kubernetes.io/name={{app}}
 
 # show errors in Labs64.IO kubectl logs
-show-errors:
+logs-errors:
     kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
 
 # rollout restart a specific application
