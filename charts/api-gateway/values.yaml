@@ -86,6 +86,7 @@ livenessProbe:
   httpGet:
     path: /health
     port: 8081
+  initialDelaySeconds: 0
   periodSeconds: 10
   failureThreshold: 3
   timeoutSeconds: 2
@@ -95,6 +96,7 @@ readinessProbe:
   httpGet:
     path: /health/ready
     port: 8081
+  initialDelaySeconds: 0
   periodSeconds: 5
   failureThreshold: 3
   timeoutSeconds: 2
