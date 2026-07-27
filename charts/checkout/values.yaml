@@ -395,6 +395,26 @@ ui:
     # Non-privileged port served by nginx-unprivileged.
     port: 8080
 
+  # -- Liveness probe for the nginx-unprivileged container serving the built UI.
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+    timeoutSeconds: 2
+
+  # -- Readiness probe for the nginx-unprivileged container serving the built UI.
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 8080
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    failureThreshold: 3
+    timeoutSeconds: 2
+
   application:
     runtimeEnv:
       # -- Enable loading a runtime config file (env.json).

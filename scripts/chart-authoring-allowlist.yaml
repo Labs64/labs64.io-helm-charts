@@ -1,0 +1,37 @@
+# Allowlist for scripts/lint-chart-authoring.py's subPath check.
+#
+# A subPath-mounted file does not receive live ConfigMap/Secret updates (no
+# kubelet periodic sync) — every entry here is an explicit acknowledgment that
+# this is fine for that specific mount, with a stated reason.
+#
+# `chart` is the chart directory name; `subPath` is the exact subPath value.
+
+allow:
+  - chart: checkout
+    subPath: env.json
+    reason: >-
+      UI runtime-env config (chart-libs.ui-configmap). The file is rendered by
+      Helm from chart values at install/upgrade time, not expected to change
+      inside a running pod between releases — a rollout, not a live edit, is
+      how it's meant to be updated.
+  - chart: customer-portal
+    subPath: env.json
+    reason: >-
+      Same UI runtime-env pattern as checkout — see that entry.
+  - chart: api-docs
+    subPath: swagger-config.yaml
+    reason: >-
+      Same rationale as env.json above: a single config file rendered by Helm
+      from chart values at install/upgrade time, mounted into the nginx image
+      that serves it. Not expected to change inside a running pod.
+  - chart: labs64io-ecosystem
+    subPath: env.json
+    reason: >-
+      The umbrella chart renders checkout/customer-portal as subcharts — same
+      env.json entries as those charts' own allowlist rows, seen again under
+      the umbrella's own release name.
+  - chart: labs64io-ecosystem
+    subPath: swagger-config.yaml
+    reason: >-
+      The umbrella chart renders api-docs as a subchart — same
+      swagger-config.yaml entry as that chart's own allowlist row.

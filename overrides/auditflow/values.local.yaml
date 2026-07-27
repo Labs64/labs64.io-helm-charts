@@ -58,10 +58,28 @@ applicationYaml:
       name: auditflow-sink
       namespace: labs64io
 
+  # Chart default is k8s-secret (reads a per-tenant `auditflow-tenant-<id>-creds` Secret this
+  # local override never creates). Local dev provisions secretRef test credentials as plain env
+  # vars instead (see values.secrets.local.yaml's AUDITFLOW_TENANT_T_REGRESSION_TESTKEY), so the
+  # resolver must match — otherwise `secretref_present` (labs64.io-auditflow/tests/e2e/
+  # secret_ref_resolution.robot) fails resolution just like `secretref_missing`.
+  secretRef:
+    resolver: env
+
   # Legacy global pipelines stay EMPTY — a non-empty list fails startup by design.
   # Local pipelines live in the per-tenant blocks under `tenants:` below.
   auditflow:
     pipelines: []
+    # Redaction is global (applies before publish, to every tenant), so this
+    # rule is scoped to a field name (`extra.redact_target`) no other suite's
+    # payload ever uses — enabling it here has zero effect on any other test.
+    # See labs64.io-auditflow/tests/e2e/redaction.robot (item 12).
+    redaction:
+      enabled: true
+      mask: "***"
+      rules:
+        - field: 'extra.redact_target'
+          action: 'mask'
 
 # Local tenant provisioning (rendered as auditflow.io/tenant ConfigMaps).
 tenants:
@@ -153,6 +171,365 @@ tenants:
       enabled: true
       pipelines:
         - name: 'mock-logging'
+          enabled: true
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+    # Dedicated regression-test tenant (item 12): pipeline routing, condition
+    # operators, and secretRef resolution, all observed via DLQ growth.
+    #
+    # DLQ semantics this fixture depends on: a DLQ entry is per EVENT, not per
+    # failing pipeline — AuditService.dispatchToPipelines fans one event out to
+    # every matching pipeline, and if ANY of them fails retryably the WHOLE event
+    # is redelivered and (on retry exhaustion) dead-lettered ONCE, regardless of
+    # how many pipelines failed on it. That is why every "probe_*" pipeline below
+    # is ANDed with a unique `extra.op` (and, for probe_eq/probe_any_mode's
+    # fan-out case, `extra.value`/`extra.op_any`) discriminator: exactly one probe
+    # may match a given test event, so "this event's DLQ entry" is unambiguously
+    # attributable to that one probe, and an event matching NO probe produces NO
+    # DLQ entry at all (never mix in a permanently-unconditional failing pipeline
+    # here — it would turn every other test's "no match" case into a false "DLQ
+    # grew").
+    #
+    # Every probe is deliberately broken via a ${secretRef:...} that never
+    # resolves (EnvSecretRefResolver throws RetryableDeliveryException
+    # in-process, no network call attempted) — fast and sink-agnostic.
+    # See labs64.io-auditflow/tests/e2e/{pipeline_routing,condition_operators,secret_ref_resolution}.robot.
+    - tenantId: t_regression
+      enabled: true
+      quota:
+        rateLimitPerSec: 100
+        burst: 200
+      pipelines:
+        - name: 'probe_eq'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'eq'
+              - field: 'extra.value'
+                operator: 'eq'
+                value: 'target'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_neq'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'neq'
+              - field: 'extra.value'
+                operator: 'neq'
+                value: 'control'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_contains'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'contains'
+              - field: 'extra.value'
+                operator: 'contains'
+                value: 'needle'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_startswith'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'startswith'
+              - field: 'extra.value'
+                operator: 'startsWith'
+                value: 'prefix'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_endswith'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'endswith'
+              - field: 'extra.value'
+                operator: 'endsWith'
+                value: 'suffix'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_in'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'in'
+              - field: 'extra.value'
+                operator: 'in'
+                value: 'a,b,c'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_notin'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'notin'
+              - field: 'extra.value'
+                operator: 'notIn'
+                value: 'x,y'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_regex'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'regex'
+              - field: 'extra.value'
+                operator: 'regex'
+                value: '^R[0-9]{3}$'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_gt'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'gt'
+              - field: 'extra.value'
+                operator: 'gt'
+                value: '10'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_gte'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'gte'
+              - field: 'extra.value'
+                operator: 'gte'
+                value: '10'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_lt'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'lt'
+              - field: 'extra.value'
+                operator: 'lt'
+                value: '10'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_lte'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'lte'
+              - field: 'extra.value'
+                operator: 'lte'
+                value: '10'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_eqignorecase'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'eqignorecase'
+              - field: 'extra.value'
+                operator: 'eqIgnoreCase'
+                value: 'TARGET'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_exists'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'exists'
+              - field: 'extra.value'
+                operator: 'exists'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_notexists'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'notexists'
+              - field: 'extra.value'
+                operator: 'notExists'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_any_mode'
+          enabled: true
+          condition:
+            match: 'any'
+            rules:
+              - field: 'extra.op_any'
+                operator: 'eq'
+                value: 'any_x'
+              - field: 'extra.op_any'
+                operator: 'eq'
+                value: 'any_y'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'secretref_present'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'secretref_present'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionTestKey}"
+        - name: 'secretref_missing'
+          enabled: true
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'secretref_missing'
+          transformer:
+            name: 'zero'
+          sink:
+            name: 'logging_sink'
+            properties:
+              log-level: "DEBUG"
+              probe-trigger: "${secretRef:regressionMissingKey}"
+    # Dedicated tiny-quota tenant (item 12) so quota_enforcement.robot can trip
+    # 429 TENANT_RATE_LIMITED deterministically without affecting t_mock or
+    # t_regression's own generous quota.
+    - tenantId: t_regression_quota
+      enabled: true
+      quota:
+        rateLimitPerSec: 1
+        burst: 2
+      pipelines:
+        - name: 'quota-sink'
           enabled: true
           transformer:
             name: 'zero'

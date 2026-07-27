@@ -516,7 +516,7 @@
           "type": "object"
         },
         "initialDelaySeconds": {
-          "default": 30,
+          "default": 0,
           "title": "initialDelaySeconds",
           "type": "integer"
         },
@@ -891,7 +891,7 @@
           "type": "object"
         },
         "initialDelaySeconds": {
-          "default": 10,
+          "default": 0,
           "title": "initialDelaySeconds",
           "type": "integer"
         },
@@ -1177,7 +1177,7 @@
       "description": "Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts\n(Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting\npod. Max boot budget = failureThreshold * periodSeconds.",
       "properties": {
         "failureThreshold": {
-          "default": 30,
+          "default": 60,
           "title": "failureThreshold",
           "type": "integer"
         },
@@ -1203,7 +1203,7 @@
           "type": "object"
         },
         "periodSeconds": {
-          "default": 5,
+          "default": 2,
           "title": "periodSeconds",
           "type": "integer"
         },

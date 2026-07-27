@@ -382,6 +382,23 @@ lint-all:
         helm lint ./charts/"$app"
     done
 
+# fail if any chart renders a credential into a ConfigMap (guardrail 3)
+lint-secrets *ARGS:
+    python3 scripts/lint-configmap-secrets.py {{ARGS}}
+
+# test the ConfigMap credential linter itself
+test-lint-secrets:
+    python3 -m pytest scripts/test_lint_configmap_secrets.py -q
+
+# chart authoring checklist (item 30): ingress annotations, sub-path PV mounts,
+# probe defaults, NetworkPolicy egress — a gate that runs, not prose
+lint-authoring *ARGS:
+    python3 scripts/lint-chart-authoring.py {{ARGS}}
+
+# test the chart authoring checklist itself
+test-lint-authoring:
+    python3 -m pytest scripts/test_lint_chart_authoring.py -q
+
 # run helm template for an application locally to inspect output
 template app:
     helm template labs64io-{{app}} ./charts/{{app}} \

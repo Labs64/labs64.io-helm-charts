@@ -340,6 +340,22 @@ applicationYaml:
     # `tenants.platform.pipelines` below and the tenant ConfigMaps), and a non-empty
     # list fails application startup by design.
     pipelines: []
+    # -- PII de-identification, applied at ingest before publish. Global (not per-pipeline) —
+    # a rule matches the field across every tenant's events. Disabled by default.
+    redaction:
+      # -- Master switch — off by default
+      enabled: false
+      # -- Replacement value used by the "mask" action
+      mask: "***"
+      # -- One entry per field to redact: {field (dot/array path, e.g. extra.userEmail), action
+      # (mask | hash | drop)}
+      # @schema
+      # type: array
+      # items:
+      #   type: object
+      #   additionalProperties: true
+      # @schema
+      rules: []
 
   # -- Tenant model (silo isolation) — the chart pins the Kubernetes-native modes; the
   # application's built-in defaults are the cluster-free ones (local-dir / in-memory / env).

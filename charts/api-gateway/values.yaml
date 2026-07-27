@@ -202,6 +202,12 @@ staticPolicies:
     scopes:
       - admin-role
       - default-roles-labs64io
+  - id: auditflow-dlq
+    prefix: /auditflow/api/v1/actuator/dlq
+    public: false
+    scopes:
+      - admin-role
+      - auditflow-role
 
 # -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
 # @schema

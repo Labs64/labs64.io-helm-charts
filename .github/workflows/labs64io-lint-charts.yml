@@ -100,6 +100,41 @@ jobs:
             exit 1
           fi
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install linter dependencies
+        run: pip install pyyaml pytest
+
+      - name: Test the ConfigMap credential linter
+        # A linter nobody tests reports "clean" forever. These tests plant
+        # credentials and assert the linter catches them.
+        run: pytest scripts/test_lint_configmap_secrets.py -q
+
+      - name: No credentials in ConfigMaps
+        # Guardrail 3: credentials are Kubernetes Secrets, never ConfigMaps.
+        # Renders every chart (default values + each overrides profile) and walks
+        # the rendered ConfigMaps — including trees nested inside `applicationYaml`,
+        # which no template-level grep can see.
+        run: python scripts/lint-configmap-secrets.py --format github
+
+      - name: Test the chart authoring checklist
+        # Same discipline as the ConfigMap linter above — pins each rule
+        # against synthetic input so it can't quietly stop catching anything.
+        run: pytest scripts/test_lint_chart_authoring.py -q
+
+      - name: Chart authoring checklist
+        # Item 30: ingress annotations (no module chart may hand-roll kind:
+        # Ingress — only chart-libs.gateway-routes may, and it hard-fails on
+        # non-public routes), sub-path PV mounts (allowlisted only — a subPath
+        # mount doesn't receive live ConfigMap/Secret updates), probe defaults
+        # (every container needs a live/ready probe with sane bounds), and
+        # NetworkPolicy egress (guardrail 10 — every long-running workload
+        # must be able to restrict its own egress, and never to an allow-all).
+        run: python scripts/lint-chart-authoring.py
+
       - name: Lint and validate charts
         run: |
           set -euo pipefail

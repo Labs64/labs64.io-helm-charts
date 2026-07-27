@@ -48,6 +48,7 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | ui.image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | ui.image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | ui.imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
+| ui.livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":2}` | Liveness probe for the nginx-unprivileged container serving the built UI. |
 | ui.nameOverride | string | `""` | This is to override the chart name. |
 | ui.networkPolicy.enabled | bool | `false` |  |
 | ui.networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
@@ -61,6 +62,7 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | ui.podSecurityContext | object | `{"fsGroup":101,"runAsGroup":101,"runAsNonRoot":true,"runAsUser":101,"seccompProfile":{"type":"RuntimeDefault"}}` | Non-root pod security context. The image is nginx-unprivileged (UID 101), so the whole pod runs unprivileged and listens on 8080. |
 | ui.rbac.create | bool | `false` |  |
 | ui.rbac.rules | list | `[]` |  |
+| ui.readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":2}` | Readiness probe for the nginx-unprivileged container serving the built UI. |
 | ui.replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | ui.securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | ui.securityContext.capabilities.drop[0] | string | `"ALL"` |  |

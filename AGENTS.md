@@ -24,10 +24,19 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 
 1. **Chart versions must match** between `Chart.yaml` and ArgoCD ApplicationSet pin.
 2. **All module charts depend on `chart-libs`** — do not break this dependency.
-3. **Credentials are Kubernetes Secrets** — never ConfigMaps for sensitive data.
+3. **Credentials are Kubernetes Secrets** — never ConfigMaps for sensitive data. Enforced by
+   `just lint-secrets` (`scripts/lint-configmap-secrets.py`) in chart CI: it renders every chart
+   against default values *and* each `overrides/<chart>/values.*.yaml`, then walks the rendered
+   ConfigMaps — including trees nested inside `applicationYaml`, which a template-level grep cannot
+   see. False positives go in `scripts/configmap-secrets-allowlist.yaml` **with a stated reason**.
 4. **Observability is infrastructure-owned** — toggle it via `observability.enabled` (env/annotation injection only); never add OTel SDK deps to services. See [`OBSERVABILITY.md`](OBSERVABILITY.md).
 5. **Local + CI deployments go through Helmfile** (`helmfile.yaml.gotmpl`, drives `just up`/`install-tools`/`install-all-apps`) — do not reintroduce raw per-tool `helm upgrade --install` calls into that path; ArgoCD (`labs64.io-devops`) remains the separate GitOps path for the AWS QA / Staging / Prod Environment (see [Deployment Modes](#deployment-modes) below).
 6. **Secret management is unified via `externalSecrets.enabled`** on every chart with a `secret.yaml`: `false` (default) renders a plain `Secret` from `.Values.secrets.data`; `true` renders an `ExternalSecret` resolved through a `ClusterSecretStore` (local: `overrides/eso/cluster-secret-store.yaml`'s `kubernetes`-provider store; AWS QA / Staging / Prod Environment: point `externalSecrets.storeName` at a real backend like AWS Secrets Manager). Same object shape everywhere — only the backing store differs.
+7. **Chart authoring checklist** (`just lint-authoring` / `scripts/lint-chart-authoring.py`, chart CI) — four rules, each a running gate, not prose:
+   - No module chart may declare `kind: Ingress` directly — only `chart-libs.gateway-routes` may (it hard-fails the render if a non-public route would be served through it, since Ingress has no ForwardAuth/Cerbos equivalent).
+   - Every `subPath` volume mount must be in `scripts/chart-authoring-allowlist.yaml` with a reason — a subPath mount does not receive live ConfigMap/Secret updates (no kubelet periodic sync).
+   - Every container in a rendered Deployment needs both a `livenessProbe` and a `readinessProbe`, each with `periodSeconds > 0` and `failureThreshold > 0`.
+   - Every chart with a long-running workload (backend and/or UI) must declare a `networkPolicy` (or `ui.networkPolicy`) key, and its egress rules must never be an allow-all — see guardrail 10 in the workspace `AGENTS.md`. Umbrella charts (no workload of their own) and one-shot Job charts (e.g. `preflight`, which needs broad connectivity by design) are exempt.
 
 ## Deployment Modes
 

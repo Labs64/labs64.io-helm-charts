@@ -18,3 +18,9 @@ resourcePolicy:
       condition:
         match:
           expr: 'request.principal.attr.scopes.exists(s, s == "admin-role" || s == "default-roles-labs64io")'
+    - actions: ["auditflow-dlq"]
+      effect: EFFECT_ALLOW
+      roles: ["*"]
+      condition:
+        match:
+          expr: 'request.principal.attr.scopes.exists(s, s == "admin-role" || s == "auditflow-role")'

@@ -498,7 +498,7 @@
           "type": "object"
         },
         "initialDelaySeconds": {
-          "default": 30,
+          "default": 0,
           "title": "initialDelaySeconds",
           "type": "integer"
         },
@@ -833,7 +833,7 @@
           "type": "object"
         },
         "initialDelaySeconds": {
-          "default": 10,
+          "default": 0,
           "title": "initialDelaySeconds",
           "type": "integer"
         },
@@ -1167,6 +1167,48 @@
               },
               "prefix": {
                 "default": "/customer-portal-ui",
+                "title": "prefix",
+                "type": "string"
+              },
+              "public": {
+                "default": false,
+                "title": "public",
+                "type": "boolean"
+              },
+              "scopes": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "required": []
+                },
+                "title": "scopes",
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "prefix",
+              "public",
+              "scopes"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "default": "auditflow-dlq",
+                "title": "id",
+                "type": "string"
+              },
+              "prefix": {
+                "default": "/auditflow/api/v1/actuator/dlq",
                 "title": "prefix",
                 "type": "string"
               },

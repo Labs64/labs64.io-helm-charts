@@ -10,6 +10,14 @@
 #     fine-grained authorization (e.g. `audit-event:read` must NOT satisfy a
 #     route requiring `audit-event:write`). Unrecognized strings therefore grant
 #     only themselves — never accidental admin.
+#
+# `auditflow-regression` / `auditflow-regression-quota` stamp dedicated tenants
+# (t_regression / t_regression_quota, provisioned in
+# overrides/auditflow/values.local.yaml) so the regression suites in
+# labs64.io-auditflow/tests/e2e/ (pipeline routing, condition operators, DLQ
+# replay, secretRef resolution, quota enforcement) can exercise deliberately
+# aggressive fixtures — tiny quotas, always-failing pipelines — without
+# affecting t_mock, which every other suite shares.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -44,6 +52,28 @@ data:
               "claims": {
                 "sub": "svc:auditflow-client",
                 "tenant": "t_mock",
+                "aud": ["account"],
+                "scope": "audit-event:write",
+                "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "auditflow-regression",
+              "claims": {
+                "sub": "svc:auditflow-regression-client",
+                "tenant": "t_regression",
+                "aud": ["account"],
+                "scope": "audit-event:write",
+                "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "auditflow-regression-quota",
+              "claims": {
+                "sub": "svc:auditflow-regression-quota-client",
+                "tenant": "t_regression_quota",
                 "aud": ["account"],
                 "scope": "audit-event:write",
                 "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }

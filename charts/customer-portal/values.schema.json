@@ -263,6 +263,62 @@
           "title": "imagePullSecrets",
           "type": "array"
         },
+        "livenessProbe": {
+          "additionalProperties": false,
+          "description": "Liveness probe for the nginx-unprivileged container serving the built UI.",
+          "properties": {
+            "failureThreshold": {
+              "default": 3,
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "httpGet": {
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "default": "/",
+                  "title": "path",
+                  "type": "string"
+                },
+                "port": {
+                  "default": 8080,
+                  "title": "port",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "path",
+                "port"
+              ],
+              "title": "httpGet",
+              "type": "object"
+            },
+            "initialDelaySeconds": {
+              "default": 5,
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 10,
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 2,
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "httpGet",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "failureThreshold",
+            "timeoutSeconds"
+          ],
+          "title": "livenessProbe",
+          "type": "object"
+        },
         "nameOverride": {
           "default": "",
           "description": "This is to override the chart name.",
@@ -423,6 +479,62 @@
           "title": "rbac",
           "type": "object"
         },
+        "readinessProbe": {
+          "additionalProperties": false,
+          "description": "Readiness probe for the nginx-unprivileged container serving the built UI.",
+          "properties": {
+            "failureThreshold": {
+              "default": 3,
+              "title": "failureThreshold",
+              "type": "integer"
+            },
+            "httpGet": {
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "default": "/",
+                  "title": "path",
+                  "type": "string"
+                },
+                "port": {
+                  "default": 8080,
+                  "title": "port",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "path",
+                "port"
+              ],
+              "title": "httpGet",
+              "type": "object"
+            },
+            "initialDelaySeconds": {
+              "default": 5,
+              "title": "initialDelaySeconds",
+              "type": "integer"
+            },
+            "periodSeconds": {
+              "default": 10,
+              "title": "periodSeconds",
+              "type": "integer"
+            },
+            "timeoutSeconds": {
+              "default": 2,
+              "title": "timeoutSeconds",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "httpGet",
+            "initialDelaySeconds",
+            "periodSeconds",
+            "failureThreshold",
+            "timeoutSeconds"
+          ],
+          "title": "readinessProbe",
+          "type": "object"
+        },
         "replicaCount": {
           "default": 1,
           "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/",
@@ -573,6 +685,8 @@
         "podSecurityContext",
         "securityContext",
         "service",
+        "livenessProbe",
+        "readinessProbe",
         "application",
         "gateway",
         "podDisruptionBudget",
