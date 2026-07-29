@@ -357,6 +357,13 @@ applicationYaml:
       # @schema
       rules: []
 
+    # -- Idempotency/dedup store. "redis" (default) is required for more than one replica;
+    # "memory" is single-replica only and lets a self-hoster skip running Redis entirely — pair
+    # it with `tenants.ratelimit.backend: in-memory` below and the autoconfigure exclude further
+    # down, or Redis connection beans still get created even though nothing uses them.
+    idempotency:
+      store: redis
+
   # -- Tenant model (silo isolation) — the chart pins the Kubernetes-native modes; the
   # application's built-in defaults are the cluster-free ones (local-dir / in-memory / env).
   # Keys below are exact Spring property paths (@Value binding, no relaxed naming) — keep kebab-case.
@@ -392,6 +399,19 @@ applicationYaml:
       host: "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}"
       # -- RabbitMQ port
       port: '{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}'
+    # -- Spring Boot auto-configuration classes to exclude. Empty by default (Redis auto-config
+    # stays active, matching `idempotency.store: redis` above). For a single-replica, no-Redis
+    # deployment, set both `auditflow.idempotency.store: memory` and
+    # `tenants.ratelimit.backend: in-memory` above, and list these four classes here so Spring
+    # Boot never creates a Redis connection it won't use — this is the exact list the bundled
+    # docker-compose dev stack already runs with:
+    # exclude:
+    #   - org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration
+    #   - org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration
+    #   - org.springframework.boot.data.redis.autoconfigure.health.DataRedisHealthContributorAutoConfiguration
+    #   - org.springframework.boot.data.redis.autoconfigure.health.DataRedisReactiveHealthContributorAutoConfiguration
+    autoconfigure:
+      exclude: []
     data:
       redis:
         # -- Redis host

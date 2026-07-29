@@ -22,6 +22,22 @@
           "additionalProperties": false,
           "description": "AuditFlow application properties (bound by",
           "properties": {
+            "idempotency": {
+              "additionalProperties": false,
+              "description": "Idempotency/dedup store. \"redis\" (default) is required for more than one replica;\n\"memory\" is single-replica only and lets a self-hoster skip running Redis entirely — pair\nit with `tenants.ratelimit.backend: in-memory` below and the autoconfigure exclude further\ndown, or Redis connection beans still get created even though nothing uses them.",
+              "properties": {
+                "store": {
+                  "default": "redis",
+                  "title": "store",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "store"
+              ],
+              "title": "idempotency",
+              "type": "object"
+            },
             "pipelines": {
               "description": "Legacy global pipelines — MUST stay empty: pipelines are per-tenant now (see\n`tenants.platform.pipelines` below and the tenant ConfigMaps), and a non-empty\nlist fails application startup by design.",
               "items": {
@@ -67,7 +83,8 @@
           },
           "required": [
             "pipelines",
-            "redaction"
+            "redaction",
+            "idempotency"
           ],
           "title": "auditflow",
           "type": "object"
@@ -159,6 +176,24 @@
           "additionalProperties": false,
           "description": "Spring configuration",
           "properties": {
+            "autoconfigure": {
+              "additionalProperties": false,
+              "description": "Spring Boot auto-configuration classes to exclude. Empty by default (Redis auto-config\nstays active, matching `idempotency.store: redis` above). For a single-replica, no-Redis\ndeployment, set both `auditflow.idempotency.store: memory` and\n`tenants.ratelimit.backend: in-memory` above, and list these four classes here so Spring\nBoot never creates a Redis connection it won't use — this is the exact list the bundled\ndocker-compose dev stack already runs with:\nexclude:\n  - org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration\n  - org.springframework.boot.data.redis.autoconfigure.DataRedisReactiveAutoConfiguration\n  - org.springframework.boot.data.redis.autoconfigure.health.DataRedisHealthContributorAutoConfiguration\n  - org.springframework.boot.data.redis.autoconfigure.health.DataRedisReactiveHealthContributorAutoConfiguration",
+              "properties": {
+                "exclude": {
+                  "items": {
+                    "required": []
+                  },
+                  "title": "exclude",
+                  "type": "array"
+                }
+              },
+              "required": [
+                "exclude"
+              ],
+              "title": "autoconfigure",
+              "type": "object"
+            },
             "data": {
               "additionalProperties": false,
               "properties": {
@@ -235,6 +270,7 @@
           "required": [
             "datasource",
             "rabbitmq",
+            "autoconfigure",
             "data"
           ],
           "title": "spring",
