@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # generate the Cerbos policy set + authproxy routes manifests from every
-# module's OpenAPI x-labs64-auth, via the commons OpenApiAuthPreprocessor.
+# module's OpenAPI OAuth security and x-labs64.auth metadata, via the commons
+# OpenApiAuthPreprocessor.
 #
 # Outputs (committed, ArgoCD-synced — this is the RFC's provenance model):
 #   charts/authz-pdp/policies/*.yaml            resource policies (one edge + per-type domain)

@@ -279,7 +279,7 @@
           "type": "string"
         },
         "routes": {
-          "description": "Routes exposed by this module.\nThe whole API surface is ONE route through ForwardAuth: the authproxy is the\nPEP and derives public-vs-protected per operation from OpenAPI x-labs64-auth\n(generated into the authproxy routes manifest + the central Cerbos PDP). Public\noperations (payment-definitions, PSP webhooks, provider/checkout redirect returns\n— none can carry a JWT) are allowed without a token by the authproxy itself, so\nthey MUST NOT be re-declared here. Re-declaring them as edge routes duplicates\nthe OpenAPI PEP and mis-strips their paths. OpenAPI stays the single source of truth.",
+          "description": "Routes exposed by this module.\nThe whole API surface is ONE route through ForwardAuth: the authproxy is the\nPEP and derives public-vs-protected per operation from OpenAPI OAuth security\nplus x-labs64.auth\n(generated into the authproxy routes manifest + the central Cerbos PDP). Public\noperations (payment-definitions, PSP webhooks, provider/checkout redirect returns\n— none can carry a JWT) are allowed without a token by the authproxy itself, so\nthey MUST NOT be re-declared here. Re-declaring them as edge routes duplicates\nthe OpenAPI PEP and mis-strips their paths. OpenAPI stays the single source of truth.",
           "items": {
             "anyOf": [
               {

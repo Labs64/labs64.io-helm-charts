@@ -1,4 +1,4 @@
-# GENERATED from x-labs64-auth by OpenApiAuthPreprocessor — do not edit.
+# GENERATED from OpenAPI security and x-labs64.auth by OpenApiAuthPreprocessor — do not edit.
 version: 1
 module: auditflow
 basePath: /auditflow/api/v1

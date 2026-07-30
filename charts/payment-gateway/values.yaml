@@ -259,7 +259,8 @@ gateway:
     basePath: ""
   # -- Routes exposed by this module.
   # The whole API surface is ONE route through ForwardAuth: the authproxy is the
-  # PEP and derives public-vs-protected per operation from OpenAPI x-labs64-auth
+  # PEP and derives public-vs-protected per operation from OpenAPI OAuth security
+  # plus x-labs64.auth
   # (generated into the authproxy routes manifest + the central Cerbos PDP). Public
   # operations (payment-definitions, PSP webhooks, provider/checkout redirect returns
   # — none can carry a JWT) are allowed without a token by the authproxy itself, so
@@ -272,7 +273,7 @@ gateway:
       port: 8080
       stripPath: true
     # -- OpenAPI docs (springdoc endpoint — NOT an OpenAPI operation, so it has no
-    # x-labs64-auth policy at the authproxy; public at the edge, prefix stripped)
+    # generated OpenAPI auth policy at the authproxy; public at the edge, prefix stripped)
     - path: /v3/api-docs
       port: 8080
       public: true
