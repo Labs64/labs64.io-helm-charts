@@ -62,7 +62,7 @@ applicationYaml:
   # local override never creates). Local dev provisions secretRef test credentials as plain env
   # vars instead (see values.secrets.local.yaml's AUDITFLOW_TENANT_T_REGRESSION_TESTKEY), so the
   # resolver must match — otherwise `secretref_present` (labs64.io-auditflow/tests/e2e/
-  # secret_ref_resolution.robot) fails resolution just like `secretref_missing`.
+  # secret_ref_resolution.robot) fails resolution just like `test_secretref_missing_intentional_fail`.
   secretRef:
     resolver: env
 
@@ -505,14 +505,14 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionTestKey}"
-        - name: 'secretref_missing'
+        - name: 'test_secretref_missing_intentional_fail'
           enabled: true
           condition:
             match: 'all'
             rules:
               - field: 'extra.op'
                 operator: 'eq'
-                value: 'secretref_missing'
+                value: 'test_secretref_missing_intentional_fail'
           transformer:
             name: 'zero'
           sink:
