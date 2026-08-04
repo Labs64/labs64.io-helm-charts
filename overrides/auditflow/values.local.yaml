@@ -186,7 +186,7 @@ tenants:
     # every matching pipeline, and if ANY of them fails retryably the WHOLE event
     # is redelivered and (on retry exhaustion) dead-lettered ONCE, regardless of
     # how many pipelines failed on it. That is why every "probe_*" pipeline below
-    # is ANDed with a unique `extra.op` (and, for probe_eq/probe_any_mode's
+    # is ANDed with a unique `extra.op` (and, for probe_eq_intentional_fail/probe_any_mode_intentional_fail's
     # fan-out case, `extra.value`/`extra.op_any`) discriminator: exactly one probe
     # may match a given test event, so "this event's DLQ entry" is unambiguously
     # attributable to that one probe, and an event matching NO probe produces NO
@@ -204,7 +204,7 @@ tenants:
         rateLimitPerSec: 100
         burst: 200
       pipelines:
-        - name: 'probe_eq'
+        - name: 'probe_eq_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -222,7 +222,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_neq'
+        - name: 'probe_neq_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -240,7 +240,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_contains'
+        - name: 'probe_contains_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -258,7 +258,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_startswith'
+        - name: 'probe_startswith_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -276,7 +276,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_endswith'
+        - name: 'probe_endswith_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -294,7 +294,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_in'
+        - name: 'probe_in_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -312,7 +312,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_notin'
+        - name: 'probe_notin_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -330,7 +330,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_regex'
+        - name: 'probe_regex_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -348,7 +348,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_gt'
+        - name: 'probe_gt_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -366,7 +366,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_gte'
+        - name: 'probe_gte_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -384,7 +384,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_lt'
+        - name: 'probe_lt_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -402,7 +402,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_lte'
+        - name: 'probe_lte_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -420,7 +420,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_eqignorecase'
+        - name: 'probe_eqignorecase_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -438,7 +438,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_exists'
+        - name: 'probe_exists_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -455,7 +455,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_notexists'
+        - name: 'probe_notexists_intentional_fail'
           enabled: true
           condition:
             match: 'all'
@@ -472,7 +472,7 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
-        - name: 'probe_any_mode'
+        - name: 'probe_any_mode_intentional_fail'
           enabled: true
           condition:
             match: 'any'
