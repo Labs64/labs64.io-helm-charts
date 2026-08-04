@@ -496,8 +496,9 @@ just dev-down     # stop
 
 # Payment Gateway backend
 cd ../labs64.io-payment-gateway/payment-gateway-be
-just infra-up     # start infrastructure
-just run          # build + spring-boot:run (local profile)
+just dev-up       # build JAR + start infrastructure and debug application
+just dev-watch    # auto-restart on JAR changes
+just dev-down     # stop
 ```
 
 ### Frontend (Vue apps)
