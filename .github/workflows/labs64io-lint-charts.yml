@@ -3,7 +3,10 @@ name: Labs64.IO - Lint Charts
 on:
   pull_request:
     paths:
-      - 'charts/**'
+      - "charts/**"
+
+permissions:
+  contents: read
 
 jobs:
   lint:
@@ -16,9 +19,9 @@ jobs:
           fetch-depth: 0
 
       - name: Install Helm
-        uses: azure/setup-helm@v4.3.0
+        uses: azure/setup-helm@v5.0.1
         with:
-          version: '3.17.0'
+          version: "3.17.0"
 
       - name: Install helm-schema plugin
         run: helm plugin install https://github.com/dadav/helm-schema
@@ -101,9 +104,9 @@ jobs:
           fi
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Install linter dependencies
         run: pip install pyyaml pytest
