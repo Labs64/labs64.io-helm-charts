@@ -120,7 +120,7 @@ config:
             or resource.attributes["service.name"] == nil
             or resource.attributes["service.name"] == "unknown_service"
           )
-          and IsMatch(log.body, "^([0-9]+[[:space:]]+)?p+[[:space:]]*$")
+          and IsMatch(log.body, ".*([0-9]+[[:space:]]+)?p{10,}.*")
     batch:
       send_batch_size: 256
       timeout: 10s
