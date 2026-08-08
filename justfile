@@ -451,6 +451,25 @@ lint-all:
         helm lint ./charts/"$app"
     done
 
+# render every helmfile release without a cluster, failing on any template error
+#
+# `helm lint` above checks charts in isolation; this catches what it cannot — bad values
+# overrides, cross-chart wiring and the `fail` guards in chart-libs (for example a
+# non-public route that would be served over Ingress). Needs no cluster and no CRDs:
+# helmDefaults.templateArgs in helmfile.yaml.gotmpl supplies the Gateway API version that
+# would otherwise only come from a live cluster.
+template-all:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out="$(mktemp)"
+    trap 'rm -f "$out"' EXIT
+    if helmfile -e {{ENV}} template > "$out"; then
+        echo "=== all releases rendered ($(grep -c '^kind:' "$out") manifests) ==="
+    else
+        echo "=== helmfile template FAILED (see above) ===" >&2
+        exit 1
+    fi
+
 # fail if any chart renders a credential into a ConfigMap (guardrail 3)
 lint-secrets *ARGS:
     python3 scripts/lint-configmap-secrets.py {{ARGS}}

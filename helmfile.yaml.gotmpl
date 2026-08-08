@@ -1,3 +1,19 @@
+# `helmfile template` renders without talking to a cluster, so .Capabilities.APIVersions
+# is empty. chart-libs.gateway-routes keys off
+# `.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1"`: without it every
+# non-public route takes the Ingress branch, which deliberately `fail`s (ForwardAuth /
+# Cerbos enforcement has no Ingress equivalent). The result was that a cluster-free
+# `helmfile template` always errored on auditflow, so it was useless as a check and the
+# error had to be explained away as "expected".
+#
+# Declaring the API version here makes template render the same HTTPRoute branch that
+# `helmfile apply` picks after install-crds has run. This only affects the template code
+# path — apply/sync still read real capabilities from the cluster, so a genuinely missing
+# CRD still fails at apply time, which is where it should fail.
+helmDefaults:
+  templateArgs:
+    - --api-versions=gateway.networking.k8s.io/v1
+
 repositories:
   - name: labs64io-pub
     url: https://labs64.github.io/labs64.io-helm-charts
