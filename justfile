@@ -11,8 +11,8 @@ METRICS_SERVER_CHART_VERSION := "3.13.1"
 RABBITMQ_CHART_VERSION := "16.0.14"
 POSTGRESQL_CHART_VERSION := "18.7.11"
 REDIS_CHART_VERSION := "27.0.13"
-OTEL_OPERATOR_CHART_VERSION := "0.119.0"
-OTEL_COLLECTOR_CHART_VERSION := "0.165.0"
+OTEL_OPERATOR_CHART_VERSION := "0.120.2"
+OTEL_COLLECTOR_CHART_VERSION := "0.169.0"
 PROMETHEUS_STACK_CHART_VERSION := "87.15.1"
 TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
@@ -256,8 +256,70 @@ install-tool-metrics-server:
 uninstall-tool-metrics-server:
     helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}} || true
 
+# Validate the rendered OTel Collector config against the pinned collector binary.
+#
+# `helm template` only proves the YAML renders — it knows nothing about which keys each
+# component accepts. This runs the real collector's `validate` subcommand over the
+# rendered config, catching errors that otherwise surface as a CrashLoopBackOff after
+# deploy. It has already caught one: the prometheusremotewrite exporter rejects
+# `sending_queue` ("has invalid keys"), which the OTLP exporters accept happily.
+#
+# Requires Docker. The image tag is read from values-collector.{{ENV}}.yaml so the
+# validator always matches the collector actually deployed.
+validate-otel-config:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    VALUES="overrides/opentelemetry/values-collector.{{ENV}}.yaml"
+    WORK="$(mktemp -d)"
+    trap 'rm -rf "$WORK"; docker rm -f otel-cfg-validate >/dev/null 2>&1 || true; docker volume rm otel-cfg-validate-vol >/dev/null 2>&1 || true' EXIT
+
+    IMAGE="$(python3 -c "import sys,re;s=open('$VALUES').read();r=re.search(r'^image:\s*$\n(?:\s+.*\n)*?\s+repository:\s*(\S+)',s,re.M);t=re.search(r'^image:\s*$\n(?:\s+.*\n)*?\s+tag:\s*(\S+)',s,re.M);print(f'{r.group(1)}:{t.group(1)}')")"
+    echo "=== validating against $IMAGE ==="
+
+    helm template opentelemetry-collector open-telemetry/opentelemetry-collector \
+      --version {{OTEL_COLLECTOR_CHART_VERSION}} \
+      -f "$VALUES" --namespace {{NAMESPACE_MONITORING}} > "$WORK/rendered.yaml"
+
+    # Pull the collector config out of the ConfigMap's `relay` key.
+    python3 - "$WORK" <<'PY'
+    import sys
+    w = sys.argv[1]
+    for doc in open(w + "/rendered.yaml").read().split("\n---\n"):
+        if "kind: ConfigMap" in doc and "  relay: |" in doc:
+            body = doc[doc.index("  relay: |") + len("  relay: |"):]
+            out = []
+            for ln in body.split("\n"):
+                if ln.strip() == "":
+                    out.append("")
+                    continue
+                if ln.startswith("    "):
+                    out.append(ln[4:])
+                else:
+                    break
+            open(w + "/config.yaml", "w").write("\n".join(out))
+            break
+    else:
+        sys.exit("could not find collector ConfigMap in rendered output")
+    PY
+
+    # K8S_NODE_NAME and the storage dir exist in the pod but not in a bare container;
+    # supply both so real config errors are not masked by environment noise.
+    docker rm -f otel-cfg-validate >/dev/null 2>&1 || true
+    docker volume create otel-cfg-validate-vol >/dev/null
+    docker create --name otel-cfg-validate \
+      -e K8S_NODE_NAME=validation-node \
+      -v otel-cfg-validate-vol:/var/lib/otelcol \
+      "$IMAGE" validate --config=/etc/otelcol-contrib/config.yaml >/dev/null
+    docker cp "$WORK/config.yaml" otel-cfg-validate:/etc/otelcol-contrib/config.yaml
+    if docker start -a otel-cfg-validate; then
+        echo "=== OTel Collector config is valid ==="
+    else
+        echo "=== OTel Collector config is INVALID (see above) ===" >&2
+        exit 1
+    fi
+
 # install Open Telemetry
-install-tool-opentelemetry:
+install-tool-opentelemetry: validate-otel-config
     helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
       --version {{OTEL_OPERATOR_CHART_VERSION}} \
       -f overrides/opentelemetry/values-operator.{{ENV}}.yaml \
@@ -368,8 +430,15 @@ repo-add:
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
 # update helm repositories
+#
+# Named explicitly rather than a bare `helm repo update`, which updates EVERY repo in the
+# caller's local helm config and fails the whole command if any one is unreachable. A
+# stale external-secrets entry left over in a developer's config was enough to abort
+# `just up` even though repo-add never declared it and nothing here pulls from it.
 repo-update: repo-add
-    helm repo update
+    helm repo update \
+      labs64io-pub traefik metrics-server bitnami \
+      open-telemetry grafana prometheus-community
 
 
 ## 🧪 Testing & Debugging ##

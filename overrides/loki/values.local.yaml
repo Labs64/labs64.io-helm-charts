@@ -10,6 +10,16 @@ loki:
   commonConfig:
     replication_factor: 1
   storage:
+    # MUST be set explicitly: the chart defaults to `s3`, which renders
+    # common.storage.s3 and leaves common.storage.filesystem unset. Meanwhile
+    # `useTestSchema: true` above pins the schema's object_store to `filesystem`, so the
+    # ingester used a filesystem client with no configured directory, resolved chunk
+    # paths relative to the CWD, and failed on the read-only root filesystem with:
+    #   failed to flush chunks: store put chunk: mkdir fake: read-only file system
+    # ("fake" is the tenant id Loki uses when auth_enabled is false.) With this set the
+    # chart renders absolute chunks_directory/rules_directory under /var/loki.
+    type: filesystem
+    # s3-only; retained for reference but unused while type is filesystem.
     bucketNames:
       chunks: chunks
       ruler: ruler

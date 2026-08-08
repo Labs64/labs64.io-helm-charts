@@ -12,12 +12,28 @@ are safe to include unconditionally from any chart.
 Prometheus scrape annotations (Micrometer /actuator/prometheus for Java services).
 Usage inside pod template metadata.annotations:
   {{- include "chart-libs.observability.podAnnotations" . | nindent 8 }}
+
+Only emit these for services that actually serve a Prometheus endpoint. Java services do
+(Micrometer, with OTEL_METRICS_EXPORTER=none so the agent does not double-count). Python
+services do NOT — they run with OTEL_METRICS_EXPORTER=otlp and PUSH metrics to the
+collector, so annotating them makes the collector scrape a path that does not exist and
+log a 404 every interval. Such services set `observability.metricsScrape: false`.
+
+Defaulting note: `metricsScrape` is read via hasKey rather than `| default true`, because
+in Helm `false | default true` evaluates to true — `default` treats false as empty. Using
+`default` here would make the flag impossible to turn off.
 */}}
 {{- define "chart-libs.observability.podAnnotations" -}}
 {{- if and .Values.observability .Values.observability.enabled }}
+{{- $scrape := true }}
+{{- if hasKey .Values.observability "metricsScrape" }}
+{{- $scrape = .Values.observability.metricsScrape }}
+{{- end }}
+{{- if $scrape }}
 prometheus.io/scrape: "true"
 prometheus.io/port: {{ .Values.service.port | quote }}
 prometheus.io/path: {{ .Values.observability.metricsPath | default "/actuator/prometheus" | quote }}
+{{- end }}
 {{- end }}
 {{- end }}
 

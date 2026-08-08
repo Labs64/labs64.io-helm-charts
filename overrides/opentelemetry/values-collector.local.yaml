@@ -7,10 +7,10 @@ podAnnotations:
 image:
   repository: otel/opentelemetry-collector-contrib
   # Pinned to the appVersion of the collector chart pinned in the justfile
-  # (OTEL_COLLECTOR_CHART_VERSION 0.165.0 -> appVersion 0.156.0), so the image and the
+  # (OTEL_COLLECTOR_CHART_VERSION 0.169.0 -> appVersion 0.158.0), so the image and the
   # chart's config schema always move together. `latest` let collector behaviour shift
   # under an unchanged chart on every pull. Bump both numbers in the same commit.
-  tag: 0.156.0
+  tag: 0.158.0
 
 presets:
   logsCollection:
@@ -204,9 +204,10 @@ config:
       endpoint: "http://prometheus-kube-prometheus-prometheus:9090/api/v1/write"
       tls:
         insecure: true
-      # NOTE: no sending_queue here. Unlike the OTLP exporters, prometheusremotewrite in
-      # collector 0.156.0 rejects that key outright ("has invalid keys: sending_queue")
-      # and the collector refuses to start. It keeps its own internal queue instead.
+      # NOTE: no sending_queue here. Unlike the OTLP exporters, prometheusremotewrite
+      # rejects that key outright ("has invalid keys: sending_queue") and the collector
+      # refuses to start; it keeps its own internal queue instead. Still true as of
+      # 0.158.0 — `just validate-otel-config` re-checks this against the pinned image.
       retry_on_failure:
         enabled: true
         initial_interval: 5s

@@ -715,6 +715,12 @@
           "title": "enabled",
           "type": "boolean"
         },
+        "metricsScrape": {
+          "default": false,
+          "description": "Emit prometheus.io/* scrape annotations. Disabled here: the authproxy is a FastAPI\nservice that pushes metrics over OTLP and serves no Prometheus endpoint (its only\nroutes are /health, /health/ready, /reload and /auth). With this on, the collector\nscraped /actuator/prometheus on the service port and logged a 404 every interval.",
+          "title": "metricsScrape",
+          "type": "boolean"
+        },
         "otlpEndpoint": {
           "default": "http://$(NODE_IP):4318",
           "description": "OTLP endpoint of the OpenTelemetry Collector",
@@ -724,7 +730,8 @@
       },
       "required": [
         "enabled",
-        "otlpEndpoint"
+        "otlpEndpoint",
+        "metricsScrape"
       ],
       "title": "observability",
       "type": "object"

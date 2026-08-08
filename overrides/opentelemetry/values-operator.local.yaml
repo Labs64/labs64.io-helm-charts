@@ -5,13 +5,18 @@ manager:
     repository: ghcr.io/open-telemetry/opentelemetry-operator/opentelemetry-operator
     tag: ""
     imagePullPolicy: IfNotPresent
-  collectorImage:
-    # Image used for any OpenTelemetryCollector CR the operator reconciles. Kept equal to
-    # the operator chart's own default for the pinned OTEL_OPERATOR_CHART_VERSION (0.119.0);
-    # this had drifted to 0.127.0, 27 minor versions behind, which would have silently
-    # given any future CR a stale collector. No CR exists today, so this is latent only.
-    repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
-    tag: 0.154.0
+  # collectorImage is deliberately NOT pinned here. It is the image the operator gives to
+  # any OpenTelemetryCollector CR it reconciles, and leaving it unset makes it track the
+  # default of whatever OTEL_OPERATOR_CHART_VERSION the justfile pins — i.e. the version
+  # that chart was tested with. A hand-maintained pin here only rots: it had drifted to
+  # 0.127.0 against a chart defaulting to 0.154.0, 27 minor versions behind, and would
+  # have silently handed any future CR a stale collector.
+  #
+  # Note this is a DIFFERENT distribution from the DaemonSet collector, which runs
+  # otel/opentelemetry-collector-contrib (see values-collector.local.yaml). The
+  # operator ships opentelemetry-collector-k8s, a trimmed component set. Matching the two
+  # version numbers would suggest a parity that does not exist, so do not "sync" them.
+  # There are currently no OpenTelemetryCollector or Instrumentation CRs, so this is inert.
   opampBridgeImage:
     repository: ""
     tag: ""

@@ -13,8 +13,11 @@ repositories:
     url: https://grafana.github.io/helm-charts
   - name: prometheus-community
     url: https://prometheus-community.github.io/helm-charts
-  - name: external-secrets
-    url: https://charts.external-secrets.io
+  # NOTE: external-secrets is intentionally absent. Its classic chart repo
+  # (charts.external-secrets.io -> ghs.googlehosted.com) is unreachable from some
+  # networks, and because `helm repo update` fails hard on any single unreachable repo it
+  # took down the whole `just up`. The release below pulls the same chart from ghcr.io via
+  # OCI instead, which needs no repo entry.
 
 environments:
   # CI targets this same "local" profile (a self-hosted runner attached to its own
@@ -41,7 +44,9 @@ releases:
 
   - name: external-secrets
     namespace: tools
-    chart: external-secrets/external-secrets
+    # Same chart and version as the classic repo, served over OCI from ghcr.io.
+    # Verified identical pull: ghcr.io/external-secrets/charts/external-secrets:0.12.1
+    chart: oci://ghcr.io/external-secrets/charts/external-secrets
     version: 0.12.1
     set:
       - name: installCRDs

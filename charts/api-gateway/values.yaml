@@ -126,6 +126,11 @@ observability:
   enabled: false
   # -- OTLP endpoint of the OpenTelemetry Collector
   otlpEndpoint: "http://$(NODE_IP):4318"
+  # -- Emit prometheus.io/* scrape annotations. Disabled here: the authproxy is a FastAPI
+  # service that pushes metrics over OTLP and serves no Prometheus endpoint (its only
+  # routes are /health, /health/ready, /reload and /auth). With this on, the collector
+  # scraped /actuator/prometheus on the service port and logged a 404 every interval.
+  metricsScrape: false
 
 # -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
 autoscaling:
