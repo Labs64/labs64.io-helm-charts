@@ -39,5 +39,11 @@ chunksCache:
   enabled: false
 resultsCache:
   enabled: false
-#lokiCanary:
-#  enabled: true
+# The canary is a Loki-availability probe: it pushes synthetic heartbeat entries
+# (nanosecond timestamp + `p` padding) and queries them back. It defaults to
+# `enabled: true` in the chart, so it must be disabled EXPLICITLY — commenting the
+# block out leaves the canary running. Note it runs with `-push=true`, writing
+# straight to the Loki push API, so it bypasses the OTel Collector entirely and no
+# collector-side filter can suppress it. Off locally: pure log noise in Grafana.
+lokiCanary:
+  enabled: false

@@ -6,7 +6,11 @@ podAnnotations:
 
 image:
   repository: otel/opentelemetry-collector-contrib
-  tag: latest
+  # Pinned to the appVersion of the collector chart pinned in the justfile
+  # (OTEL_COLLECTOR_CHART_VERSION 0.165.0 -> appVersion 0.156.0), so the image and the
+  # chart's config schema always move together. `latest` let collector behaviour shift
+  # under an unchanged chart on every pull. Bump both numbers in the same commit.
+  tag: 0.156.0
 
 presets:
   logsCollection:
@@ -109,18 +113,48 @@ config:
       #     kubernetes.container.name: "$FILE_NAME_REGEX(^/var/log/pods/[^/]+/[^/]+_([^/]+)-([^_]+)/)"
 
   processors:
-    filter/drop_unknown_service_noise:
+    # NOTE: do not add a filter here for Loki canary heartbeats. The canary runs with
+    # `-push=true` and writes straight to Loki's push API, so its records never traverse
+    # this collector — the only effective control is `lokiCanary.enabled` in
+    # overrides/loki/values.local.yaml.
+    # Drop kubelet probe traffic before it reaches Tempo. Probes fire every few seconds
+    # per pod and otherwise dominate the trace list.
+    #
+    # Matched on three fronts because the runtimes disagree on attributes: the Java agent
+    # (2.29.0) emits stable HTTP semconv (`url.path`), while the Python distro (0.65b0)
+    # may still emit legacy `http.target` unless OTEL_SEMCONV_STABILITY_OPT_IN=http is set.
+    # Span name is the backstop for both. Each attribute is nil-guarded — `and`
+    # short-circuits, so IsMatch never sees a nil on services that lack the attribute.
+    #
+    # Operational endpoints dropped, and why each is safe:
+    #   /actuator/health/**  Java probe endpoints
+    #   /actuator/prometheus Micrometer scrape target — hit every scrape interval, per pod
+    #   /actuator/info       static build metadata
+    #   /actuator/metrics/** Micrometer browse API (has sub-paths, e.g. /jvm.memory.used)
+    #   /health /ready /live /info  Python sinks + transformers — this is exactly the set
+    #                        those services already suppress from uvicorn access logs
+    #                        (HEALTH_PATHS in auditflow-{sink,transformer}/health.py)
+    #   /health/ready /health/live  api-gateway
+    #
+    # Deliberately NOT dropped: /actuator/dlq. Spring Boot exposes
+    # `health,info,metrics,prometheus,dlq`, and dlq is a real admin-gated business endpoint
+    # (api-gateway route `auditflow-dlq`, admin-role/auditflow-role) whose traces matter.
+    # That is why this enumerates actuator endpoints instead of matching /actuator/**.
+    filter/drop_health_checks:
       error_mode: ignore
-      log_conditions:
-        # Drop Loki canary heartbeat noise rendered as `unknown_service`, while
-        # preserving application service logs and other unknown-service records.
-        - >-
-          (
-            (resource.attributes["k8s.pod.name"] != nil and IsMatch(resource.attributes["k8s.pod.name"], "^loki-canary-"))
-            or resource.attributes["service.name"] == nil
-            or resource.attributes["service.name"] == "unknown_service"
-          )
-          and IsMatch(log.body, ".*([0-9]+[[:space:]]+)?p{10,}.*")
+      traces:
+        span:
+          - >-
+            attributes["url.path"] != nil
+            and IsMatch(attributes["url.path"],
+            "^/(actuator/(health(/.*)?|info|metrics(/.*)?|prometheus)|health(/(ready|live))?|ready|live|info)$")
+          - >-
+            attributes["http.target"] != nil
+            and IsMatch(attributes["http.target"],
+            "^/(actuator/(health(/.*)?|info|metrics(/.*)?|prometheus)|health(/(ready|live))?|ready|live|info)([?].*)?$")
+          - >-
+            IsMatch(name,
+            "^(GET|HEAD) /(actuator/(health(/.*)?|info|metrics(/.*)?|prometheus)|health(/(ready|live))?|ready|live|info)$")
     batch:
       send_batch_size: 256
       timeout: 10s
@@ -156,9 +190,11 @@ config:
         exporters: [prometheusremotewrite]
       traces:
         receivers: [otlp]
-        processors: [batch/traces, memory_limiter]
+        # memory_limiter first so it can shed load before anything buffers; filter next so
+        # dropped probe spans never occupy a batch.
+        processors: [memory_limiter, filter/drop_health_checks, batch/traces]
         exporters: [otlp/tempo]
       logs:
         receivers: [filelog, otlp]
-        processors: [filter/drop_unknown_service_noise, batch]
+        processors: [batch]
         exporters: [otlphttp/loki]

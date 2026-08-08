@@ -6,8 +6,12 @@ manager:
     tag: ""
     imagePullPolicy: IfNotPresent
   collectorImage:
+    # Image used for any OpenTelemetryCollector CR the operator reconciles. Kept equal to
+    # the operator chart's own default for the pinned OTEL_OPERATOR_CHART_VERSION (0.119.0);
+    # this had drifted to 0.127.0, 27 minor versions behind, which would have silently
+    # given any future CR a stale collector. No CR exists today, so this is latent only.
     repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
-    tag: 0.127.0
+    tag: 0.154.0
   opampBridgeImage:
     repository: ""
     tag: ""
@@ -303,7 +307,8 @@ automountServiceAccountToken: true
 testFramework:
   image:
     repository: busybox
-    tag: latest
+    # Only pulled by `helm test`, but pinned for the same reason as the collector image.
+    tag: 1.37.0
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:
