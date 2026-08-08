@@ -16,17 +16,22 @@ presets:
   logsCollection:
     enabled: true
     includeCollectorLogs: false
-    storeCheckpoints: false
+    # Persists filelog read offsets via a file_storage extension. With this false and
+    # `start_at: beginning`, every collector restart re-shipped the entire log history to
+    # Loki. The same extension backs the exporters' persistent sending queues below.
+    storeCheckpoints: true
     maxRecombineLogSize: 102400
   hostMetrics:
     enabled: false
   kubernetesAttributes:
     enabled: true
-    # This can lead to a lot of labels, which might increase cardinality and cost in your backend, but it ensures you get all available labels.
-    # Be mindful of this in production!
-    extractAllPodLabels: true
-    # Similar to labels, annotations can also add significant metadata.
-    extractAllPodAnnotations: true
+    # Both were true, which promoted every pod label AND annotation to a resource
+    # attribute — the cardinality blow-up the original comment warned about. The preset
+    # still extracts standard pod/namespace/node metadata with these off. Note the
+    # metrics `job` label does NOT depend on this: it comes from the prometheus
+    # receiver's own service discovery relabeling further down.
+    extractAllPodLabels: false
+    extractAllPodAnnotations: false
   kubeletMetrics:
     enabled: false
   kubernetesEvents:
@@ -90,13 +95,21 @@ config:
                 action: replace
                 target_label: pod
     filelog:
+      # k3d runs containerd, not Docker, so container stdout lives under /var/log/pods/
+      # as <namespace>_<pod>_<uid>/<container>/N.log — three path segments. This used to
+      # point at /var/lib/docker/containers/*.log, a Docker-runtime path that is empty on
+      # a k3d node, so this receiver collected nothing and only OTLP-exported logs reached
+      # Loki. The chart mounts both host paths, so only the glob needed correcting.
       include:
-        - /var/lib/docker/containers/*.log
-        #- /var/log/containers/*.log
-        #- /var/log/pods/*/*.log
-      start_at: beginning
-      # Exclude logs from the collector itself to avoid self-loop
-      exclude: [/var/log/pods/*/otel-collector-*.log]
+        - /var/log/pods/*/*/*.log
+      # Read only new lines. Offsets persist via storeCheckpoints above, so a restart
+      # resumes where it left off instead of replaying history.
+      start_at: end
+      # Skip the collector's own logs to avoid a feedback loop. This must match the
+      # include glob's depth — the previous value had two path segments against a
+      # three-segment include and so never matched anything.
+      exclude:
+        - /var/log/pods/*_otel-collector*/*/*.log
       # Parse multiline logs (e.g., stack traces)
       #multiline:
       #  pattern: '^\S'
@@ -155,6 +168,16 @@ config:
           - >-
             IsMatch(name,
             "^(GET|HEAD) /(actuator/(health(/.*)?|info|metrics(/.*)?|prometheus)|health(/(ready|live))?|ready|live|info)$")
+    # Adds host.name / os.* to every signal. Deliberately limited to detectors that need
+    # no extra RBAC: the k8snode detector would require nodes/get, which this chart's
+    # ClusterRole does not grant (kubeletMetrics and clusterMetrics presets are off).
+    # Pod/namespace/node metadata already arrives via the k8sattributes preset.
+    resourcedetection:
+      detectors: [env, system]
+      timeout: 2s
+      override: false
+      system:
+        hostname_sources: [os]
     batch:
       send_batch_size: 256
       timeout: 10s
@@ -166,35 +189,92 @@ config:
       limit_percentage: 80
       spike_limit_percentage: 25
 
+  # Every exporter below carries a persistent sending queue plus retry. Previously a
+  # Tempo, Loki or Prometheus restart silently discarded in-flight telemetry; the queue is
+  # backed by the same file_storage extension as the filelog checkpoints, so it also
+  # survives a collector restart.
+  #
+  # Endpoints use bare service names rather than <svc>.monitoring.svc.cluster.local. This
+  # is what commit 192e98f said it did but did not — that diff only stripped the http://
+  # prefix from the Tempo gRPC endpoint. Bare names resolve because the collector runs in
+  # the same namespace as Tempo/Loki/Prometheus; if it is ever moved, these need the
+  # namespace back.
   exporters:
-    debug:
-      verbosity: detailed
     prometheusremotewrite:
       endpoint: "http://prometheus-kube-prometheus-prometheus:9090/api/v1/write"
       tls:
         insecure: true
+      # NOTE: no sending_queue here. Unlike the OTLP exporters, prometheusremotewrite in
+      # collector 0.156.0 rejects that key outright ("has invalid keys: sending_queue")
+      # and the collector refuses to start. It keeps its own internal queue instead.
+      retry_on_failure:
+        enabled: true
+        initial_interval: 5s
+        max_interval: 30s
+        max_elapsed_time: 300s
     otlp/tempo:
-      endpoint: "tempo.monitoring.svc.cluster.local:4317"
+      endpoint: "tempo:4317"
       tls:
         insecure: true
+      sending_queue:
+        enabled: true
+        storage: file_storage
+        num_consumers: 4
+        queue_size: 1000
+      retry_on_failure:
+        enabled: true
+        initial_interval: 5s
+        max_interval: 30s
+        max_elapsed_time: 300s
     otlphttp/loki:
-      endpoint: "http://loki.monitoring.svc.cluster.local:3100/otlp"
+      endpoint: "http://loki:3100/otlp"
       tls:
         insecure: true
+      sending_queue:
+        enabled: true
+        storage: file_storage
+        num_consumers: 4
+        queue_size: 1000
+      retry_on_failure:
+        enabled: true
+        initial_interval: 5s
+        max_interval: 30s
+        max_elapsed_time: 300s
+
+  connectors:
+    # Derives RED metrics (rate / errors / duration) from spans with no application
+    # change, feeding the SLO recording rules and Grafana dashboards in this repo.
+    # Wired as an exporter on the traces pipeline and a receiver on the metrics pipeline.
+    # Because it sits at the end of the traces pipeline it sees post-filter spans, so
+    # dropped probe traffic never inflates these metrics.
+    spanmetrics:
+      histogram:
+        explicit:
+          buckets: [5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2s, 5s, 10s]
+      dimensions:
+        - name: http.request.method
+        - name: http.response.status_code
+        - name: http.route
+      exemplars:
+        enabled: true
+      metrics_flush_interval: 30s
 
   service:
     pipelines:
+      # memory_limiter leads every pipeline so it can shed load before anything buffers.
+      # It previously guarded only traces, leaving logs and metrics to OOM the collector
+      # instead of dropping data under pressure.
       metrics:
-        receivers: [otlp, prometheus]
-        processors: [batch]
+        receivers: [otlp, prometheus, spanmetrics]
+        processors: [memory_limiter, resourcedetection, batch]
         exporters: [prometheusremotewrite]
       traces:
         receivers: [otlp]
-        # memory_limiter first so it can shed load before anything buffers; filter next so
-        # dropped probe spans never occupy a batch.
-        processors: [memory_limiter, filter/drop_health_checks, batch/traces]
-        exporters: [otlp/tempo]
+        # filter before batch so dropped probe spans never occupy a batch slot.
+        processors:
+          [memory_limiter, resourcedetection, filter/drop_health_checks, batch/traces]
+        exporters: [otlp/tempo, spanmetrics]
       logs:
         receivers: [filelog, otlp]
-        processors: [batch]
+        processors: [memory_limiter, resourcedetection, batch]
         exporters: [otlphttp/loki]
