@@ -33,6 +33,13 @@ transformer:
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
     port: 8081
+  # -- `extra` keys to promote into dedicated sink fields/columns, as {extra key: target field}.
+  # Applies to every bundled transformer in this deployment, on top of the generic audit-semantics
+  # vocabulary they already promote — the no-code alternative to shipping a transformer module.
+  # Target names must match ^[a-zA-Z_][a-zA-Z0-9_]*$ (they land in SQL identifier position), and
+  # each promoted key needs a matching column in the sink schema or it is dropped at insert time.
+  # An invalid mapping fails the transformer module's import and shows in GET /registry.
+  promotedKeys: {}
   # -- Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service).
   resources:
     limits:
@@ -550,6 +557,10 @@ extraContainers: |
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
+      {{- if $.Values.transformer.promotedKeys }}
+        - name: AUDITFLOW_PROMOTED_KEYS
+          value: {{ $.Values.transformer.promotedKeys | toJson | quote }}
+      {{- end }}
       {{- if $.Values.observability.enabled }}
         - name: NODE_IP
           valueFrom:
