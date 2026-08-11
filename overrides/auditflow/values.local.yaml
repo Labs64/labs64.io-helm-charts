@@ -116,7 +116,7 @@ tenants:
         condition:
           match: 'any'  # 'all' (AND) or 'any' (OR)
           rules:
-            - field: 'extra.action_status'
+            - field: 'extra.actionStatus'
               operator: 'in'
               value: 'PENDING,FAILURE,WARN,ERROR'
         transformer:
