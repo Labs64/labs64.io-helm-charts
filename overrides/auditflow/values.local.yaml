@@ -116,6 +116,10 @@ tenants:
         condition:
           match: 'any'  # 'all' (AND) or 'any' (OR)
           rules:
+            # `extra.actionStatus` is part of the optional well-known convention, not a guaranteed
+            # field: `extra` is an open map and a publisher may omit it entirely. A rule on an
+            # absent field simply does not match — use the `exists` operator if you need to branch
+            # on presence.
             - field: 'extra.actionStatus'
               operator: 'in'
               value: 'PENDING,FAILURE,WARN,ERROR'
