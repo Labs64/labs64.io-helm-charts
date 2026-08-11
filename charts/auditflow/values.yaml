@@ -39,6 +39,10 @@ transformer:
   # Target names must match ^[a-zA-Z_][a-zA-Z0-9_]*$ (they land in SQL identifier position), and
   # each promoted key needs a matching column in the sink schema or it is dropped at insert time.
   # An invalid mapping fails the transformer module's import and shows in GET /registry.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
   promotedKeys: {}
   # -- Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service).
   resources:
