@@ -3,6 +3,33 @@ entries:
   api-docs:
   - apiVersion: v2
     appVersion: v5.27.1
+    created: "2026-08-13T05:25:26.624400852Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.3.0
+    description: 'Labs64.IO :: Swagger UI'
+    digest: 49e919c0f5d07a65d0f5e072e987d009822ce5d705420b0db1b1657ed085d944
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - api
+    - documentation
+    - swagger
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: api-docs
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/api-docs-0.3.0/api-docs-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
+    appVersion: v5.27.1
     created: "2026-07-24T08:04:09.596326476Z"
     dependencies:
     - name: chart-libs
@@ -29,6 +56,39 @@ entries:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/api-docs-0.2.0/api-docs-0.2.0.tgz
     version: 0.2.0
   api-gateway:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-08-13T05:25:26.856170688Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.3.0
+    description: 'Labs64.IO :: API Gateway (AuthProxy + Middlewares)'
+    digest: da1cf89ee1be6780e152bd845fe79d3aa5fc0bfa590b30918bf8feec6347830d
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - traefik
+    - authproxy
+    - security
+    - authentication
+    - authorization
+    - oauth2
+    - oidc
+    - middleware
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: api-gateway
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-authproxy/tree/master/traefik-authproxy
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/api-gateway-0.7.0/api-gateway-0.7.0.tgz
+    version: 0.7.0
   - apiVersion: v2
     appVersion: 0.0.1
     created: "2026-07-24T08:04:09.758730047Z"
@@ -146,6 +206,33 @@ entries:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/api-gateway-0.0.1/api-gateway-0.0.1.tgz
     version: 0.0.1
   auditflow:
+  - apiVersion: v2
+    appVersion: 0.0.2
+    created: "2026-08-13T05:25:27.080679497Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.3.0
+    description: 'Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices'
+    digest: 54e8bd19c6ebab9fbb75bbd511131efc1e7738b7a17b47eed77a526b2717cbcc
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - auditflow
+    - audit
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: auditflow
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-auditflow
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/auditflow-0.8.0/auditflow-0.8.0.tgz
+    version: 0.8.0
   - apiVersion: v2
     appVersion: 0.0.2
     created: "2026-08-11T19:52:42.72728157Z"
@@ -317,6 +404,35 @@ entries:
   authz-pdp:
   - apiVersion: v2
     appVersion: 0.51.0
+    created: "2026-08-13T05:25:27.292402637Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.3.0
+    description: 'Labs64.IO :: Cerbos PDP — central authorization decision point'
+    digest: e3b67a198222425cd0dbc14f23e55c8c6265befdd4253b4c3fc5906d4af52cd4
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - cerbos
+    - authorization
+    - pdp
+    - security
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: authz-pdp
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/cerbos/cerbos
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/authz-pdp-0.3.0/authz-pdp-0.3.0.tgz
+    version: 0.3.0
+  - apiVersion: v2
+    appVersion: 0.51.0
     created: "2026-07-24T08:04:10.113311141Z"
     dependencies:
     - name: chart-libs
@@ -345,6 +461,26 @@ entries:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/authz-pdp-0.2.0/authz-pdp-0.2.0.tgz
     version: 0.2.0
   chart-libs:
+  - apiVersion: v2
+    created: "2026-08-13T05:25:27.45761191Z"
+    description: 'Labs64.IO :: Helm Charts Common Templates'
+    digest: 39b0ae148087350ab2b4343e89e7b53cfae8a78d5adf5cf2a46880978a30b042
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - library
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: chart-libs
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: library
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/chart-libs-0.3.0/chart-libs-0.3.0.tgz
+    version: 0.3.0
   - apiVersion: v2
     created: "2026-07-24T08:04:10.272743929Z"
     description: 'Labs64.IO :: Helm Charts Common Templates'
@@ -406,6 +542,34 @@ entries:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/chart-libs-0.0.1/chart-libs-0.0.1.tgz
     version: 0.0.1
   checkout:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-08-13T05:25:27.674154245Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.3.0
+    description: 'Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales
+      Enablement'
+    digest: 7e6f00b12869f9c14609ccf91304392eb2e46e2a17a041d8fc66c119901a7dd2
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - ecommerce
+    - checkout
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: checkout
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-checkout
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/checkout-0.5.0/checkout-0.5.0.tgz
+    version: 0.5.0
   - apiVersion: v2
     appVersion: 0.0.1
     created: "2026-07-24T08:04:10.423332839Z"
@@ -501,6 +665,35 @@ entries:
   customer-portal:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2026-08-13T05:25:27.875292984Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.3.0
+    description: 'Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64
+      Customer Portal, built with Vite and Vue 3.'
+    digest: 5cb9dd05fd06381668a1d79c76945e7b630144ec5857bb3442a29825ca10f7b6
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - customer-portal
+    - frontend
+    - vue
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: customer-portal
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-customer-portal
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/customer-portal-0.5.0/customer-portal-0.5.0.tgz
+    version: 0.5.0
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2026-07-24T08:04:10.551083151Z"
     dependencies:
     - name: chart-libs
@@ -529,6 +722,58 @@ entries:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/customer-portal-0.4.0/customer-portal-0.4.0.tgz
     version: 0.4.0
   labs64io-ecosystem:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-08-13T05:25:28.083377919Z"
+    dependencies:
+    - condition: api-gateway.enabled
+      name: api-gateway
+      repository: file://../api-gateway
+      version: '>=0.1.0'
+    - condition: authz-pdp.enabled
+      name: authz-pdp
+      repository: file://../authz-pdp
+      version: '>=0.1.0'
+    - condition: checkout.enabled
+      name: checkout
+      repository: file://../checkout
+      version: '>=0.1.0'
+    - condition: payment-gateway.enabled
+      name: payment-gateway
+      repository: file://../payment-gateway
+      version: '>=0.1.0'
+    - condition: auditflow.enabled
+      name: auditflow
+      repository: file://../auditflow
+      version: '>=0.1.0'
+    - condition: api-docs.enabled
+      name: api-docs
+      repository: file://../api-docs
+      version: '>=0.1.0'
+    - condition: customer-portal.enabled
+      name: customer-portal
+      repository: file://../customer-portal
+      version: '>=0.1.0'
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 18.7.11
+    - condition: rabbitmq.enabled
+      name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 16.0.14
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 27.0.13
+    description: 'Labs64.IO :: Umbrella Chart for entire Ecosystem'
+    digest: b0bceeb30e05246540d12dc045fafce360f1edf5a3f9d0fd365cadbb313ae2d2
+    home: https://labs64.io
+    name: labs64io-ecosystem
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/labs64io-ecosystem-0.3.0/labs64io-ecosystem-0.3.0.tgz
+    version: 0.3.0
   - apiVersion: v2
     appVersion: 0.0.1
     created: "2026-07-24T08:04:10.767481484Z"
@@ -582,6 +827,38 @@ entries:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/labs64io-ecosystem-0.2.0/labs64io-ecosystem-0.2.0.tgz
     version: 0.2.0
   payment-gateway:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2026-08-13T05:25:28.254708071Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.3.0
+    description: 'Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP
+      Integration'
+    digest: c5c983ba5034ce6b5b003439fc9952a450c9f42faa9be3465a8bf6d036a48146
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - ecommerce
+    - payment
+    - gateway
+    - psp
+    - stripe
+    - paypal
+    maintainers:
+    - email: info@labs64.com
+      name: labs64
+    name: payment-gateway
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-payment-gateway
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/payment-gateway-0.5.0/payment-gateway-0.5.0.tgz
+    version: 0.5.0
   - apiVersion: v2
     appVersion: 0.0.1
     created: "2026-07-24T08:04:10.942481803Z"
@@ -735,4 +1012,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/preflight-0.0.1/preflight-0.0.1.tgz
     version: 0.0.1
-generated: "2026-08-11T19:52:43.831310131Z"
+generated: "2026-08-13T05:25:28.254787331Z"
