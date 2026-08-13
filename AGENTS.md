@@ -37,6 +37,13 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
    - Every `subPath` volume mount must be in `scripts/chart-authoring-allowlist.yaml` with a reason — a subPath mount does not receive live ConfigMap/Secret updates (no kubelet periodic sync).
    - Every container in a rendered Deployment needs both a `livenessProbe` and a `readinessProbe`, each with `periodSeconds > 0` and `failureThreshold > 0`.
    - Every chart with a long-running workload (backend and/or UI) must declare a `networkPolicy` (or `ui.networkPolicy`) key, and its egress rules must never be an allow-all — see guardrail 10 in the workspace `AGENTS.md`. Umbrella charts (no workload of their own) and one-shot Job charts (e.g. `preflight`, which needs broad connectivity by design) are exempt.
+8. **Never render an image reference by hand** — always
+   `{{ include "chart-libs.image" (dict "imageRoot" .Values.<path>.image "context" $) }}`, including
+   inside `extraContainers` strings. Precedence is digest → explicit tag → `.Chart.AppVersion`, so
+   setting `image.digest` (`sha256:<64 hex>`, validated at render) pins the deployment to exact
+   content. Neither Docker Hub nor GHCR can enforce tag immutability, so the digest is the only
+   deployment identity that cannot be moved out from under a running workload — shared environments
+   should pin it in `overrides/<module>/values.<env>.yaml`; local dev keeps using tags.
 
 ## Deployment Modes
 
@@ -62,6 +69,36 @@ just install-app auditflow   # install/reinstall a single module
 just generate-all            # regenerate chart README + values.schema.json
 ```
 
+## Release propagation
+
+A module release does not update its chart by hand. The publish workflow reports each
+image's digest, dispatches `module-released` to this repo, and
+`.github/workflows/labs64io-chart-image-update.yml` opens a PR that pins the digests:
+
+```
+module release  →  docker-publish.yml (digest)  →  chart-update-dispatch.yml
+                →  labs64io-chart-image-update.yml  →  scripts/update-chart-images.py  →  PR
+```
+
+What the updater guarantees, and why you should not hand-edit around it:
+
+- **All-or-nothing.** Every first-party (`labs64/…`) image in the chart must be pinned in
+  one go — a chart's images share one `appVersion`, so a partial pin deploys a mix no
+  release ever validated. Third-party wrappers (swagger-ui, cerbos) are exempt.
+- **Chart version always bumps** when anything changes, because `chart-releaser` runs with
+  `skip_existing: true` and would silently not republish otherwise.
+- **Idempotent.** Replaying a release event is a no-op, so a redelivered dispatch cannot
+  inflate the chart version.
+- **Comments survive.** Edits are line-level; a PyYAML round-trip would strip every `# --`
+  helm-docs annotation in `values.yaml`.
+
+Replay or pin by hand with `just update-chart-images <chart> <version> --image repo@sha256:…`
+(repeat `--image` per image), or re-run the workflow via `workflow_dispatch`.
+
+Requires `CHART_DISPATCH_TOKEN` (a PAT with `contents: write` here) on the module repo, and
+`CHART_UPDATE_TOKEN` here so the generated PR triggers chart CI. Without the first, releases
+still succeed and print the exact `gh api` command to run manually.
+
 ## Where to make common changes
 
 | Goal | Where |
@@ -71,4 +108,5 @@ just generate-all            # regenerate chart README + values.schema.json
 | Default values | `charts/<module>/values.yaml` |
 | Local dev overrides | `overrides/<module>/values.local.yaml` |
 | Pinned chart versions | `justfile` (version variables at top) |
+| Release digest propagation | `scripts/update-chart-images.py` + `.github/workflows/labs64io-chart-image-update.yml` |
 | Observability wiring / collector pipelines | `OBSERVABILITY.md` + `overrides/opentelemetry/` |

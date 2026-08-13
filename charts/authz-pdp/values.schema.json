@@ -86,6 +86,12 @@
       "additionalProperties": false,
       "description": "Cerbos container image (third-party; keeps its own non-root user).",
       "properties": {
+        "digest": {
+          "default": "",
+          "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
+          "title": "digest",
+          "type": "string"
+        },
         "pullPolicy": {
           "default": "IfNotPresent",
           "title": "pullPolicy",
@@ -106,7 +112,8 @@
       "required": [
         "repository",
         "pullPolicy",
-        "tag"
+        "tag",
+        "digest"
       ],
       "title": "image",
       "type": "object"

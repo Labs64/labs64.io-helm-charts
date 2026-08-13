@@ -1,6 +1,6 @@
 # api-docs
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.27.1](https://img.shields.io/badge/AppVersion-v5.27.1-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.27.1](https://img.shields.io/badge/AppVersion-v5.27.1-informational?style=flat-square)
 
 Labs64.IO :: Swagger UI
 
@@ -20,7 +20,7 @@ Labs64.IO :: Swagger UI
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.2.0 |
+| file://../chart-libs | chart-libs | 0.3.0 |
 
 ## Values
 
@@ -41,7 +41,8 @@ Labs64.IO :: Swagger UI
 | gateway.routes | list | `[]` | Routes. Each: path, optional pathType (default PathPrefix), service{name,port}; stripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path. @schema type: array @schema |
 | global | object | `{"domain":"localhost"}` | Global values shared across Labs64.IO charts @schema type: object additionalProperties: true @schema |
 | global.domain | string | `"localhost"` | Base domain; swagger-ui is exposed as gateway.<domain> |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"swaggerapi/swagger-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image | object | `{"digest":"","pullPolicy":"IfNotPresent","repository":"swaggerapi/swagger-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image.digest | string | `""` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |

@@ -23,12 +23,16 @@ image:
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
+  # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
+  digest: ""
 
 transformer:
   image:
     repository: labs64/auditflow-transformer
     pullPolicy: IfNotPresent
     tag: ""
+    # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
+    digest: ""
   # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
@@ -58,6 +62,8 @@ sink:
     repository: labs64/auditflow-sink
     pullPolicy: IfNotPresent
     tag: ""
+    # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
+    digest: ""
   # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
@@ -548,7 +554,7 @@ applicationType: "java"
 
 extraContainers: |
     - name: auditflow-transformer
-      image: '{{ .Values.transformer.image.repository }}:{{ .Values.transformer.image.tag | default .Chart.AppVersion }}'
+      image: '{{ include "chart-libs.image" (dict "imageRoot" .Values.transformer.image "context" $) }}'
       imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'
       ports:
         - name: http-trn
@@ -606,7 +612,7 @@ extraContainers: |
           mountPath: /tmp
   
     - name: auditflow-sink
-      image: '{{ .Values.sink.image.repository }}:{{ .Values.sink.image.tag | default .Chart.AppVersion }}'
+      image: '{{ include "chart-libs.image" (dict "imageRoot" .Values.sink.image "context" $) }}'
       imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'
       ports:
         - name: http-snk

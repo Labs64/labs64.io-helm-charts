@@ -1,0 +1,172 @@
+name: Labs64.IO - Chart Image Update
+
+# Receives a module release event and opens a PR pinning the released image
+# digests into the module's chart (values.yaml `digest:` + Chart.yaml
+# appVersion/version). This is the Helm end of the release pipeline: the module
+# repo publishes images and reports their digests, this repo decides what the
+# clusters run.
+#
+# A PR rather than a direct push, deliberately — chart CI (lint, schema, docs,
+# authoring checklist, version-bump gate) must pass before a chart change can
+# reach master, and Argo CD syncs module charts straight from master.
+#
+# Trigger it either way:
+#   * repository_dispatch `module-released` — from the module's publish workflow
+#     via labs64.io-workspace/.github/workflows/chart-update-dispatch.yml
+#   * workflow_dispatch — manually, e.g. to replay a release whose dispatch was
+#     lost, or to pin a chart by hand
+#
+# The client_payload comes from another repository and is untrusted: it is passed
+# to the updater as a file, never through a shell, and every field is validated
+# in scripts/update-chart-images.py (load_event).
+
+on:
+  repository_dispatch:
+    types: [module-released]
+  workflow_dispatch:
+    inputs:
+      chart:
+        description: "Chart directory name under charts/ (e.g. auditflow)"
+        required: true
+        type: string
+      version:
+        description: "Released application version X.Y.Z"
+        required: true
+        type: string
+      images:
+        description: "One `repository@sha256:...` per line"
+        required: true
+        type: string
+      bump:
+        description: "Chart version bump"
+        required: false
+        default: patch
+        type: choice
+        options: [patch, minor, major, none]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serialize per chart: two releases of the same module racing would produce
+  # two PRs branched off different versions of the same file.
+  group: chart-image-update-${{ github.event.client_payload.chart || inputs.chart }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Pin ${{ github.event.client_payload.chart || inputs.chart }} images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install pyyaml pytest
+
+      - name: Test the chart updater
+        # A writer nobody tests silently corrupts charts. Same convention as the
+        # other gates in this repo.
+        run: pytest scripts/test_update_chart_images.py -q
+
+      - name: Build the release event payload
+        env:
+          DISPATCH_PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+          IN_CHART: ${{ inputs.chart }}
+          IN_VERSION: ${{ inputs.version }}
+          IN_IMAGES: ${{ inputs.images }}
+          IN_BUMP: ${{ inputs.bump }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "repository_dispatch" ]]; then
+            printf '%s' "$DISPATCH_PAYLOAD" > event.json
+          else
+            python3 - <<'PY'
+          import json, os
+          images = []
+          for line in os.environ["IN_IMAGES"].splitlines():
+              line = line.strip()
+              if not line:
+                  continue
+              repository, _, digest = line.rpartition("@")
+              images.append({"image": repository, "digest": digest})
+          json.dump(
+              {
+                  "chart": os.environ["IN_CHART"],
+                  "version": os.environ["IN_VERSION"],
+                  "bump": os.environ["IN_BUMP"] or "patch",
+                  "images": images,
+              },
+              open("event.json", "w"),
+          )
+          PY
+          fi
+          cat event.json
+
+      # Validation happens before any payload value becomes a step output: these
+      # fields end up in a branch name and a PR title, and an unvalidated string
+      # from another repository could otherwise forge extra output lines.
+      - name: Validate the payload
+        id: event
+        run: python3 scripts/update-chart-images.py --event-file event.json --print-event >> "$GITHUB_OUTPUT"
+
+      - name: Pin the released digests
+        run: python3 scripts/update-chart-images.py --event-file event.json
+
+      - name: Detect changes
+        id: diff
+        run: |
+          set -euo pipefail
+          rm -f event.json
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Chart already pinned to these digests — nothing to propose." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Proposed chart update"
+              echo
+              echo '```diff'
+              git diff
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Open the chart update PR
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          # A PAT is needed for the PR to trigger chart CI — GitHub does not run
+          # workflows on PRs opened with GITHUB_TOKEN. Falls back so the PR still
+          # gets created (unchecked) if the secret is not configured.
+          token: ${{ secrets.CHART_UPDATE_TOKEN || secrets.GITHUB_TOKEN }}
+          branch: chart-update/${{ steps.event.outputs.chart }}-${{ steps.event.outputs.version }}
+          # Stable branch name: a replayed release event updates the open PR
+          # instead of opening a second one.
+          delete-branch: true
+          commit-message: |
+            chore(${{ steps.event.outputs.chart }}): pin ${{ steps.event.outputs.version }} image digests
+
+            Generated by scripts/update-chart-images.py from the release event.
+          title: "chore(${{ steps.event.outputs.chart }}): pin ${{ steps.event.outputs.version }} image digests"
+          body: |
+            Automated chart update from the **${{ steps.event.outputs.chart }} ${{ steps.event.outputs.version }}** release.
+
+            - `values.yaml` — image digests pinned to the exact artifacts the release published
+            - `Chart.yaml` — `appVersion` set to the release, `version` bumped so chart-releaser republishes it
+
+            Deploying by digest rather than tag is what makes the rollout reproducible: neither Docker Hub
+            nor GHCR can enforce tag immutability, so `:${{ steps.event.outputs.version }}` may resolve to
+            different content later.
+
+            Merging this changes what Argo CD deploys — review the digests against the release before approving.
+          labels: |
+            chart-update
+            automated

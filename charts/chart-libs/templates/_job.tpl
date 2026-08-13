@@ -39,7 +39,7 @@ spec:
 
       containers:
         - name: migrate
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "chart-libs.image" (dict "imageRoot" .Values.image "context" $) | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           env:
             - name: SPRING_FLYWAY_ENABLED

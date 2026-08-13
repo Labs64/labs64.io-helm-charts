@@ -128,6 +128,12 @@ jobs:
         # against synthetic input so it can't quietly stop catching anything.
         run: pytest scripts/test_lint_chart_authoring.py -q
 
+      - name: Test the chart image updater
+        # The updater rewrites Chart.yaml/values.yaml unattended from a release
+        # event; its all-or-nothing, idempotency and payload-validation rules
+        # need the same gate as the linters.
+        run: pytest scripts/test_update_chart_images.py -q
+
       - name: Chart authoring checklist
         # Item 30: ingress annotations (no module chart may hand-roll kind:
         # Ingress — only chart-libs.gateway-routes may, and it hard-fails on

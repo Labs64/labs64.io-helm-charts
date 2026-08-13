@@ -61,7 +61,7 @@ spec:
           securityContext:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          image: "{{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag | default .Chart.AppVersion }}"
+          image: {{ include "chart-libs.image" (dict "imageRoot" .Values.ui.image "context" $) | quote }}
           imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
           ports:
             - name: http

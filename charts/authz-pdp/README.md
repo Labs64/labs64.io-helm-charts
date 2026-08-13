@@ -1,6 +1,6 @@
 # authz-pdp
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.51.0](https://img.shields.io/badge/AppVersion-0.51.0-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.51.0](https://img.shields.io/badge/AppVersion-0.51.0-informational?style=flat-square)
 
 Labs64.IO :: Cerbos PDP — central authorization decision point
 
@@ -21,7 +21,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.2.0 |
+| file://../chart-libs | chart-libs | 0.3.0 |
 
 ## Values
 
@@ -35,7 +35,8 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 | env | list | `[]` |  |
 | envFrom | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
-| image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/cerbos/cerbos","tag":""}` | Cerbos container image (third-party; keeps its own non-root user). |
+| image | object | `{"digest":"","pullPolicy":"IfNotPresent","repository":"ghcr.io/cerbos/cerbos","tag":""}` | Cerbos container image (third-party; keeps its own non-root user). |
+| image.digest | string | `""` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` |  |
 | livenessProbe.httpGet.path | string | `"/_cerbos/health"` |  |

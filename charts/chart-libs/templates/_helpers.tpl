@@ -123,16 +123,37 @@ Usage:
 {{- end -}}
 
 {{/*
-Return the proper image name
+Return the fully qualified image reference for an image block.
+
+Digest wins over tag: when `digest` is set the reference is `repository@sha256:...`,
+which is the only deployment identity that cannot be moved out from under a running
+workload — neither Docker Hub nor GHCR can enforce tag immutability, so a redeployed
+`:1.4.0` may resolve to different content than the release that was validated. The tag
+form remains the default for local development and for charts wrapping upstream images
+that are not yet digest-pinned.
+
+Precedence: digest -> explicit tag -> .Chart.AppVersion.
+
+Usage:
+  {{ include "chart-libs.image" (dict "imageRoot" .Values.image "context" $) }}
+  {{ include "chart-libs.image" (dict "imageRoot" .Values.ui.image "context" $) }}
 */}}
 {{- define "chart-libs.image" -}}
-{{- $registryName := .imageRoot.registry -}}
-{{- $repositoryName := .imageRoot.repository -}}
-{{- $tag := .imageRoot.tag | toString -}}
-{{- if $registryName }}
-  {{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}
+{{- $img := .imageRoot -}}
+{{- $ctx := .context -}}
+{{- $repository := required "image.repository is required" $img.repository -}}
+{{- $ref := $repository -}}
+{{- with $img.registry -}}
+{{- $ref = printf "%s/%s" . $repository -}}
+{{- end -}}
+{{- $digest := $img.digest | default "" | toString -}}
+{{- if $digest -}}
+{{- if not (regexMatch "^sha256:[a-f0-9]{64}$" $digest) -}}
+{{- fail (printf "invalid image digest %q for %s (expected sha256:<64 lowercase hex>)" $digest $repository) -}}
+{{- end -}}
+{{- printf "%s@%s" $ref $digest -}}
 {{- else -}}
-  {{- printf "%s:%s" $repositoryName $tag -}}
+{{- printf "%s:%s" $ref ($img.tag | default $ctx.Chart.AppVersion | toString) -}}
 {{- end -}}
 {{- end -}}
 

@@ -487,6 +487,20 @@ lint-authoring *ARGS:
 test-lint-authoring:
     python3 -m pytest scripts/test_lint_chart_authoring.py -q
 
+# pin released image digests into a chart (what the release pipeline runs).
+# Normally driven by the module-released event; use this to replay a release or
+# pin a chart by hand. Pass every first-party image of the release.
+#   just update-chart-images auditflow 1.4.0 \
+#       --image labs64/auditflow@sha256:... \
+#       --image labs64/auditflow-transformer@sha256:... \
+#       --image labs64/auditflow-sink@sha256:...
+update-chart-images chart version *ARGS:
+    python3 scripts/update-chart-images.py --chart {{chart}} --app-version {{version}} {{ARGS}}
+
+# test the chart image updater itself
+test-update-chart-images:
+    python3 -m pytest scripts/test_update_chart_images.py -q
+
 # run helm template for an application locally to inspect output
 template app:
     helm template labs64io-{{app}} ./charts/{{app}} \
