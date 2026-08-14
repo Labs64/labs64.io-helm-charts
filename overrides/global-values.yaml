@@ -6,6 +6,9 @@ global:
   # which every HTTPRoute would then render with — and since Traefik has no matching listener
   # for that host, every request 404s at the edge instead of reaching the app.
   domain: localhost
+  gateway:
+    # Internal Kubernetes DNS name used for service-to-service calls through Traefik.
+    internalHost: traefik.tools.svc.cluster.local
   environment: local
   postgresql:
     host: "postgresql.tools.svc.cluster.local"

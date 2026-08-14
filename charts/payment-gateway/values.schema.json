@@ -17,6 +17,84 @@
       "additionalProperties": false,
       "description": "Additional application properties",
       "properties": {
+        "labs64": {
+          "additionalProperties": false,
+          "properties": {
+            "auditflow": {
+              "additionalProperties": false,
+              "properties": {
+                "oauth2": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "client-id": {
+                      "default": "payment-gateway",
+                      "description": "OAuth2 service-principal client ID",
+                      "title": "client-id",
+                      "type": "string"
+                    },
+                    "client-secret": {
+                      "default": "${AUDITFLOW_OAUTH_CLIENT_SECRET}",
+                      "description": "The value is resolved from the Pod environment populated by secrets.data.",
+                      "title": "client-secret",
+                      "type": "string"
+                    },
+                    "scopes": {
+                      "description": "Scopes requested for AuditFlow publishing",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          }
+                        ],
+                        "required": []
+                      },
+                      "title": "scopes",
+                      "type": "array"
+                    },
+                    "token-uri": {
+                      "default": "http://keycloak.tools.svc.cluster.local/realms/labs64io/protocol/openid-connect/token",
+                      "description": "OAuth2 token endpoint used for the client_credentials grant",
+                      "title": "token-uri",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "token-uri",
+                    "client-id",
+                    "client-secret",
+                    "scopes"
+                  ],
+                  "title": "oauth2",
+                  "type": "object"
+                },
+                "source-system": {
+                  "default": "labs64.io-payment-gateway",
+                  "description": "Stable producer identity written into every audit event",
+                  "title": "source-system",
+                  "type": "string"
+                },
+                "url": {
+                  "default": "{{ if and .Values.global .Values.global.gateway .Values.global.gateway.internalHost }}http://{{ .Values.global.gateway.internalHost }}/auditflow/api/v1{{ else }}${AUDITFLOW_URL}{{ end }}",
+                  "description": "AuditFlow API base URL derived from global.gateway.internalHost; standalone installs may supply AUDITFLOW_URL instead",
+                  "title": "url",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url",
+                "source-system",
+                "oauth2"
+              ],
+              "title": "auditflow",
+              "type": "object"
+            }
+          },
+          "required": [
+            "auditflow"
+          ],
+          "title": "labs64",
+          "type": "object"
+        },
         "spring": {
           "additionalProperties": false,
           "description": "Spring configuration",
@@ -69,34 +147,10 @@
               ],
               "title": "datasource",
               "type": "object"
-            },
-            "rabbitmq": {
-              "additionalProperties": false,
-              "properties": {
-                "host": {
-                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}",
-                  "description": "RabbitMQ host",
-                  "title": "host",
-                  "type": "string"
-                },
-                "port": {
-                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}",
-                  "description": "RabbitMQ port",
-                  "title": "port",
-                  "type": "string"
-                }
-              },
-              "required": [
-                "host",
-                "port"
-              ],
-              "title": "rabbitmq",
-              "type": "object"
             }
           },
           "required": [
             "datasource",
-            "rabbitmq",
             "data"
           ],
           "title": "spring",
@@ -104,7 +158,8 @@
         }
       },
       "required": [
-        "spring"
+        "spring",
+        "labs64"
       ],
       "title": "applicationYaml",
       "type": "object"
@@ -683,26 +738,6 @@
                 "additionalProperties": false,
                 "properties": {
                   "name": {
-                    "default": "rabbitmq",
-                    "title": "name",
-                    "type": "string"
-                  },
-                  "port": {
-                    "default": 5672,
-                    "title": "port",
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "name",
-                  "port"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "name": {
                     "default": "postgresql",
                     "title": "name",
                     "type": "string"
@@ -729,6 +764,46 @@
                   },
                   "port": {
                     "default": 6379,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "traefik",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8000,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "keycloak",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
                     "title": "port",
                     "type": "integer"
                   }
@@ -977,7 +1052,7 @@
     },
     "secrets": {
       "additionalProperties": false,
-      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply broker/database/cache credentials here, e.g.\n  SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.\nWhen rabbitmq.enabled=true / postgresql.enabled=true / redis.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth / redis.auth.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
+      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply OAuth/database/cache credentials here, e.g.\n  AUDITFLOW_OAUTH_CLIENT_SECRET, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
       "properties": {
         "data": {
           "additionalProperties": true,
