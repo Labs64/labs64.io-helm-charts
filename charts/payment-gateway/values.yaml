@@ -170,9 +170,8 @@ env: []
 envFrom: []
 
 # -- Secret data to be used as environment variables (delivered via envFrom).
-# External installs supply broker/database/cache credentials here, e.g.
-#   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.
-# When rabbitmq.enabled=true / postgresql.enabled=true / redis.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth / redis.auth.
+# External installs supply OAuth/database/cache credentials here, e.g.
+#   AUDITFLOW_OAUTH_CLIENT_SECRET, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.
 # Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).
 # Note: the Secret is hook-managed (pre-install) and survives helm uninstall.
 # @schema
@@ -184,13 +183,6 @@ envFrom: []
 # @schema
 secrets:
   data: {}
-
-# -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own broker instead.
-# @schema
-# type: object
-# additionalProperties: true
-# @schema
 
 # -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own database instead.
@@ -216,17 +208,28 @@ applicationYaml:
       # Set credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`
       # (a Secret, injected via envFrom) instead — see `secrets.data` below.
       url: "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"
-    rabbitmq:
-      # -- RabbitMQ host
-      host: "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}"
-      # -- RabbitMQ port
-      port: '{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}'
     data:
       redis:
         # -- Redis host
         host: "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}"
         # -- Redis port
         port: '{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}'
+  labs64:
+    auditflow:
+      # -- AuditFlow API base URL derived from global.gateway.internalHost; standalone installs may supply AUDITFLOW_URL instead
+      url: "{{ if and .Values.global .Values.global.gateway .Values.global.gateway.internalHost }}http://{{ .Values.global.gateway.internalHost }}/auditflow/api/v1{{ else }}${AUDITFLOW_URL}{{ end }}"
+      # -- Stable producer identity written into every audit event
+      source-system: labs64.io-payment-gateway
+      oauth2:
+        # -- OAuth2 token endpoint used for the client_credentials grant
+        token-uri: "http://keycloak.tools.svc.cluster.local/realms/labs64io/protocol/openid-connect/token"
+        # -- OAuth2 service-principal client ID
+        client-id: payment-gateway
+        # The value is resolved from the Pod environment populated by secrets.data.
+        client-secret: "${AUDITFLOW_OAUTH_CLIENT_SECRET}"
+        # -- Scopes requested for AuditFlow publishing
+        scopes:
+          - audit-event:write
 
 
 
@@ -306,12 +309,15 @@ networkPolicy:
   # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
   # database-per-service isolation.
   toolsEgress:
-    - name: rabbitmq
-      port: 5672
     - name: postgresql
       port: 5432
     - name: redis
       port: 6379
+    # The API call must traverse ForwardAuth; direct AuditFlow service egress is not granted.
+    - name: traefik
+      port: 8000
+    - name: keycloak
+      port: 8080
   # -- Egress rules enforcing database-per-service isolation.
   egress:
     # Cerbos PDP: @Authorize decisions over gRPC.

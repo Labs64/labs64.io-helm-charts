@@ -23,6 +23,10 @@ Usage (wrapper template in the module chart):
 {{- $fullname := include "chart-libs.fullname" . -}}
 {{- $prefix := .Values.gateway.prefix | default (printf "/%s" .Chart.Name) -}}
 {{- $host := include "chart-libs.gatewayHost" . -}}
+{{- $internalHost := "" -}}
+{{- if and .Values.global .Values.global.gateway -}}
+{{- $internalHost = .Values.global.gateway.internalHost | default "" -}}
+{{- end -}}
 {{- $mw := .Values.gateway.sharedMiddlewares -}}
 {{- if .Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1" }}
 apiVersion: gateway.networking.k8s.io/v1
@@ -36,6 +40,9 @@ spec:
     {{- toYaml .Values.gateway.parentRefs | nindent 4 }}
   hostnames:
     - {{ $host | quote }}
+    {{- if and $internalHost (ne $internalHost $host) }}
+    - {{ $internalHost | quote }}
+    {{- end }}
   rules:
     {{- range $route := .Values.gateway.routes }}
     - matches:

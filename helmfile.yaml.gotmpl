@@ -246,9 +246,11 @@ releases:
     labels:
       layer: apps
     needs:
-      - tools/rabbitmq
       - tools/postgresql
       - tools/redis
+      - tools/traefik
+      - labs64io/labs64io-api-gateway
+      - labs64io/labs64io-auditflow
 
   - name: labs64io-customer-portal
     namespace: labs64io

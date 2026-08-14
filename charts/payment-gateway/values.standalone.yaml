@@ -10,14 +10,14 @@
 
 # 1. Bring Your Own Infrastructure (BYOI)
 # ------------------------------------------------------------------------------
-# Define the external coordinates for PostgreSQL and RabbitMQ.
+# Define the external coordinates for PostgreSQL and Redis.
 global:
   postgresql:
     host: "my-external-postgres.database.svc.cluster.local"
     port: 5432
-  rabbitmq:
-    host: "my-external-rabbitmq.messaging.svc.cluster.local"
-    port: 5672
+  redis:
+    host: "my-external-redis.cache.svc.cluster.local"
+    port: 6379
 
   # 2. Shared Secrets / Credentials
   # ------------------------------------------------------------------------------
@@ -31,8 +31,15 @@ secrets:
   data:
     SPRING_DATASOURCE_USERNAME: "payment"
     SPRING_DATASOURCE_PASSWORD: "my-secure-postgres-password"
-    SPRING_RABBITMQ_USERNAME: "user"
-    SPRING_RABBITMQ_PASSWORD: "my-secure-rabbitmq-password"
+    AUDITFLOW_OAUTH_CLIENT_SECRET: "my-secure-oauth-client-secret"
+
+applicationYaml:
+  labs64:
+    auditflow:
+      url: "https://gateway.example.com/auditflow/api/v1"
+      oauth2:
+        token-uri: "https://identity.example.com/realms/labs64io/protocol/openid-connect/token"
+        client-id: payment-gateway
 
 # 3. Routing Agnosticism
 # ------------------------------------------------------------------------------
