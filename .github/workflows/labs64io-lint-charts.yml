@@ -151,12 +151,28 @@ jobs:
             if [ ! -f "$chart_dir/Chart.yaml" ]; then
               continue
             fi
+            chart_type=$(sed -n -E 's/^type: *//p' "$chart_dir/Chart.yaml")
             echo "=== Linting: $chart_name ==="
 
             # helm lint
             if ! helm lint "$chart_dir"; then
               echo "FAIL: helm lint $chart_name"
               FAILED=1
+            fi
+
+            # Schema validation metadata is required for both application and library charts.
+            if [ ! -f "$chart_dir/values.schema.json" ]; then
+              echo "FAIL: Missing values.schema.json in $chart_name"
+              FAILED=1
+            fi
+
+            # A library chart only defines named templates for its consumers. Helm deliberately
+            # rejects installing or rendering it on its own; consumer charts in this loop
+            # exercise those templates through their file://chart-libs dependency.
+            if [ "$chart_type" = "library" ]; then
+              echo "SKIP: standalone template validation is not applicable to library chart $chart_name"
+              echo "PASS: $chart_name"
+              continue
             fi
 
             # helm template (syntax + render check)
@@ -166,16 +182,11 @@ jobs:
               FAILED=1
             fi
 
-            # Schema validation (schema must exist)
-            if [ ! -f "$chart_dir/values.schema.json" ]; then
-              echo "FAIL: Missing values.schema.json in $chart_name"
+            # Render once with the committed values to exercise values.schema.json validation.
+            if ! helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" > /dev/null 2>&1; then
+              echo "FAIL: schema validation $chart_name"
+              helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" 2>&1 | tail -5
               FAILED=1
-            else
-              if ! helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" > /dev/null 2>&1; then
-                echo "FAIL: schema validation $chart_name"
-                helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" 2>&1 | tail -5
-                FAILED=1
-              fi
             fi
 
             echo "PASS: $chart_name"
