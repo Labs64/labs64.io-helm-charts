@@ -23,6 +23,9 @@ jobs:
         with:
           version: "3.17.0"
 
+      - name: Add dependent repositories
+        run: helm repo add bitnami https://charts.bitnami.com/bitnami
+
       - name: Install helm-schema plugin
         run: helm plugin install https://github.com/dadav/helm-schema
 
