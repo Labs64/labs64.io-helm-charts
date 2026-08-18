@@ -27,6 +27,7 @@ applicationYaml:
         port: "6379"
   labs64:
     auditflow:
+      enabled: true
       oauth2:
         token-uri: https://identity.infra.example.com/oauth2/token
         client-id: payment-gateway

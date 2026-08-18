@@ -216,6 +216,8 @@ applicationYaml:
         port: '{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}'
   labs64:
     auditflow:
+      # -- Publish payment lifecycle events through AuditFlow
+      enabled: false
       # -- AuditFlow API base URL derived from global.gateway.internalHost; standalone installs may supply AUDITFLOW_URL instead
       url: "{{ if and .Values.global .Values.global.gateway .Values.global.gateway.internalHost }}http://{{ .Values.global.gateway.internalHost }}/auditflow/api/v1{{ else }}${AUDITFLOW_URL}{{ end }}"
       # -- Stable producer identity written into every audit event
