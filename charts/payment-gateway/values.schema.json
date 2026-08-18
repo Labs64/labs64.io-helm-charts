@@ -23,6 +23,12 @@
             "auditflow": {
               "additionalProperties": false,
               "properties": {
+                "enabled": {
+                  "default": false,
+                  "description": "Publish payment lifecycle events through AuditFlow",
+                  "title": "enabled",
+                  "type": "boolean"
+                },
                 "oauth2": {
                   "additionalProperties": false,
                   "properties": {
@@ -81,6 +87,7 @@
                 }
               },
               "required": [
+                "enabled",
                 "url",
                 "source-system",
                 "oauth2"

@@ -21,6 +21,7 @@ networkPolicy:
 applicationYaml:
   labs64:
     auditflow:
+      enabled: true
       oauth2:
         token-uri: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/token
 

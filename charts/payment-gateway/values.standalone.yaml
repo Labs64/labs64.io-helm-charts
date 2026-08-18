@@ -31,15 +31,6 @@ secrets:
   data:
     SPRING_DATASOURCE_USERNAME: "payment"
     SPRING_DATASOURCE_PASSWORD: "my-secure-postgres-password"
-    AUDITFLOW_OAUTH_CLIENT_SECRET: "my-secure-oauth-client-secret"
-
-applicationYaml:
-  labs64:
-    auditflow:
-      url: "https://gateway.example.com/auditflow/api/v1"
-      oauth2:
-        token-uri: "https://identity.example.com/realms/labs64io/protocol/openid-connect/token"
-        client-id: payment-gateway
 
 # 3. Routing Agnosticism
 # ------------------------------------------------------------------------------
