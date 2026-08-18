@@ -141,7 +141,7 @@ jobs:
 
       - name: Open the chart update PR
         if: steps.diff.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           # A PAT is needed for the PR to trigger chart CI — GitHub does not run
           # workflows on PRs opened with GITHUB_TOKEN. Falls back so the PR still
