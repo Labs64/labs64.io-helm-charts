@@ -102,6 +102,41 @@
           "title": "labs64",
           "type": "object"
         },
+        "payment-gateway": {
+          "additionalProperties": false,
+          "description": "Payment Gateway application properties bound under the Spring prefix `payment-gateway`",
+          "properties": {
+            "idempotency": {
+              "additionalProperties": false,
+              "description": "Generic HTTP idempotency storage and processing recovery",
+              "properties": {
+                "processing-timeout": {
+                  "default": "${IDEMPOTENCY_PROCESSING_TIMEOUT:PT5M}",
+                  "description": "Time after which another identical request may take over an abandoned PROCESSING record",
+                  "title": "processing-timeout",
+                  "type": "string"
+                },
+                "redis-ttl": {
+                  "default": "${IDEMPOTENCY_REDIS_TTL:PT3H}",
+                  "description": "Lifetime of completed and in-progress idempotency records in Redis",
+                  "title": "redis-ttl",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "redis-ttl",
+                "processing-timeout"
+              ],
+              "title": "idempotency",
+              "type": "object"
+            }
+          },
+          "required": [
+            "idempotency"
+          ],
+          "title": "payment-gateway",
+          "type": "object"
+        },
         "spring": {
           "additionalProperties": false,
           "description": "Spring configuration",
@@ -165,6 +200,7 @@
         }
       },
       "required": [
+        "payment-gateway",
         "spring",
         "labs64"
       ],
