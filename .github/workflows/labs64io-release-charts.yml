@@ -1,4 +1,4 @@
-name: Labs64.IO - Release Charts
+name: Labs64.IO - Helm Charts - Release Charts
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Labs64.IO - Lint Charts
+name: Labs64.IO - Helm Charts - Lint Charts
 
 on:
   pull_request:

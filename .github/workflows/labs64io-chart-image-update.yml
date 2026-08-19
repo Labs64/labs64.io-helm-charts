@@ -1,4 +1,4 @@
-name: Labs64.IO - Chart Image Update
+name: Labs64.IO - Helm Charts - Chart Image Update
 
 # Receives a module release event and opens a PR pinning the released image
 # digests into the module's chart (values.yaml `digest:` + Chart.yaml
