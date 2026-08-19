@@ -36,11 +36,22 @@ Bundled infrastructure:
 Credentials are pre-wired end-to-end via the shared Secret "{{ .Values.global.sharedSecret.name }}"
 (dev-grade defaults in `secrets.*Password` — change them before using this anywhere but local/demo).
 
-This chart does NOT include Traefik or a Gateway API `Gateway` resource — that's
-infrastructure-owned, shared across the whole ecosystem, and lives outside this repo's
-published charts. Any module installed with `gateway.enabled: true` needs a Gateway named
-"labs64io-gateway" in namespace "tools" to actually receive traffic; see the "Gateway API
+{{- if .Values.traefik.enabled }}
+Gateway: provisioned by the bundled Traefik subchart as "labs64io-gateway" in namespace
+"{{ .Values.traefik.gateway.namespace }}". Find its address with:
+  kubectl get svc -n {{ .Values.traefik.gateway.namespace }} -l app.kubernetes.io/name=traefik
+{{- else }}
+This chart did NOT install Traefik or a Gateway API `Gateway` resource. Any module
+installed with `gateway.enabled: true` needs a Gateway named "labs64io-gateway" in
+namespace "tools" to actually receive traffic — until one exists its HTTPRoute renders
+fine but sits at `Accepted: False`. Set `traefik.enabled=true`, or see the "Gateway API
 setup" section of the chart repo's README.
+{{- end }}
+{{- if index .Values "mock-oidc" "enabled" }}
+
+  !! mock-oidc is enabled — DEMO ONLY. It authenticates nobody and signs whatever
+     scopes the caller asks for. Never leave it running anywhere that matters.
+{{- end }}
 
 Check rollout status per module:
   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}

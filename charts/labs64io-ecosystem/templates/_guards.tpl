@@ -14,3 +14,14 @@ can still be enforced cheaply.
   {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+mock-oidc authenticates nobody — it signs whatever the caller asks for. Allowing it
+outside demoMode would let a production install silently accept forged identities.
+*/}}
+{{- define "labs64io-ecosystem.guardMockOidc" -}}
+{{- if and (index .Values "mock-oidc" "enabled") (not .Values.demoMode) -}}
+  {{- fail "mock-oidc.enabled requires demoMode=true — it issues tokens to anyone who asks and must never run outside a throwaway demo." -}}
+{{- end -}}
+{{- end -}}
+

@@ -1,7 +1,7 @@
 apiVersion: v2
 name: labs64io-ecosystem
 type: application
-version: 0.6.0
+version: 0.7.0
 appVersion: 0.0.1
 description: "Labs64.IO :: Umbrella Chart for entire Ecosystem"
 home: https://labs64.io
@@ -47,3 +47,18 @@ dependencies:
     version: 27.0.13
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
+  # Gateway (opt-in). Provisions the GatewayClass + the shared labs64io-gateway that
+  # every module's gateway.parentRefs points at. Without one, every HTTPRoute renders
+  # and then sits Accepted:False. Default off so GitOps users who manage ingress
+  # separately are unaffected; the install wizard turns it on. Pinned to the same
+  # version the justfile uses (TRAEFIK_CHART_VERSION) so local dev and the published
+  # path agree.
+  - name: traefik
+    version: "41.0.1"
+    repository: https://traefik.github.io/charts
+    condition: traefik.enabled
+  # Dev-only IdP (opt-in, additionally gated on demoMode — see templates/_guards.tpl).
+  - name: mock-oidc
+    version: ">=0.1.0"
+    repository: file://../mock-oidc
+    condition: mock-oidc.enabled

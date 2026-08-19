@@ -7,6 +7,10 @@
 # @schema
 api-gateway:
   enabled: true
+  # Leave oidc.discoveryUrl unset to use the chart default (Keycloak). It is not set
+  # here because the mock-oidc Service resolves as mock-oidc.<namespace>.svc.cluster.local
+  # and the namespace is not knowable at chart-authoring time — install.sh sets it
+  # explicitly for demo installs.
 # @schema
 # type: object
 # additionalProperties: true
@@ -192,3 +196,74 @@ redis:
   auth:
     existingSecret: "labs64io-shared-secret"
     existingSecretPasswordKey: "SPRING_DATA_REDIS_PASSWORD"
+
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+# -- Opt-in Gateway. Without a GatewayClass and a Gateway named labs64io-gateway,
+# every module's HTTPRoute renders but sits Accepted:False and receives no traffic
+# — pods running, nothing to curl. Enable this, or provision an equivalent Gateway
+# yourself (see "Gateway API setup" in the chart repo's README).
+#
+# The Gateway API CRDs are deliberately NOT bundled: Helm never upgrades CRDs from a
+# chart's crds/ after first install. Apply them separately (`just install-crds`, or
+# install.sh, which does it with `kubectl apply --server-side`).
+traefik:
+  enabled: false
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  providers:
+    # @schema
+    # type: object
+    # additionalProperties: true
+    # @schema
+    kubernetesGateway:
+      enabled: true
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  gatewayClass:
+    enabled: true
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  gateway:
+    enabled: true
+    name: labs64io-gateway
+    namespace: tools
+    # @schema
+    # type: object
+    # additionalProperties: true
+    # @schema
+    listeners:
+      # @schema
+      # type: object
+      # additionalProperties: true
+      # @schema
+      web:
+        port: 8000
+        protocol: HTTP
+        # @schema
+        # type: object
+        # additionalProperties: true
+        # @schema
+        namespacePolicy:
+          # Modules install into their own namespace; the listener must accept
+          # routes from it.
+          from: All
+
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+# -- Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render
+# otherwise. Issues tokens to anyone who asks and authenticates nobody; never
+# enable it outside a throwaway demo.
+mock-oidc:
+  enabled: false
+

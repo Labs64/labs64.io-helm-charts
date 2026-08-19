@@ -29,5 +29,11 @@ dependencies:
 - name: redis
   repository: https://charts.bitnami.com/bitnami
   version: 27.0.13
-digest: sha256:f7efd8871eed812f125f4ef5c3eb2d7b8506c960e8a93e353c70435f8d6336c8
-generated: "2026-08-19T21:20:51.147778+02:00"
+- name: traefik
+  repository: https://traefik.github.io/charts
+  version: 41.0.1
+- name: mock-oidc
+  repository: file://../mock-oidc
+  version: 0.1.0
+digest: sha256:211d274df083999555316e82a19dbe9f9ca947f7c6c1362646e6668087c1568c
+generated: "2026-08-19T21:25:07.198683+02:00"

@@ -257,6 +257,22 @@
       "title": "global",
       "type": "object"
     },
+    "mock-oidc": {
+      "additionalProperties": true,
+      "description": "Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render\notherwise. Issues tokens to anyone who asks and authenticates nobody; never\nenable it outside a throwaway demo.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "mock-oidc",
+      "type": "object"
+    },
     "payment-gateway": {
       "additionalProperties": true,
       "properties": {
@@ -506,6 +522,132 @@
         "redisPassword"
       ],
       "title": "secrets",
+      "type": "object"
+    },
+    "traefik": {
+      "additionalProperties": true,
+      "description": "Opt-in Gateway. Without a GatewayClass and a Gateway named labs64io-gateway,\nevery module's HTTPRoute renders but sits Accepted:False and receives no traffic\n— pods running, nothing to curl. Enable this, or provision an equivalent Gateway\nyourself (see \"Gateway API setup\" in the chart repo's README).\n\nThe Gateway API CRDs are deliberately NOT bundled: Helm never upgrades CRDs from a\nchart's crds/ after first install. Apply them separately (`just install-crds`, or\ninstall.sh, which does it with `kubectl apply --server-side`).",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "gateway": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "listeners": {
+              "additionalProperties": true,
+              "properties": {
+                "web": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "namespacePolicy": {
+                      "additionalProperties": true,
+                      "properties": {
+                        "from": {
+                          "default": "All",
+                          "description": "Modules install into their own namespace; the listener must accept\nroutes from it.",
+                          "title": "from",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "from"
+                      ],
+                      "title": "namespacePolicy",
+                      "type": "object"
+                    },
+                    "port": {
+                      "default": 8000,
+                      "title": "port",
+                      "type": "integer"
+                    },
+                    "protocol": {
+                      "default": "HTTP",
+                      "title": "protocol",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "port",
+                    "protocol"
+                  ],
+                  "title": "web",
+                  "type": "object"
+                }
+              },
+              "required": [],
+              "title": "listeners",
+              "type": "object"
+            },
+            "name": {
+              "default": "labs64io-gateway",
+              "title": "name",
+              "type": "string"
+            },
+            "namespace": {
+              "default": "tools",
+              "title": "namespace",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "name",
+            "namespace"
+          ],
+          "title": "gateway",
+          "type": "object"
+        },
+        "gatewayClass": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "gatewayClass",
+          "type": "object"
+        },
+        "providers": {
+          "additionalProperties": true,
+          "properties": {
+            "kubernetesGateway": {
+              "additionalProperties": true,
+              "properties": {
+                "enabled": {
+                  "default": true,
+                  "title": "enabled",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "title": "kubernetesGateway",
+              "type": "object"
+            }
+          },
+          "required": [],
+          "title": "providers",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "traefik",
       "type": "object"
     }
   },

@@ -405,11 +405,29 @@ generate-docu:
         --log-level warning
 
 # Generate Helm values schema (values.schema.json) for all charts
+#
+# helm-schema exits non-zero when it cannot parse a *vendored subchart's* own
+# @schema comments: Traefik's values.yaml uses a single-line
+# `@schema type: [boolean, null]` form its parser rejects. It still writes every
+# schema in this repo correctly, so the run is judged by its output rather than its
+# exit code — fail only when a chart ends up without a schema. (--dependencies-filter
+# silences the message but writes 1 schema instead of 11; do not "fix" it that way.)
 generate-schema: helm-tools
+    #!/usr/bin/env bash
+    set -uo pipefail
     helm schema \
         --chart-search-root ./charts \
         --no-dependencies \
-        --append-newline
+        --append-newline || true
+    missing=0
+    for chart in charts/*/values.yaml; do
+        dir=$(dirname "$chart")
+        if [ ! -f "$dir/values.schema.json" ]; then
+            echo "generate-schema: no schema written for $dir" >&2
+            missing=1
+        fi
+    done
+    exit $missing
 
 # Generate all — Helm charts docs and schema
 generate-all: generate-docu generate-schema
