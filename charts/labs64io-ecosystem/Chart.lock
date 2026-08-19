@@ -1,7 +1,7 @@
 dependencies:
 - name: api-gateway
   repository: file://../api-gateway
-  version: 0.8.0
+  version: 0.9.0
 - name: authz-pdp
   repository: file://../authz-pdp
   version: 0.3.0
@@ -29,5 +29,5 @@ dependencies:
 - name: redis
   repository: https://charts.bitnami.com/bitnami
   version: 27.0.13
-digest: sha256:9aacdaa32407503da884d0ced222911887688d177686e1dc92d7853492959b76
-generated: "2026-08-19T21:16:24.670034+02:00"
+digest: sha256:f7efd8871eed812f125f4ef5c3eb2d7b8506c960e8a93e353c70435f8d6336c8
+generated: "2026-08-19T21:20:51.147778+02:00"

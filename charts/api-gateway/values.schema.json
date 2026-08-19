@@ -133,6 +133,22 @@
       "title": "buffering",
       "type": "object"
     },
+    "cerbos": {
+      "additionalProperties": false,
+      "description": "Central Cerbos PDP HTTP endpoint (the authorization decision).",
+      "properties": {
+        "url": {
+          "default": "http://labs64io-authz-pdp:3592",
+          "title": "url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "title": "cerbos",
+      "type": "object"
+    },
     "chart-libs": {
       "additionalProperties": true,
       "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
@@ -196,169 +212,8 @@
       "type": "boolean"
     },
     "env": {
+      "description": "Raw environment entries appended verbatim to the container. Escape hatch for\nanything not exposed above; container env wins over envFrom, so an entry here\noverrides the ConfigMap value of the same name.",
       "items": {
-        "anyOf": [
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "OIDC_DISCOVERY_URL",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "OIDC_AUDIENCE",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "account",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "LOG_LEVEL",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "INFO",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "TOKEN_SCOPES_CLAIM_PATHS",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "scope,realm_access.roles,resource_access.{audience}.roles",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "TOKEN_TENANT_CLAIM_PATH",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "tenant",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "CERBOS_URL",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "http://labs64io-authz-pdp:3592",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "ROUTES_DIR",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "/app/routes",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          },
-          {
-            "additionalProperties": false,
-            "properties": {
-              "name": {
-                "default": "STATIC_ROUTES_FILE",
-                "title": "name",
-                "type": "string"
-              },
-              "value": {
-                "default": "/opt/application-config/static_routes.yaml",
-                "title": "value",
-                "type": "string"
-              }
-            },
-            "required": [
-              "name",
-              "value"
-            ],
-            "type": "object"
-          }
-        ],
         "required": []
       },
       "title": "env",
@@ -529,6 +384,12 @@
       ],
       "title": "livenessProbe",
       "type": "object"
+    },
+    "logLevel": {
+      "default": "INFO",
+      "description": "Log level for the auth proxy.",
+      "title": "logLevel",
+      "type": "string"
     },
     "nameOverride": {
       "default": "",
@@ -743,6 +604,44 @@
       "title": "observability",
       "type": "object"
     },
+    "oidc": {
+      "additionalProperties": false,
+      "description": "OIDC provider settings. Rendered into this chart's ConfigMap and delivered via\nenvFrom, as scalars rather than a raw env list: Helm replaces lists wholesale on\nmerge, so with a list a caller overriding one field had to restate all eight — and\nsilently lost any entry added upstream later.",
+      "properties": {
+        "audience": {
+          "default": "account",
+          "description": "Expected JWT audience.",
+          "title": "audience",
+          "type": "string"
+        },
+        "discoveryUrl": {
+          "default": "http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
+          "description": "Discovery URL. There is no in-repo default IdP; point this at your issuer.\n  demo/dev: http://mock-oidc.\u003cnamespace\u003e.svc.cluster.local:8080/labs64io/.well-known/openid-configuration\n  keycloak: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
+          "title": "discoveryUrl",
+          "type": "string"
+        },
+        "scopesClaimPaths": {
+          "default": "scope,realm_access.roles,resource_access.{audience}.roles",
+          "description": "Dot-paths (comma-separated) to collect scopes from the JWT; \"{audience}\" expands to oidc.audience.",
+          "title": "scopesClaimPaths",
+          "type": "string"
+        },
+        "tenantClaimPath": {
+          "default": "tenant",
+          "description": "Dot-path to the tenant claim for X-Auth-Tenant; \"-\" is emitted when absent.",
+          "title": "tenantClaimPath",
+          "type": "string"
+        }
+      },
+      "required": [
+        "discoveryUrl",
+        "audience",
+        "scopesClaimPaths",
+        "tenantClaimPath"
+      ],
+      "title": "oidc",
+      "type": "object"
+    },
     "podAnnotations": {
       "additionalProperties": false,
       "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
@@ -930,6 +829,12 @@
       ],
       "title": "resources",
       "type": "object"
+    },
+    "routesDir": {
+      "default": "/app/routes",
+      "description": "Directory of generated \u003cmodule\u003e.routes.yaml manifests (mounted ConfigMap).",
+      "title": "routesDir",
+      "type": "string"
     },
     "secrets": {
       "additionalProperties": false,
@@ -1261,6 +1166,12 @@
       "title": "staticPolicies",
       "type": "array"
     },
+    "staticRoutesFile": {
+      "default": "/opt/application-config/static_routes.yaml",
+      "description": "Static prefix policies file (rendered from .Values.staticPolicies).",
+      "title": "staticRoutesFile",
+      "type": "string"
+    },
     "terminationGracePeriodSeconds": {
       "default": 45,
       "description": "Graceful shutdown: drain on rolling updates / scale-in (uvicorn handles SIGTERM;\npreStop gives Traefik/kube-proxy time to deregister the pod first).",
@@ -1433,6 +1344,11 @@
     "nodeSelector",
     "tolerations",
     "affinity",
+    "oidc",
+    "cerbos",
+    "logLevel",
+    "routesDir",
+    "staticRoutesFile",
     "env",
     "staticPolicies",
     "podDisruptionBudget",

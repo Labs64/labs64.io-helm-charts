@@ -5,3 +5,11 @@ metadata:
   labels:
     {{- include "chart-libs.labels" . | nindent 4 }}
 data:
+  OIDC_DISCOVERY_URL: {{ .Values.oidc.discoveryUrl | quote }}
+  OIDC_AUDIENCE: {{ .Values.oidc.audience | quote }}
+  TOKEN_SCOPES_CLAIM_PATHS: {{ .Values.oidc.scopesClaimPaths | quote }}
+  TOKEN_TENANT_CLAIM_PATH: {{ .Values.oidc.tenantClaimPath | quote }}
+  CERBOS_URL: {{ .Values.cerbos.url | quote }}
+  LOG_LEVEL: {{ .Values.logLevel | quote }}
+  ROUTES_DIR: {{ .Values.routesDir | quote }}
+  STATIC_ROUTES_FILE: {{ .Values.staticRoutesFile | quote }}

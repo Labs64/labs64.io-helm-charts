@@ -161,34 +161,38 @@ tolerations: []
 
 affinity: {}
 
-env:
-  # -- OIDC discovery URL. Override per environment:
-  #   production: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
-  #   local dev:  http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
-  - name: OIDC_DISCOVERY_URL
-    value: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
-  # -- Audience for the auth proxy.
-  - name: OIDC_AUDIENCE
-    value: account
-  # -- Log level for the auth proxy.
-  - name: LOG_LEVEL
-    value: INFO
-  # -- Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to OIDC_AUDIENCE.
-  # Default: scope,realm_access.roles,resource_access.{audience}.roles.
-  - name: TOKEN_SCOPES_CLAIM_PATHS
-    value: "scope,realm_access.roles,resource_access.{audience}.roles"
+# -- OIDC provider settings. Rendered into this chart's ConfigMap and delivered via
+# envFrom, as scalars rather than a raw env list: Helm replaces lists wholesale on
+# merge, so with a list a caller overriding one field had to restate all eight — and
+# silently lost any entry added upstream later.
+oidc:
+  # -- Discovery URL. There is no in-repo default IdP; point this at your issuer.
+  #   demo/dev: http://mock-oidc.<namespace>.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
+  #   keycloak: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  discoveryUrl: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  # -- Expected JWT audience.
+  audience: account
+  # -- Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to oidc.audience.
+  scopesClaimPaths: "scope,realm_access.roles,resource_access.{audience}.roles"
   # -- Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent.
-  - name: TOKEN_TENANT_CLAIM_PATH
-    value: "tenant"
-  # -- Central Cerbos PDP HTTP endpoint (the authorization decision).
-  - name: CERBOS_URL
-    value: http://labs64io-authz-pdp:3592
-  # -- Directory of generated <module>.routes.yaml manifests (mounted ConfigMap).
-  - name: ROUTES_DIR
-    value: /app/routes
-  # -- Static prefix policies file (rendered from .Values.staticPolicies).
-  - name: STATIC_ROUTES_FILE
-    value: /opt/application-config/static_routes.yaml
+  tenantClaimPath: "tenant"
+
+# -- Central Cerbos PDP HTTP endpoint (the authorization decision).
+cerbos:
+  url: http://labs64io-authz-pdp:3592
+
+# -- Log level for the auth proxy.
+logLevel: INFO
+
+# -- Directory of generated <module>.routes.yaml manifests (mounted ConfigMap).
+routesDir: /app/routes
+# -- Static prefix policies file (rendered from .Values.staticPolicies).
+staticRoutesFile: /opt/application-config/static_routes.yaml
+
+# -- Raw environment entries appended verbatim to the container. Escape hatch for
+# anything not exposed above; container env wins over envFrom, so an entry here
+# overrides the ConfigMap value of the same name.
+env: []
 
 # -- Static prefix policies for gateway surfaces without an OpenAPI spec
 # (UI bundles). Rendered into static_routes.yaml; `id` MUST match an action in
