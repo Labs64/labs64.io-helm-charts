@@ -17,8 +17,11 @@ authz-pdp:
 # type: object
 # additionalProperties: true
 # @schema
+# -- Not GA. The labs64/checkout and labs64/checkout-ui images have never been
+# published (both repositories 404 on Docker Hub), so enabling this yields
+# ImagePullBackOff. Toggle retained for when they are.
 checkout:
-  enabled: true
+  enabled: false
 # @schema
 # type: object
 # additionalProperties: true
@@ -41,8 +44,10 @@ api-docs:
 # type: object
 # additionalProperties: true
 # @schema
+# -- Not GA. labs64/customer-portal-ui publishes no tags. Enable only once you have
+# a published customer-portal-ui image.
 customer-portal:
-  enabled: true
+  enabled: false
 
 # Global Configuration Shared Across Ecosystem
 # @schema
@@ -50,6 +55,12 @@ customer-portal:
 # additionalProperties: true
 # @schema
 global:
+  # -- Required by the bitnamilegacy image override under `rabbitmq` below: the
+  # Bitnami charts refuse a repository they do not recognise as official unless
+  # this is set.
+  security:
+    allowInsecureImages: true
+
   sharedConfig:
     enabled: true
     name: "labs64io-shared-config"
@@ -92,6 +103,13 @@ postgresql:
   # -- Pinned so `global.postgresql.host` above can be a plain string (standalone
   # architecture: no "-primary" suffix on the resulting service name)
   fullnameOverride: "labs64io-postgresql"
+  # TODO: pin this image. The subchart defaults to `latest`, which pulls today but is
+  # mutable: a re-pull can move the PostgreSQL MAJOR version under an existing PVC, and
+  # PostgreSQL refuses to start on a data directory written by a different major — a
+  # routine pod restart that presents as data loss. There is currently no tag to pin to:
+  # docker.io/bitnami/postgresql carries only `latest`, and bitnamilegacy/postgresql
+  # stops at 17.6.0 while this subchart (18.7.11) targets appVersion 18.4.0. Pin by
+  # digest, or move to oci://registry-1.docker.io/bitnamicharts, once one is available.
   # @schema
   # type: object
   # additionalProperties: true
@@ -116,6 +134,19 @@ rabbitmq:
   enabled: true
   # -- Pinned so `global.rabbitmq.host` above can be a plain string
   fullnameOverride: "labs64io-rabbitmq"
+  # -- docker.io/bitnami/rabbitmq:4.1.3-debian-12-r1 (the subchart default) returns
+  # 404: since 2025-08-28 the Bitnami free tier carries only rolling tags, and this
+  # is the one bundled subchart that pins a versioned one. The versioned image lives
+  # in bitnamilegacy/*, which needs global.security.allowInsecureImages above. Same
+  # fix as overrides/rabbitmq/values.local.yaml and charts/preflight.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    registry: docker.io
+    repository: bitnamilegacy/rabbitmq
+    tag: 4.1.3-debian-12-r1
   # @schema
   # type: object
   # additionalProperties: true
@@ -131,6 +162,10 @@ rabbitmq:
 # @schema
 redis:
   enabled: true
+  # TODO: pin this image — see the note under `postgresql` above. Same situation:
+  # docker.io/bitnami/redis carries only `latest` and bitnamilegacy/redis stops at
+  # 8.2.1 while this subchart (27.0.13) targets appVersion 8.8.0. Lower stakes than
+  # PostgreSQL (no on-disk major-version barrier), but still mutable.
   architecture: standalone
   # -- Pinned so `global.redis.host` above can be a plain string (standalone architecture:
   # the primary/master service is named "<fullnameOverride>-master")

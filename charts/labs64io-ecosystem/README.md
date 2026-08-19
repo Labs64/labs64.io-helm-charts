@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Umbrella Chart for entire Ecosystem
 
@@ -29,8 +29,8 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | api-gateway.enabled | bool | `true` |  |
 | auditflow.enabled | bool | `true` |  |
 | authz-pdp.enabled | bool | `true` |  |
-| checkout.enabled | bool | `true` |  |
-| customer-portal.enabled | bool | `true` |  |
+| checkout | object | `{"enabled":false}` | Not GA. The labs64/checkout and labs64/checkout-ui images have never been published (both repositories 404 on Docker Hub), so enabling this yields ImagePullBackOff. Toggle retained for when they are. |
+| customer-portal | object | `{"enabled":false}` | Not GA. labs64/customer-portal-ui publishes no tags. Enable only once you have a published customer-portal-ui image. |
 | global.postgresql.database | string | `"labs64io"` |  |
 | global.postgresql.host | string | `"labs64io-postgresql"` |  |
 | global.postgresql.port | int | `5432` |  |
@@ -40,6 +40,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | global.rabbitmq.username | string | `"labs64"` |  |
 | global.redis.host | string | `"labs64io-redis-master"` |  |
 | global.redis.port | int | `6379` |  |
+| global.security | object | `{"allowInsecureImages":true}` | Required by the bitnamilegacy image override under `rabbitmq` below: the Bitnami charts refuse a repository they do not recognise as official unless this is set. |
 | global.sharedConfig.enabled | bool | `true` |  |
 | global.sharedConfig.name | string | `"labs64io-shared-config"` |  |
 | global.sharedSecret.enabled | bool | `true` |  |
@@ -57,6 +58,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | rabbitmq.auth.username | string | `"labs64"` |  |
 | rabbitmq.enabled | bool | `true` |  |
 | rabbitmq.fullnameOverride | string | `"labs64io-rabbitmq"` | Pinned so `global.rabbitmq.host` above can be a plain string |
+| rabbitmq.image | object | `{"registry":"docker.io","repository":"bitnamilegacy/rabbitmq","tag":"4.1.3-debian-12-r1"}` | docker.io/bitnami/rabbitmq:4.1.3-debian-12-r1 (the subchart default) returns 404: since 2025-08-28 the Bitnami free tier carries only rolling tags, and this is the one bundled subchart that pins a versioned one. The versioned image lives in bitnamilegacy/*, which needs global.security.allowInsecureImages above. Same fix as overrides/rabbitmq/values.local.yaml and charts/preflight. @schema type: object additionalProperties: true @schema |
 | redis.architecture | string | `"standalone"` |  |
 | redis.auth.existingSecret | string | `"labs64io-shared-secret"` |  |
 | redis.auth.existingSecretPasswordKey | string | `"SPRING_DATA_REDIS_PASSWORD"` |  |

@@ -65,9 +65,10 @@
     },
     "checkout": {
       "additionalProperties": true,
+      "description": "Not GA. The labs64/checkout and labs64/checkout-ui images have never been\npublished (both repositories 404 on Docker Hub), so enabling this yields\nImagePullBackOff. Toggle retained for when they are.",
       "properties": {
         "enabled": {
-          "default": true,
+          "default": false,
           "title": "enabled",
           "type": "boolean"
         }
@@ -80,9 +81,10 @@
     },
     "customer-portal": {
       "additionalProperties": true,
+      "description": "Not GA. labs64/customer-portal-ui publishes no tags. Enable only once you have\na published customer-portal-ui image.",
       "properties": {
         "enabled": {
-          "default": true,
+          "default": false,
           "title": "enabled",
           "type": "boolean"
         }
@@ -179,6 +181,22 @@
           "title": "redis",
           "type": "object"
         },
+        "security": {
+          "additionalProperties": false,
+          "description": "Required by the bitnamilegacy image override under `rabbitmq` below: the\nBitnami charts refuse a repository they do not recognise as official unless\nthis is set.",
+          "properties": {
+            "allowInsecureImages": {
+              "default": true,
+              "title": "allowInsecureImages",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowInsecureImages"
+          ],
+          "title": "security",
+          "type": "object"
+        },
         "sharedConfig": {
           "additionalProperties": false,
           "properties": {
@@ -223,6 +241,7 @@
         }
       },
       "required": [
+        "security",
         "sharedConfig",
         "sharedSecret",
         "postgresql",
@@ -253,6 +272,7 @@
       "properties": {
         "auth": {
           "additionalProperties": true,
+          "description": "TODO: pin this image. The subchart defaults to `latest`, which pulls today but is\nmutable: a re-pull can move the PostgreSQL MAJOR version under an existing PVC, and\nPostgreSQL refuses to start on a data directory written by a different major — a\nroutine pod restart that presents as data loss. There is currently no tag to pin to:\ndocker.io/bitnami/postgresql carries only `latest`, and bitnamilegacy/postgresql\nstops at 17.6.0 while this subchart (18.7.11) targets appVersion 18.4.0. Pin by\ndigest, or move to oci://registry-1.docker.io/bitnamicharts, once one is available.",
           "properties": {
             "database": {
               "default": "labs64io",
@@ -358,6 +378,34 @@
           "description": "Pinned so `global.rabbitmq.host` above can be a plain string",
           "title": "fullnameOverride",
           "type": "string"
+        },
+        "image": {
+          "additionalProperties": true,
+          "description": "docker.io/bitnami/rabbitmq:4.1.3-debian-12-r1 (the subchart default) returns\n404: since 2025-08-28 the Bitnami free tier carries only rolling tags, and this\nis the one bundled subchart that pins a versioned one. The versioned image lives\nin bitnamilegacy/*, which needs global.security.allowInsecureImages above. Same\nfix as overrides/rabbitmq/values.local.yaml and charts/preflight.",
+          "properties": {
+            "registry": {
+              "default": "docker.io",
+              "title": "registry",
+              "type": "string"
+            },
+            "repository": {
+              "default": "bitnamilegacy/rabbitmq",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "4.1.3-debian-12-r1",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "registry",
+            "repository",
+            "tag"
+          ],
+          "title": "image",
+          "type": "object"
         }
       },
       "required": [
@@ -372,6 +420,7 @@
       "properties": {
         "architecture": {
           "default": "standalone",
+          "description": "TODO: pin this image — see the note under `postgresql` above. Same situation:\ndocker.io/bitnami/redis carries only `latest` and bitnamilegacy/redis stops at\n8.2.1 while this subchart (27.0.13) targets appVersion 8.8.0. Lower stakes than\nPostgreSQL (no on-disk major-version barrier), but still mutable.",
           "title": "architecture",
           "type": "string"
         },
