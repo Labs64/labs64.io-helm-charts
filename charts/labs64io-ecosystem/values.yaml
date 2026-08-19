@@ -85,13 +85,28 @@ global:
     host: "labs64io-redis-master"
     port: 6379
 
+# -- Demo mode. Permits the dev-grade default passwords below and unlocks the
+# dev-only mock-oidc subchart. MUST be false for any real deployment: with it
+# false, the chart refuses to render while any password is still at its default.
+demoMode: false
+
 secrets:
-  # Base64 encoded secrets injected into labs64io-shared-secret.
-  # Out of the box, we use a default dev password so Bitnami and Java apps sync up.
-  # Change these in production!
+  # -- Convenience aliases for the three bundled-infra passwords, injected into
+  # labs64io-shared-secret. The shipped values are dev defaults — with
+  # `demoMode: false` (the default) the chart fails to render until they change.
   postgresqlPassword: "labs64_dev_password"
+  # -- See `secrets.postgresqlPassword`.
   rabbitmqPassword: "labs64_dev_password"
+  # -- See `secrets.postgresqlPassword`.
   redisPassword: "labs64_dev_password"
+  # -- Additional key/value pairs merged into the shared Secret verbatim. Same shape
+  # as every module chart's `secrets.data`, so one caller code path covers both.
+  # Keys here win over the aliases above on collision.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  data: {}
 
 # Opt-In Infrastructure (Enabled by default for one-click dev deployments)
 # @schema

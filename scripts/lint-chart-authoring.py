@@ -88,10 +88,28 @@ def app_chart_dirs(only: str | None) -> list[Path]:
     return charts
 
 
+# Charts that deliberately refuse to render against their shipped defaults, mapped
+# to the minimum override that makes them renderable. labs64io-ecosystem `fail`s
+# while its demo passwords are unchanged (charts/labs64io-ecosystem/templates/
+# _guards.tpl) — that guard is the point, so the linter supplies the demo flag
+# rather than the guard being softened to keep tooling happy.
+RENDER_SETS = {
+    "labs64io-ecosystem": ["demoMode=true"],
+}
+
+
+def render_sets_for(chart: str) -> list[str]:
+    args: list[str] = []
+    for expr in RENDER_SETS.get(chart, []):
+        args += ["--set", expr]
+    return args
+
+
 def render(chart_dir: Path, extra_args: list[str] | None = None) -> str:
     cmd = ["helm", "template", f"lint-{chart_dir.name}", str(chart_dir)]
     for api in API_VERSIONS:
         cmd += ["--api-versions", api]
+    cmd += render_sets_for(chart_dir.name)
     cmd += extra_args or []
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0:

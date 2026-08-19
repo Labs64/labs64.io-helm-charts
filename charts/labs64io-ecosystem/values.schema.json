@@ -95,6 +95,12 @@
       "title": "customer-portal",
       "type": "object"
     },
+    "demoMode": {
+      "default": false,
+      "description": "Demo mode. Permits the dev-grade default passwords below and unlocks the\ndev-only mock-oidc subchart. MUST be false for any real deployment: with it\nfalse, the chart refuses to render while any password is still at its default.",
+      "title": "demoMode",
+      "type": "boolean"
+    },
     "global": {
       "additionalProperties": true,
       "description": "Global Configuration Shared Across Ecosystem",
@@ -468,19 +474,28 @@
     "secrets": {
       "additionalProperties": false,
       "properties": {
+        "data": {
+          "additionalProperties": true,
+          "description": "Additional key/value pairs merged into the shared Secret verbatim. Same shape\nas every module chart's `secrets.data`, so one caller code path covers both.\nKeys here win over the aliases above on collision.",
+          "required": [],
+          "title": "data",
+          "type": "object"
+        },
         "postgresqlPassword": {
           "default": "labs64_dev_password",
-          "description": "Base64 encoded secrets injected into labs64io-shared-secret.\nOut of the box, we use a default dev password so Bitnami and Java apps sync up.\nChange these in production!",
+          "description": "Convenience aliases for the three bundled-infra passwords, injected into\nlabs64io-shared-secret. The shipped values are dev defaults — with\n`demoMode: false` (the default) the chart fails to render until they change.",
           "title": "postgresqlPassword",
           "type": "string"
         },
         "rabbitmqPassword": {
           "default": "labs64_dev_password",
+          "description": "See `secrets.postgresqlPassword`.",
           "title": "rabbitmqPassword",
           "type": "string"
         },
         "redisPassword": {
           "default": "labs64_dev_password",
+          "description": "See `secrets.postgresqlPassword`.",
           "title": "redisPassword",
           "type": "string"
         }
@@ -495,6 +510,7 @@
     }
   },
   "required": [
+    "demoMode",
     "secrets"
   ],
   "type": "object"
