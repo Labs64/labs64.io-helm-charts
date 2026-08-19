@@ -30,3 +30,5 @@ env:
     value: SHADOW
   - name: LABS64_AUTH_AUTHZ_PDPADDRESS
     value: labs64io-authz-pdp.labs64io.svc.cluster.local:3593
+  - name: PAYMENT_GATEWAY_PUBLIC_BASE_URL
+    value: http://gateway.localhost/payment-gateway/api/v1
