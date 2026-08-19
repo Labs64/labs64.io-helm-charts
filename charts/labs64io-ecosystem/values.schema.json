@@ -524,6 +524,36 @@
       "title": "secrets",
       "type": "object"
     },
+    "tests": {
+      "additionalProperties": false,
+      "description": "`helm test` probes each enabled module's health endpoint through its Service.\nPaths and ports mirror each chart's own readinessProbe, so a passing test means\nthe same thing Kubernetes means by \"ready\".",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "image": {
+          "default": "busybox:1.36",
+          "description": "Image used to run the probes. Needs only a shell and wget.",
+          "title": "image",
+          "type": "string"
+        },
+        "timeoutSeconds": {
+          "default": 10,
+          "description": "Per-probe timeout (seconds)",
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "timeoutSeconds",
+        "image"
+      ],
+      "title": "tests",
+      "type": "object"
+    },
     "traefik": {
       "additionalProperties": true,
       "description": "Opt-in Gateway. Without a GatewayClass and a Gateway named labs64io-gateway,\nevery module's HTTPRoute renders but sits Accepted:False and receives no traffic\n— pods running, nothing to curl. Enable this, or provision an equivalent Gateway\nyourself (see \"Gateway API setup\" in the chart repo's README).\n\nThe Gateway API CRDs are deliberately NOT bundled: Helm never upgrades CRDs from a\nchart's crds/ after first install. Apply them separately (`just install-crds`, or\ninstall.sh, which does it with `kubectl apply --server-side`).",
@@ -653,7 +683,8 @@
   },
   "required": [
     "demoMode",
-    "secrets"
+    "secrets",
+    "tests"
   ],
   "type": "object"
 }

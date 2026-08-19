@@ -1,0 +1,53 @@
+{{- if and .Values.tests .Values.tests.enabled }}
+{{/*
+The probe list is built from the same toggles NOTES.txt reads, so a disabled
+module is never probed. Each path/port mirrors that chart's own readinessProbe.
+*/}}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ .Release.Name }}-test-modules"
+  labels:
+    app.kubernetes.io/name: labs64io-ecosystem
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  restartPolicy: Never
+  containers:
+    - name: probe
+      image: {{ .Values.tests.image | quote }}
+      env:
+        - name: TIMEOUT
+          value: {{ .Values.tests.timeoutSeconds | quote }}
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          fail=0
+          probe() {
+            echo "== $1 $2"
+            if wget -q -T "$TIMEOUT" -O- "$2" >/dev/null 2>&1; then
+              echo "   ok"
+            else
+              echo "   FAILED"; fail=1
+            fi
+          }
+          {{- if .Values.auditflow.enabled }}
+          probe auditflow "http://{{ .Release.Name }}-auditflow:8080/actuator/health/readiness"
+          {{- end }}
+          {{- if index .Values "payment-gateway" "enabled" }}
+          probe payment-gateway "http://{{ .Release.Name }}-payment-gateway:8080/actuator/health/readiness"
+          {{- end }}
+          {{- if index .Values "api-gateway" "enabled" }}
+          {{/* api-gateway pins fullnameOverride: gateway-common, so it is NOT <release>-api-gateway. */}}
+          probe api-gateway "http://gateway-common:8081/health/ready"
+          {{- end }}
+          {{- if index .Values "authz-pdp" "enabled" }}
+          probe authz-pdp "http://{{ .Release.Name }}-authz-pdp:3592/_cerbos/health"
+          {{- end }}
+          {{- if index .Values "api-docs" "enabled" }}
+          probe api-docs "http://{{ .Release.Name }}-api-docs:8080/"
+          {{- end }}
+          exit $fail
+{{- end }}

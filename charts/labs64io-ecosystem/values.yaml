@@ -267,3 +267,13 @@ traefik:
 mock-oidc:
   enabled: false
 
+# -- `helm test` probes each enabled module's health endpoint through its Service.
+# Paths and ports mirror each chart's own readinessProbe, so a passing test means
+# the same thing Kubernetes means by "ready".
+tests:
+  enabled: true
+  # -- Per-probe timeout (seconds)
+  timeoutSeconds: 10
+  # -- Image used to run the probes. Needs only a shell and wget.
+  image: busybox:1.36
+
