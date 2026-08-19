@@ -1,0 +1,133 @@
+# DEV ONLY: mock OIDC provider for local M2M testing.
+# Issues signed JWTs with Keycloak-shaped realm_access.roles claims for ANY
+# client_credentials request. Never deploy outside local environments.
+#
+# The `scope` request param selects the token shape:
+#   - Named personas (auditflow / ecommerce / no-access / admin) issue a fixed,
+#     curated scope set — convenient shorthand for coarse role testing.
+#   - ANY OTHER value is echoed verbatim into the JWT `scope` claim (${scope}),
+#     so you can mint a token with EXACTLY the scopes you ask for and assert
+#     fine-grained authorization (e.g. `audit-event:read` must NOT satisfy a
+#     route requiring `audit-event:write`). Unrecognized strings therefore grant
+#     only themselves — never accidental admin.
+#
+# `auditflow-regression` / `auditflow-regression-quota` stamp dedicated tenants
+# (t_regression / t_regression_quota, provisioned in
+# overrides/auditflow/values.local.yaml) so the regression suites in
+# labs64.io-auditflow/tests/e2e/ (pipeline routing, condition operators, DLQ
+# replay, secretRef resolution, quota enforcement) can exercise deliberately
+# aggressive fixtures — tiny quotas, always-failing pipelines — without
+# affecting t_mock, which every other suite shares.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-oidc-config
+  labels:
+    {{- include "mock-oidc.labels" . | nindent 4 }}
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
+data:
+  name: mock-oidc-config
+  namespace: tools
+  annotations:
+    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
+data:
+  config.json: |
+    {
+      "interactiveLogin": false,
+      "httpServer": "NettyWrapper",
+      "tokenCallbacks": [
+        {
+          "issuerId": "labs64io",
+          "tokenExpiry": 3600,
+          "requestMappings": [
+            {
+              "requestParam": "scope",
+              "match": "auditflow-tenant-2",
+              "claims": {
+                "sub": "svc:auditflow-client-2",
+                "tenant": "t_mock_2",
+                "aud": ["account"],
+                "scope": "audit-event:write",
+                "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "auditflow",
+              "claims": {
+                "sub": "svc:auditflow-client",
+                "tenant": "t_mock",
+                "aud": ["account"],
+                "scope": "audit-event:write",
+                "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "auditflow-regression",
+              "claims": {
+                "sub": "svc:auditflow-regression-client",
+                "tenant": "t_regression",
+                "aud": ["account"],
+                "scope": "audit-event:write",
+                "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "auditflow-regression-quota",
+              "claims": {
+                "sub": "svc:auditflow-regression-quota-client",
+                "tenant": "t_regression_quota",
+                "aud": ["account"],
+                "scope": "audit-event:write",
+                "realm_access": { "roles": ["auditflow-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "ecommerce",
+              "claims": {
+                "sub": "svc:ecommerce-client",
+                "tenant": "t_mock",
+                "aud": ["account"],
+                "scope": "customer:read customer:write purchase-order:read purchase-order:write purchase-order:checkout checkout-transaction:read payment:read payment:write payment:pay payment-provider:read payment-transaction:read",
+                "realm_access": { "roles": ["ecommerce-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "no-access",
+              "claims": {
+                "sub": "svc:no-access-client",
+                "aud": ["account"],
+                "realm_access": { "roles": ["no-access-role"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "admin",
+              "claims": {
+                "sub": "svc:admin-client",
+                "tenant": "t_mock",
+                "aud": ["account"],
+                "scope": "audit-event:write customer:read customer:write purchase-order:read purchase-order:write purchase-order:checkout checkout-transaction:read payment:read payment:write payment:pay payment-provider:read payment-provider:write payment-transaction:read",
+                "realm_access": { "roles": ["admin-role", "default-roles-labs64io"] }
+              }
+            },
+            {
+              "requestParam": "scope",
+              "match": "*",
+              "claims": {
+                "sub": "svc:local-test",
+                "tenant": "t_mock",
+                "aud": ["account"],
+                "scope": "${scope}",
+                "realm_access": { "roles": ["default-roles-labs64io"] }
+              }
+            }
+          ]
+        }
+      ]
+    }

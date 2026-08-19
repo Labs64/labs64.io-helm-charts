@@ -1,0 +1,17 @@
+mock-oidc is installed.
+
+  !! DEV / DEMO ONLY !!
+  This server issues tokens to anyone who asks, with whatever scopes they
+  request. It performs no authentication. Do not run it anywhere that matters.
+
+Discovery URL (set this as api-gateway's oidc.discoveryUrl):
+  http://mock-oidc.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}{{ .Values.gateway.pathPrefix }}/.well-known/openid-configuration
+
+Mint a token from inside the cluster:
+  curl -s -d grant_type=client_credentials -d scope=admin \
+    http://mock-oidc.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}{{ .Values.gateway.pathPrefix }}/token
+{{- if .Values.gateway.enabled }}
+
+The same endpoints are exposed through the shared Gateway under
+{{ .Values.gateway.pathPrefix }} — see the umbrella chart's NOTES for the Gateway's address.
+{{- end }}

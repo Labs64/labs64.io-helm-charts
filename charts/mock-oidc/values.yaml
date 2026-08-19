@@ -1,0 +1,57 @@
+# -- DEV/DEMO ONLY. This issues signed tokens to anyone who asks, with whatever
+# scopes they request, and authenticates nobody. Never install it in an
+# environment that matters. The umbrella chart additionally refuses to enable it
+# unless `demoMode` is set.
+enabled: false
+
+# -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: ghcr.io/navikt/mock-oauth2-server
+  # -- This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  type: ClusterIP
+  # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 8080
+
+# -- Resource requests/limits. The server holds a handful of static personas in
+# memory and signs short-lived tokens; it needs very little.
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 128Mi
+
+# -- HTTPRoute exposing the token endpoint through the shared Gateway, so a demo
+# user can mint a token from outside the cluster.
+gateway:
+  enabled: true
+  # -- Gateways this route attaches to.
+  parentRefs:
+    - name: labs64io-gateway
+      namespace: tools
+  # -- Path prefix the issuer is served under. mock-oauth2-server derives it from
+  # the issuer id baked into the persona config ("labs64io"), so this MUST match
+  # that value — because it does, the route needs no path rewrite.
+  pathPrefix: /labs64io
+  # -- Restrict the route to these hostnames. Empty means "any host", which is what
+  # lets the wizard hand the user a working URL for whatever address the Gateway
+  # ends up with.
+  hostnames: []
+
+# -- Restrict this pod's traffic. Egress is DNS-only: the server calls nothing,
+# it signs tokens from the static config mounted at startup.
+networkPolicy:
+  enabled: true
+  # -- Namespace the shared Gateway runs in; ingress is accepted from there and
+  # from this release's own namespace.
+  gatewayNamespace: tools

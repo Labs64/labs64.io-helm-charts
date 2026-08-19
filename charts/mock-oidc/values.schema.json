@@ -1,0 +1,227 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "enabled": {
+      "default": false,
+      "description": "DEV/DEMO ONLY. This issues signed tokens to anyone who asks, with whatever\nscopes they request, and authenticates nobody. Never install it in an\nenvironment that matters. The umbrella chart additionally refuses to enable it\nunless `demoMode` is set.",
+      "title": "enabled",
+      "type": "boolean"
+    },
+    "gateway": {
+      "additionalProperties": false,
+      "description": "HTTPRoute exposing the token endpoint through the shared Gateway, so a demo\nuser can mint a token from outside the cluster.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "hostnames": {
+          "description": "Restrict the route to these hostnames. Empty means \"any host\", which is what\nlets the wizard hand the user a working URL for whatever address the Gateway\nends up with.",
+          "items": {
+            "required": []
+          },
+          "title": "hostnames",
+          "type": "array"
+        },
+        "parentRefs": {
+          "description": "Gateways this route attaches to.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "labs64io-gateway",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "namespace": {
+                    "default": "tools",
+                    "title": "namespace",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "namespace"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "parentRefs",
+          "type": "array"
+        },
+        "pathPrefix": {
+          "default": "/labs64io",
+          "description": "Path prefix the issuer is served under. mock-oauth2-server derives it from\nthe issuer id baked into the persona config (\"labs64io\"), so this MUST match\nthat value — because it does, the route needs no path rewrite.",
+          "title": "pathPrefix",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "parentRefs",
+        "pathPrefix",
+        "hostnames"
+      ],
+      "title": "gateway",
+      "type": "object"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "This sets the pull policy for images.",
+          "title": "pullPolicy",
+          "type": "string"
+        },
+        "repository": {
+          "default": "ghcr.io/navikt/mock-oauth2-server",
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "description": "Overrides the image tag whose default is the chart appVersion.",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "pullPolicy",
+        "tag"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "networkPolicy": {
+      "additionalProperties": false,
+      "description": "Restrict this pod's traffic. Egress is DNS-only: the server calls nothing,\nit signs tokens from the static config mounted at startup.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "gatewayNamespace": {
+          "default": "tools",
+          "description": "Namespace the shared Gateway runs in; ingress is accepted from there and\nfrom this release's own namespace.",
+          "title": "gatewayNamespace",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "gatewayNamespace"
+      ],
+      "title": "networkPolicy",
+      "type": "object"
+    },
+    "replicaCount": {
+      "default": 1,
+      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/",
+      "title": "replicaCount",
+      "type": "integer"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "description": "Resource requests/limits. The server holds a handful of static personas in\nmemory and signs short-lived tokens; it needs very little.",
+      "properties": {
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "200m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "256Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
+          "type": "object"
+        },
+        "requests": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "50m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "128Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "requests",
+          "type": "object"
+        }
+      },
+      "required": [
+        "limits",
+        "requests"
+      ],
+      "title": "resources",
+      "type": "object"
+    },
+    "service": {
+      "additionalProperties": false,
+      "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
+      "properties": {
+        "port": {
+          "default": 8080,
+          "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports",
+          "title": "port",
+          "type": "integer"
+        },
+        "type": {
+          "default": "ClusterIP",
+          "title": "type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "port"
+      ],
+      "title": "service",
+      "type": "object"
+    }
+  },
+  "required": [
+    "enabled",
+    "image",
+    "replicaCount",
+    "service",
+    "resources",
+    "gateway",
+    "networkPolicy"
+  ],
+  "type": "object"
+}
