@@ -200,6 +200,14 @@ secrets:
 
 # -- Additional application properties
 applicationYaml:
+  # -- Payment Gateway application properties bound under the Spring prefix `payment-gateway`
+  payment-gateway:
+    # -- Generic HTTP idempotency storage and processing recovery
+    idempotency:
+      # -- Lifetime of completed and in-progress idempotency records in Redis
+      redis-ttl: "${IDEMPOTENCY_REDIS_TTL:PT3H}"
+      # -- Time after which another identical request may take over an abandoned PROCESSING record
+      processing-timeout: "${IDEMPOTENCY_PROCESSING_TIMEOUT:PT5M}"
   # -- Spring configuration
   spring:
     datasource:

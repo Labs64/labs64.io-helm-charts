@@ -71,4 +71,4 @@ This is the contract that chart-lint CI validates.
 |--------|--------|------------|
 | auditflow | `auditflow` | `pipelines`, `idempotency.store` |
 | checkout | `checkout` | `checkoutProperties.*` |
-| payment-gateway | `paymentgateway` | `paymentGatewayProperties.*` |
+| payment-gateway | `payment-gateway` | `idempotency.redis-ttl`, `idempotency.processing-timeout` |
