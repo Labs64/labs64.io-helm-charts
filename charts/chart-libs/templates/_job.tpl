@@ -1,4 +1,25 @@
 {{/*
+Credential sources for the migration Job, mirroring what chart-libs.deployment
+already does for the workload itself: the umbrella's shared Secret first, then
+the module's own Secret, which therefore wins on any key it defines.
+
+This used to be two explicit secretKeyRefs against the module Secret alone. Under
+the umbrella that Secret is empty — credentials live in the shared one — so the
+Job could never start ("couldn't find key SPRING_DATASOURCE_PASSWORD"), taking the
+whole install down with it since it is a pre-install hook. The shared Secret is
+optional so a standalone install, which has no umbrella, still renders.
+*/}}
+{{- define "chart-libs.migration-job-credentials" -}}
+{{- if and .Values.global .Values.global.sharedSecret .Values.global.sharedSecret.enabled }}
+- secretRef:
+    name: {{ .Values.global.sharedSecret.name }}
+    optional: true
+{{- end }}
+- secretRef:
+    name: {{ include "chart-libs.fullname" . }}
+{{- end -}}
+
+{{/*
 Migration Job macro. Usage: {{ include "chart-libs.migration-job" . }}
 */}}
 {{- define "chart-libs.migration-job" -}}
@@ -19,20 +40,17 @@ spec:
       initContainers:
         - name: ensure-db
           image: postgres:18
-          env:
-            - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "chart-libs.fullname" . }}
-                  key: SPRING_DATASOURCE_PASSWORD
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "chart-libs.fullname" . }}
-                  key: SPRING_DATASOURCE_USERNAME
+          envFrom:
+            {{- include "chart-libs.migration-job-credentials" . | nindent 12 }}
           command: ["sh","-c"]
           args:
+            # psql's own variable names are read from the environment rather than
+            # remapped in `env:`, because envFrom values cannot be referenced by
+            # $(VAR) expansion there.
             - |
+              set -eu
+              export PGPASSWORD="$SPRING_DATASOURCE_PASSWORD"
+              DB_USER="$SPRING_DATASOURCE_USERNAME"
               DB_HOST=$(echo {{ tpl .Values.applicationYaml.spring.datasource.url $ }} | sed -E 's|jdbc:postgresql://([^:/]+):?.*|\1|')
               psql -h $DB_HOST -U $DB_USER -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='{{ .Chart.Name | replace "-" "_" }}'" | grep -q 1 || \
               psql -h $DB_HOST -U $DB_USER -d postgres -c "CREATE DATABASE {{ .Chart.Name | replace "-" "_" }};"
@@ -62,16 +80,8 @@ spec:
               value: "validate"
             - name: SPRING_DATASOURCE_URL
               value: {{ tpl .Values.applicationYaml.spring.datasource.url $ | quote }}
-            - name: SPRING_DATASOURCE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "chart-libs.fullname" . }}
-                  key: SPRING_DATASOURCE_USERNAME
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "chart-libs.fullname" . }}
-                  key: SPRING_DATASOURCE_PASSWORD
+          envFrom:
+            {{- include "chart-libs.migration-job-credentials" . | nindent 12 }}
 
           terminationMessagePolicy: FallbackToLogsOnError
 {{- end }}
