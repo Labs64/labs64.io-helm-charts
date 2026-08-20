@@ -27,14 +27,22 @@ api-docs:
 # sink container's log, no external store to configure).
 auditflow:
   enabled: true
+  # The @Authorize SDK defaults to a Cerbos sidecar on localhost:3593. There is no
+  # sidecar here — the PDP is central — so without this every domain decision fails
+  # "Connection refused" and is enforced as a deny: authenticated, allowed at the
+  # edge, still 403.
+  # Assumes the release is named "labs64io", as in the README's install command.
+  env:
+    - name: LABS64_AUTH_AUTHZ_PDPADDRESS
+      value: "labs64io-authz-pdp:3593"
   gateway:
     enabled: true
   tenants:
     additional:
+      # tenantId / enabled / quota / pipelines are the only fields TenantConfig
+      # accepts; anything else makes the app skip the ConfigMap as malformed.
       - tenantId: t_mock
         enabled: true
-        rateLimitPerSec: 200
-        burst: 400
         pipelines:
           - name: demo-logging
             enabled: true
@@ -45,6 +53,14 @@ auditflow:
 
 payment-gateway:
   enabled: true
+  # The @Authorize SDK defaults to a Cerbos sidecar on localhost:3593. There is no
+  # sidecar here — the PDP is central — so without this every domain decision fails
+  # "Connection refused" and is enforced as a deny: authenticated, allowed at the
+  # edge, still 403.
+  # Assumes the release is named "labs64io", as in the README's install command.
+  env:
+    - name: LABS64_AUTH_AUTHZ_PDPADDRESS
+      value: "labs64io-authz-pdp:3593"
   gateway:
     enabled: true
 # Not GA — their images have never been published.

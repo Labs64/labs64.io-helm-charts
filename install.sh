@@ -363,12 +363,12 @@ write_values() {
   # provisions its own tenants.
   AUDITFLOW_DEMO_TENANT=""
   if [ "$DEMO_MODE" = "true" ]; then
+    # tenantId / enabled / quota / pipelines are the only fields TenantConfig
+    # accepts; anything else makes the app skip the ConfigMap as malformed.
     AUDITFLOW_DEMO_TENANT='  tenants:
     additional:
       - tenantId: t_mock
         enabled: true
-        rateLimitPerSec: 200
-        burst: 400
         pipelines:
           - name: demo-logging
             enabled: true
@@ -396,11 +396,25 @@ api-docs:
 # with no route to their APIs at all.
 auditflow:
   enabled: true
+  # The @Authorize SDK defaults to a Cerbos sidecar on localhost:3593. There is no
+  # sidecar here — the PDP is central — so without this every domain decision fails
+  # "Connection refused" and is enforced as a deny: authenticated, allowed at the
+  # edge, still 403.
+  env:
+    - name: LABS64_AUTH_AUTHZ_PDPADDRESS
+      value: "$RELEASE-authz-pdp.$NS_MODULES.svc.cluster.local:3593"
   gateway:
     enabled: true
 ${AUDITFLOW_DEMO_TENANT}
 payment-gateway:
   enabled: true
+  # The @Authorize SDK defaults to a Cerbos sidecar on localhost:3593. There is no
+  # sidecar here — the PDP is central — so without this every domain decision fails
+  # "Connection refused" and is enforced as a deny: authenticated, allowed at the
+  # edge, still 403.
+  env:
+    - name: LABS64_AUTH_AUTHZ_PDPADDRESS
+      value: "$RELEASE-authz-pdp.$NS_MODULES.svc.cluster.local:3593"
   gateway:
     enabled: true
 # Not GA — their images have never been published.
@@ -673,9 +687,11 @@ EOF
        --data-urlencode 'scope=admin' \\
        | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
-   Call a protected endpoint:
-     curl -i -H "Authorization: Bearer \$TOKEN" \\
-       $addr/auditflow/api/v1/audit/publish
+   Publish an audit event (eventType and sourceSystem are both required):
+     curl -i -X POST $addr/auditflow/api/v1/audit/publish \\
+       -H "Authorization: Bearer \$TOKEN" \\
+       -H 'Content-Type: application/json' \\
+       -d '{"eventType":"demo.hello","sourceSystem":"quickstart"}'
 EOF
   fi
   cat <<EOF
