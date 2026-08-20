@@ -489,9 +489,91 @@ EOF
   do_verify
 }
 
+# --- verification -------------------------------------------------------------
+#
+# "helm reported success" is not the finish line. Quickstart has to prove the
+# deployment is callable and hand the user a working curl.
+
+gateway_address() {
+  local ip host port
+  ip=$(kubectl -n "$NS_GATEWAY" get svc -l app.kubernetes.io/name=traefik \
+        -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+  host=$(kubectl -n "$NS_GATEWAY" get svc -l app.kubernetes.io/name=traefik \
+        -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+  port=$(kubectl -n "$NS_GATEWAY" get svc -l app.kubernetes.io/name=traefik \
+        -o jsonpath='{.items[0].spec.ports[?(@.name=="web")].port}' 2>/dev/null || true)
+  [ -n "$port" ] || port=8000
+  if   [ -n "$ip" ];   then printf 'http://%s:%s' "$ip" "$port"
+  elif [ -n "$host" ]; then printf 'http://%s:%s' "$host" "$port"
+  else printf ''; fi
+}
+
+do_verify() {
+  log ""
+  log "Verifying..."
+
+  if helm test "$RELEASE" -n "$NS_MODULES" --timeout 5m >>"$LOGFILE" 2>&1; then
+    info "Module health checks passed"
+  else
+    warn "helm test failed — see $LOGFILE. Pods may still be starting; re-check with option 2."
+  fi
+
+  local addr port_forward=""
+  addr=$(gateway_address)
+  if [ -z "$addr" ]; then
+    warn "The Gateway has no external address (this cluster has no LoadBalancer).
+  Reach it with a port-forward instead:
+    kubectl -n $NS_GATEWAY port-forward svc/traefik 8000:8000
+  then use http://localhost:8000 as the base URL below."
+    addr="http://localhost:8000"
+    port_forward=1
+  elif curl -fsS -m 10 "$addr/auditflow/v3/api-docs" >/dev/null 2>&1; then
+    info "Public route reachable at $addr"
+  else
+    warn "The Gateway is at $addr but is not answering yet — routes may need a moment."
+  fi
+
+  print_notes "$addr" "$port_forward"
+}
+
+print_notes() {
+  local addr=$1 port_forward=${2:-}
+  cat <<EOF
+
+────────────────────────────────────────────────────────────────
+ Labs64.IO is ready.
+
+   Base URL:  $addr
+   API docs:  $addr/swagger-ui
+EOF
+  [ -n "$port_forward" ] && cat <<EOF
+
+   First run the port-forward (this cluster has no LoadBalancer):
+     kubectl -n $NS_GATEWAY port-forward svc/traefik 8000:8000
+EOF
+  if [ "$(state_get demoMode)" = "true" ]; then
+    cat <<EOF
+
+   Get a demo token (DEV ONLY — mock-oidc authenticates nobody):
+     TOKEN=\$(curl -s -d grant_type=client_credentials -d scope=admin \
+       $addr/labs64io/token \
+       | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+
+   Call a protected endpoint:
+     curl -i -H "Authorization: Bearer \$TOKEN" \
+       $addr/auditflow/api/v1/audit/publish
+EOF
+  fi
+  cat <<EOF
+
+   Manage this install:  bash install.sh   (status / stop / start / uninstall)
+   Generated config:     $WORKDIR/
+────────────────────────────────────────────────────────────────
+EOF
+}
+
 # --- lifecycle actions (filled in by later tasks) -----------------------------
 
-do_verify()    { :; }
 do_status()    { die "status is not implemented yet"; }
 do_stop()      { die "stop is not implemented yet"; }
 do_start()     { die "start is not implemented yet"; }
