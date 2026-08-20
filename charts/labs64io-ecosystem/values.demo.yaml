@@ -1,0 +1,37 @@
+# Demo / evaluation profile. Everything bundled, nothing external required.
+#
+#   helm install labs64io labs64io/labs64io-ecosystem -f values.demo.yaml
+#
+# NOT for production: demoMode permits the shipped default passwords and enables
+# mock-oidc, which authenticates nobody and signs whatever scopes it is asked for.
+demoMode: true
+
+api-gateway:
+  enabled: true
+authz-pdp:
+  enabled: true
+api-docs:
+  enabled: true
+auditflow:
+  enabled: true
+payment-gateway:
+  enabled: true
+# Not GA — their images have never been published.
+checkout:
+  enabled: false
+customer-portal:
+  enabled: false
+
+postgresql:
+  enabled: true
+rabbitmq:
+  enabled: true
+redis:
+  enabled: true
+
+# Without these two a demo install has nothing to curl and nothing to
+# authenticate against.
+traefik:
+  enabled: true
+mock-oidc:
+  enabled: true

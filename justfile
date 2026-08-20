@@ -439,7 +439,7 @@ build-policies:
 
 # add external helm repositories
 repo-add:
-    helm repo add labs64io-pub https://labs64.github.io/labs64.io-helm-charts
+    helm repo add labs64io https://labs64.github.io/labs64.io-helm-charts
     helm repo add traefik https://traefik.github.io/charts
     helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
     helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -455,7 +455,7 @@ repo-add:
 # `just up` even though repo-add never declared it and nothing here pulls from it.
 repo-update: repo-add
     helm repo update \
-      labs64io-pub traefik metrics-server bitnami \
+      labs64io traefik metrics-server bitnami \
       open-telemetry grafana prometheus-community
 
 

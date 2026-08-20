@@ -56,4 +56,4 @@ setup" section of the chart repo's README.
 Check rollout status per module:
   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
 
-Cherry-pick out a module you don't want: `helm upgrade {{ .Release.Name }} <repo>/labs64io-ecosystem --reuse-values --set <module>.enabled=false`
+Cherry-pick out a module you don't want: `helm upgrade {{ .Release.Name }} labs64io/labs64io-ecosystem --reuse-values --set <module>.enabled=false`

@@ -126,13 +126,13 @@ Users are expected to deploy to their own clusters (GCP, Azure, on-prem).
 
 - **Orchestration**: Helm CLI, ArgoCD, Flux, etc.
 - **Infrastructure**: Provided by the user. The charts deliberately do not bundle PostgreSQL or RabbitMQ sub-charts to avoid lock-in.
-- **Configuration**: Users reference `overrides/<module>/values.prod-example.yaml` to craft their own overrides.
+- **Configuration**: Example values ship *inside* each chart package (see [Example values](#example-values) below); this git repo additionally carries richer `overrides/<module>/values.prod-example.yaml` starting points.
 - **Secrets**: Users can use `externalSecrets.enabled: false` to inject their own CI-managed secrets, or `externalSecrets.enabled: true` pointing to their own Vault/GCP Secret Manager `ClusterSecretStore`.
 
 | Profile | File | Use case |
 |---|---|---|
 | standalone (bundled infra) | `charts/<module>/values.standalone.yaml` (checkout, payment-gateway, auditflow) | install the module alone, pointed at your own PostgreSQL/RabbitMQ/Redis |
-| BYO overrides | `overrides/<module>/values.prod-example.yaml` | copy & adapt: your infrastructure, credentials via `secrets.data` (ESO recommended) |
+| BYO overrides | `overrides/<module>/values.prod-example.yaml` (**this git repo only — not in the published chart**) | copy & adapt: your infrastructure, credentials via `secrets.data` (ESO recommended) |
 
 Network policies also accept `networkPolicy.ingressControllerLabels` (pod-selector labels for a
 non-Traefik ingress controller, e.g. `app.kubernetes.io/name: nginx`) and
@@ -177,7 +177,7 @@ runs as one container; the Job succeeds only if all pass.
 
 Once Helm is properly set up, add the repository as follows:
 ```
-helm repo add <alias> https://labs64.github.io/labs64.io-helm-charts
+helm repo add labs64io https://labs64.github.io/labs64.io-helm-charts
 ```
 
 If you have already added this repository, run the following command to retrieve the latest versions of the packages:
@@ -187,23 +187,44 @@ helm repo update
 
 To list the available chart versions:
 ```
-helm search repo <alias>
+helm search repo labs64io
 ```
 
 To view default chart values:
 ```
-helm show values <alias>/<chart-name>
+helm show values labs64io/<chart-name>
 ```
 
 To install the <chart-name> chart:
 ```
-helm upgrade --install my-<chart-name> <alias>/<chart-name>
+helm upgrade --install my-<chart-name> labs64io/<chart-name>
 ```
 
 To uninstall the chart:
 ```
 helm uninstall my-<chart-name>
 ```
+
+### Example values
+
+Example values are shipped inside each chart package, so they are reachable without
+cloning this repo:
+
+```
+helm pull labs64io/labs64io-ecosystem --untar
+ls labs64io-ecosystem/values*.yaml   # values.yaml, values.demo.yaml
+```
+
+`values.demo.yaml` is the evaluation profile: every module plus bundled
+PostgreSQL/RabbitMQ/Redis, Traefik + a `Gateway`, and the dev-only mock IdP.
+
+```
+helm install labs64io labs64io/labs64io-ecosystem -f labs64io-ecosystem/values.demo.yaml
+```
+
+`overrides/<module>/values.prod-example.yaml` in this git repo is a richer BYO starting
+point, but it lives outside `charts/` and is therefore **not** part of the published
+chart — clone the repo to read it.
 
 ## Building-Box: cherry-pick your modules
 
@@ -216,13 +237,13 @@ below for what each module needs.
 
 | Module | Purpose | Infra required (BYO) | Gateway routes (opt-in) | Install |
 |---|---|---|---|---|
-| auditflow | Audit logging | RabbitMQ | `/auditflow/api` (protected), `/auditflow/v3/api-docs` (public) | `helm install my-auditflow labs64io-pub/auditflow` |
-| checkout | Checkout API + UI (`ui.enabled`) | RabbitMQ, PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public), `/checkout` UI (public — static assets, no Bearer token on plain navigation) | `helm install my-checkout labs64io-pub/checkout` |
-| payment-gateway | Payments API | RabbitMQ, PostgreSQL, Redis | `/payment-gateway/api` (protected), `/payment-gateway/v3/api-docs` (public) | `helm install my-payments labs64io-pub/payment-gateway` |
-| customer-portal | Customer portal UI (no backend yet; `ui.enabled`) | - | `/customer-portal` (public — static assets, no Bearer token on plain navigation) | `helm install my-portal labs64io-pub/customer-portal` |
-| api-gateway | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (auth, rate limit, headers) | - | n/a | `helm install api-gateway labs64io-pub/api-gateway` |
-| authz-pdp | Cerbos PDP — central authorization decision point | - | n/a | `helm install authz-pdp labs64io-pub/authz-pdp` |
-| api-docs | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install api-docs labs64io-pub/api-docs` |
+| auditflow | Audit logging | RabbitMQ | `/auditflow/api` (protected), `/auditflow/v3/api-docs` (public) | `helm install my-auditflow labs64io/auditflow` |
+| checkout | Checkout API + UI (`ui.enabled`) | RabbitMQ, PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public), `/checkout` UI (public — static assets, no Bearer token on plain navigation) | `helm install my-checkout labs64io/checkout` |
+| payment-gateway | Payments API | RabbitMQ, PostgreSQL, Redis | `/payment-gateway/api` (protected), `/payment-gateway/v3/api-docs` (public) | `helm install my-payments labs64io/payment-gateway` |
+| customer-portal | Customer portal UI (no backend yet; `ui.enabled`) | - | `/customer-portal` (public — static assets, no Bearer token on plain navigation) | `helm install my-portal labs64io/customer-portal` |
+| api-gateway | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (auth, rate limit, headers) | - | n/a | `helm install api-gateway labs64io/api-gateway` |
+| authz-pdp | Cerbos PDP — central authorization decision point | - | n/a | `helm install authz-pdp labs64io/authz-pdp` |
+| api-docs | Swagger UI aggregator | - | `/swagger-ui` (public) | `helm install api-docs labs64io/api-docs` |
 
 Prefer Gateway API (`gateway.enabled: true`, Traefik v3 + Gateway API CRDs + the
 `api-gateway` chart for ForwardAuth/shared middlewares) — it's the only path that enforces
@@ -284,7 +305,7 @@ default) with credentials pre-wired end-to-end via a shared `Secret`. Cherry-pic
 with `--set <module>.enabled=false`:
 
 ```
-helm install labs64io labs64io-pub/labs64io-ecosystem
+helm install labs64io labs64io/labs64io-ecosystem
 ```
 
 Use the umbrella chart for a full local/demo stack; install individual module charts directly
