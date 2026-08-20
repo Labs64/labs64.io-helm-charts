@@ -23,6 +23,10 @@ Usage (wrapper template in the module chart):
 {{- $fullname := include "chart-libs.fullname" . -}}
 {{- $prefix := .Values.gateway.prefix | default (printf "/%s" .Chart.Name) -}}
 {{- $host := include "chart-libs.gatewayHost" . -}}
+{{- $anyHost := false -}}
+{{- if and .Values.global .Values.global.gateway -}}
+{{- $anyHost = .Values.global.gateway.anyHost | default false -}}
+{{- end -}}
 {{- $internalHost := "" -}}
 {{- if and .Values.global .Values.global.gateway -}}
 {{- $internalHost = .Values.global.gateway.internalHost | default "" -}}
@@ -38,11 +42,17 @@ metadata:
 spec:
   parentRefs:
     {{- toYaml .Values.gateway.parentRefs | nindent 4 }}
+  {{- /* An HTTPRoute with no `hostnames` matches any Host header. That is what a
+         deployment reached by raw IP or a LoadBalancer DNS name needs: there is no
+         domain to derive a hostname from, and a hostname-scoped route 404s every
+         request. Opt in with global.gateway.anyHost. */}}
+  {{- if not $anyHost }}
   hostnames:
     - {{ $host | quote }}
     {{- if and $internalHost (ne $internalHost $host) }}
     - {{ $internalHost | quote }}
     {{- end }}
+  {{- end }}
   rules:
     {{- range $route := .Values.gateway.routes }}
     - matches:

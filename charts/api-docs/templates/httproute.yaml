@@ -8,8 +8,13 @@ metadata:
 spec:
   parentRefs:
     {{- toYaml .Values.gateway.parentRefs | nindent 4 }}
+  {{- /* Omitted when global.gateway.anyHost is set: a route reached by raw IP or a
+         port-forward has no domain to derive a hostname from, and a hostname-scoped
+         HTTPRoute 404s every such request. Same rule as chart-libs.gateway-routes. */}}
+  {{- if not (and .Values.global .Values.global.gateway .Values.global.gateway.anyHost) }}
   hostnames:
     - {{ include "chart-libs.gatewayHost" . | quote }}
+  {{- end }}
   rules:
     {{- range $route := .Values.gateway.routes }}
     - matches:

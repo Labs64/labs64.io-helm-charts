@@ -304,17 +304,51 @@ resolve_password() {
 }
 
 # detect_infra NAME DEFAULT_SVC — sets <NAME>_ENABLED and <NAME>_HOST
+#
+# The bundled/adopted decision is made once and then remembered. Re-probing on
+# every run is actively wrong: after the first install the wizard's OWN bundled
+# Service is present, so a second run would "adopt" it, set <infra>.enabled=false
+# and have the upgrade delete the very database it just provisioned.
 detect_infra() {
-  local n=$1 svc=$2
+  local n=$1 svc=$2 recorded=""
+  recorded=$(state_get "infra_$n")
+
+  case "$recorded" in
+    bundled)
+      eval "${n}_ENABLED=true"; eval "${n}_HOST=$svc"; return 0 ;;
+    adopted)
+      info "$n was adopted on a previous run — still not managed by this installer"
+      eval "${n}_ENABLED=false"; eval "${n}_HOST=$svc"; return 0 ;;
+  esac
+
+  # First run. A Service belonging to our own Helm release is not a pre-existing
+  # one, even if a previous attempt left it behind.
+  local owner=""
   if have_service "$svc" "$NS_MODULES"; then
+    owner=$(kubectl -n "$NS_MODULES" get svc "$svc" \
+              -o jsonpath='{.metadata.labels.app\.kubernetes\.io/instance}' 2>/dev/null || true)
+  fi
+
+  if [ -n "$owner" ] && [ "$owner" != "$RELEASE" ]; then
     info "Found an existing $n at $svc — adopting it (it will not be removed on uninstall)"
     state_append adopted "Service/$svc"
+    state_set "infra_$n" adopted
     eval "${n}_ENABLED=false"
-    eval "${n}_HOST=$svc"
-  else
+  elif [ -n "$owner" ]; then
+    info "$n at $svc belongs to this release — keeping it bundled"
+    state_set "infra_$n" bundled
     eval "${n}_ENABLED=true"
-    eval "${n}_HOST=$svc"
+  elif have_service "$svc" "$NS_MODULES"; then
+    # Present but unlabelled: created by hand, so it is not ours to manage.
+    info "Found an existing $n at $svc — adopting it (it will not be removed on uninstall)"
+    state_append adopted "Service/$svc"
+    state_set "infra_$n" adopted
+    eval "${n}_ENABLED=false"
+  else
+    state_set "infra_$n" bundled
+    eval "${n}_ENABLED=true"
   fi
+  eval "${n}_HOST=$svc"
 }
 
 # --- values generation --------------------------------------------------------
@@ -334,10 +368,16 @@ authz-pdp:
   enabled: true
 api-docs:
   enabled: true
+# gateway.enabled defaults to false on these two, which would leave the install
+# with no route to their APIs at all.
 auditflow:
   enabled: true
+  gateway:
+    enabled: true
 payment-gateway:
   enabled: true
+  gateway:
+    enabled: true
 # Not GA — their images have never been published.
 checkout:
   enabled: false
@@ -352,6 +392,10 @@ redis:
   enabled: $REDIS_ENABLED
 
 global:
+  gateway:
+    # There is no domain to derive route hostnames from here, and a hostname-scoped
+    # HTTPRoute 404s every request that arrives by IP or port-forward.
+    anyHost: true
   postgresql:
     host: "$POSTGRES_HOST"
   rabbitmq:
@@ -587,12 +631,16 @@ EOF
     cat <<EOF
 
    Get a demo token (DEV ONLY — mock-oidc authenticates nobody):
-     TOKEN=\$(curl -s -d grant_type=client_credentials -d scope=admin \
-       $addr/labs64io/token \
-       | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+     TOKEN=\$(curl -s -X POST $addr/labs64io/token \\
+       -H 'Content-Type: application/x-www-form-urlencoded' \\
+       --data-urlencode 'grant_type=client_credentials' \\
+       --data-urlencode 'client_id=local-test' \\
+       --data-urlencode 'client_secret=local-test' \\
+       --data-urlencode 'scope=admin' \\
+       | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
    Call a protected endpoint:
-     curl -i -H "Authorization: Bearer \$TOKEN" \
+     curl -i -H "Authorization: Bearer \$TOKEN" \\
        $addr/auditflow/api/v1/audit/publish
 EOF
   fi

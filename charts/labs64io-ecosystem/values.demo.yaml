@@ -6,16 +6,28 @@
 # mock-oidc, which authenticates nobody and signs whatever scopes it is asked for.
 demoMode: true
 
+# No domain to derive route hostnames from on a demo cluster reached by IP or a
+# port-forward, so routes must match any Host header.
+global:
+  gateway:
+    anyHost: true
+
 api-gateway:
   enabled: true
 authz-pdp:
   enabled: true
 api-docs:
   enabled: true
+# gateway.enabled defaults to false on these two; without it their APIs render no
+# HTTPRoute at all and the install has nothing to call.
 auditflow:
   enabled: true
+  gateway:
+    enabled: true
 payment-gateway:
   enabled: true
+  gateway:
+    enabled: true
 # Not GA — their images have never been published.
 checkout:
   enabled: false
