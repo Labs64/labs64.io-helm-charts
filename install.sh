@@ -32,10 +32,16 @@ usage() {
   cat <<'USAGE'
 Labs64.IO Ecosystem installer
 
-  install.sh [--dry-run] [--version] [--help]
+  install.sh [install|status|stop|start|uninstall] [--dry-run] [--version] [--help]
 
-Interactive by default: it opens a menu (install / status / stop / start /
-uninstall). Set LABS64_PROFILE=quickstart|custom to run without prompts.
+With no arguments it opens a menu. Name an action to run just that one, which is
+what scripts and CI should do — feeding menu numbers on stdin is fragile because
+the first prompt is the cluster confirmation.
+
+  install.sh status     # exits non-zero when anything is unhealthy
+  LABS64_YES=1 install.sh stop
+
+Set LABS64_PROFILE=quickstart|custom to install without any prompts.
 
 Environment:
   LABS64_PROFILE              quickstart | custom — skips the menu and every prompt
@@ -51,6 +57,7 @@ USAGE
 }
 
 DRY_RUN=""
+COMMAND=""
 for arg in "$@"; do
   case "$arg" in
     # Server-side: a client-side dry run cannot resolve `lookup`, and the bundled
@@ -59,6 +66,9 @@ for arg in "$@"; do
     --dry-run) DRY_RUN="--dry-run=server" ;;
     --version) printf 'labs64io installer %s\n' "$WIZARD_VERSION"; exit 0 ;;
     -h|--help) usage; exit 0 ;;
+    # Naming the action beats feeding menu numbers on stdin: the first prompt is
+    # the cluster confirmation, which would silently swallow the menu number.
+    install|status|stop|start|uninstall) COMMAND="$arg" ;;
     *) printf 'Unrecognised argument: %s\n\n' "$arg" >&2; usage >&2; exit 2 ;;
   esac
 done
@@ -639,7 +649,7 @@ do_verify() {
   if helm test "$RELEASE" -n "$NS_MODULES" --timeout 5m >>"$LOGFILE" 2>&1; then
     info "Module health checks passed"
   else
-    warn "helm test failed — see $LOGFILE. Pods may still be starting; re-check with option 2."
+    warn "helm test failed — see $LOGFILE. Pods may still be starting; re-check with: install.sh status"
   fi
 
   local addr port_forward=""
@@ -696,7 +706,7 @@ EOF
   fi
   cat <<EOF
 
-   Manage this install:  bash install.sh   (status / stop / start / uninstall)
+   Manage this install:  bash install.sh status | stop | start | uninstall
    Generated config:     $WORKDIR/
 ────────────────────────────────────────────────────────────────
 EOF
@@ -813,7 +823,7 @@ $(workload_list '.spec.replicas')
 EOF
 
   state_set stopped "yes"
-  log "Stopped. Restart with option 4; data survives."
+  log "Stopped. Restart with: install.sh start   (PVCs and Secrets are untouched)"
 }
 
 do_start() {
@@ -833,7 +843,7 @@ do_start() {
 $(workload_list ".metadata.annotations['labs64io\\.install/original-replicas']")
 EOF
   state_set stopped "no"
-  log "Started. Check readiness with option 2."
+  log "Started. Check readiness with: install.sh status"
 }
 # --- uninstall ----------------------------------------------------------------
 #
@@ -971,7 +981,16 @@ EOF
 
 main() {
   check_prereqs
-  if [ -n "${LABS64_PROFILE:-}" ]; then do_install; else main_menu; fi
+  case "${COMMAND:-}" in
+    install)   do_install ;;
+    status)    do_status ;;
+    stop)      do_stop ;;
+    start)     do_start ;;
+    uninstall) do_uninstall ;;
+    *)
+      if [ -n "${LABS64_PROFILE:-}" ]; then do_install; else main_menu; fi
+      ;;
+  esac
 }
 
 main "$@"
