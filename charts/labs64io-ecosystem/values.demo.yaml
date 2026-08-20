@@ -20,10 +20,29 @@ api-docs:
   enabled: true
 # gateway.enabled defaults to false on these two; without it their APIs render no
 # HTTPRoute at all and the install has nothing to call.
+# mock-oidc's demo personas all stamp tenant "t_mock". The chart ships only the
+# reserved `platform` tenant, so without this an authenticated demo call reaches
+# auditflow and is rejected 403 for an unknown tenant — auth working, nothing
+# publishable. A logging sink keeps the demo self-contained (events land in the
+# sink container's log, no external store to configure).
 auditflow:
   enabled: true
   gateway:
     enabled: true
+  tenants:
+    additional:
+      - tenantId: t_mock
+        enabled: true
+        rateLimitPerSec: 200
+        burst: 400
+        pipelines:
+          - name: demo-logging
+            enabled: true
+            sink:
+              name: logging_sink
+              properties:
+                log-level: INFO
+
 payment-gateway:
   enabled: true
   gateway:
