@@ -1,0 +1,143 @@
+name: Labs64.IO - Helm Charts - Published Chart E2E
+
+# Installs the umbrella chart into a throwaway k3d cluster through install.sh and
+# asserts the result is reachable, not merely present.
+#
+# `just up` exercises the local override path; until this job nothing installed
+# what users actually get. That is how the chart/image drift shipped: published
+# appVersions referenced tags that were never built, and no job ever pulled them.
+#
+# On pull_request the chart under test is the one in the branch (LABS64_CHART), so
+# chart changes are verified before they are published. The weekly schedule runs
+# the published chart instead, which is what catches drift between published
+# charts and published images even when this repo has not changed.
+
+on:
+  pull_request:
+    paths:
+      - "charts/**"
+      - "install.sh"
+      - ".github/workflows/labs64io-published-chart-e2e.yml"
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      LABS64_PROFILE: quickstart
+      LABS64_YES: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create k3d cluster
+        run: |
+          set -euo pipefail
+          curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+          # Traefik is disabled in k3s: the umbrella brings its own, and two
+          # Traefik installs would fight over the same Gateway.
+          k3d cluster create e2e --agents 1 --wait \
+            -p "8000:80@loadbalancer" --k3s-arg "--disable=traefik@server:0"
+
+      - uses: azure/setup-helm@v5.0.1
+        with:
+          version: "3.17.0"
+
+      - name: Select the chart under test
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "LABS64_CHART=./charts/labs64io-ecosystem" >> "$GITHUB_ENV"
+          fi
+
+      - name: Install
+        run: bash install.sh install
+
+      - name: Assert no pod is stuck pulling
+        run: |
+          set -euo pipefail
+          kubectl -n labs64io get pods
+          # The defect class this whole job exists for.
+          if kubectl -n labs64io get pods \
+               -o jsonpath='{.items[*].status.containerStatuses[*].state.waiting.reason}' \
+             | tr ' ' '\n' | grep -qE 'ImagePullBackOff|ErrImagePull'; then
+            echo "::error::image pull failure — a chart appVersion likely references an unpublished tag"
+            kubectl -n labs64io get pods -o wide
+            exit 1
+          fi
+
+      - name: Assert module health
+        run: helm test labs64io -n labs64io --timeout 10m
+
+      - name: Assert the deployment is callable
+        run: |
+          set -euo pipefail
+          BASE=http://localhost:8000
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' -m 30 "$BASE/auditflow/v3/api-docs")
+          [ "$code" = "200" ] || { echo "::error::public route returned $code, expected 200"; exit 1; }
+
+          code=$(curl -s -o /dev/null -w '%{http_code}' -m 30 -X POST \
+                   "$BASE/auditflow/api/v1/audit/publish" \
+                   -H 'Content-Type: application/json' -d '{}')
+          [ "$code" = "401" ] || { echo "::error::unauthenticated call returned $code, expected 401"; exit 1; }
+
+          TOKEN=$(curl -s -m 30 -X POST "$BASE/labs64io/token" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data-urlencode 'grant_type=client_credentials' \
+            --data-urlencode 'client_id=local-test' \
+            --data-urlencode 'client_secret=local-test' \
+            --data-urlencode 'scope=admin' \
+            | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+          [ -n "$TOKEN" ] || { echo "::error::mock-oidc issued no token"; exit 1; }
+
+          # The whole point: authenticated, authorized, and accepted by the app.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -m 30 -X POST \
+                   "$BASE/auditflow/api/v1/audit/publish" \
+                   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+                   -d '{"eventType":"ci.e2e","sourceSystem":"github-actions"}')
+          [ "$code" = "200" ] || { echo "::error::authenticated publish returned $code, expected 200"; exit 1; }
+
+      - name: Assert status reports healthy
+        run: bash install.sh status
+
+      - name: Assert stop/start round-trips
+        run: |
+          set -euo pipefail
+          kubectl -n labs64io get deploy \
+            -o custom-columns=N:.metadata.name,R:.spec.replicas --no-headers | sort > /tmp/before
+          bash install.sh stop
+          kubectl -n labs64io get deploy \
+            -o custom-columns=N:.metadata.name,R:.spec.replicas --no-headers | sort | awk '$2!=0{print; f=1} END{exit f}' \
+            || { echo "::error::stop left a workload above zero"; exit 1; }
+          bash install.sh start
+          kubectl -n labs64io get deploy \
+            -o custom-columns=N:.metadata.name,R:.spec.replicas --no-headers | sort > /tmp/after
+          # api-gateway runs 2 replicas by default, so this only passes if the
+          # original counts round-trip through the annotation.
+          diff /tmp/before /tmp/after || { echo "::error::replica counts were not restored"; exit 1; }
+
+      - name: Assert re-running converges
+        run: |
+          set -euo pipefail
+          kubectl -n labs64io get secret labs64io-shared-secret \
+            -o jsonpath='{.data.SPRING_DATASOURCE_PASSWORD}' > /tmp/pw1
+          bash install.sh install
+          kubectl -n labs64io get secret labs64io-shared-secret \
+            -o jsonpath='{.data.SPRING_DATASOURCE_PASSWORD}' > /tmp/pw2
+          # Regenerating this against a surviving PVC yields a database whose
+          # stored credential no longer matches the Secret.
+          diff /tmp/pw1 /tmp/pw2 || { echo "::error::the shared password changed on re-run"; exit 1; }
+          [ "$(helm list -n labs64io --no-headers | wc -l)" = "1" ] \
+            || { echo "::error::expected exactly one release"; exit 1; }
+
+      - name: Dump diagnostics on failure
+        if: failure()
+        run: |
+          kubectl -n labs64io get events --sort-by=.lastTimestamp | tail -50 || true
+          kubectl -n labs64io describe pods | tail -120 || true
+          cat labs64io-install/install.log || true

@@ -1,7 +1,21 @@
-architecture: replication
-
-replica:
-  replicaCount: 1
+# Kept deliberately close to the `redis` block in
+# charts/labs64io-ecosystem/values.yaml. Local dev exists to catch problems before
+# users do, which it cannot do while running a different architecture and auth model
+# than the published path: this ran `replication` with auth off while the umbrella
+# runs `standalone` with auth on, so `just up` never exercised either.
+#
+# The password is inline rather than the umbrella's `existingSecret:
+# labs64io-shared-secret`, for the same reason postgresql/values.local.yaml is:
+# that Secret is created by the umbrella chart in the labs64io namespace, and this
+# release lives in `tools` — a Secret cannot be referenced across namespaces. The
+# shape that matters (standalone, auth enabled) is what is converged here.
+architecture: standalone
 
 auth:
-  enabled: false
+  enabled: true
+  password: labs64pw
+
+master:
+  persistence:
+    enabled: true
+    size: 1Gi
