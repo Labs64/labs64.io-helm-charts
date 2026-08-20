@@ -23,7 +23,19 @@ optional so a standalone install, which has no umbrella, still renders.
 Migration Job macro. Usage: {{ include "chart-libs.migration-job" . }}
 */}}
 {{- define "chart-libs.migration-job" -}}
-{{- if and .Values.applicationYaml .Values.applicationYaml.spring .Values.applicationYaml.spring.datasource }}
+{{/*
+Rendered unless migrationJob.enabled is explicitly false, so charts that never
+declare the key keep their current behaviour.
+
+Turn it off when the database is provisioned alongside the app in the same Helm
+release (the umbrella's bundled PostgreSQL). This is a pre-install hook, so it
+runs before the release's own resources exist — it would be waiting for a
+database that cannot be created until it finishes. In that topology the database
+is created by the server's initdb scripts and the schema by the application's
+own Flyway, which every module here has enabled with baseline-on-migrate.
+*/}}
+{{- $mj := .Values.migrationJob | default dict -}}
+{{- if and (not (eq (toString $mj.enabled) "false")) .Values.applicationYaml .Values.applicationYaml.spring .Values.applicationYaml.spring.datasource }}
 apiVersion: batch/v1
 kind: Job
 metadata:

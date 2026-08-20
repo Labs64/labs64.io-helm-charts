@@ -26,12 +26,19 @@ authz-pdp:
 # ImagePullBackOff. Toggle retained for when they are.
 checkout:
   enabled: false
+  # See payment-gateway.migrationJob above.
+  migrationJob:
+    enabled: false
 # @schema
 # type: object
 # additionalProperties: true
 # @schema
 payment-gateway:
   enabled: true
+  # The bundled PostgreSQL above creates this database at initdb; the app runs its
+  # own Flyway. See the migrationJob comment in charts/payment-gateway/values.yaml.
+  migrationJob:
+    enabled: false
 # @schema
 # type: object
 # additionalProperties: true
@@ -129,6 +136,32 @@ postgresql:
   # docker.io/bitnami/postgresql carries only `latest`, and bitnamilegacy/postgresql
   # stops at 17.6.0 while this subchart (18.7.11) targets appVersion 18.4.0. Pin by
   # digest, or move to oci://registry-1.docker.io/bitnamicharts, once one is available.
+  # -- Each module owns its own database (db-per-service isolation — see the note on
+  # global.postgresql above). The Bitnami chart creates only `auth.database`, and the
+  # modules' own pre-install migration Jobs cannot create the rest: they run before
+  # this server exists. Creating them here, at first initdb, is the only point in the
+  # release where the ordering works. Runs once, on an empty data directory only —
+  # enabling a module later needs the database created by hand.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  primary:
+    # @schema
+    # type: object
+    # additionalProperties: true
+    # @schema
+    initdb:
+      # @schema
+      # type: object
+      # additionalProperties: true
+      # @schema
+      scripts:
+        00-labs64io-databases.sql: |
+          SELECT 'CREATE DATABASE payment_gateway'
+            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'payment_gateway')\gexec
+          SELECT 'CREATE DATABASE checkout'
+            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'checkout')\gexec
   # @schema
   # type: object
   # additionalProperties: true

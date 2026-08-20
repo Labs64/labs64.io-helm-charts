@@ -71,10 +71,27 @@
           "default": false,
           "title": "enabled",
           "type": "boolean"
+        },
+        "migrationJob": {
+          "additionalProperties": false,
+          "description": "See payment-gateway.migrationJob above.",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "migrationJob",
+          "type": "object"
         }
       },
       "required": [
-        "enabled"
+        "enabled",
+        "migrationJob"
       ],
       "title": "checkout",
       "type": "object"
@@ -280,10 +297,27 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "migrationJob": {
+          "additionalProperties": false,
+          "description": "The bundled PostgreSQL above creates this database at initdb; the app runs its\nown Flyway. See the migrationJob comment in charts/payment-gateway/values.yaml.",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "migrationJob",
+          "type": "object"
         }
       },
       "required": [
-        "enabled"
+        "enabled",
+        "migrationJob"
       ],
       "title": "payment-gateway",
       "type": "object"
@@ -294,7 +328,6 @@
       "properties": {
         "auth": {
           "additionalProperties": true,
-          "description": "TODO: pin this image. The subchart defaults to `latest`, which pulls today but is\nmutable: a re-pull can move the PostgreSQL MAJOR version under an existing PVC, and\nPostgreSQL refuses to start on a data directory written by a different major — a\nroutine pod restart that presents as data loss. There is currently no tag to pin to:\ndocker.io/bitnami/postgresql carries only `latest`, and bitnamilegacy/postgresql\nstops at 17.6.0 while this subchart (18.7.11) targets appVersion 18.4.0. Pin by\ndigest, or move to oci://registry-1.docker.io/bitnamicharts, once one is available.",
           "properties": {
             "database": {
               "default": "labs64io",
@@ -351,6 +384,38 @@
           "description": "Pinned so `global.postgresql.host` above can be a plain string (standalone\narchitecture: no \"-primary\" suffix on the resulting service name)",
           "title": "fullnameOverride",
           "type": "string"
+        },
+        "primary": {
+          "additionalProperties": true,
+          "description": "TODO: pin this image. The subchart defaults to `latest`, which pulls today but is\nmutable: a re-pull can move the PostgreSQL MAJOR version under an existing PVC, and\nPostgreSQL refuses to start on a data directory written by a different major — a\nroutine pod restart that presents as data loss. There is currently no tag to pin to:\ndocker.io/bitnami/postgresql carries only `latest`, and bitnamilegacy/postgresql\nstops at 17.6.0 while this subchart (18.7.11) targets appVersion 18.4.0. Pin by\ndigest, or move to oci://registry-1.docker.io/bitnamicharts, once one is available.\nEach module owns its own database (db-per-service isolation — see the note on\nglobal.postgresql above). The Bitnami chart creates only `auth.database`, and the\nmodules' own pre-install migration Jobs cannot create the rest: they run before\nthis server exists. Creating them here, at first initdb, is the only point in the\nrelease where the ordering works. Runs once, on an empty data directory only —\nenabling a module later needs the database created by hand.",
+          "properties": {
+            "initdb": {
+              "additionalProperties": true,
+              "properties": {
+                "scripts": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "00-labs64io-databases.sql": {
+                      "default": "SELECT 'CREATE DATABASE payment_gateway'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'payment_gateway')\\gexec\nSELECT 'CREATE DATABASE checkout'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'checkout')\\gexec\n",
+                      "title": "00-labs64io-databases.sql",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "00-labs64io-databases.sql"
+                  ],
+                  "title": "scripts",
+                  "type": "object"
+                }
+              },
+              "required": [],
+              "title": "initdb",
+              "type": "object"
+            }
+          },
+          "required": [],
+          "title": "primary",
+          "type": "object"
         }
       },
       "required": [

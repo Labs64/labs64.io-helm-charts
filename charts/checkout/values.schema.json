@@ -548,6 +548,22 @@
       "title": "livenessProbe",
       "type": "object"
     },
+    "migrationJob": {
+      "additionalProperties": false,
+      "description": "Pre-install Job that creates the database and runs migrations. Leave enabled\nwhen pointing at infrastructure that already exists. Set false when the database\nis provisioned by the same Helm release (the umbrella's bundled PostgreSQL): the\nJob is a pre-install hook and would wait for a server that cannot start until it\nfinishes. The application runs Flyway itself either way.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "migrationJob",
+      "type": "object"
+    },
     "nameOverride": {
       "default": "",
       "description": "This is to override the chart name.",
@@ -1988,6 +2004,7 @@
     "affinity",
     "env",
     "envFrom",
+    "migrationJob",
     "applicationYaml",
     "gateway",
     "podDisruptionBudget",

@@ -185,6 +185,14 @@ envFrom: []
 secrets:
   data: {}
 
+# -- Pre-install Job that creates the database and runs migrations. Leave enabled
+# when pointing at infrastructure that already exists. Set false when the database
+# is provisioned by the same Helm release (the umbrella's bundled PostgreSQL): the
+# Job is a pre-install hook and would wait for a server that cannot start until it
+# finishes. The application runs Flyway itself either way.
+migrationJob:
+  enabled: true
+
 # -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own broker instead.
 # @schema

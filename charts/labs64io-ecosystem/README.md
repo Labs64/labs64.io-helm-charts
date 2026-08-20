@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.10.0](https://img.shields.io/badge/Version-0.10.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.11.0](https://img.shields.io/badge/Version-0.11.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Umbrella Chart for entire Ecosystem
 
@@ -31,7 +31,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | api-gateway.enabled | bool | `true` |  |
 | auditflow.enabled | bool | `true` |  |
 | authz-pdp.enabled | bool | `true` |  |
-| checkout | object | `{"enabled":false}` | Not GA. The labs64/checkout and labs64/checkout-ui images have never been published (both repositories 404 on Docker Hub), so enabling this yields ImagePullBackOff. Toggle retained for when they are. |
+| checkout | object | `{"enabled":false,"migrationJob":{"enabled":false}}` | Not GA. The labs64/checkout and labs64/checkout-ui images have never been published (both repositories 404 on Docker Hub), so enabling this yields ImagePullBackOff. Toggle retained for when they are. |
 | customer-portal | object | `{"enabled":false}` | Not GA. labs64/customer-portal-ui publishes no tags. Enable only once you have a published customer-portal-ui image. |
 | demoMode | bool | `false` | Demo mode. Permits the dev-grade default passwords below and unlocks the dev-only mock-oidc subchart. MUST be false for any real deployment: with it false, the chart refuses to render while any password is still at its default. |
 | global.postgresql.database | string | `"labs64io"` |  |
@@ -50,6 +50,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | global.sharedSecret.name | string | `"labs64io-shared-secret"` |  |
 | mock-oidc | object | `{"enabled":false}` | Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render otherwise. Issues tokens to anyone who asks and authenticates nobody; never enable it outside a throwaway demo. |
 | payment-gateway.enabled | bool | `true` |  |
+| payment-gateway.migrationJob.enabled | bool | `false` |  |
 | postgresql.auth.database | string | `"labs64io"` |  |
 | postgresql.auth.existingSecret | string | `"labs64io-shared-secret"` |  |
 | postgresql.auth.secretKeys.adminPasswordKey | string | `"SPRING_DATASOURCE_PASSWORD"` |  |
@@ -57,6 +58,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | postgresql.auth.username | string | `"labs64"` |  |
 | postgresql.enabled | bool | `true` |  |
 | postgresql.fullnameOverride | string | `"labs64io-postgresql"` | Pinned so `global.postgresql.host` above can be a plain string (standalone architecture: no "-primary" suffix on the resulting service name) |
+| postgresql.primary | object | `{"initdb":{"scripts":{"00-labs64io-databases.sql":"SELECT 'CREATE DATABASE payment_gateway'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'payment_gateway')\\gexec\nSELECT 'CREATE DATABASE checkout'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'checkout')\\gexec\n"}}}` | Each module owns its own database (db-per-service isolation — see the note on global.postgresql above). The Bitnami chart creates only `auth.database`, and the modules' own pre-install migration Jobs cannot create the rest: they run before this server exists. Creating them here, at first initdb, is the only point in the release where the ordering works. Runs once, on an empty data directory only — enabling a module later needs the database created by hand. @schema type: object additionalProperties: true @schema |
 | rabbitmq.auth.existingPasswordSecret | string | `"labs64io-shared-secret"` |  |
 | rabbitmq.auth.existingSecretPasswordKey | string | `"SPRING_RABBITMQ_PASSWORD"` |  |
 | rabbitmq.auth.username | string | `"labs64"` |  |
