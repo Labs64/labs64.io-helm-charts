@@ -456,6 +456,12 @@ EOF
   write_values
   ensure_gateway_crds
 
+  # The Traefik subchart puts the Gateway in NS_GATEWAY while the release lives in
+  # NS_MODULES, and --create-namespace only ever creates the release's own.
+  if [ "$TRAEFIK_ENABLED" = "true" ] && [ -z "$DRY_RUN" ]; then
+    kubectl get ns "$NS_GATEWAY" >/dev/null 2>&1 || kubectl create ns "$NS_GATEWAY" >/dev/null
+  fi
+
   # A local chart path needs no repo; only resolve the published repo when using it.
   case "$CHART" in
     ./*|/*|../*)
@@ -494,18 +500,44 @@ EOF
 # "helm reported success" is not the finish line. Quickstart has to prove the
 # deployment is callable and hand the user a working curl.
 
+# Traefik's Service lives in the release namespace even though its Gateway object
+# is created in NS_GATEWAY, so look in both rather than assuming.
+traefik_svc() {
+  local ns name
+  for ns in "$NS_MODULES" "$NS_GATEWAY"; do
+    name=$(kubectl -n "$ns" get svc -l app.kubernetes.io/name=traefik \
+             -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)
+    if [ -n "$name" ]; then printf '%s %s' "$ns" "$name"; return 0; fi
+  done
+  printf ''
+}
+
 gateway_address() {
-  local ip host port
-  ip=$(kubectl -n "$NS_GATEWAY" get svc -l app.kubernetes.io/name=traefik \
-        -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-  host=$(kubectl -n "$NS_GATEWAY" get svc -l app.kubernetes.io/name=traefik \
-        -o jsonpath='{.items[0].status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
-  port=$(kubectl -n "$NS_GATEWAY" get svc -l app.kubernetes.io/name=traefik \
-        -o jsonpath='{.items[0].spec.ports[?(@.name=="web")].port}' 2>/dev/null || true)
+  local svc ns name ip host port
+  svc=$(traefik_svc); [ -n "$svc" ] || { printf ''; return 0; }
+  ns=${svc%% *}; name=${svc##* }
+  ip=$(kubectl -n "$ns" get svc "$name" \
+        -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+  host=$(kubectl -n "$ns" get svc "$name" \
+        -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+  port=$(kubectl -n "$ns" get svc "$name" \
+        -o jsonpath='{.spec.ports[?(@.name=="web")].port}' 2>/dev/null || true)
   [ -n "$port" ] || port=8000
   if   [ -n "$ip" ];   then printf 'http://%s:%s' "$ip" "$port"
   elif [ -n "$host" ]; then printf 'http://%s:%s' "$host" "$port"
   else printf ''; fi
+}
+
+# A ready-to-paste port-forward for clusters with no LoadBalancer.
+port_forward_cmd() {
+  local svc ns name port
+  svc=$(traefik_svc)
+  if [ -z "$svc" ]; then printf 'kubectl -n %s port-forward svc/traefik 8000:8000' "$NS_GATEWAY"; return 0; fi
+  ns=${svc%% *}; name=${svc##* }
+  port=$(kubectl -n "$ns" get svc "$name" \
+          -o jsonpath='{.spec.ports[?(@.name=="web")].port}' 2>/dev/null || true)
+  [ -n "$port" ] || port=8000
+  printf 'kubectl -n %s port-forward svc/%s 8000:%s' "$ns" "$name" "$port"
 }
 
 do_verify() {
@@ -523,7 +555,7 @@ do_verify() {
   if [ -z "$addr" ]; then
     warn "The Gateway has no external address (this cluster has no LoadBalancer).
   Reach it with a port-forward instead:
-    kubectl -n $NS_GATEWAY port-forward svc/traefik 8000:8000
+    $(port_forward_cmd)
   then use http://localhost:8000 as the base URL below."
     addr="http://localhost:8000"
     port_forward=1
@@ -549,7 +581,7 @@ EOF
   [ -n "$port_forward" ] && cat <<EOF
 
    First run the port-forward (this cluster has no LoadBalancer):
-     kubectl -n $NS_GATEWAY port-forward svc/traefik 8000:8000
+     $(port_forward_cmd)
 EOF
   if [ "$(state_get demoMode)" = "true" ]; then
     cat <<EOF
@@ -572,12 +604,239 @@ EOF
 EOF
 }
 
-# --- lifecycle actions (filled in by later tasks) -----------------------------
+# --- status -------------------------------------------------------------------
+#
+# Reads the state ConfigMap, then reports live. Exits non-zero when anything is
+# unhealthy, so `install.sh` option 2 is usable in a scripted check.
 
-do_status()    { die "status is not implemented yet"; }
-do_stop()      { die "stop is not implemented yet"; }
-do_start()     { die "start is not implemented yet"; }
-do_uninstall() { die "uninstall is not implemented yet"; }
+do_status() {
+  local rc=0
+  state_exists || { log "Not installed (no $STATE_CM in $NS_MODULES)."; return 1; }
+
+  log ""
+  log "Installed by wizard v$(state_get wizardVersion) on $(state_get created)"
+  log "  profile: $(state_get profile)   demoMode: $(state_get demoMode)   stopped: $(state_get stopped no)"
+  local resolved; resolved=$(state_get resolvedVersion)
+  [ -n "$resolved" ] && log "  chart version: $resolved"
+
+  log ""
+  log "Releases:"
+  local entry rel ns listed
+  for entry in $(state_get releases | tr ',' ' '); do
+    rel=${entry%%:*}; ns=${entry##*:}
+    if have_release "$rel" "$ns"; then
+      info "$(helm list -n "$ns" -f "^$rel\$" --no-headers 2>/dev/null | awk '{print $1, $8, $9}')"
+    else
+      warn "$rel/$ns is recorded in state but not found in Helm — drift"; rc=1
+    fi
+  done
+  # The other direction: a labelled release Helm knows about that state does not.
+  listed=$(state_get releases)
+  for rel in $(helm list -n "$NS_MODULES" --no-headers -o json 2>/dev/null \
+                 | sed -n 's/.*"name":"\([^"]*\)".*/\1/p'); do
+    case ",$listed," in *",$rel:$NS_MODULES,"*) : ;;
+      *) warn "release $rel exists in $NS_MODULES but is not recorded in state — drift"; rc=1 ;;
+    esac
+  done
+
+  log ""
+  log "Workloads:"
+  local notready
+  kubectl -n "$NS_MODULES" get deploy,statefulset \
+    -o custom-columns='NAME:.metadata.name,READY:.status.readyReplicas,WANT:.spec.replicas' \
+    --no-headers 2>/dev/null | while read -r line; do info "$line"; done
+  notready=$(kubectl -n "$NS_MODULES" get pods --no-headers 2>/dev/null \
+             | grep -vcE 'Running|Completed' || true)
+  if [ "${notready:-0}" -gt 0 ] 2>/dev/null; then
+    warn "$notready pod(s) not Running"; rc=1
+  fi
+
+  log ""
+  local addr; addr=$(gateway_address)
+  if [ -n "$addr" ]; then
+    info "Gateway: $addr"
+    if curl -fsS -m 10 "$addr/auditflow/v3/api-docs" >/dev/null 2>&1; then
+      info "Public route: OK"
+    else
+      warn "Public route: unreachable"; rc=1
+    fi
+  else
+    warn "Gateway: no external address (no LoadBalancer on this cluster).
+  Reach it with: $(port_forward_cmd)"
+  fi
+
+  local pvcs adopted
+  pvcs=$(kubectl -n "$NS_MODULES" get pvc --no-headers 2>/dev/null \
+         | awk '{print "  " $1 " " $2 " " $4}')
+  if [ -n "$pvcs" ]; then log ""; log "Volumes:"; printf '%s\n' "$pvcs" | tee -a "$LOGFILE"; fi
+
+  adopted=$(state_get adopted)
+  if [ -n "$adopted" ]; then
+    log ""
+    log "Adopted, never removed on uninstall: $adopted"
+  fi
+  return $rc
+}
+# --- stop / start -------------------------------------------------------------
+#
+# Scale to zero and back, preserving data. The original replica count is stored
+# in an annotation on each workload rather than only in the state ConfigMap, so a
+# restart still works if that ConfigMap is lost.
+
+# Emits "<kind> <name> <value>" per workload, where <value> is the jsonpath given.
+workload_list() {
+  kubectl -n "$NS_MODULES" get deploy,statefulset \
+    -o jsonpath="{range .items[*]}{.kind}{' '}{.metadata.name}{' '}{$1}{'\n'}{end}" 2>/dev/null
+}
+
+lower() { printf '%s' "$1" | tr 'A-Z' 'a-z'; }
+
+do_stop() {
+  state_exists || die "Nothing installed in $NS_MODULES."
+
+  # An active HPA will fight a scale-to-zero. Every module chart defaults
+  # autoscaling.enabled=false, so this is worth naming, not blocking on.
+  local hpas; hpas=$(kubectl -n "$NS_MODULES" get hpa --no-headers 2>/dev/null | wc -l | tr -d ' ')
+  if [ "${hpas:-0}" -gt 0 ] 2>/dev/null; then
+    warn "$hpas HorizontalPodAutoscaler(s) present — they may scale these workloads back up."
+  fi
+
+  log "Scaling workloads in $NS_MODULES to zero (PVCs and Secrets are untouched)..."
+  local kind name reps k
+  while read -r kind name reps; do
+    [ -z "${name:-}" ] && continue
+    [ "${reps:-0}" = "0" ] && continue
+    k=$(lower "$kind")
+    kubectl -n "$NS_MODULES" annotate "$k" "$name" "$STOP_ANNOTATION=$reps" --overwrite >/dev/null
+    kubectl -n "$NS_MODULES" scale "$k" "$name" --replicas=0 >/dev/null
+    info "$kind/$name: $reps -> 0"
+  done <<EOF
+$(workload_list '.spec.replicas')
+EOF
+
+  state_set stopped "yes"
+  log "Stopped. Restart with option 4; data survives."
+}
+
+do_start() {
+  state_exists || die "Nothing installed in $NS_MODULES."
+  log "Restoring replica counts..."
+  local kind name reps k
+  while read -r kind name reps; do
+    [ -z "${name:-}" ] && continue
+    # No annotation means this wizard never stopped it; one replica is the safe
+    # floor rather than leaving it at zero.
+    [ -z "${reps:-}" ] && reps=1
+    k=$(lower "$kind")
+    kubectl -n "$NS_MODULES" scale "$k" "$name" --replicas="$reps" >/dev/null
+    kubectl -n "$NS_MODULES" annotate "$k" "$name" "$STOP_ANNOTATION-" >/dev/null 2>&1 || true
+    info "$kind/$name -> $reps"
+  done <<EOF
+$(workload_list ".metadata.annotations['labs64io\\.install/original-replicas']")
+EOF
+  state_set stopped "no"
+  log "Started. Check readiness with option 2."
+}
+# --- uninstall ----------------------------------------------------------------
+#
+# Prompts per resource class, never one blanket "delete everything?". Destructive
+# classes default to No, and anything recorded as adopted is filtered out of every
+# list — the wizard must never delete what it merely found.
+
+do_uninstall() {
+  state_exists || die "Nothing installed in $NS_MODULES (no $STATE_CM)."
+
+  local adopted entry rel ns
+  adopted=$(state_get adopted)
+  log ""
+  log "Uninstalling. You will be asked about each class of resource separately."
+  [ -n "$adopted" ] && log "Left in place (pre-existing, adopted): $adopted"
+
+  # 1. Helm releases — wizard-created only
+  log ""
+  log "Helm releases created by this wizard:"
+  for entry in $(state_get releases | tr ',' ' '); do
+    info "${entry%%:*} (namespace ${entry##*:})"
+  done
+  if confirm "Delete these releases?" y; then
+    for entry in $(state_get releases | tr ',' ' '); do
+      rel=${entry%%:*}; ns=${entry##*:}
+      if helm uninstall "$rel" -n "$ns" --wait --timeout 5m >>"$LOGFILE" 2>&1; then
+        info "deleted $rel"
+      else
+        warn "could not delete $rel — see $LOGFILE"
+      fi
+    done
+  fi
+
+  # 2. PVCs — irreversible, default No, listed with sizes first
+  local pvcs
+  pvcs=$(kubectl -n "$NS_MODULES" get pvc \
+    -o custom-columns='NAME:.metadata.name,SIZE:.spec.resources.requests.storage' \
+    --no-headers 2>/dev/null || true)
+  if [ -n "$pvcs" ]; then
+    log ""
+    log "PersistentVolumeClaims in $NS_MODULES (DELETING THESE DESTROYS ALL DATA):"
+    printf '%s\n' "$pvcs" | while read -r l; do info "$l"; done
+    if confirm "Delete these PVCs? This cannot be undone" n; then
+      kubectl -n "$NS_MODULES" delete pvc --all --wait=false >>"$LOGFILE" 2>&1
+      info "PVCs deleted"
+    else
+      info "PVCs kept — a later re-install will reattach to them"
+    fi
+  fi
+
+  # 3. Secrets. Keeping them is what lets a re-install reattach to surviving PVCs
+  #    with credentials the database will still accept.
+  log ""
+  if confirm "Delete generated Secrets (keeping them lets a re-install reattach to surviving PVCs)?" n; then
+    kubectl -n "$NS_MODULES" delete secret labs64io-shared-secret --ignore-not-found >>"$LOGFILE" 2>&1
+    info "shared Secret deleted"
+  fi
+
+  # 4. Gateway namespace — only if we created the Gateway and nothing else is left
+  if [ "$(state_get gatewayCreatedBy)" = "wizard" ]; then
+    local left_gw
+    left_gw=$(kubectl -n "$NS_GATEWAY" get all --no-headers 2>/dev/null | wc -l | tr -d ' ')
+    if [ "${left_gw:-0}" -eq 0 ] 2>/dev/null; then
+      log ""
+      confirm "Namespace $NS_GATEWAY is empty. Delete it?" n \
+        && kubectl delete ns "$NS_GATEWAY" --wait=false >>"$LOGFILE" 2>&1 || true
+    else
+      warn "Namespace $NS_GATEWAY still holds other workloads — left in place."
+    fi
+  fi
+
+  # 5. Gateway API CRDs — cluster-scoped, default No
+  if [ "$(state_get gatewayApiCrds)" = "applied-by-wizard" ]; then
+    log ""
+    warn "Gateway API CRDs are cluster-scoped. Deleting them removes EVERY Gateway and
+  HTTPRoute in this cluster, including ones unrelated to Labs64.IO."
+    if confirm "Delete Gateway API CRDs?" n; then
+      kubectl delete -f \
+        "https://github.com/kubernetes-sigs/gateway-api/releases/download/${GATEWAY_API_VERSION}/standard-install.yaml" \
+        --ignore-not-found >>"$LOGFILE" 2>&1 || warn "could not delete the CRDs — see $LOGFILE"
+    fi
+  fi
+
+  # 6. Module namespace — only when nothing is left in it
+  log ""
+  local left
+  left=$(kubectl -n "$NS_MODULES" get all --no-headers 2>/dev/null | wc -l | tr -d ' ')
+  if [ "${left:-0}" -eq 0 ] 2>/dev/null; then
+    if confirm "Namespace $NS_MODULES is empty. Delete it?" n; then
+      kubectl delete ns "$NS_MODULES" --wait=false >>"$LOGFILE" 2>&1
+      log "Uninstalled. Generated files remain in $WORKDIR/"
+      return 0
+    fi
+  else
+    info "Namespace $NS_MODULES still holds $left object(s) — left in place."
+  fi
+
+  # 7. State ConfigMap last, once everything else has been dealt with
+  kubectl -n "$NS_MODULES" delete configmap "$STATE_CM" --ignore-not-found >>"$LOGFILE" 2>&1
+  log "Uninstalled. Generated files remain in $WORKDIR/"
+}
 
 # --- menu ---------------------------------------------------------------------
 
