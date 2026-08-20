@@ -32,6 +32,9 @@ checks:
 # -- Images used by the check containers
 images:
   busybox: busybox:1.36
-  postgresql: bitnamilegacy/postgresql:17.6.0-debian-12-r4
-  redis: bitnamilegacy/redis:7.4.3-debian-12-r0
+  # -- Official images rather than bitnamilegacy/*, which is an unsupported
+  # namespace on a deprecation path. These run the same SELECT 1 / PING checks;
+  # both put psql / redis-cli on PATH, which is all job.yaml relies on.
+  postgresql: postgres:17-alpine
+  redis: redis:7-alpine
   curl: curlimages/curl:8.10.1

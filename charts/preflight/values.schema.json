@@ -190,12 +190,13 @@
           "type": "string"
         },
         "postgresql": {
-          "default": "bitnamilegacy/postgresql:17.6.0-debian-12-r4",
+          "default": "postgres:17-alpine",
+          "description": "Official images rather than bitnamilegacy/*, which is an unsupported\nnamespace on a deprecation path. These run the same SELECT 1 / PING checks;\nboth put psql / redis-cli on PATH, which is all job.yaml relies on.",
           "title": "postgresql",
           "type": "string"
         },
         "redis": {
-          "default": "bitnamilegacy/redis:7.4.3-debian-12-r0",
+          "default": "redis:7-alpine",
           "title": "redis",
           "type": "string"
         }
