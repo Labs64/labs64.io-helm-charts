@@ -568,6 +568,8 @@ EOF
   case "$CHART" in
     ./*|/*|../*)
       info "Installing from the local chart $CHART (not the published one)"
+      helm repo add bitnami https://charts.bitnami.com/bitnami >/dev/null 2>&1 || true
+      helm repo add traefik https://traefik.github.io/charts >/dev/null 2>&1 || true
       helm dependency build "$CHART" >>"$LOGFILE" 2>&1 || true
       ;;
     *)
