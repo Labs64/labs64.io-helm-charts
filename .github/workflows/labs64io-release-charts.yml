@@ -36,6 +36,7 @@ jobs:
       - name: Add dependent repositories
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add traefik https://traefik.github.io/charts
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
