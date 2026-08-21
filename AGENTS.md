@@ -62,7 +62,7 @@ profile — evaluate a single module against the shared local toolset (`just ins
 
 ```bash
 just up                      # k3d cluster + registry + all modules (Helmfile-driven)
-just up-full                 # + monitoring stack, observability enabled
+just up-otel                 # + monitoring stack, observability enabled
 just reset                   # uninstall apps/monitoring/tools, keep the cluster
 just cluster-down            # delete the k3d cluster
 just install-app auditflow   # install/reinstall a single module

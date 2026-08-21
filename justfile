@@ -20,7 +20,7 @@ LOKI_CHART_VERSION := "6.24.0"
 
 LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal mock-oidc"
 # Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
-# `up-full` enables observability on these once the monitoring stack is present.
+# `up-otel` enables observability on these once the monitoring stack is present.
 OBSERVABILITY_APPS := "api-gateway auditflow checkout payment-gateway"
 
 # List available commands
@@ -61,7 +61,7 @@ docker-system-prune:
 # stack — the collector DaemonSet must be running so OTLP export has a target).
 # Kept off in the base `up` profile so a monitoring-less cluster shows no export errors.
 # Once the collector exists, `install-app` re-enables observability automatically on
-# every (re)install, so this recipe is only needed for the initial up-full flip.
+# every (re)install, so this recipe is only needed for the initial up-otel flip.
 enable-observability:
     #!/usr/bin/env bash
     set -euo pipefail

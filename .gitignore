@@ -25,3 +25,13 @@ overrides/rabbitmq/rabbitmq-secret.yaml
 # --- Logs ---
 *.log
 .worktrees/
+
+# --- Python ---
+__pycache__/
+.pytest_cache/
+
+# --- Claude Code ---
+.claude/
+
+# --- install.sh generated workdir (values/logs, always regenerated) ---
+labs64io-install/

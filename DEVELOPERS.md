@@ -435,7 +435,7 @@ curl -s http://gateway.localhost/payment-gateway/api/v1/payment-providers \
   -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
 ```
 
-### Check observability (if installed with `just up-full`)
+### Check observability (if installed with `just up-otel`)
 
 ```bash
 # Grafana
@@ -455,7 +455,7 @@ kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 909
 
 ```bash
 # All modules
-just show-errors
+just logs-errors
 
 # Specific module
 kubectl logs -n labs64io -l app.kubernetes.io/name=checkout --tail=100

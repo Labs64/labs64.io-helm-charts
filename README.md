@@ -168,7 +168,7 @@ runs as one container; the Job succeeds only if all pass.
 ### Local cluster
 
     just up               # k3d cluster + registry + all modules (Helmfile-driven)
-    just up-full          # + monitoring stack, observability enabled
+    just up-otel          # + monitoring stack, observability enabled
     just cluster-down     # delete the k3d cluster
 
 ## Usage
