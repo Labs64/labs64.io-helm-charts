@@ -125,15 +125,6 @@ jobs:
       - name: Pin the released digests
         run: python3 scripts/update-chart-images.py --event-file event.json
 
-      - name: Update chart dependencies
-        run: |
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo add traefik https://traefik.github.io/charts
-          for chart_dir in charts/*/; do
-            [ -f "$chart_dir/Chart.yaml" ] || continue
-            helm dependency update "$chart_dir"
-          done
-
       - name: Generate values schema
         run: |
           helm plugin install https://github.com/dadav/helm-schema
@@ -142,6 +133,15 @@ jobs:
       - name: Generate docs
         run: |
           docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" jnorwood/helm-docs:v1.14.2 --chart-search-root ./charts --log-level warning
+
+      - name: Update chart dependencies
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add traefik https://traefik.github.io/charts
+          for chart_dir in charts/*/; do
+            [ -f "$chart_dir/Chart.yaml" ] || continue
+            helm dependency update "$chart_dir"
+          done
 
       - name: Detect changes
         id: diff
