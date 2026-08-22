@@ -184,16 +184,16 @@ jobs:
             fi
 
             # helm template (syntax + render check)
-            if ! helm template "test-$chart_name" "$chart_dir" > /dev/null 2>&1; then
+            if ! helm template "test-$chart_name" "$chart_dir" --set demoMode=true > /dev/null 2>&1; then
               echo "FAIL: helm template $chart_name"
-              helm template "test-$chart_name" "$chart_dir" 2>&1 | tail -5
+              helm template "test-$chart_name" "$chart_dir" --set demoMode=true 2>&1 | tail -5
               FAILED=1
             fi
 
             # Render once with the committed values to exercise values.schema.json validation.
-            if ! helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" > /dev/null 2>&1; then
+            if ! helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" --set demoMode=true > /dev/null 2>&1; then
               echo "FAIL: schema validation $chart_name"
-              helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" 2>&1 | tail -5
+              helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" --set demoMode=true 2>&1 | tail -5
               FAILED=1
             fi
 
