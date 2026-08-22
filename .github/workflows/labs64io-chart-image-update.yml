@@ -134,6 +134,15 @@ jobs:
             helm dependency update "$chart_dir"
           done
 
+      - name: Generate values schema
+        run: |
+          helm plugin install https://github.com/dadav/helm-schema
+          helm schema --chart-search-root ./charts --no-dependencies --append-newline
+
+      - name: Generate docs
+        run: |
+          docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" jnorwood/helm-docs:v1.14.2 --chart-search-root ./charts --log-level warning
+
       - name: Detect changes
         id: diff
         run: |
