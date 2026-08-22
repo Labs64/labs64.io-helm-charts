@@ -416,6 +416,17 @@ def test_real_auditflow_chart_renders_by_digest_after_update(tmp_path):
     chart = tmp_path / "auditflow"
     shutil.copytree(src, chart)
 
+    libs_src = REPO_ROOT / "charts" / "chart-libs"
+    libs_chart = tmp_path / "chart-libs"
+    if libs_src.exists():
+        shutil.copytree(libs_src, libs_chart)
+    
+    subprocess.run(
+        ["helm", "dependency", "build", str(chart)],
+        capture_output=True,
+        check=True,
+    )
+
     upd.update_chart(
         chart,
         "9.9.9",
