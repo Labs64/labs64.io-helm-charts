@@ -81,17 +81,6 @@ jobs:
             exit 1
           fi
 
-      - name: Build chart dependencies
-        # Vendored deps (charts/*/charts/) are gitignored, so a fresh checkout is
-        # missing them (e.g. chart-libs, a file://../chart-libs local dependency);
-        # without this, every dependent chart fails to lint/template below.
-        run: |
-          set -euo pipefail
-          for chart_dir in charts/*/; do
-            [ -f "$chart_dir/Chart.yaml" ] || continue
-            helm dependency build "$chart_dir"
-          done
-
       - name: Enforce schema generation
         run: |
           helm schema --chart-search-root ./charts --no-dependencies --append-newline
@@ -107,6 +96,17 @@ jobs:
             echo "ERROR: README.md files are out of date. Please run 'just generate-docu' and commit the changes."
             exit 1
           fi
+
+      - name: Build chart dependencies
+        # Vendored deps (charts/*/charts/) are gitignored, so a fresh checkout is
+        # missing them (e.g. chart-libs, a file://../chart-libs local dependency);
+        # without this, every dependent chart fails to lint/template below.
+        run: |
+          set -euo pipefail
+          for chart_dir in charts/*/; do
+            [ -f "$chart_dir/Chart.yaml" ] || continue
+            helm dependency build "$chart_dir"
+          done
 
       - name: Set up Python
         uses: actions/setup-python@v7
