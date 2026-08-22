@@ -24,7 +24,7 @@ image:
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
   # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-  digest: ""
+  digest: "sha256:c7b26d3ca11cc686f0cd6feacca0b6eeedded736d4a38111c7d75a2bb439b1e3"
 
 transformer:
   image:
@@ -32,7 +32,7 @@ transformer:
     pullPolicy: IfNotPresent
     tag: ""
     # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-    digest: ""
+    digest: "sha256:0af0ab7a50eeb4dd89587f9aab630eeed8583381647dde9546482026ef62a4f3"
   # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
@@ -63,7 +63,7 @@ sink:
     pullPolicy: IfNotPresent
     tag: ""
     # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-    digest: ""
+    digest: "sha256:bc4b7684b612aa43a8636ab2c9f8bf763986a89153a5b3cea461e37bfca2f7f3"
   # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
