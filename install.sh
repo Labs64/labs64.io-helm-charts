@@ -570,7 +570,18 @@ EOF
       info "Installing from the local chart $CHART (not the published one)"
       helm repo add bitnami https://charts.bitnami.com/bitnami >/dev/null 2>&1 || true
       helm repo add traefik https://traefik.github.io/charts >/dev/null 2>&1 || true
-      helm dependency build "$CHART" >>"$LOGFILE" 2>&1 || true
+      
+      # Helm does not recursively build file:// dependencies. If we are installing
+      # the local umbrella chart, we must first build all its local dependencies.
+      if [ -d "${CHART%/*}" ]; then
+        for d in "${CHART%/*}"/*; do
+          if [ -f "$d/Chart.yaml" ] && [ "$d" != "$CHART" ]; then
+            helm dependency update "$d" >>"$LOGFILE" 2>&1 || true
+          fi
+        done
+      fi
+      
+      helm dependency update "$CHART" >>"$LOGFILE" 2>&1 || true
       ;;
     *)
       helm repo add "$REPO_ALIAS" "$REPO_URL" >/dev/null 2>&1 || true
