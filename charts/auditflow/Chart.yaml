@@ -1,8 +1,8 @@
 apiVersion: v2
 name: auditflow
 type: application
-version: 0.12.0
-appVersion: 0.0.5
+version: 0.12.1
+appVersion: "0.0.11"
 description: "Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices"
 icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
 home: https://labs64.io
