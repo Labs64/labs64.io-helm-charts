@@ -18,7 +18,6 @@ env:
   - name: LABS64_AUTH_AUTHZ_PDPADDRESS
     value: labs64io-authz-pdp.labs64io.svc.cluster.local:3593
 ui:
-  replicaCount: 0
   image:
     repository: localhost:5005/checkout-ui
     tag: latest
@@ -41,10 +40,3 @@ ui:
   networkPolicy:
     enabled: true
 
-# Disable deployment of pods for checkout (backend and ui) and the migration job.
-# This is a temporary workaround until `checkout` is GA and its CI successfully
-# publishes `:edge` images to Docker Hub. Without this, the deployment will fail
-# because the chart forces a minimum of 1 replica which gets stuck in ImagePullBackOff.
-replicaCount: 0
-migrationJob:
-  enabled: false
