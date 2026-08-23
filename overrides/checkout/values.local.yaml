@@ -18,6 +18,7 @@ env:
   - name: LABS64_AUTH_AUTHZ_PDPADDRESS
     value: labs64io-authz-pdp.labs64io.svc.cluster.local:3593
 ui:
+  replicaCount: 0
   image:
     repository: localhost:5005/checkout-ui
     tag: latest
@@ -39,3 +40,10 @@ ui:
   
   networkPolicy:
     enabled: true
+
+# Disable deployment of pods for checkout (backend and ui) and the migration job
+# since checkout is not GA yet and its :edge images are not available.
+replicaCount: 0
+db:
+  migration:
+    enabled: false
