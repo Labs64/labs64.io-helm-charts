@@ -390,7 +390,7 @@ grafana-password:
 
 # Install required Helm plugins
 helm-tools:
-    @helm plugin install --verify=false https://github.com/databus23/helm-diff 2>/dev/null || true
+    @helm plugin install --verify=false https://github.com/databus23/helm-diff --version v3.9.14 2>/dev/null || true
     @helm plugin install --verify=false https://github.com/dadav/helm-schema 2>/dev/null || true
     @echo "Installed Helm plugins:"
     @helm plugin list
