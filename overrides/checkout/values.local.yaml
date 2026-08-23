@@ -41,8 +41,10 @@ ui:
   networkPolicy:
     enabled: true
 
-# Disable deployment of pods for checkout (backend and ui) and the migration job
-# since checkout is not GA yet and its :edge images are not available.
+# Disable deployment of pods for checkout (backend and ui) and the migration job.
+# This is a temporary workaround until `checkout` is GA and its CI successfully
+# publishes `:edge` images to Docker Hub. Without this, the deployment will fail
+# because the chart forces a minimum of 1 replica which gets stuck in ImagePullBackOff.
 replicaCount: 0
 migrationJob:
   enabled: false
