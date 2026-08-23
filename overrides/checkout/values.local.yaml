@@ -44,6 +44,5 @@ ui:
 # Disable deployment of pods for checkout (backend and ui) and the migration job
 # since checkout is not GA yet and its :edge images are not available.
 replicaCount: 0
-db:
-  migration:
-    enabled: false
+migrationJob:
+  enabled: false
