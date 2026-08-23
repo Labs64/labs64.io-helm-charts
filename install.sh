@@ -173,8 +173,8 @@ check_prereqs() {
     warn "kubectl 1.$kv is older than the tested 1.27."
   fi
   hv=$(helm version --template '{{.Version}}' 2>/dev/null | sed 's/^v//;s/\..*//')
-  if [ -n "$hv" ] && [ "$hv" -lt 3 ] 2>/dev/null; then
-    die "helm 3.12+ is required (found v$hv)."
+  if [ -n "$hv" ] && [ "$hv" -lt 4 ] 2>/dev/null; then
+    die "helm 4.0+ is required (found v$hv)."
   fi
 
   kubectl cluster-info >/dev/null 2>&1 \

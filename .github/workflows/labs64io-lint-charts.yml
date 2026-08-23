@@ -21,7 +21,7 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v5.0.1
         with:
-          version: "3.17.0"
+          version: "4.2.4"
 
       - name: Add dependent repositories
         run: |

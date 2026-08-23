@@ -46,7 +46,7 @@ jobs:
 
       - uses: azure/setup-helm@v5.0.1
         with:
-          version: "3.17.0"
+          version: "4.2.4"
 
       - name: Select the chart under test
         run: |
