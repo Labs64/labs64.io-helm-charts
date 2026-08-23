@@ -18,11 +18,11 @@ jobs:
           # Full history needed to diff each chart against the PR base ref below.
           fetch-depth: 0
 
-      - name: Install Helm
-        uses: azure/setup-helm@v5.0.1
-        with:
-          version: "4.2.4"
-
+      - name: Install Helm 4.2.4
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh --version v4.2.4
       - name: Add dependent repositories
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
