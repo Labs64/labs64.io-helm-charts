@@ -70,11 +70,11 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml pytest
 
-      - name: Install Helm 4.2.4
+      - name: Install Helm 4
         run: |
           curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
           chmod 700 get_helm.sh
-          ./get_helm.sh --version v4.2.4
+          ./get_helm.sh
       - name: Test the chart updater
         # A writer nobody tests silently corrupts charts. Same convention as the
         # other gates in this repo.
