@@ -1,16 +1,19 @@
 image:
   repository: localhost:5005/auditflow
   tag: latest
+  digest: ""
 
 transformer:
   image:
     repository: localhost:5005/auditflow-transformer
     tag: latest
+    digest: ""
 
 sink:
   image:
     repository: localhost:5005/auditflow-sink
     tag: latest
+    digest: ""
 
 resources:
   #limits:
