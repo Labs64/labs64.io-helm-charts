@@ -21,7 +21,7 @@ LOKI_CHART_VERSION := "6.24.0"
 LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal mock-oidc"
 # Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
 # `up-otel` enables observability on these once the monitoring stack is present.
-OBSERVABILITY_APPS := "api-gateway auditflow checkout payment-gateway"
+OBSERVABILITY_APPS := "api-gateway auditflow payment-gateway"
 
 # List available commands
 default:
