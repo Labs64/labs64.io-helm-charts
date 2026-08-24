@@ -13,17 +13,12 @@ networkPolicy:
       port: 5432
     - name: redis
       port: 6379
-    - name: traefik
-      port: 8000
-    - name: mock-oidc
-      port: 8080
 
 applicationYaml:
   labs64:
     auditflow:
       enabled: true
-      oauth2:
-        token-uri: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/token
+      url: http://labs64io-auditflow:8080
 
 # Authorization PEP -> central Cerbos PDP
 env:

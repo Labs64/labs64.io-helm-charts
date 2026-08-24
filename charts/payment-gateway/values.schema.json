@@ -29,23 +29,11 @@
                   "title": "enabled",
                   "type": "boolean"
                 },
-                "oauth2": {
+                "internal-call": {
                   "additionalProperties": false,
                   "properties": {
-                    "client-id": {
-                      "default": "payment-gateway",
-                      "description": "OAuth2 service-principal client ID",
-                      "title": "client-id",
-                      "type": "string"
-                    },
-                    "client-secret": {
-                      "default": "${AUDITFLOW_OAUTH_CLIENT_SECRET}",
-                      "description": "The value is resolved from the Pod environment populated by secrets.data.",
-                      "title": "client-secret",
-                      "type": "string"
-                    },
                     "scopes": {
-                      "description": "Scopes requested for AuditFlow publishing",
+                      "description": "Scopes sent on direct AuditFlow calls",
                       "items": {
                         "anyOf": [
                           {
@@ -57,20 +45,18 @@
                       "title": "scopes",
                       "type": "array"
                     },
-                    "token-uri": {
-                      "default": "http://keycloak.tools.svc.cluster.local/realms/labs64io/protocol/openid-connect/token",
-                      "description": "OAuth2 token endpoint used for the client_credentials grant",
-                      "title": "token-uri",
+                    "service-name": {
+                      "default": "payment-gateway",
+                      "description": "Service name encoded as the canonical internal service principal",
+                      "title": "service-name",
                       "type": "string"
                     }
                   },
                   "required": [
-                    "token-uri",
-                    "client-id",
-                    "client-secret",
+                    "service-name",
                     "scopes"
                   ],
-                  "title": "oauth2",
+                  "title": "internal-call",
                   "type": "object"
                 },
                 "source-system": {
@@ -80,8 +66,8 @@
                   "type": "string"
                 },
                 "url": {
-                  "default": "{{ if and .Values.global .Values.global.gateway .Values.global.gateway.internalHost }}http://{{ .Values.global.gateway.internalHost }}/auditflow/api/v1{{ else }}${AUDITFLOW_URL}{{ end }}",
-                  "description": "AuditFlow API base URL derived from global.gateway.internalHost; standalone installs may supply AUDITFLOW_URL instead",
+                  "default": "http://labs64io-auditflow:8080",
+                  "description": "Direct AuditFlow service URL; standalone installs must override it when using a different release name",
                   "title": "url",
                   "type": "string"
                 }
@@ -90,7 +76,7 @@
                 "enabled",
                 "url",
                 "source-system",
-                "oauth2"
+                "internal-call"
               ],
               "title": "auditflow",
               "type": "object"
@@ -686,6 +672,88 @@
                           "additionalProperties": false,
                           "properties": {
                             "port": {
+                              "default": 8080,
+                              "title": "port",
+                              "type": "integer"
+                            },
+                            "protocol": {
+                              "default": "TCP",
+                              "title": "protocol",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "protocol",
+                            "port"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "ports",
+                    "type": "array"
+                  },
+                  "to": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "podSelector": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "matchLabels": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "app.kubernetes.io/name": {
+                                      "default": "auditflow",
+                                      "title": "app.kubernetes.io/name",
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "app.kubernetes.io/name"
+                                  ],
+                                  "title": "matchLabels",
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "matchLabels"
+                              ],
+                              "title": "podSelector",
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "podSelector"
+                          ],
+                          "type": "object"
+                        }
+                      ],
+                      "required": []
+                    },
+                    "title": "to",
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "to",
+                  "ports"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "ports": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "additionalProperties": false,
+                          "properties": {
+                            "port": {
                               "default": 3593,
                               "title": "port",
                               "type": "integer"
@@ -830,46 +898,6 @@
                   },
                   "port": {
                     "default": 6379,
-                    "title": "port",
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "name",
-                  "port"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "name": {
-                    "default": "traefik",
-                    "title": "name",
-                    "type": "string"
-                  },
-                  "port": {
-                    "default": 8000,
-                    "title": "port",
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "name",
-                  "port"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "name": {
-                    "default": "keycloak",
-                    "title": "name",
-                    "type": "string"
-                  },
-                  "port": {
-                    "default": 8080,
                     "title": "port",
                     "type": "integer"
                   }
@@ -1118,7 +1146,7 @@
     },
     "secrets": {
       "additionalProperties": false,
-      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply OAuth/database/cache credentials here, e.g.\n  AUDITFLOW_OAUTH_CLIENT_SECRET, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
+      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply database/cache credentials here, e.g.\n  SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD and SPRING_DATA_REDIS_PASSWORD.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
       "properties": {
         "data": {
           "additionalProperties": true,
