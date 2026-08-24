@@ -126,8 +126,10 @@ jobs:
         run: python3 scripts/update-chart-images.py --event-file event.json
 
       - name: Generate values schema
+        # Helm 4 verifies plugins by default, but Git sources cannot provide provenance.
+        # The plugin's signed release archive can replace this exception in a security follow-up.
         run: |
-          helm plugin install https://github.com/dadav/helm-schema
+          helm plugin install https://github.com/dadav/helm-schema --verify=false
           helm schema --chart-search-root ./charts --no-dependencies --append-newline
 
       - name: Generate docs
