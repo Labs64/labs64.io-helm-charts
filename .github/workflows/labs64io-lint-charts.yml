@@ -29,7 +29,9 @@ jobs:
           helm repo add traefik https://traefik.github.io/charts
 
       - name: Install helm-schema plugin
-        run: helm plugin install https://github.com/dadav/helm-schema
+        # Helm 4 verifies plugins by default, but Git sources cannot provide provenance.
+        # The plugin's signed release archive can replace this exception in a security follow-up.
+        run: helm plugin install https://github.com/dadav/helm-schema --verify=false
 
       - name: Enforce chart version bump
         # chart-releaser skips re-publishing a chart whose Chart.yaml version already has a
