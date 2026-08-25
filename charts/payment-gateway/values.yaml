@@ -234,8 +234,8 @@ applicationYaml:
     auditflow:
       # -- Publish payment lifecycle events through AuditFlow
       enabled: false
-      # -- Direct AuditFlow service URL; standalone installs must override it when using a different release name
-      url: "http://labs64io-auditflow:8080"
+      # -- Direct AuditFlow Kubernetes Service URL; override it when using a different release name, namespace, or cluster domain
+      url: "http://labs64io-auditflow.labs64io.svc.cluster.local:8080"
       # -- Stable producer identity written into every audit event
       source-system: labs64.io-payment-gateway
       internal-call:

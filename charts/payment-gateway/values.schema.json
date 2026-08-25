@@ -66,8 +66,8 @@
                   "type": "string"
                 },
                 "url": {
-                  "default": "http://labs64io-auditflow:8080",
-                  "description": "Direct AuditFlow service URL; standalone installs must override it when using a different release name",
+                  "default": "http://labs64io-auditflow.labs64io.svc.cluster.local:8080",
+                  "description": "Direct AuditFlow Kubernetes Service URL; override it when using a different release name, namespace, or cluster domain",
                   "title": "url",
                   "type": "string"
                 }

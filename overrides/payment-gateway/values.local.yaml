@@ -18,7 +18,7 @@ applicationYaml:
   labs64:
     auditflow:
       enabled: true
-      url: http://labs64io-auditflow:8080
+      url: http://labs64io-auditflow.labs64io.svc.cluster.local:8080
 
 # Authorization PEP -> central Cerbos PDP
 env:
