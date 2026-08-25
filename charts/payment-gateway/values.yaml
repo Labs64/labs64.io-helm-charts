@@ -170,8 +170,8 @@ env: []
 envFrom: []
 
 # -- Secret data to be used as environment variables (delivered via envFrom).
-# External installs supply OAuth/database/cache credentials here, e.g.
-#   AUDITFLOW_OAUTH_CLIENT_SECRET, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD, SPRING_DATA_REDIS_PASSWORD.
+# External installs supply database/cache credentials here, e.g.
+#   SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD and SPRING_DATA_REDIS_PASSWORD.
 # Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).
 # Note: the Secret is hook-managed (pre-install) and survives helm uninstall.
 # @schema
@@ -234,18 +234,14 @@ applicationYaml:
     auditflow:
       # -- Publish payment lifecycle events through AuditFlow
       enabled: false
-      # -- AuditFlow API base URL derived from global.gateway.internalHost; standalone installs may supply AUDITFLOW_URL instead
-      url: "{{ if and .Values.global .Values.global.gateway .Values.global.gateway.internalHost }}http://{{ .Values.global.gateway.internalHost }}/auditflow/api/v1{{ else }}${AUDITFLOW_URL}{{ end }}"
+      # -- Direct AuditFlow Kubernetes Service URL; override it when using a different release name, namespace, or cluster domain
+      url: "http://labs64io-auditflow.labs64io.svc.cluster.local:8080"
       # -- Stable producer identity written into every audit event
       source-system: labs64.io-payment-gateway
-      oauth2:
-        # -- OAuth2 token endpoint used for the client_credentials grant
-        token-uri: "http://keycloak.tools.svc.cluster.local/realms/labs64io/protocol/openid-connect/token"
-        # -- OAuth2 service-principal client ID
-        client-id: payment-gateway
-        # The value is resolved from the Pod environment populated by secrets.data.
-        client-secret: "${AUDITFLOW_OAUTH_CLIENT_SECRET}"
-        # -- Scopes requested for AuditFlow publishing
+      internal-call:
+        # -- Service name encoded as the canonical internal service principal
+        service-name: payment-gateway
+        # -- Scopes sent on direct AuditFlow calls
         scopes:
           - audit-event:write
 
@@ -331,13 +327,16 @@ networkPolicy:
       port: 5432
     - name: redis
       port: 6379
-    # The API call must traverse ForwardAuth; direct AuditFlow service egress is not granted.
-    - name: traefik
-      port: 8000
-    - name: keycloak
-      port: 8080
   # -- Egress rules enforcing database-per-service isolation.
   egress:
+    # Direct AuditFlow API call in the application namespace.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: auditflow
+      ports:
+        - protocol: TCP
+          port: 8080
     # Cerbos PDP: @Authorize decisions over gRPC.
     - to:
         - podSelector:

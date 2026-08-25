@@ -2,12 +2,6 @@
 # Bundled deps stay off; point applicationYaml at your infrastructure and
 # deliver credentials via secrets.data (preferably sourced through
 # External Secrets Operator or your secret-management tooling).
-global:
-  domain: example.com
-  gateway:
-    # Internal platform gateway hostname for service-to-service calls.
-    internalHost: gateway.infra.example.com
-
 gateway:
   enabled: true
 
@@ -28,13 +22,10 @@ applicationYaml:
   labs64:
     auditflow:
       enabled: true
-      oauth2:
-        token-uri: https://identity.infra.example.com/oauth2/token
-        client-id: payment-gateway
+      url: http://labs64io-auditflow.labs64io.svc.cluster.local:8080
 
 secrets:
   data:
-    AUDITFLOW_OAUTH_CLIENT_SECRET: <your-oauth-client-secret>
     SPRING_DATASOURCE_USERNAME: <your-db-username>
     SPRING_DATASOURCE_PASSWORD: <your-db-password>
     SPRING_DATA_REDIS_PASSWORD: <your-redis-password>
