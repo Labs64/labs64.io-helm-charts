@@ -94,6 +94,8 @@ fi
 C_BOLD='\033[1m'
 C_GREEN='\033[32m'
 C_YELLOW='\033[33m'
+C_BLUE='\033[34m'
+C_MAGENTA='\033[35m'
 C_RED='\033[31m'
 C_CYAN='\033[36m'
 C_RESET='\033[0m'
@@ -199,19 +201,25 @@ check_prereqs() {
 
   # Which cluster this lands in is the one thing never to guess at.
   local ctx; ctx=$(kubectl config current-context)
-  log ""
-  log "  Cluster context: $ctx"
+  printf '\n  Cluster context: %s\n' "$ctx" >> "$LOGFILE"
+  printf '  Namespaces:      %s — modules, bundled infra (PostgreSQL/RabbitMQ/Redis), and\n' "$NS_MODULES" >> "$LOGFILE"
+  printf '                   the gateway workload itself (%s-traefik, and the ForwardAuth\n' "$RELEASE" >> "$LOGFILE"
+  printf '                   proxy "gateway-common") all run here\n' >> "$LOGFILE"
+  printf '                   %s — holds only the Gateway API Gateway object; no pods\n' "$NS_GATEWAY" >> "$LOGFILE"
+  printf '                   are ever created here\n' >> "$LOGFILE"
+
+  printf "\n  Cluster context: %b%s%b\n" "${C_BOLD}${C_CYAN}" "$ctx" "${C_RESET}"
   # Everything (modules, bundled infra, Traefik itself, the ForwardAuth proxy) is one Helm
   # release installed with --namespace NS_MODULES. NS_GATEWAY holds exactly one object: the
   # Gateway API `Gateway` resource, which the traefik subchart pins there via an explicit
   # metadata.namespace override so it can, in principle, be shared across app namespaces —
   # it is never where the gateway *workload* runs, unlike the Helmfile-based local dev path
   # (helmfile.yaml.gotmpl), which installs Traefik as its own release inside NS_GATEWAY.
-  log "  Namespaces:      $NS_MODULES — modules, bundled infra (PostgreSQL/RabbitMQ/Redis), and"
-  log "                    the gateway workload itself ($RELEASE-traefik, and the ForwardAuth"
-  log "                    proxy \"gateway-common\") all run here"
-  log "                    $NS_GATEWAY — holds only the Gateway API's Gateway object; no pods"
-  log "                    are ever created here"
+  printf "  Namespaces:      %b%s%b — modules, bundled infra (PostgreSQL/RabbitMQ/Redis), and\n" "${C_BOLD}${C_CYAN}" "$NS_MODULES" "${C_RESET}"
+  printf "                   the gateway workload itself (%s-traefik, and the ForwardAuth\n" "$RELEASE"
+  printf "                   proxy \"gateway-common\") all run here\n"
+  printf "                   %b%s%b — holds only the Gateway API's Gateway object; no pods\n" "${C_BOLD}${C_CYAN}" "$NS_GATEWAY" "${C_RESET}"
+  printf "                   are ever created here\n"
   confirm "  Install into this cluster?" y \
     || die "Aborted. Switch with: kubectl config use-context <name>"
 
@@ -953,53 +961,42 @@ print_notes() {
     port_forward=1
   fi
 
-  cat <<EOF
+  printf "\n%b────────────────────────────────────────────────────────────────%b\n" "${C_BOLD}${C_GREEN}" "${C_RESET}"
+  printf " %bLabs64.IO is ready.%b\n\n" "${C_BOLD}" "${C_RESET}"
+  printf "   Base URL:  %b%s%b\n" "${C_CYAN}" "$addr" "${C_RESET}"
 
-────────────────────────────────────────────────────────────────
- Labs64.IO is ready.
-
-   Base URL:  $addr
-EOF
   if [ "$ENABLE_API_DOCS" = "true" ]; then
-    cat <<EOF
-   API docs:  $addr/swagger-ui
-EOF
+    printf "   API docs:  %b%s/swagger-ui%b\n" "${C_CYAN}" "$addr" "${C_RESET}"
   fi
-  [ -n "$port_forward" ] && cat <<EOF
 
-   This cluster has no LoadBalancer — the checks above ran against a guess.
-   Run the port-forward first, then re-check against http://localhost:8000:
-     $(port_forward_cmd)
-EOF
+  if [ -n "$port_forward" ]; then
+    printf "\n   %bThis cluster has no LoadBalancer — the checks above ran against a guess.%b\n" "${C_YELLOW}" "${C_RESET}"
+    printf "   Run the port-forward first, then re-check against http://localhost:8000:\n"
+    printf "     %b%s%b\n" "${C_BOLD}${C_CYAN}" "$(port_forward_cmd)" "${C_RESET}"
+  fi
 
-  cat <<EOF
-
- Enabled modules:
-EOF
-  [ "$ENABLE_API_GATEWAY" = "true" ]     && printf '   - api-gateway\n'
-  [ "$ENABLE_AUTHZ_PDP" = "true" ]       && printf '   - authz-pdp\n'
-  [ "$ENABLE_API_DOCS" = "true" ]        && printf '   - api-docs\n'
-  [ "$ENABLE_AUDITFLOW" = "true" ]       && printf '   - auditflow\n'
-  [ "$ENABLE_PAYMENT_GATEWAY" = "true" ] && printf '   - payment-gateway\n'
-  [ "$ENABLE_CHECKOUT" = "true" ]        && printf '   - checkout\n'
-  [ "$ENABLE_CUSTOMER_PORTAL" = "true" ] && printf '   - customer-portal\n'
+  printf "\n %bEnabled modules:%b\n" "${C_BOLD}" "${C_RESET}"
+  [ "$ENABLE_API_GATEWAY" = "true" ]     && printf "   %b- api-gateway%b\n" "${C_GREEN}" "${C_RESET}"
+  [ "$ENABLE_AUTHZ_PDP" = "true" ]       && printf "   %b- authz-pdp%b\n" "${C_GREEN}" "${C_RESET}"
+  [ "$ENABLE_API_DOCS" = "true" ]        && printf "   %b- api-docs%b\n" "${C_GREEN}" "${C_RESET}"
+  [ "$ENABLE_AUDITFLOW" = "true" ]       && printf "   %b- auditflow%b\n" "${C_GREEN}" "${C_RESET}"
+  [ "$ENABLE_PAYMENT_GATEWAY" = "true" ] && printf "   %b- payment-gateway%b\n" "${C_GREEN}" "${C_RESET}"
+  [ "$ENABLE_CHECKOUT" = "true" ]        && printf "   %b- checkout%b\n" "${C_GREEN}" "${C_RESET}"
+  [ "$ENABLE_CUSTOMER_PORTAL" = "true" ] && printf "   %b- customer-portal%b\n" "${C_GREEN}" "${C_RESET}"
 
   # Not called here: do_verify (this function's only caller) already ran
   # do_smoke immediately before this, which prints this same section once —
   # calling it again here would just duplicate it.
 
-  cat <<EOF
-
- Next steps
-   bash install.sh smoke       re-run the checks above any time
-   bash install.sh status      what is installed, and is it healthy
-   bash install.sh stop        scale everything to zero (keeps data)
-   bash install.sh start       restore previous replica counts
-   bash install.sh uninstall   remove what this wizard created
-
-   Generated config: $WORKDIR/
-────────────────────────────────────────────────────────────────
-EOF
+  printf "\n %bNext steps:%b\n" "${C_BOLD}" "${C_RESET}"
+  printf "   %bbash install.sh smoke%b       re-run the checks above any time\n" "${C_CYAN}" "${C_RESET}"
+  printf "   %bbash install.sh status%b      what is installed, and is it healthy\n" "${C_CYAN}" "${C_RESET}"
+  printf "   %bbash install.sh stop%b        scale everything to zero (keeps data)\n" "${C_CYAN}" "${C_RESET}"
+  printf "   %bbash install.sh start%b       restore previous replica counts\n" "${C_CYAN}" "${C_RESET}"
+  printf "   %bbash install.sh uninstall%b   remove what this wizard created\n\n" "${C_CYAN}" "${C_RESET}"
+  
+  printf "   Generated config: %b%s/%b\n" "${C_YELLOW}" "$WORKDIR" "${C_RESET}"
+  printf "%b────────────────────────────────────────────────────────────────%b\n" "${C_BOLD}${C_GREEN}" "${C_RESET}"
 }
 
 # --- smoke test -----------------------------------------------------------------
@@ -1145,13 +1142,28 @@ do_status() {
   local rc=0
   state_exists || { log "Not installed (no $STATE_CM in $NS_MODULES)."; return 1; }
 
-  log ""
-  log "Installed by wizard v$(state_get wizardVersion) on $(state_get created)"
-  log "  profile: $(state_get profile)"
-  log "  demoMode: $(state_get demoMode)"
-  log "  stopped: $(state_get stopped no)"
+  local wizard_ver; wizard_ver=$(state_get wizardVersion)
+  local created_on; created_on=$(state_get created)
+  local state_prof; state_prof=$(state_get profile)
+  local state_demo; state_demo=$(state_get demoMode)
+  local state_stop; state_stop=$(state_get stopped no)
+  
+  printf "\nInstalled by wizard v%s on %s\n" "$wizard_ver" "$created_on" >> "$LOGFILE"
+  printf "  profile: %s\n" "$state_prof" >> "$LOGFILE"
+  printf "  demoMode: %s\n" "$state_demo" >> "$LOGFILE"
+  printf "  stopped: %s\n" "$state_stop" >> "$LOGFILE"
+
+  printf "\n%bInstallation Info:%b\n" "${C_BOLD}" "${C_RESET}"
+  printf "  %-15s %s\n" "Wizard Version:" "$wizard_ver"
+  printf "  %-15s %s\n" "Created On:" "$created_on"
+  printf "  %-15s %s\n" "Profile:" "$state_prof"
+  printf "  %-15s %s\n" "Demo Mode:" "$state_demo"
+  printf "  %-15s %s\n" "Stopped:" "$state_stop"
   local resolved; resolved=$(state_get resolvedVersion)
-  [ -n "$resolved" ] && log "  chart version: $resolved"
+  if [ -n "$resolved" ]; then
+    printf "  chart version: %s\n" "$resolved" >> "$LOGFILE"
+    printf "  %-15s %s\n" "Chart Version:" "$resolved"
+  fi
 
   log ""
   log "Releases:"
@@ -1385,17 +1397,21 @@ do_uninstall() {
 # --- menu ---------------------------------------------------------------------
 
 main_menu() {
-  local installed choice
+  local installed choice status_color
   while :; do
     installed="not installed"
-    state_exists && installed="installed in $NS_MODULES"
+    status_color="${C_YELLOW}"
+    if state_exists; then
+      installed="installed in $NS_MODULES"
+      status_color="${C_GREEN}"
+    fi
     open_tty
+    
+    printf "\n%bLabs64.IO Ecosystem installer%b (v%s)\n" "${C_BOLD}" "${C_RESET}" "$WIZARD_VERSION" > "$PROMPT_OUT"
+    printf "Cluster: %b%s%b\n" "${C_CYAN}" "$(kubectl config current-context)" "${C_RESET}" > "$PROMPT_OUT"
+    printf "Status:  %b%s%b\n\n" "${status_color}" "$installed" "${C_RESET}" > "$PROMPT_OUT"
+    
     cat > "$PROMPT_OUT" <<EOF
-
-Labs64.IO Ecosystem installer (v$WIZARD_VERSION)
-Cluster: $(kubectl config current-context)
-Status:  $installed
-
   1) Install or update  — run the wizard to install or upgrade
   2) Status             — what is installed, and is it healthy
   3) Start              — restore previous replica counts
