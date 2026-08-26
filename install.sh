@@ -23,30 +23,38 @@ STATE_CM="labs64io-installer-state"
 WORKDIR="${LABS64_WORKDIR:-./labs64io-install}"
 LOGFILE="$WORKDIR/install.log"
 GATEWAY_API_VERSION="${LABS64_GATEWAY_API_VERSION:-v1.6.0}"
-# Chart to install. Defaults to the published one; point it at a local directory
-# to exercise chart changes that are not published yet ("./charts/labs64io-ecosystem").
-CHART="${LABS64_CHART:-$REPO_ALIAS/labs64io-ecosystem}"
+# Chart to install. Defaults to the local directory if it exists, otherwise the published one.
+# Point it at a local directory to exercise chart changes that are not published yet ("./charts/labs64io-ecosystem").
+if [ -d "./charts/labs64io-ecosystem" ] && [ -z "${LABS64_CHART:-}" ]; then
+  CHART="./charts/labs64io-ecosystem"
+else
+  CHART="${LABS64_CHART:-$REPO_ALIAS/labs64io-ecosystem}"
+fi
 STOP_ANNOTATION="labs64io.install/original-replicas"
 
 usage() {
   cat <<'USAGE'
 Labs64.IO Ecosystem installer
 
-  install.sh [install|status|stop|start|uninstall] [--dry-run] [--version] [--help]
+  install.sh [install|status|stop|start|uninstall|smoke] [--dry-run] [--version] [--help]
 
 With no arguments it opens a menu. Name an action to run just that one, which is
 what scripts and CI should do — feeding menu numbers on stdin is fragile because
 the first prompt is the cluster confirmation.
 
   install.sh status     # exits non-zero when anything is unhealthy
+  install.sh smoke      # re-runs the quickstart request flow for real (install already runs
+                         # it once automatically); exits non-zero on failure
   LABS64_YES=1 install.sh stop
 
 Set LABS64_PROFILE=quickstart|custom to install without any prompts.
 
 Environment:
   LABS64_PROFILE              quickstart | custom — skips the menu and every prompt
-  LABS64_NAMESPACE            namespace for modules and bundled infra (default: labs64io)
-  LABS64_GATEWAY_NAMESPACE    namespace for Traefik and the Gateway (default: tools)
+  LABS64_NAMESPACE            namespace for modules, bundled infra, and the gateway workload
+                              itself (Traefik, the ForwardAuth proxy) (default: labs64io)
+  LABS64_GATEWAY_NAMESPACE    namespace for the Gateway API `Gateway` object only — no pods
+                              ever run here (default: tools)
   LABS64_RELEASE              Helm release name (default: labs64io)
   LABS64_WORKDIR              where generated values/logs go (default: ./labs64io-install)
   LABS64_OIDC_DISCOVERY_URL   issuer discovery URL (required by the custom profile)
@@ -68,7 +76,7 @@ for arg in "$@"; do
     -h|--help) usage; exit 0 ;;
     # Naming the action beats feeding menu numbers on stdin: the first prompt is
     # the cluster confirmation, which would silently swallow the menu number.
-    install|status|stop|start|uninstall) COMMAND="$arg" ;;
+    install|status|stop|start|uninstall|smoke) COMMAND="$arg" ;;
     *) printf 'Unrecognised argument: %s\n\n' "$arg" >&2; usage >&2; exit 2 ;;
   esac
 done
@@ -82,13 +90,21 @@ fi
 
 # --- output -------------------------------------------------------------------
 
+# Colors
+C_BOLD='\033[1m'
+C_GREEN='\033[32m'
+C_YELLOW='\033[33m'
+C_RED='\033[31m'
+C_CYAN='\033[36m'
+C_RESET='\033[0m'
+
 mkdir -p "$WORKDIR"
 : > "$LOGFILE"
 
-log()  { printf '%s\n' "$*" | tee -a "$LOGFILE"; }
-info() { printf '  %s\n' "$*" | tee -a "$LOGFILE"; }
-warn() { printf 'WARNING: %s\n' "$*" | tee -a "$LOGFILE" >&2; }
-die()  { printf 'ERROR: %s\n' "$*" | tee -a "$LOGFILE" >&2; exit 1; }
+log()  { printf '%s\n' "$*" >> "$LOGFILE"; printf '%b%s%b\n' "${C_BOLD}" "$*" "${C_RESET}"; }
+info() { printf '  %s\n' "$*" >> "$LOGFILE"; printf '  %b%s%b\n' "${C_GREEN}" "$*" "${C_RESET}"; }
+warn() { printf 'WARNING: %s\n' "$*" >> "$LOGFILE"; printf '%bWARNING: %s%b\n' "${C_YELLOW}" "$*" "${C_RESET}" >&2; }
+die()  { printf 'ERROR: %s\n' "$*" >> "$LOGFILE"; printf '%bERROR: %s%b\n' "${C_RED}" "$*" "${C_RESET}" >&2; exit 1; }
 
 on_err() {
   local rc=$?
@@ -137,8 +153,8 @@ prompt() {
     return 0
   fi
   open_tty
-  if [ -n "$__p_def" ]; then printf '%s [%s]: ' "$__p_q" "$__p_def" > "$PROMPT_OUT"
-  else printf '%s: ' "$__p_q" > "$PROMPT_OUT"; fi
+  if [ -n "$__p_def" ]; then printf '%b%s%b [%s]: ' "${C_CYAN}" "$__p_q" "${C_RESET}" "$__p_def" > "$PROMPT_OUT"
+  else printf '%b%s%b: ' "${C_CYAN}" "$__p_q" "${C_RESET}" > "$PROMPT_OUT"; fi
   IFS= read -r __p_ans <&"$TTY_FD" || __p_ans=""
   eval "$__p_var=\"\${__p_ans:-\$__p_def}\""
 }
@@ -185,7 +201,17 @@ check_prereqs() {
   local ctx; ctx=$(kubectl config current-context)
   log ""
   log "  Cluster context: $ctx"
-  log "  Namespaces:      $NS_MODULES (modules + bundled infra), $NS_GATEWAY (gateway)"
+  # Everything (modules, bundled infra, Traefik itself, the ForwardAuth proxy) is one Helm
+  # release installed with --namespace NS_MODULES. NS_GATEWAY holds exactly one object: the
+  # Gateway API `Gateway` resource, which the traefik subchart pins there via an explicit
+  # metadata.namespace override so it can, in principle, be shared across app namespaces —
+  # it is never where the gateway *workload* runs, unlike the Helmfile-based local dev path
+  # (helmfile.yaml.gotmpl), which installs Traefik as its own release inside NS_GATEWAY.
+  log "  Namespaces:      $NS_MODULES — modules, bundled infra (PostgreSQL/RabbitMQ/Redis), and"
+  log "                    the gateway workload itself ($RELEASE-traefik, and the ForwardAuth"
+  log "                    proxy \"gateway-common\") all run here"
+  log "                    $NS_GATEWAY — holds only the Gateway API's Gateway object; no pods"
+  log "                    are ever created here"
   confirm "  Install into this cluster?" y \
     || die "Aborted. Switch with: kubectl config use-context <name>"
 
@@ -375,6 +401,22 @@ write_values() {
   if [ "$DEMO_MODE" = "true" ]; then
     # tenantId / enabled / quota / pipelines are the only fields TenantConfig
     # accepts; anything else makes the app skip the ConfigMap as malformed.
+    #
+    # log-level: DEBUG is the sink's own debug mode (logging_sink.py reads this
+    # property and sets its logger to it directly, independent of the container's
+    # root log level) — it dumps the full transformed event JSON to `kubectl logs`
+    # on the auditflow-sink container, not just the one-line "Processing event ..."
+    # summary every pipeline already logs at INFO.
+    #
+    # transformer.name: zero is required to see ANY transformer-side output at
+    # all: AuditService (auditflow-be) skips the transform HTTP call entirely
+    # for "a pipeline with no transformer" and passes the event straight to the
+    # sink — with no transformer stage configured, the transformer container
+    # never receives a request, so there is nothing in its logs to turn debug
+    # on for. `zero` (pass-through, ships in every image) is enough to route the
+    # event through it and get its existing per-event INFO line; transformer
+    # modules take no properties/config at all (see AGENTS.md), so there is no
+    # further "debug" level to set on that side.
     AUDITFLOW_DEMO_TENANT='  tenants:
     additional:
       - tenantId: t_mock
@@ -382,11 +424,37 @@ write_values() {
         pipelines:
           - name: demo-logging
             enabled: true
+            transformer:
+              name: zero
             sink:
               name: logging_sink
               properties:
-                log-level: INFO'
+                log-level: DEBUG'
   fi
+
+  # Swagger UI's TopBar needs an explicit list of OpenAPI definitions — it has no
+  # way to discover enabled modules on its own, and ships with `urls: []` by
+  # default ("Could not render TopBar... No API definition provided."). Relative
+  # paths (not `http://gateway.<domain>/...`) so this keeps working no matter which
+  # address the browser used to reach the gateway (LoadBalancer IP, localhost,
+  # port-forward) — the browser resolves them against the current page itself.
+  API_DOCS_URLS=""
+  if [ "$ENABLE_AUDITFLOW" = "true" ]; then
+    API_DOCS_URLS="$API_DOCS_URLS
+    - url: /auditflow/v3/api-docs
+      name: AuditFlow API"
+  fi
+  if [ "$ENABLE_CHECKOUT" = "true" ]; then
+    API_DOCS_URLS="$API_DOCS_URLS
+    - url: /checkout/v3/api-docs
+      name: Checkout API"
+  fi
+  if [ "$ENABLE_PAYMENT_GATEWAY" = "true" ]; then
+    API_DOCS_URLS="$API_DOCS_URLS
+    - url: /payment-gateway/v3/api-docs
+      name: Payment Gateway API"
+  fi
+  [ -n "$API_DOCS_URLS" ] || API_DOCS_URLS=" []"
 
   cat > "$WORKDIR/values-overrides.yaml" <<EOF
 # Generated by install.sh v$WIZARD_VERSION on $(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -395,17 +463,39 @@ write_values() {
 demoMode: $DEMO_MODE
 
 api-gateway:
-  enabled: true
+  enabled: $ENABLE_API_GATEWAY
   oidc:
     discoveryUrl: "$OIDC_DISCOVERY_URL"
 authz-pdp:
-  enabled: true
+  enabled: $ENABLE_AUTHZ_PDP
 api-docs:
-  enabled: true
+  enabled: $ENABLE_API_DOCS
+  # The api-docs chart pinned by the currently published labs64io-ecosystem
+  # chart ships \`gateway.routes: []\` by default (the working two-route example
+  # is commented out) — with no route at all, the Gateway API CRD's own default
+  # ("no rules" -> one catch-all PathPrefix "/" rule with zero backendRefs")
+  # kicks in, so /swagger-ui 503s "no available server" instead of ever reaching
+  # the pod. Set both routes explicitly rather than depend on the chart default.
+  gateway:
+    routes:
+      # service is required explicitly: the currently published api-docs chart's
+      # httproute.yaml reads \$route.service.name/.port directly with no nil-safe
+      # default, so a route without one fails the render ("nil pointer evaluating
+      # interface {}.name") instead of falling back to this chart's own service.
+      - path: /swagger-ui
+        service:
+          name: $RELEASE-api-docs
+          port: 8080
+        stripPrefix: true
+      - path: /
+        pathType: Exact
+        redirectTo: /swagger-ui/
+  swaggerUI:
+    urls:$API_DOCS_URLS
 # gateway.enabled defaults to false on these two, which would leave the install
 # with no route to their APIs at all.
 auditflow:
-  enabled: true
+  enabled: $ENABLE_AUDITFLOW
   # The @Authorize SDK defaults to a Cerbos sidecar on localhost:3593. There is no
   # sidecar here — the PDP is central — so without this every domain decision fails
   # "Connection refused" and is enforced as a deny: authenticated, allowed at the
@@ -417,7 +507,7 @@ auditflow:
     enabled: true
 ${AUDITFLOW_DEMO_TENANT}
 payment-gateway:
-  enabled: true
+  enabled: $ENABLE_PAYMENT_GATEWAY
   # The @Authorize SDK defaults to a Cerbos sidecar on localhost:3593. There is no
   # sidecar here — the PDP is central — so without this every domain decision fails
   # "Connection refused" and is enforced as a deny: authenticated, allowed at the
@@ -429,14 +519,16 @@ payment-gateway:
     enabled: true
 # Not GA — their images have never been published.
 checkout:
-  enabled: false
+  enabled: $ENABLE_CHECKOUT
 customer-portal:
-  enabled: false
+  enabled: $ENABLE_CUSTOMER_PORTAL
 
 postgresql:
   enabled: $POSTGRES_ENABLED
 rabbitmq:
   enabled: $RABBITMQ_ENABLED
+  service:
+    trafficDistribution: PreferSameZone
 redis:
   enabled: $REDIS_ENABLED
 
@@ -492,6 +584,90 @@ $bad
   die "See $LOGFILE for the full transcript."
 }
 
+# --- progress -------------------------------------------------------------------
+#
+# Shared by the install/start progress watcher and `status`, so they can never
+# drift into counting readiness two different ways and disagreeing.
+
+# Prints "<ready> <total>" for pods in NS_MODULES (Terminating excluded).
+# STATUS=Running alone isn't enough — a pod can sit at "0/1 Running" while its
+# container is still starting or crash-looping — so ready compares the READY
+# column's own "n/n"; Completed (Job) pods have no ready ratio and count on
+# STATUS alone. `|| printf '0 0'` guards against a transient kubectl failure
+# (e.g. an API server hiccup) tripping `set -e` in a bare `x=$(pod_readiness)`.
+pod_readiness() {
+  kubectl -n "$NS_MODULES" get pods --no-headers 2>/dev/null | awk '
+    $3 == "Terminating" { next }
+    { total++; split($2, r, "/") }
+    $3 == "Completed" || (r[1] == r[2] && $3 == "Running") { ready++ }
+    END { print (ready + 0), (total + 0) }' || printf '0 0'
+}
+
+# Backgrounds a loop that prints "... N/M pods ready" (or "... waiting for pods
+# to be created") every 10s, only when it changes. Sets $! to the watcher's PID
+# same as backgrounding any other job — read it immediately after calling.
+# `kill -0 $$` uses the caller's PID (bash does not update $$ in a subshell),
+# so the watcher exits on its own if the parent script dies without an explicit
+# stop_pod_watcher — a safety net against an orphaned background loop.
+start_pod_watcher() {
+  (
+    trap 'exit 0' TERM
+    local last_msg="" ready total msg
+    while sleep 10; do
+      kill -0 $$ 2>/dev/null || exit 0
+      read -r ready total <<< "$(pod_readiness)"
+      if [ "$total" -gt 0 ]; then msg="... $ready/$total pods ready"
+      else msg="... waiting for pods to be created"
+      fi
+      if [ "$msg" != "$last_msg" ]; then
+        info "$msg"
+        last_msg="$msg"
+      fi
+    done
+  ) &
+}
+
+stop_pod_watcher() {
+  [ -n "${1:-}" ] && kill "$1" 2>/dev/null || true
+}
+
+# Sum of .spec.replicas across every Deployment/StatefulSet — the target
+# `wait_for_pods_ready` waits for, computed fresh so it reflects whatever was
+# just scaled to.
+desired_replica_total() {
+  kubectl -n "$NS_MODULES" get deploy,statefulset \
+    -o jsonpath='{range .items[*]}{.spec.replicas}{"\n"}{end}' 2>/dev/null \
+    | awk '{s += $1} END { print s + 0 }'
+}
+
+# Blocks, printing "... N/M pods ready" (M fixed at the desired replica total,
+# taken once up front) until enough pods are ready or TIMEOUT_SECS elapses.
+# Unlike `helm upgrade --wait` (which do_install's watcher runs alongside),
+# `kubectl scale` returns as soon as the Deployment/StatefulSet spec is
+# updated — before the controller has even created the new Pod objects — so
+# do_start has nothing else already blocking to give pods time to come up,
+# and pod_readiness()'s own *current* pod count cannot be trusted as the
+# denominator: checked too early, it would only see whatever pods already
+# existed (e.g. leftover Completed Jobs) and could look "fully ready" on the
+# very first pass, before any of the just-scaled workloads even started.
+wait_for_pods_ready() {
+  local timeout_secs=${1:-300} elapsed=0 last_msg="" ready total desired msg
+  desired=$(desired_replica_total)
+  while [ "$elapsed" -lt "$timeout_secs" ]; do
+    read -r ready total <<< "$(pod_readiness)"
+    msg="... $ready/$desired pods ready"
+    if [ "$msg" != "$last_msg" ]; then
+      info "$msg"
+      last_msg="$msg"
+    fi
+    if [ "$desired" -gt 0 ] && [ "$ready" -ge "$desired" ]; then return 0; fi
+    sleep 10
+    elapsed=$((elapsed + 10))
+  done
+  warn "Not all pods were ready within ${timeout_secs}s — check with: install.sh status"
+  return 1
+}
+
 # --- install ------------------------------------------------------------------
 
 do_install() {
@@ -516,6 +692,9 @@ EOF
 
   if [ "$profile" = quickstart ]; then
     DEMO_MODE=true; TRAEFIK_ENABLED=true; MOCK_OIDC_ENABLED=true
+    ENABLE_API_GATEWAY=true; ENABLE_AUTHZ_PDP=true; ENABLE_API_DOCS=true
+    ENABLE_AUDITFLOW=true; ENABLE_PAYMENT_GATEWAY=true
+    ENABLE_CHECKOUT=false; ENABLE_CUSTOMER_PORTAL=false
     OIDC_DISCOVERY_URL="http://mock-oidc.${NS_MODULES}.svc.cluster.local:8080/labs64io/.well-known/openid-configuration"
   else
     DEMO_MODE=false; MOCK_OIDC_ENABLED=false
@@ -524,6 +703,15 @@ EOF
       || die "An OIDC discovery URL is required outside demo mode.
   Set LABS64_OIDC_DISCOVERY_URL, or choose the quickstart profile."
     if confirm "Install Traefik and a Gateway?" y; then TRAEFIK_ENABLED=true; else TRAEFIK_ENABLED=false; fi
+    log ""
+    log "Select modules to install:"
+    if confirm "  Enable API Gateway (api-gateway module)?" y; then ENABLE_API_GATEWAY=true; else ENABLE_API_GATEWAY=false; fi
+    if confirm "  Enable Authz PDP (authz-pdp module)?" y; then ENABLE_AUTHZ_PDP=true; else ENABLE_AUTHZ_PDP=false; fi
+    if confirm "  Enable API Docs (api-docs module)?" y; then ENABLE_API_DOCS=true; else ENABLE_API_DOCS=false; fi
+    if confirm "  Enable AuditFlow (auditflow module)?" y; then ENABLE_AUDITFLOW=true; else ENABLE_AUDITFLOW=false; fi
+    if confirm "  Enable Payment Gateway (payment-gateway module)?" y; then ENABLE_PAYMENT_GATEWAY=true; else ENABLE_PAYMENT_GATEWAY=false; fi
+    if confirm "  Enable Checkout (checkout module)?" n; then ENABLE_CHECKOUT=true; else ENABLE_CHECKOUT=false; fi
+    if confirm "  Enable Customer Portal (customer-portal module)?" n; then ENABLE_CUSTOMER_PORTAL=true; else ENABLE_CUSTOMER_PORTAL=false; fi
   fi
 
   detect_infra POSTGRES labs64io-postgresql
@@ -593,10 +781,21 @@ EOF
   # it actually resolved so Status can report drift and Uninstall knows what it
   # installed.
   log "Installing (this takes a few minutes on first run)..."
-  helm upgrade --install "$RELEASE" "$CHART" \
+  
+  local watcher_pid=""
+  if [ -z "$DRY_RUN" ]; then
+    start_pod_watcher
+    watcher_pid=$!
+  fi
+
+  if ! helm upgrade --install "$RELEASE" "$CHART" \
     --namespace "$NS_MODULES" --create-namespace \
     -f "$WORKDIR/values-overrides.yaml" -f "$WORKDIR/secrets.yaml" \
-    ${DRY_RUN:+$DRY_RUN} --wait --timeout 15m 2>&1 | tee -a "$LOGFILE" || install_failed
+    ${DRY_RUN:+$DRY_RUN} --wait --timeout 15m 2>&1 | tee -a "$LOGFILE"; then
+    stop_pod_watcher "$watcher_pid"
+    install_failed
+  fi
+  [ -n "$watcher_pid" ] && kill "$watcher_pid" 2>/dev/null || true
 
   if [ -n "$DRY_RUN" ]; then
     log ""
@@ -638,6 +837,23 @@ gateway_address() {
   port=$(kubectl -n "$ns" get svc "$name" \
         -o jsonpath='{.spec.ports[?(@.name=="web")].port}' 2>/dev/null || true)
   [ -n "$port" ] || port=8000
+
+  # k3d's built-in servicelb reports the serverlb container's address on the Docker
+  # bridge network (e.g. 172.18.0.2) as status.loadBalancer.ingress[0].ip. That address
+  # is real from inside Docker's network namespace, but unreachable from the host on
+  # Docker Desktop (macOS/Windows), where that namespace lives inside a VM — so it is
+  # useless as a "browse to this URL" answer even though kubectl reports it as ready.
+  # k3d also always publishes that same service port straight through to localhost
+  # (k3d/labs64io.yaml maps 80:80/443:443), so prefer localhost whenever it actually
+  # answers, and only fall back to the reported address if it doesn't.
+  case "$(kubectl config current-context 2>/dev/null)" in
+    k3d-*)
+      if curl -s -o /dev/null -m 2 "http://localhost:$port" 2>/dev/null; then
+        printf 'http://localhost:%s' "$port"; return 0
+      fi
+      ;;
+  esac
+
   if   [ -n "$ip" ];   then printf 'http://%s:%s' "$ip" "$port"
   elif [ -n "$host" ]; then printf 'http://%s:%s' "$host" "$port"
   else printf ''; fi
@@ -655,6 +871,27 @@ port_forward_cmd() {
   printf 'kubectl -n %s port-forward svc/%s 8000:%s' "$ns" "$name" "$port"
 }
 
+# True if a Deployment carrying the chart's standard app.kubernetes.io/name
+# label exists. Used to work out which modules are actually installed —
+# read live from the cluster rather than install.sh's own state, so it works
+# the same whether this run installed them or a previous run did.
+module_present() {
+  kubectl -n "$NS_MODULES" get deploy -l "app.kubernetes.io/name=$1" --no-headers 2>/dev/null \
+    | grep -q .
+}
+
+# The one public route every profile is guaranteed to have *something* behind:
+# prefer Swagger UI (most universally reachable page), then a real module API,
+# then the api-gateway's own /health. Shared by do_verify and do_status so
+# they can never drift into checking two different things and disagreeing.
+pick_health_route() {
+  if   module_present api-docs;   then printf '/swagger-ui'
+  elif module_present auditflow;  then printf '/auditflow/v3/api-docs'
+  elif module_present api-gateway; then printf '/health'
+  else printf '/'
+  fi
+}
+
 do_verify() {
   log ""
   log "Verifying..."
@@ -665,43 +902,29 @@ do_verify() {
     warn "helm test failed — see $LOGFILE. Pods may still be starting; re-check with: install.sh status"
   fi
 
-  local addr port_forward=""
-  addr=$(gateway_address)
-  if [ -z "$addr" ]; then
-    warn "The Gateway has no external address (this cluster has no LoadBalancer).
-  Reach it with a port-forward instead:
-    $(port_forward_cmd)
-  then use http://localhost:8000 as the base URL below."
-    addr="http://localhost:8000"
-    port_forward=1
-  elif curl -fsS -m 10 "$addr/auditflow/v3/api-docs" >/dev/null 2>&1; then
-    info "Public route reachable at $addr"
-  else
-    warn "The Gateway is at $addr but is not answering yet — routes may need a moment."
-  fi
+  # The real functional check: run the exact quickstart request flow (gateway,
+  # Swagger UI, a demo token, a real published event) instead of one ad-hoc
+  # curl. Never let a smoke failure abort a freshly-succeeded `helm install` —
+  # it is surfaced above via FAIL lines, not by killing this command.
+  do_smoke || true
 
-  print_notes "$addr" "$port_forward"
+  print_notes
 }
 
-print_notes() {
-  local addr=$1 port_forward=${2:-}
+# Copy-pasteable demo commands for the given base URL. Called once, from the
+# end of do_smoke — which runs both right after install (do_verify) and
+# standalone (`install.sh smoke`) — so it shows up either way without
+# printing twice. Reads module_present/state_get rather than do_install's
+# ENABLE_* globals, since do_smoke must work in its own invocation with none
+# of those set.
+print_try_it_yourself() {
+  local addr=$1
+  [ "$(state_get demoMode)" = "true" ] || return 0
+
   cat <<EOF
 
-────────────────────────────────────────────────────────────────
- Labs64.IO is ready.
-
-   Base URL:  $addr
-   API docs:  $addr/swagger-ui
-EOF
-  [ -n "$port_forward" ] && cat <<EOF
-
-   First run the port-forward (this cluster has no LoadBalancer):
-     $(port_forward_cmd)
-EOF
-  if [ "$(state_get demoMode)" = "true" ]; then
-    cat <<EOF
-
-   Get a demo token (DEV ONLY — mock-oidc authenticates nobody):
+ Try it yourself (DEV ONLY — mock-oidc authenticates nobody):
+   Get a demo token:
      TOKEN=\$(curl -s -X POST $addr/labs64io/token \\
        -H 'Content-Type: application/x-www-form-urlencoded' \\
        --data-urlencode 'grant_type=client_credentials' \\
@@ -709,6 +932,9 @@ EOF
        --data-urlencode 'client_secret=local-test' \\
        --data-urlencode 'scope=admin' \\
        | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+EOF
+  if module_present auditflow; then
+    cat <<EOF
 
    Publish an audit event (eventType and sourceSystem are both required):
      curl -i -X POST $addr/auditflow/api/v1/audit/publish \\
@@ -717,12 +943,197 @@ EOF
        -d '{"eventType":"demo.hello","sourceSystem":"quickstart"}'
 EOF
   fi
+}
+
+print_notes() {
+  local addr port_forward=""
+  addr=$(gateway_address)
+  if [ -z "$addr" ]; then
+    addr="http://localhost:8000"
+    port_forward=1
+  fi
+
   cat <<EOF
 
-   Manage this install:  bash install.sh status | stop | start | uninstall
-   Generated config:     $WORKDIR/
+────────────────────────────────────────────────────────────────
+ Labs64.IO is ready.
+
+   Base URL:  $addr
+EOF
+  if [ "$ENABLE_API_DOCS" = "true" ]; then
+    cat <<EOF
+   API docs:  $addr/swagger-ui
+EOF
+  fi
+  [ -n "$port_forward" ] && cat <<EOF
+
+   This cluster has no LoadBalancer — the checks above ran against a guess.
+   Run the port-forward first, then re-check against http://localhost:8000:
+     $(port_forward_cmd)
+EOF
+
+  cat <<EOF
+
+ Enabled modules:
+EOF
+  [ "$ENABLE_API_GATEWAY" = "true" ]     && printf '   - api-gateway\n'
+  [ "$ENABLE_AUTHZ_PDP" = "true" ]       && printf '   - authz-pdp\n'
+  [ "$ENABLE_API_DOCS" = "true" ]        && printf '   - api-docs\n'
+  [ "$ENABLE_AUDITFLOW" = "true" ]       && printf '   - auditflow\n'
+  [ "$ENABLE_PAYMENT_GATEWAY" = "true" ] && printf '   - payment-gateway\n'
+  [ "$ENABLE_CHECKOUT" = "true" ]        && printf '   - checkout\n'
+  [ "$ENABLE_CUSTOMER_PORTAL" = "true" ] && printf '   - customer-portal\n'
+
+  # Not called here: do_verify (this function's only caller) already ran
+  # do_smoke immediately before this, which prints this same section once —
+  # calling it again here would just duplicate it.
+
+  cat <<EOF
+
+ Next steps
+   bash install.sh smoke       re-run the checks above any time
+   bash install.sh status      what is installed, and is it healthy
+   bash install.sh stop        scale everything to zero (keeps data)
+   bash install.sh start       restore previous replica counts
+   bash install.sh uninstall   remove what this wizard created
+
+   Generated config: $WORKDIR/
 ────────────────────────────────────────────────────────────────
 EOF
+}
+
+# --- smoke test -----------------------------------------------------------------
+#
+# print_notes() below only *prints* the quickstart recipe (get a token, publish an
+# event) for the user to paste in by hand. do_smoke() runs that exact recipe for
+# real against a live install and reports pass/fail per step, so "it's ready" is a
+# verified fact instead of a printed suggestion. do_verify() runs it automatically
+# at the end of every install; it is also its own command (`install.sh smoke`) for
+# re-checking later, so it must not assume it is running right after an install —
+# no dependence on do_install's ENABLE_* variables, only on what is actually live
+# in the cluster right now (module_present, state_get demoMode).
+#
+# Exits non-zero if anything fails, so `install.sh smoke` is usable as a scripted
+# post-install / CI check, same as `install.sh status`.
+
+do_smoke() {
+  state_exists || die "Nothing installed in $NS_MODULES. Run: install.sh install"
+
+  log ""
+  log "Smoke test — running the quickstart request flow for real..."
+  log ""
+
+  local pass=0 fail=0
+
+  step_pass() { pass=$((pass + 1)); info "PASS  $*"; }
+  step_fail() { fail=$((fail + 1)); warn "FAIL  $*"; }
+  step_skip() { info "SKIP  $*"; }
+
+  local addr port_forward=""
+  addr=$(gateway_address)
+  if [ -z "$addr" ]; then
+    warn "No external Gateway address (this cluster has no LoadBalancer).
+  Reach it with a port-forward instead:
+    $(port_forward_cmd)
+  then re-run against http://localhost:8000."
+    addr="http://localhost:8000"
+    port_forward=1
+  fi
+
+  # 1. Gateway itself answers. Every other check talks through this same
+  #    address, so a failure here means they would all fail identically —
+  #    stop after one clear message instead of a wall of confusing FAILs.
+  if curl -fsS -m 5 -o /dev/null "$addr/" 2>>"$LOGFILE"; then
+    step_pass "Gateway reachable at $addr"
+  else
+    step_fail "Gateway not reachable at $addr"
+    log ""
+    log "Smoke test: $pass passed, $fail failed, rest skipped (nothing downstream of the"
+    log "gateway can be reached either) — see $LOGFILE for details."
+    [ "$port_forward" = "1" ] && warn "Ran against a port-forward guess ($addr) — start one first: $(port_forward_cmd)"
+    return 1
+  fi
+
+  # 2. Swagger UI, and the TopBar actually has API definitions configured — the
+  #    exact regression this smoke test exists to catch (an empty `urls: []`
+  #    renders a UI with no error but "No API definition provided").
+  if module_present api-docs; then
+    if curl -fsS -m 5 -o /dev/null "$addr/swagger-ui/" 2>>"$LOGFILE"; then
+      step_pass "Swagger UI reachable at $addr/swagger-ui/"
+    else
+      step_fail "Swagger UI unreachable at $addr/swagger-ui/"
+    fi
+    # Matches the per-entry "url: ..." line, not the "urls:" key itself (no
+    # trailing colon right after "url") or "validatorUrl:" (capital U) — plain
+    # substring match on purpose: \s isn't portable BRE (BSD/macOS grep).
+    # `|| true` guards both curl (connection failure) and grep (zero matches,
+    # its own definition of "not found") from tripping `set -e`.
+    local urls_count
+    urls_count=$(curl -fsS -m 5 "$addr/swagger-ui/swagger-config.yaml" 2>>"$LOGFILE" \
+                   | grep -c 'url:' || true)
+    if [ "${urls_count:-0}" -gt 0 ]; then
+      step_pass "Swagger UI TopBar has $urls_count API definition(s) configured"
+    else
+      step_fail "Swagger UI TopBar has no API definitions (swagger-config.yaml urls: [])"
+    fi
+  else
+    step_skip "api-docs not installed — no Swagger UI to check"
+  fi
+
+  # 3. The actual first-good-request flow: get a demo token, then use it.
+  if [ "$(state_get demoMode)" != "true" ]; then
+    step_skip "demoMode is off (custom profile / your own OIDC issuer) — no demo token to fetch"
+  else
+    # `|| true` on both curl calls below is load-bearing: without it, a refused
+    # connection or a non-2xx (curl -f) exits nonzero, and this bare assignment
+    # would trip `set -e` and kill the whole script instead of recording a FAIL.
+    local token_resp token
+    token_resp=$(curl -fsS -m 5 -X POST "$addr/labs64io/token" \
+      -H 'Content-Type: application/x-www-form-urlencoded' \
+      --data-urlencode 'grant_type=client_credentials' \
+      --data-urlencode 'client_id=local-test' \
+      --data-urlencode 'client_secret=local-test' \
+      --data-urlencode 'scope=admin' 2>>"$LOGFILE") || token_resp=""
+    printf 'token response: %s\n' "$token_resp" >>"$LOGFILE"
+    token=$(printf '%s' "$token_resp" \
+              | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+
+    if [ -n "$token" ]; then
+      step_pass "Obtained a demo access token from mock-oidc"
+    else
+      step_fail "Could not obtain a demo access token from mock-oidc ($addr/labs64io/token)"
+    fi
+
+    if [ -z "$token" ]; then
+      step_skip "Publish an audit event — no token to authenticate with"
+    elif ! module_present auditflow; then
+      step_skip "auditflow not installed — no demo API call to make"
+    else
+      local publish_resp publish_code
+      publish_resp=$(mktemp)
+      publish_code=$(curl -s -o "$publish_resp" -w '%{http_code}' -m 5 \
+        -X POST "$addr/auditflow/api/v1/audit/publish" \
+        -H "Authorization: Bearer $token" \
+        -H 'Content-Type: application/json' \
+        -d '{"eventType":"smoke.test","sourceSystem":"install.sh"}' 2>>"$LOGFILE") || publish_code="000"
+      printf 'publish response (HTTP %s): %s\n' "$publish_code" "$(cat "$publish_resp")" >>"$LOGFILE"
+      rm -f "$publish_resp"
+      case "$publish_code" in
+        2??) step_pass "Published a demo audit event (HTTP $publish_code) — first good request succeeded" ;;
+        *)   step_fail "Audit event publish failed (HTTP $publish_code) — see $LOGFILE" ;;
+      esac
+    fi
+  fi
+
+  log ""
+  if [ "$fail" -eq 0 ]; then
+    log "Smoke test: $pass passed, 0 failed — the quickstart flow works end to end."
+  else
+    log "Smoke test: $pass passed, $fail failed — see $LOGFILE for full request/response detail."
+  fi
+  [ "$port_forward" = "1" ] && warn "Ran against a port-forward guess ($addr) — start one first if checks above failed to connect."
+  print_try_it_yourself "$addr"
+  [ "$fail" -eq 0 ]
 }
 
 # --- status -------------------------------------------------------------------
@@ -736,7 +1147,9 @@ do_status() {
 
   log ""
   log "Installed by wizard v$(state_get wizardVersion) on $(state_get created)"
-  log "  profile: $(state_get profile)   demoMode: $(state_get demoMode)   stopped: $(state_get stopped no)"
+  log "  profile: $(state_get profile)"
+  log "  demoMode: $(state_get demoMode)"
+  log "  stopped: $(state_get stopped no)"
   local resolved; resolved=$(state_get resolvedVersion)
   [ -n "$resolved" ] && log "  chart version: $resolved"
 
@@ -762,13 +1175,13 @@ do_status() {
 
   log ""
   log "Workloads:"
-  local notready
   kubectl -n "$NS_MODULES" get deploy,statefulset \
     -o custom-columns='NAME:.metadata.name,READY:.status.readyReplicas,WANT:.spec.replicas' \
     --no-headers 2>/dev/null | while read -r line; do info "$line"; done
-  notready=$(kubectl -n "$NS_MODULES" get pods --no-headers 2>/dev/null \
-             | grep -vcE 'Running|Completed' || true)
-  if [ "${notready:-0}" -gt 0 ] 2>/dev/null; then
+  local ready total notready
+  read -r ready total <<< "$(pod_readiness)"
+  notready=$((total - ready))
+  if [ "$notready" -gt 0 ]; then
     warn "$notready pod(s) not Running"; rc=1
   fi
 
@@ -776,8 +1189,11 @@ do_status() {
   local addr; addr=$(gateway_address)
   if [ -n "$addr" ]; then
     info "Gateway: $addr"
-    if curl -fsS -m 10 "$addr/auditflow/v3/api-docs" >/dev/null 2>&1; then
+    local health_route; health_route=$(pick_health_route)
+    if curl -fsS -m 5 "$addr$health_route" >/dev/null 2>&1; then
       info "Public route: OK"
+    elif kubectl run --rm -i curl-pod --image=curlimages/curl --restart=Never -- curl -fsS -m 5 "$addr$health_route" >/dev/null 2>&1; then
+      info "Public route: OK (verified from within cluster)"
     else
       warn "Public route: unreachable"; rc=1
     fi
@@ -856,6 +1272,13 @@ do_start() {
 $(workload_list ".metadata.annotations['labs64io\\.install/original-replicas']")
 EOF
   state_set stopped "no"
+
+  # `kubectl scale` returns as soon as the request is accepted, not once pods
+  # are actually ready — unlike do_install's `helm upgrade --wait`, nothing
+  # here already blocks, so show the same "... N/M pods ready" progress while
+  # actively waiting for it, instead of leaving the user to guess.
+  log "Waiting for pods to become ready..."
+  wait_for_pods_ready || true
   log "Started. Check readiness with: install.sh status"
 }
 # --- uninstall ----------------------------------------------------------------
@@ -970,22 +1393,25 @@ main_menu() {
     cat > "$PROMPT_OUT" <<EOF
 
 Labs64.IO Ecosystem installer (v$WIZARD_VERSION)
-Cluster: $(kubectl config current-context)   Status: $installed
+Cluster: $(kubectl config current-context)
+Status:  $installed
 
-  1) Install or update
-  2) Status        — what is installed, and is it healthy
-  3) Stop          — scale everything to zero (keeps data)
-  4) Start         — restore previous replica counts
-  5) Uninstall     — remove what this wizard created
+  1) Install or update  — run the wizard to install or upgrade
+  2) Status             — what is installed, and is it healthy
+  3) Start              — restore previous replica counts
+  4) Stop               — scale everything to zero (keeps data)
+  5) Uninstall          — remove what this wizard created
+  6) Smoke tests        — run the quickstart request flow for real and verify it works
   q) Quit
 EOF
     prompt choice "Choose" "1"
     case "$choice" in
-      1) do_install; return ;;
+      1) do_install ;;
       2) do_status || true ;;
-      3) do_stop ;;
-      4) do_start ;;
+      3) do_start ;;
+      4) do_stop ;;
       5) do_uninstall; return ;;
+      6) do_smoke || true ;;
       q|Q) exit 0 ;;
       *) warn "Unrecognised choice: $choice" ;;
     esac
@@ -1000,6 +1426,7 @@ main() {
     stop)      do_stop ;;
     start)     do_start ;;
     uninstall) do_uninstall ;;
+    smoke)     do_smoke ;;
     *)
       if [ -n "${LABS64_PROFILE:-}" ]; then do_install; else main_menu; fi
       ;;

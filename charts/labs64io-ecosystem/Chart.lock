@@ -16,7 +16,7 @@ dependencies:
   version: 0.12.1
 - name: api-docs
   repository: file://../api-docs
-  version: 0.7.1
+  version: 0.7.2
 - name: customer-portal
   repository: file://../customer-portal
   version: 0.8.0
@@ -35,5 +35,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.0
-digest: sha256:54f3eaf1cb91e69c377f2d8ae959dd9f213280d195bcd4d50017729d3657e468
-generated: "2026-08-22T20:55:16.084589615Z"
+digest: sha256:9c1b680db7025370c74823a5108e96823920ce0165faa6428876e81dffb6ef5e
+generated: "2026-08-26T05:52:46.288843+02:00"
