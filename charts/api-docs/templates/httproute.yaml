@@ -41,8 +41,8 @@ spec:
         {{- end }}
       {{- if not $route.redirectTo }}
       backendRefs:
-        - name: {{ $route.service.name }}
-          port: {{ $route.service.port }}
+        - name: {{ if $route.service }}{{ $route.service.name | default (include "chart-libs.fullname" $) }}{{ else }}{{ include "chart-libs.fullname" $ }}{{ end }}
+          port: {{ if $route.service }}{{ $route.service.port | default $.Values.service.port }}{{ else }}{{ $.Values.service.port }}{{ end }}
       {{- end }}
     {{- end }}
 {{- end }}

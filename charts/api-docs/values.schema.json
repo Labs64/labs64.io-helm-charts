@@ -160,7 +160,9 @@
         "routes": {
           "description": "Routes. Each: path, optional pathType (default PathPrefix), service{name,port};\nstripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path.",
           "items": {
-            "required": []
+            "additionalProperties": true,
+            "required": [],
+            "type": "object"
           },
           "title": "routes",
           "type": "array"

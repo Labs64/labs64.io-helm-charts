@@ -100,14 +100,16 @@ gateway:
   # stripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path.
   # @schema
   # type: array
+  # items:
+  #   type: object
+  #   additionalProperties: true
   # @schema
-  routes: []
-  #  - path: /swagger-ui
-  #    service: { name: labs64io-api-docs, port: 8080 }
-  #    stripPrefix: true
-  #  - path: /
-  #    pathType: Exact
-  #    redirectTo: /swagger-ui/
+  routes:
+    - path: /swagger-ui
+      stripPrefix: true
+    - path: /
+      pathType: Exact
+      redirectTo: /swagger-ui/
 
 resources:
   limits:
