@@ -966,7 +966,7 @@ print_notes() {
   printf "   Base URL:  %b%s%b\n" "${C_CYAN}" "$addr" "${C_RESET}"
 
   if [ "$ENABLE_API_DOCS" = "true" ]; then
-    printf "   API docs:  %b%s/swagger-ui%b\n" "${C_CYAN}" "$addr" "${C_RESET}"
+    printf "   API docs:  %b%s/swagger-ui/%b\n" "${C_CYAN}" "$addr" "${C_RESET}"
   fi
 
   if [ -n "$port_forward" ]; then
