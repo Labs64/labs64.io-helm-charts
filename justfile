@@ -99,7 +99,7 @@ uninstall-all-apps:
     done
 
 # Install a specific Labs64.IO application
-install-app app:
+install-app app extra_values="":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "=== Installing Labs64.IO App: {{app}} ==="
@@ -115,6 +115,15 @@ install-app app:
       echo "Using secrets override: overrides/{{app}}/values.secrets.{{ENV}}.yaml"
       ARGS+=("-f" "./overrides/{{app}}/values.secrets.{{ENV}}.yaml")
     fi
+    extra_values="{{extra_values}}"
+    if [ -n "$extra_values" ]; then
+      if [ ! -f "$extra_values" ]; then
+        echo "Additional values file not found: $extra_values" >&2
+        exit 1
+      fi
+      echo "Using additional override: $extra_values"
+      ARGS+=("-f" "$extra_values")
+    fi
     # Observability follows the monitoring stack declaratively: if the OTel
     # collector is running and this app is instrumented, enable it on every
     # (re)install so a reinstall can never silently drop telemetry.
@@ -124,6 +133,29 @@ install-app app:
       ARGS+=("--set" "observability.enabled=true")
     fi
     helm upgrade --install labs64io-{{app}} ./charts/{{app}} "${ARGS[@]}" --force-conflicts
+
+# Point only the existing local Payment Gateway deployment at the host-side PSP stub.
+# The extra values file deep-merges provider-owned Spring configuration and rolls the PG pod.
+payment-gateway-psp-stub-enable host_cidr stub_url:
+    helm upgrade labs64io-payment-gateway ./charts/payment-gateway \
+      --namespace {{NAMESPACE_LABS64IO}} \
+      --reuse-values \
+      -f ./overrides/payment-gateway/values.psp-stub.local.yaml \
+      --set-string 'applicationYaml.payment-provider.stripe.api-base-url={{stub_url}}' \
+      --set-string 'applicationYaml.payment-provider.paypal.api-base-url={{stub_url}}' \
+      --set-string 'networkPolicy.extraEgress[0].to[0].ipBlock.cidr={{host_cidr}}' \
+      --set-string 'networkPolicy.extraEgress[0].ports[0].protocol=TCP' \
+      --set 'networkPolicy.extraEgress[0].ports[0].port=8090' \
+      --force-conflicts
+    # Rollout health is the setup gate. The selected PSP Robot scenarios then prove that both
+    # SDK clients actually use this endpoint by making black-box calls that WireMock verifies;
+    # startup-log text is diagnostic output, not a stable configuration contract.
+    kubectl rollout status deployment/labs64io-payment-gateway --namespace {{NAMESPACE_LABS64IO}} --timeout=180s
+
+# Restore the ordinary local Payment Gateway values (official PSP endpoints).
+payment-gateway-psp-stub-disable:
+    just install-app payment-gateway
+    kubectl rollout status deployment/labs64io-payment-gateway --namespace {{NAMESPACE_LABS64IO}} --timeout=180s
 
 
 # Uninstall a specific Labs64.IO application
