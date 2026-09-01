@@ -837,6 +837,14 @@
           "title": "enabled",
           "type": "boolean"
         },
+        "extraEgress": {
+          "description": "Additional raw egress rules",
+          "items": {
+            "required": []
+          },
+          "title": "extraEgress",
+          "type": "array"
+        },
         "extraIngress": {
           "description": "Additional raw ingress rules",
           "items": {
@@ -920,6 +928,7 @@
         "gatewayNamespace",
         "observabilityNamespace",
         "extraIngress",
+        "extraEgress",
         "toolsEgress",
         "egress"
       ],
