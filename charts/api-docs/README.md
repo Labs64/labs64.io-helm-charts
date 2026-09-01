@@ -38,7 +38,7 @@ Labs64.IO :: Swagger UI
 | gateway | object | `{"enabled":true,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"routes":[{"path":"/swagger-ui","stripPrefix":true},{"path":"/","pathType":"Exact","redirectTo":"/swagger-ui/"}]}` | Gateway API HTTPRoute for swagger-ui (public docs aggregator; module API routes are owned by the module charts). No auth — faithful to prior behavior. |
 | gateway.enabled | bool | `true` | Enable the swagger-ui HTTPRoute |
 | gateway.parentRefs | list | `[{"name":"labs64io-gateway","namespace":"tools"}]` | Gateway(s) this HTTPRoute attaches to |
-| gateway.routes | list | `[{"path":"/swagger-ui","stripPrefix":true},{"path":"/","pathType":"Exact","redirectTo":"/swagger-ui/"}]` | Routes. Each: path, optional pathType (default PathPrefix), service{name,port}; stripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path. @schema type: array @schema |
+| gateway.routes | list | `[{"path":"/swagger-ui","stripPrefix":true},{"path":"/","pathType":"Exact","redirectTo":"/swagger-ui/"}]` | Routes. Each: path, optional pathType (default PathPrefix), service{name,port}; stripPrefix strips the matched prefix; redirectTo issues a 302 to a fixed path. @schema type: array items:   type: object   additionalProperties: true @schema |
 | global | object | `{"domain":"localhost"}` | Global values shared across Labs64.IO charts @schema type: object additionalProperties: true @schema |
 | global.domain | string | `"localhost"` | Base domain; swagger-ui is exposed as gateway.<domain> |
 | image | object | `{"digest":"","pullPolicy":"IfNotPresent","repository":"swaggerapi/swagger-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
