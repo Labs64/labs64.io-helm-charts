@@ -206,7 +206,11 @@ migrationJob:
 # additionalProperties: true
 # @schema
 
-# -- Additional application properties
+# -- Additional application properties, including top-level prefixes owned by provider JARs
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 applicationYaml:
   # -- Payment Gateway application properties bound under the Spring prefix `payment-gateway`
   payment-gateway:

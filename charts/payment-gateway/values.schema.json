@@ -14,8 +14,8 @@
       "type": "string"
     },
     "applicationYaml": {
-      "additionalProperties": false,
-      "description": "Additional application properties",
+      "additionalProperties": true,
+      "description": "Additional application properties, including top-level prefixes owned by provider JARs",
       "properties": {
         "labs64": {
           "additionalProperties": false,
@@ -1485,7 +1485,6 @@
     "env",
     "envFrom",
     "migrationJob",
-    "applicationYaml",
     "gateway",
     "podDisruptionBudget",
     "networkPolicy",
