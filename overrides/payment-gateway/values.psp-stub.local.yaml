@@ -1,0 +1,9 @@
+# Applied only by `just payment-gateway-psp-stub-enable`.
+# The orchestration recipe overrides this default with an endpoint it has probed from the
+# current k3d node. Absence of this profile leaves both providers on their official API endpoints.
+applicationYaml:
+  payment-provider:
+    stripe:
+      api-base-url: http://host.k3d.internal:8090
+    paypal:
+      api-base-url: http://host.k3d.internal:8090

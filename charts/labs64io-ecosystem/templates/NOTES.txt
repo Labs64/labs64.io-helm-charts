@@ -42,9 +42,8 @@ Gateway: provisioned by the bundled Traefik subchart as "{{ .Values.traefik.gate
   kubectl get svc -n {{ .Release.Namespace }} -l app.kubernetes.io/name=traefik
 {{- else }}
 This chart did NOT install Traefik or a Gateway API `Gateway` resource. Any module
-installed with `gateway.enabled: true` needs a Gateway named "{{ .Values.global.gateway.name | default "labs64io-gateway" }}" in
-namespace "{{ .Values.global.gateway.namespace | default "tools" }}" to actually receive traffic — until one exists its HTTPRoute renders
-fine but sits at `Accepted: False`. Set `traefik.enabled=true`, or see the "Gateway API
+installed with `gateway.enabled: true` needs a Gateway named "{{ get (.Values.global.gateway | default dict) "name" | default "labs64io-gateway" }}" in
+namespace "{{ get (.Values.global.gateway | default dict) "namespace" | default "tools" }}" to actually receive traffic — until one exists its HTTPRoute rendersfine but sits at `Accepted: False`. Set `traefik.enabled=true`, or see the "Gateway API
 setup" section of the chart repo's README.
 {{- end }}
 {{- if index .Values "mock-oidc" "enabled" }}

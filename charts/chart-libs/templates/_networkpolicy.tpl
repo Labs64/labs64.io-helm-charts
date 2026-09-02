@@ -4,7 +4,8 @@ pods. Egress is restricted to DNS, the monitoring namespace (OTLP, when
 observability is enabled), specific tools-namespace destinations declared via
 .Values.networkPolicy.toolsEgress (name + port pairs — NOT a blanket allow to the
 whole tools namespace, to preserve database-per-service isolation), and any
-additional destinations listed in .Values.networkPolicy.egress.
+base destinations listed in .Values.networkPolicy.egress plus chart/environment-specific
+rules in .Values.networkPolicy.extraEgress.
 Usage: {{ include "chart-libs.networkpolicy" . }}
 */}}
 {{- define "chart-libs.networkpolicy" -}}
@@ -84,6 +85,10 @@ spec:
     {{- end }}
     {{- if .Values.networkPolicy.egress }}
     {{- toYaml .Values.networkPolicy.egress | nindent 4 }}
+    {{- end }}
+    {{- with .Values.networkPolicy.extraEgress }}
+    # Additional chart-specific egress rules
+    {{- toYaml . | nindent 4 }}
     {{- end }}
 {{- end }}
 {{- end }}
