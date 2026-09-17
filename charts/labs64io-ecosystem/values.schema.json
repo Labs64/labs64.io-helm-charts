@@ -187,7 +187,8 @@
           "additionalProperties": false,
           "properties": {
             "host": {
-              "default": "labs64io-redis-master",
+              "default": "labs64io-redis-primary",
+              "description": "Bitnami's Valkey chart names its standalone service \"\u003cfullname\u003e-primary\" (the\nolder Redis chart used \"-master\" — verified against the packaged chart's own\ntemplates/primary/service.yaml before switching; changing this string without\nre-checking that would silently break every module's cache connection).",
               "title": "host",
               "type": "string"
             },
@@ -507,7 +508,7 @@
       "properties": {
         "architecture": {
           "default": "standalone",
-          "description": "TODO: pin this image — see the note under `postgresql` above. Same situation:\ndocker.io/bitnami/redis carries only `latest` and bitnamilegacy/redis stops at\n8.2.1 while this subchart (27.0.13) targets appVersion 8.8.0. Lower stakes than\nPostgreSQL (no on-disk major-version barrier), but still mutable.",
+          "description": "This is bitnami/valkey (Chart.yaml aliases it \"redis\" — see the dependency comment\nthere), matching the engine AWS ElastiCache runs (labs64.io-devops pins Valkey 9.1).\nTODO: pin this image — see the note under `postgresql` above. Same situation:\ndocker.io/bitnami/valkey carries only `latest` (currently Valkey 9.1.x). Lower\nstakes than PostgreSQL (no on-disk major-version barrier), but still mutable.",
           "title": "architecture",
           "type": "string"
         },
@@ -539,7 +540,7 @@
         },
         "fullnameOverride": {
           "default": "labs64io-redis",
-          "description": "Pinned so `global.redis.host` above can be a plain string (standalone architecture:\nthe primary/master service is named \"\u003cfullnameOverride\u003e-master\")",
+          "description": "Pinned so `global.redis.host` above can be a plain string (standalone architecture:\nthe primary service is named \"\u003cfullnameOverride\u003e-primary\")",
           "title": "fullnameOverride",
           "type": "string"
         }

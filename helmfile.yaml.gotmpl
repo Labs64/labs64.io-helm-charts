@@ -91,10 +91,14 @@ releases:
     labels:
       layer: infra
 
+  # bitnami/valkey, not bitnami/redis — AWS ElastiCache (labs64.io-devops) runs Valkey, and
+  # keeping local dev on the same engine avoids drift from a different (if protocol-compatible)
+  # project. Release name stays "redis" (overrides/redis/values.local.yaml pins
+  # fullnameOverride: "redis" so the resulting Service name doesn't change).
   - name: redis
     namespace: tools
-    chart: bitnami/redis
-    version: 27.0.13
+    chart: bitnami/valkey
+    version: 6.3.0
     values:
       - overrides/redis/values.{{ .Environment.Name }}.yaml
     labels:

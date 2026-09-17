@@ -1,7 +1,7 @@
 apiVersion: v2
 name: labs64io-ecosystem
 type: application
-version: 0.16.0
+version: 0.17.0
 appVersion: 0.0.1
 description: "Labs64.IO :: Umbrella Chart for entire Ecosystem"
 home: https://labs64.io
@@ -43,8 +43,14 @@ dependencies:
     version: 16.0.14
     repository: https://charts.bitnami.com/bitnami
     condition: rabbitmq.enabled
-  - name: redis
-    version: 27.0.13
+  # Valkey, aliased as "redis" so `.Values.redis`, the Secret key names
+  # (SPRING_DATA_REDIS_*) and the rendered object names (fullnameOverride below) don't
+  # change. AWS ElastiCache (labs64.io-devops) runs Valkey, not Redis OSS — this keeps
+  # local dev on the same engine instead of a different project that only shares the
+  # wire protocol. See values.yaml's `redis:` block for the version/naming notes.
+  - name: valkey
+    alias: redis
+    version: 6.3.0
     repository: https://charts.bitnami.com/bitnami
     condition: redis.enabled
   # Gateway (opt-in). Provisions the GatewayClass + the shared labs64io-gateway that

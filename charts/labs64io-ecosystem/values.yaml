@@ -93,7 +93,11 @@ global:
     port: 5672
     username: "labs64"
   redis:
-    host: "labs64io-redis-master"
+    # Bitnami's Valkey chart names its standalone service "<fullname>-primary" (the
+    # older Redis chart used "-master" — verified against the packaged chart's own
+    # templates/primary/service.yaml before switching; changing this string without
+    # re-checking that would silently break every module's cache connection).
+    host: "labs64io-redis-primary"
     port: 6379
 
 # -- Demo mode. Permits the dev-grade default passwords below and unlocks the
@@ -214,13 +218,14 @@ rabbitmq:
 # @schema
 redis:
   enabled: true
+  # This is bitnami/valkey (Chart.yaml aliases it "redis" — see the dependency comment
+  # there), matching the engine AWS ElastiCache runs (labs64.io-devops pins Valkey 9.1).
   # TODO: pin this image — see the note under `postgresql` above. Same situation:
-  # docker.io/bitnami/redis carries only `latest` and bitnamilegacy/redis stops at
-  # 8.2.1 while this subchart (27.0.13) targets appVersion 8.8.0. Lower stakes than
-  # PostgreSQL (no on-disk major-version barrier), but still mutable.
+  # docker.io/bitnami/valkey carries only `latest` (currently Valkey 9.1.x). Lower
+  # stakes than PostgreSQL (no on-disk major-version barrier), but still mutable.
   architecture: standalone
   # -- Pinned so `global.redis.host` above can be a plain string (standalone architecture:
-  # the primary/master service is named "<fullnameOverride>-master")
+  # the primary service is named "<fullnameOverride>-primary")
   fullnameOverride: "labs64io-redis"
   # @schema
   # type: object

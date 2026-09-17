@@ -17,9 +17,8 @@ global:
     host: "rabbitmq.tools.svc.cluster.local"
     port: 5672
   redis:
-    # Bitnami redis is installed with `architecture: replication` (overrides/redis/values.local.yaml),
-    # which names its services redis-master/redis-replicas/redis-headless — there is no plain
-    # "redis" service, so that hostname never resolves (DataRedisReactiveHealthIndicator DOWN,
-    # NXDOMAIN). Point at the master, which serves both reads and writes.
-    host: "redis-master.tools.svc.cluster.local"
+    # bitnami/valkey (overrides/redis/values.local.yaml, helmfile.yaml.gotmpl) names its
+    # standalone service "<fullnameOverride>-primary" — there is no plain "redis" service,
+    # so that hostname never resolves (DataRedisReactiveHealthIndicator DOWN, NXDOMAIN).
+    host: "redis-primary.tools.svc.cluster.local"
     port: 6379

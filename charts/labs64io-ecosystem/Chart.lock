@@ -26,14 +26,14 @@ dependencies:
 - name: rabbitmq
   repository: https://charts.bitnami.com/bitnami
   version: 16.0.14
-- name: redis
+- name: valkey
   repository: https://charts.bitnami.com/bitnami
-  version: 27.0.13
+  version: 6.3.0
 - name: traefik
   repository: https://traefik.github.io/charts
   version: 41.0.1
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.0
-digest: sha256:591d7a93a32ead26f1bd2bed31d0f27bcc9a9860fc21fc11878179c8561a6f25
-generated: "2026-09-16T21:31:05.459185+02:00"
+digest: sha256:12bda43f586eb971bcb4c44909c568716f400c5a4df591f8855466004b44b6dc
+generated: "2026-09-17T05:59:45.753057+02:00"

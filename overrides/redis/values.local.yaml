@@ -9,13 +9,19 @@
 # that Secret is created by the umbrella chart in the labs64io namespace, and this
 # release lives in `tools` — a Secret cannot be referenced across namespaces. The
 # shape that matters (standalone, auth enabled) is what is converged here.
+#
+# This release is bitnami/valkey (see helmfile.yaml.gotmpl) — its standalone node config
+# lives under `primary:`, not the older Redis chart's `master:` key, and its service name
+# is "<fullname>-primary" (not "-master"); fullnameOverride keeps that plain "redis" like
+# before the swap (overrides/global-values.yaml's global.redis.host depends on it).
 architecture: standalone
+fullnameOverride: "redis"
 
 auth:
   enabled: true
   password: labs64pw
 
-master:
+primary:
   persistence:
     enabled: true
     size: 1Gi

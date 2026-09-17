@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.16.0](https://img.shields.io/badge/Version-0.16.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.17.0](https://img.shields.io/badge/Version-0.17.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Umbrella Chart for entire Ecosystem
 
@@ -20,7 +20,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | file://../payment-gateway | payment-gateway | >=0.1.0 |
 | https://charts.bitnami.com/bitnami | postgresql | 18.7.11 |
 | https://charts.bitnami.com/bitnami | rabbitmq | 16.0.14 |
-| https://charts.bitnami.com/bitnami | redis | 27.0.13 |
+| https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.0 |
 | https://traefik.github.io/charts | traefik | 41.0.1 |
 
 ## Values
@@ -41,7 +41,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | global.rabbitmq.host | string | `"labs64io-rabbitmq"` |  |
 | global.rabbitmq.port | int | `5672` |  |
 | global.rabbitmq.username | string | `"labs64"` |  |
-| global.redis.host | string | `"labs64io-redis-master"` |  |
+| global.redis.host | string | `"labs64io-redis-primary"` |  |
 | global.redis.port | int | `6379` |  |
 | global.security | object | `{"allowInsecureImages":true}` | Required by the bitnamilegacy image override under `rabbitmq` below: the Bitnami charts refuse a repository they do not recognise as official unless this is set. |
 | global.sharedConfig.enabled | bool | `true` |  |
@@ -69,7 +69,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | redis.auth.existingSecret | string | `"labs64io-shared-secret"` |  |
 | redis.auth.existingSecretPasswordKey | string | `"SPRING_DATA_REDIS_PASSWORD"` |  |
 | redis.enabled | bool | `true` |  |
-| redis.fullnameOverride | string | `"labs64io-redis"` | Pinned so `global.redis.host` above can be a plain string (standalone architecture: the primary/master service is named "<fullnameOverride>-master") |
+| redis.fullnameOverride | string | `"labs64io-redis"` | Pinned so `global.redis.host` above can be a plain string (standalone architecture: the primary service is named "<fullnameOverride>-primary") |
 | secrets.data | object | `{}` | Additional key/value pairs merged into the shared Secret verbatim. Same shape as every module chart's `secrets.data`, so one caller code path covers both. Keys here win over the aliases above on collision. @schema type: object additionalProperties: true @schema |
 | secrets.postgresqlPassword | string | `"labs64_dev_password"` | Convenience aliases for the three bundled-infra passwords, injected into labs64io-shared-secret. The shipped values are dev defaults — with `demoMode: false` (the default) the chart fails to render until they change. |
 | secrets.rabbitmqPassword | string | `"labs64_dev_password"` | See `secrets.postgresqlPassword`. |

@@ -36,5 +36,6 @@ images:
   # namespace on a deprecation path. These run the same SELECT 1 / PING checks;
   # both put psql / redis-cli on PATH, which is all job.yaml relies on.
   postgresql: postgres:18-alpine
-  redis: redis:7-alpine
+  # redis-cli speaks RESP, so it works unchanged against Valkey (AWS ElastiCache, local dev).
+  redis: redis:8-alpine
   curl: curlimages/curl:8.10.1
