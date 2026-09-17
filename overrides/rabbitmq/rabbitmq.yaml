@@ -26,7 +26,9 @@ spec:
     spec:
       containers:
       - name: rabbitmq
-        image: rabbitmq:4-management
+        # Pinned to the 4.3.x track rather than the floating `4-management` tag, which would
+        # silently jump to RabbitMQ 5.x on the next pull. Matches Amazon MQ's RabbitMQ 4.3.
+        image: rabbitmq:4.3-management
         ports:
         - containerPort: 5672
           name: amqp

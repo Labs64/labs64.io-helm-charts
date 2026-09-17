@@ -3,6 +3,8 @@ enabled: true
 externalSecrets:
   enabled: false
   storeName: local-kubernetes-store
+  # -- Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname.
+  secretKey: ""
 # -- Global values shared across Labs64.IO charts and Bitnami subcharts
 # @schema
 # type: object
@@ -38,7 +40,11 @@ serviceAccount:
   create: true
   # -- Automatically mount a ServiceAccount's API credentials?
   automount: true
-  # -- Annotations to add to the service account
+  # -- Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA)
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
   annotations: {}
   # -- The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
@@ -222,12 +228,18 @@ applicationYaml:
       host: "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}"
       # -- RabbitMQ port
       port: '{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}'
+      ssl:
+        # -- Use TLS for AMQP (Amazon MQ accepts AMQPS on 5671 only)
+        enabled: false
     data:
       redis:
         # -- Redis host
         host: "{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}"
         # -- Redis port
         port: '{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}'
+        ssl:
+          # -- Use TLS for Redis (required by ElastiCache in-transit encryption)
+          enabled: false
 
 # -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
 gateway:

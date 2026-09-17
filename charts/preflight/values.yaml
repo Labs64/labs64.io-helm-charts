@@ -35,6 +35,6 @@ images:
   # -- Official images rather than bitnamilegacy/*, which is an unsupported
   # namespace on a deprecation path. These run the same SELECT 1 / PING checks;
   # both put psql / redis-cli on PATH, which is all job.yaml relies on.
-  postgresql: postgres:17-alpine
+  postgresql: postgres:18-alpine
   redis: redis:7-alpine
   curl: curlimages/curl:8.10.1

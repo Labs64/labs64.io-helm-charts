@@ -60,10 +60,12 @@ releases:
 
   - name: external-secrets
     namespace: tools
-    # Same chart and version as the classic repo, served over OCI from ghcr.io.
-    # Verified identical pull: ghcr.io/external-secrets/charts/external-secrets:0.12.1
+    # Same chart as the classic repo, served over OCI from ghcr.io.
+    # 0.16.x is the bridge release that serves both external-secrets.io/v1 (used by chart-libs
+    # and overrides/eso since chart-libs 0.7.0) and v1beta1; 0.17+ drops v1beta1. Keep in lockstep
+    # with ESO_CHART_VERSION in labs64.io-devops (the AWS path).
     chart: oci://ghcr.io/external-secrets/charts/external-secrets
-    version: 0.12.1
+    version: 0.16.2
     set:
       - name: installCRDs
         value: true

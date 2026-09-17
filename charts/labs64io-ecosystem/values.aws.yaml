@@ -1,0 +1,91 @@
+# AWS managed-services profile.
+#
+# Data stores are AWS-managed — RDS PostgreSQL and ElastiCache Valkey per module, one Amazon MQ
+# (RabbitMQ) broker — and credentials come from AWS Secrets Manager through External Secrets
+# Operator (>= 0.16, external-secrets.io/v1). All of it is provisioned by labs64.io-devops.
+#
+# This file holds only what is true for every AWS environment. Environment-specific coordinates
+# (hosts, Secrets Manager keys, IRSA role ARNs) are rendered from Terraform outputs by
+# labs64.io-devops (`just helm-values <env>`) and passed as the last values file:
+#
+#   helm upgrade --install labs64io labs64io/labs64io-ecosystem -n labs64io \
+#     -f values.aws.yaml -f <generated-values>.yaml
+#
+# Throwaway smoke test with demo identity (mock-oidc) — demo first, so this file wins:
+#
+#   ... -f values.demo.yaml -f values.aws.yaml -f <generated-values>.yaml
+
+global:
+  # Each module gets its own data-store coordinates (see the generated values). The shared
+  # ConfigMap would export SPRING_*_HOST env vars for everyone, and env vars take precedence over
+  # application.yaml, silently pointing every module at the same host.
+  sharedConfig:
+    enabled: false
+  # Credentials come from each module's ExternalSecret instead of one shared Secret.
+  sharedSecret:
+    enabled: false
+
+# Nothing renders these once the bundled infrastructure and the shared Secret are off; cleared so
+# the default-password guard does not trip outside demoMode.
+secrets:
+  postgresqlPassword: ""
+  rabbitmqPassword: ""
+  redisPassword: ""
+
+postgresql:
+  enabled: false
+rabbitmq:
+  enabled: false
+redis:
+  enabled: false
+
+traefik:
+  service:
+    # Never let the gateway Service provision a public AWS load balancer as a side effect.
+    # Expose it deliberately (AWS Load Balancer Controller + TLS) once DNS and certificates exist;
+    # until then reach it with `kubectl port-forward`. (Traefik's chart reads service.spec.type —
+    # a top-level service.type is silently ignored.)
+    spec:
+      type: ClusterIP
+
+auditflow:
+  externalSecrets:
+    enabled: true
+    storeName: aws-secretsmanager-cluster
+  applicationYaml:
+    spring:
+      rabbitmq:
+        ssl:
+          # Amazon MQ accepts AMQPS (TLS, 5671) only.
+          enabled: true
+      data:
+        redis:
+          ssl:
+            # ElastiCache in-transit encryption is mandatory.
+            enabled: true
+
+payment-gateway:
+  # The database exists before the release (RDS), so the pre-install migration Job can run.
+  migrationJob:
+    enabled: true
+  externalSecrets:
+    enabled: true
+    storeName: aws-secretsmanager-cluster
+  applicationYaml:
+    spring:
+      data:
+        redis:
+          ssl:
+            enabled: true
+
+checkout:
+  migrationJob:
+    enabled: true
+  externalSecrets:
+    enabled: true
+    storeName: aws-secretsmanager-cluster
+  applicationYaml:
+    spring:
+      rabbitmq:
+        ssl:
+          enabled: true

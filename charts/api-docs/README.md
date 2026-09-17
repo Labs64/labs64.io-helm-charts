@@ -1,6 +1,6 @@
 # api-docs
 
-![Version: 0.7.2](https://img.shields.io/badge/Version-0.7.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.33.0](https://img.shields.io/badge/AppVersion-v5.33.0-informational?style=flat-square)
+![Version: 0.8.0](https://img.shields.io/badge/Version-0.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.33.0](https://img.shields.io/badge/AppVersion-v5.33.0-informational?style=flat-square)
 
 Labs64.IO :: Swagger UI
 
@@ -20,7 +20,7 @@ Labs64.IO :: Swagger UI
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.6.0 |
+| file://../chart-libs | chart-libs | 0.7.0 |
 
 ## Values
 
@@ -33,6 +33,7 @@ Labs64.IO :: Swagger UI
 | env | list | `[{"name":"CONFIG_URL","value":"swagger-config.yaml"}]` | CONFIG_URL tells the swagger-ui image's configurator script (/docker-entrypoint.d/40-swagger-ui.sh) to fetch this path client-side (browser-side, not container-side) for its full config (dom_id/urls/validatorUrl), instead of using its built-in petstore.swagger.io demo. Deliberately relative (no leading slash): the page is only reachable behind the gateway's /swagger-ui prefix, which the HTTPRoute strips before forwarding — a root-absolute "/swagger-config.yaml" would miss that route entirely (404 at the gateway, never reaching this container). Must stay in sync with the volumeMount path above. |
 | envFrom | list | `[]` |  |
 | externalSecrets.enabled | bool | `false` |  |
+| externalSecrets.secretKey | string | `""` | Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname. |
 | externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"enabled":true,"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"routes":[{"path":"/swagger-ui","stripPrefix":true},{"path":"/","pathType":"Exact","redirectTo":"/swagger-ui/"}]}` | Gateway API HTTPRoute for swagger-ui (public docs aggregator; module API routes are owned by the module charts). No auth — faithful to prior behavior. |
@@ -81,7 +82,7 @@ Labs64.IO :: Swagger UI
 | service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | serviceAccount | object | `{"annotations":{},"automount":true,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
-| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA) @schema type: object additionalProperties: true @schema |
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |

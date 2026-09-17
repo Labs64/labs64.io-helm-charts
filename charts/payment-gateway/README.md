@@ -1,6 +1,6 @@
 # payment-gateway
 
-![Version: 0.8.0](https://img.shields.io/badge/Version-0.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
@@ -21,7 +21,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.6.0 |
+| file://../chart-libs | chart-libs | 0.7.0 |
 
 ## Values
 
@@ -29,7 +29,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | applicationType | string | `"java"` |  |
-| applicationYaml | object | `{"labs64":{"auditflow":{"enabled":false,"internal-call":{"scopes":["audit-event:write"],"service-name":"payment-gateway"},"source-system":"labs64.io-payment-gateway","url":"http://labs64io-auditflow.labs64io.svc.cluster.local:8080"}},"payment-gateway":{"idempotency":{"processing-timeout":"${IDEMPOTENCY_PROCESSING_TIMEOUT:PT5M}","redis-ttl":"${IDEMPOTENCY_REDIS_TTL:PT3H}"}},"spring":{"data":{"redis":{"host":"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}","port":"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}"}},"datasource":{"url":"jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"}}}` | Additional application properties, including top-level prefixes owned by provider JARs @schema type: object additionalProperties: true @schema |
+| applicationYaml | object | `{"labs64":{"auditflow":{"enabled":false,"internal-call":{"scopes":["audit-event:write"],"service-name":"payment-gateway"},"source-system":"labs64.io-payment-gateway","url":"http://labs64io-auditflow.labs64io.svc.cluster.local:8080"}},"payment-gateway":{"idempotency":{"processing-timeout":"${IDEMPOTENCY_PROCESSING_TIMEOUT:PT5M}","redis-ttl":"${IDEMPOTENCY_REDIS_TTL:PT3H}"}},"spring":{"data":{"redis":{"host":"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}","port":"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}","ssl":{"enabled":false}}},"datasource":{"url":"jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"}}}` | Additional application properties, including top-level prefixes owned by provider JARs @schema type: object additionalProperties: true @schema |
 | applicationYaml.labs64.auditflow.enabled | bool | `false` | Publish payment lifecycle events through AuditFlow |
 | applicationYaml.labs64.auditflow.internal-call.scopes | list | `["audit-event:write"]` | Scopes sent on direct AuditFlow calls |
 | applicationYaml.labs64.auditflow.internal-call.service-name | string | `"payment-gateway"` | Service name encoded as the canonical internal service principal |
@@ -39,9 +39,10 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | applicationYaml.payment-gateway.idempotency | object | `{"processing-timeout":"${IDEMPOTENCY_PROCESSING_TIMEOUT:PT5M}","redis-ttl":"${IDEMPOTENCY_REDIS_TTL:PT3H}"}` | Generic HTTP idempotency storage and processing recovery |
 | applicationYaml.payment-gateway.idempotency.processing-timeout | string | `"${IDEMPOTENCY_PROCESSING_TIMEOUT:PT5M}"` | Time after which another identical request may take over an abandoned PROCESSING record |
 | applicationYaml.payment-gateway.idempotency.redis-ttl | string | `"${IDEMPOTENCY_REDIS_TTL:PT3H}"` | Lifetime of completed and in-progress idempotency records in Redis |
-| applicationYaml.spring | object | `{"data":{"redis":{"host":"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}","port":"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}"}},"datasource":{"url":"jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"}}` | Spring configuration |
+| applicationYaml.spring | object | `{"data":{"redis":{"host":"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}","port":"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}","ssl":{"enabled":false}}},"datasource":{"url":"jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"}}` | Spring configuration |
 | applicationYaml.spring.data.redis.host | string | `"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.host | default \"redis.tools.svc.cluster.local\" }}{{ else }}redis.tools.svc.cluster.local{{ end }}"` | Redis host |
 | applicationYaml.spring.data.redis.port | string | `"{{ if and .Values.global .Values.global.redis }}{{ .Values.global.redis.port | default 6379 }}{{ else }}6379{{ end }}"` | Redis port |
+| applicationYaml.spring.data.redis.ssl.enabled | bool | `false` | Use TLS for Redis (required by ElastiCache in-transit encryption) |
 | applicationYaml.spring.datasource.url | string | `"jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/payment_gateway"` | JDBC URL; resolves to the bundled subchart when postgresql.enabled, else set your database URL Username/password are NOT set here — this block renders into a plain ConfigMap. Set credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD` (a Secret, injected via envFrom) instead — see `secrets.data` below. |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | chart-libs | object | `{}` | Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency) @schema type: object additionalProperties: true @schema |
@@ -49,6 +50,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | env | list | `[]` |  |
 | envFrom | list | `[]` |  |
 | externalSecrets.enabled | bool | `false` |  |
+| externalSecrets.secretKey | string | `""` | Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname. |
 | externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"annotations":{},"authPolicy":{"basePath":"","enabled":true},"enabled":false,"ingressClassName":"","parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
@@ -111,7 +113,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
 | serviceAccount | object | `{"annotations":{},"automount":true,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
-| serviceAccount.annotations | object | `{}` | Annotations to add to the service account |
+| serviceAccount.annotations | object | `{}` | Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA) @schema type: object additionalProperties: true @schema |
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |

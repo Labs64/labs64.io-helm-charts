@@ -144,11 +144,28 @@
                       "description": "Redis port",
                       "title": "port",
                       "type": "string"
+                    },
+                    "ssl": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "enabled": {
+                          "default": false,
+                          "description": "Use TLS for Redis (required by ElastiCache in-transit encryption)",
+                          "title": "enabled",
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "enabled"
+                      ],
+                      "title": "ssl",
+                      "type": "object"
                     }
                   },
                   "required": [
                     "host",
-                    "port"
+                    "port",
+                    "ssl"
                   ],
                   "title": "redis",
                   "type": "object"
@@ -261,6 +278,12 @@
           "title": "enabled",
           "type": "boolean"
         },
+        "secretKey": {
+          "default": "",
+          "description": "Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname.",
+          "title": "secretKey",
+          "type": "string"
+        },
         "storeName": {
           "default": "local-kubernetes-store",
           "title": "storeName",
@@ -269,7 +292,8 @@
       },
       "required": [
         "enabled",
-        "storeName"
+        "storeName",
+        "secretKey"
       ],
       "title": "externalSecrets",
       "type": "object"
@@ -1262,8 +1286,8 @@
       "description": "This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/",
       "properties": {
         "annotations": {
-          "additionalProperties": false,
-          "description": "Annotations to add to the service account",
+          "additionalProperties": true,
+          "description": "Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA)",
           "required": [],
           "title": "annotations",
           "type": "object"
@@ -1290,7 +1314,6 @@
       "required": [
         "create",
         "automount",
-        "annotations",
         "name"
       ],
       "title": "serviceAccount",

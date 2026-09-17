@@ -98,26 +98,25 @@ sequenceDiagram
     LocalConfig-->>K3d: Overrides inject localhost defaults & static secrets
 ```
 
-### 2. AWS QA / Staging / Prod Environment (ArgoCD + Terraform)
+### 2. AWS QA / Staging / Prod Environment (Terraform + umbrella chart)
 
-The internal QA and production environments are strictly GitOps driven. `Helmfile` is **not** used here. 
+Provisioned and installed from [`labs64.io-devops`](https://github.com/Labs64/labs64.io-devops) — `Helmfile` is **not** used here. GitOps (ArgoCD) will take over the install step later.
 
-- **Orchestration**: Managed by **ArgoCD** configured in the `labs64.io-devops` repository.
-- **Infrastructure**: Provisioned externally via **Terraform** (e.g., AWS RDS for Postgres, Amazon MQ for RabbitMQ, ElastiCache for Redis).
-- **Secrets**: `externalSecrets.enabled: true`. Helm templates generate an `ExternalSecret` custom resource instead of a plain `Secret`. The **External Secrets Operator (ESO)** resolves this against a `ClusterSecretStore` backed by AWS Secrets Manager.
+- **Infrastructure**: Terraform — EKS, RDS PostgreSQL and ElastiCache Valkey per module, Amazon MQ (RabbitMQ, AMQPS only), S3.
+- **Install**: `just modules-install <env>` in `labs64.io-devops` installs `labs64io-ecosystem` with [`values.aws.yaml`](charts/labs64io-ecosystem/values.aws.yaml) (bundled infra off, per-module hosts, TLS to the managed services, `ClusterIP` gateway) plus values rendered from Terraform outputs.
+- **Secrets**: `externalSecrets.enabled: true`; each module's `ExternalSecret` (`external-secrets.io/v1`) reads `labs64/<env>/<module>` from AWS Secrets Manager through the `aws-secretsmanager-cluster` `ClusterSecretStore`.
 
 ```mermaid
 sequenceDiagram
     participant TF as Terraform (labs64.io-devops)
-    participant AWS as AWS Infra (RDS, MQ, Secrets)
-    participant Argo as ArgoCD
-    participant QAConfig as values.qa.yaml
+    participant AWS as AWS (RDS, Valkey, MQ, Secrets Manager)
+    participant Just as just modules-install
     participant Cluster as AWS EKS Cluster
-    
-    TF->>AWS: Provision Infrastructure & Secrets
-    Argo->>Cluster: Sync Applications via AppSets
-    QAConfig-->>Cluster: Override DB hosts, enable ExternalSecrets
-    Cluster->>AWS: ESO Fetches Secrets from AWS Secrets Manager
+
+    TF->>AWS: Provision data stores + per-module secrets
+    TF-->>Just: terraform output (hosts, secret keys, IRSA roles)
+    Just->>Cluster: helm upgrade --install labs64io-ecosystem -f values.aws.yaml -f generated values
+    Cluster->>AWS: ESO fetches labs64/<env>/<module> from Secrets Manager
 ```
 
 ### 3. Users' Own Infrastructure (BYO Infra)

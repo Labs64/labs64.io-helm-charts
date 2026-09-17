@@ -190,7 +190,7 @@
           "type": "string"
         },
         "postgresql": {
-          "default": "postgres:17-alpine",
+          "default": "postgres:18-alpine",
           "description": "Official images rather than bitnamilegacy/*, which is an unsupported\nnamespace on a deprecation path. These run the same SELECT 1 / PING checks;\nboth put psql / redis-cli on PATH, which is all job.yaml relies on.",
           "title": "postgresql",
           "type": "string"

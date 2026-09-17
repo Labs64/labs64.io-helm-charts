@@ -211,11 +211,28 @@
                       "description": "Redis port",
                       "title": "port",
                       "type": "string"
+                    },
+                    "ssl": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "enabled": {
+                          "default": false,
+                          "description": "Use TLS for Redis (required by ElastiCache in-transit encryption)",
+                          "title": "enabled",
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "enabled"
+                      ],
+                      "title": "ssl",
+                      "type": "object"
                     }
                   },
                   "required": [
                     "host",
-                    "port"
+                    "port",
+                    "ssl"
                   ],
                   "title": "redis",
                   "type": "object"
@@ -257,11 +274,28 @@
                   "description": "RabbitMQ port",
                   "title": "port",
                   "type": "string"
+                },
+                "ssl": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "enabled": {
+                      "default": false,
+                      "description": "Use TLS for AMQP (Amazon MQ accepts AMQPS on 5671 only)",
+                      "title": "enabled",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "enabled"
+                  ],
+                  "title": "ssl",
+                  "type": "object"
                 }
               },
               "required": [
                 "host",
-                "port"
+                "port",
+                "ssl"
               ],
               "title": "rabbitmq",
               "type": "object"
@@ -485,6 +519,12 @@
           "title": "enabled",
           "type": "boolean"
         },
+        "secretKey": {
+          "default": "",
+          "description": "Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname.",
+          "title": "secretKey",
+          "type": "string"
+        },
         "storeName": {
           "default": "local-kubernetes-store",
           "title": "storeName",
@@ -493,7 +533,8 @@
       },
       "required": [
         "enabled",
-        "storeName"
+        "storeName",
+        "secretKey"
       ],
       "title": "externalSecrets",
       "type": "object"
@@ -755,7 +796,7 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "",
+          "default": "sha256:c7b26d3ca11cc686f0cd6feacca0b6eeedded736d4a38111c7d75a2bb439b1e3",
           "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
@@ -1647,8 +1688,8 @@
       "description": "This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/",
       "properties": {
         "annotations": {
-          "additionalProperties": false,
-          "description": "Annotations to add to the service account",
+          "additionalProperties": true,
+          "description": "Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA)",
           "required": [],
           "title": "annotations",
           "type": "object"
@@ -1675,7 +1716,6 @@
       "required": [
         "create",
         "automount",
-        "annotations",
         "name"
       ],
       "title": "serviceAccount",
@@ -1688,7 +1728,7 @@
           "additionalProperties": false,
           "properties": {
             "digest": {
-              "default": "",
+              "default": "sha256:bc4b7684b612aa43a8636ab2c9f8bf763986a89153a5b3cea461e37bfca2f7f3",
               "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
@@ -2001,7 +2041,7 @@
           "additionalProperties": false,
           "properties": {
             "digest": {
-              "default": "",
+              "default": "sha256:0af0ab7a50eeb4dd89587f9aab630eeed8583381647dde9546482026ef62a4f3",
               "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
