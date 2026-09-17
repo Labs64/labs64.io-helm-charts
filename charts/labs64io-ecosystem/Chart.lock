@@ -1,31 +1,28 @@
 dependencies:
 - name: api-gateway
   repository: file://../api-gateway
-  version: 0.13.0
+  version: 0.14.0
 - name: authz-pdp
   repository: file://../authz-pdp
-  version: 0.7.0
+  version: 0.8.0
 - name: checkout
   repository: file://../checkout
-  version: 0.9.0
+  version: 0.11.0
 - name: payment-gateway
   repository: file://../payment-gateway
-  version: 0.9.0
+  version: 0.10.0
 - name: auditflow
   repository: file://../auditflow
-  version: 0.13.0
+  version: 0.15.0
 - name: api-docs
   repository: file://../api-docs
-  version: 0.8.0
+  version: 0.9.0
 - name: customer-portal
   repository: file://../customer-portal
-  version: 0.9.0
+  version: 0.10.0
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 18.7.11
-- name: rabbitmq
-  repository: https://charts.bitnami.com/bitnami
-  version: 16.0.14
 - name: valkey
   repository: https://charts.bitnami.com/bitnami
   version: 6.3.0
@@ -35,5 +32,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.0
-digest: sha256:12bda43f586eb971bcb4c44909c568716f400c5a4df591f8855466004b44b6dc
-generated: "2026-09-17T05:59:45.753057+02:00"
+digest: sha256:a26f2970717263152b99322816f6ee239cfe92a2c265a2248f27bca88dd16a9d
+generated: "2026-09-17T06:26:41.667795+02:00"

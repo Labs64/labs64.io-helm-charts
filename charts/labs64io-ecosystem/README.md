@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.17.0](https://img.shields.io/badge/Version-0.17.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.18.0](https://img.shields.io/badge/Version-0.18.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Umbrella Chart for entire Ecosystem
 
@@ -19,7 +19,6 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | file://../mock-oidc | mock-oidc | >=0.1.0 |
 | file://../payment-gateway | payment-gateway | >=0.1.0 |
 | https://charts.bitnami.com/bitnami | postgresql | 18.7.11 |
-| https://charts.bitnami.com/bitnami | rabbitmq | 16.0.14 |
 | https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.0 |
 | https://traefik.github.io/charts | traefik | 41.0.1 |
 
@@ -49,6 +48,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | global.sharedSecret.enabled | bool | `true` |  |
 | global.sharedSecret.name | string | `"labs64io-shared-secret"` |  |
 | mock-oidc | object | `{"enabled":false}` | Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render otherwise. Issues tokens to anyone who asks and authenticates nobody; never enable it outside a throwaway demo. |
+| networkPolicy | object | `{"enabled":false}` | NetworkPolicy for this chart's own workload (templates/rabbitmq.yaml — the only long-running workload this chart declares itself; every module's own NetworkPolicy is configured under that module's own key, e.g. `auditflow.networkPolicy`). |
 | payment-gateway.enabled | bool | `true` |  |
 | payment-gateway.migrationJob.enabled | bool | `false` |  |
 | postgresql.auth.database | string | `"labs64io"` |  |
@@ -58,18 +58,20 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | postgresql.auth.username | string | `"labs64"` |  |
 | postgresql.enabled | bool | `true` |  |
 | postgresql.fullnameOverride | string | `"labs64io-postgresql"` | Pinned so `global.postgresql.host` above can be a plain string (standalone architecture: no "-primary" suffix on the resulting service name) |
-| postgresql.primary | object | `{"initdb":{"scripts":{"00-labs64io-databases.sql":"SELECT 'CREATE DATABASE payment_gateway'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'payment_gateway')\\gexec\nSELECT 'CREATE DATABASE checkout'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'checkout')\\gexec\n"}}}` | Each module owns its own database (db-per-service isolation — see the note on global.postgresql above). The Bitnami chart creates only `auth.database`, and the modules' own pre-install migration Jobs cannot create the rest: they run before this server exists. Creating them here, at first initdb, is the only point in the release where the ordering works. Runs once, on an empty data directory only — enabling a module later needs the database created by hand. @schema type: object additionalProperties: true @schema |
+| postgresql.primary | object | `{"initdb":{"scripts":{"00-labs64io-databases.sql":"SELECT 'CREATE DATABASE payment_gateway'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'payment_gateway')\\gexec\nSELECT 'CREATE DATABASE checkout'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'checkout')\\gexec\n"}},"networkPolicy":{"allowExternalEgress":false}}` | Each module owns its own database (db-per-service isolation — see the note on global.postgresql above). The Bitnami chart creates only `auth.database`, and the modules' own pre-install migration Jobs cannot create the rest: they run before this server exists. Creating them here, at first initdb, is the only point in the release where the ordering works. Runs once, on an empty data directory only — enabling a module later needs the database created by hand. @schema type: object additionalProperties: true @schema |
 | rabbitmq.auth.existingPasswordSecret | string | `"labs64io-shared-secret"` |  |
 | rabbitmq.auth.existingSecretPasswordKey | string | `"SPRING_RABBITMQ_PASSWORD"` |  |
 | rabbitmq.auth.username | string | `"labs64"` |  |
 | rabbitmq.enabled | bool | `true` |  |
-| rabbitmq.fullnameOverride | string | `"labs64io-rabbitmq"` | Pinned so `global.rabbitmq.host` above can be a plain string |
-| rabbitmq.image | object | `{"registry":"docker.io","repository":"bitnamilegacy/rabbitmq","tag":"4.1.3-debian-12-r1"}` | docker.io/bitnami/rabbitmq:4.1.3-debian-12-r1 (the subchart default) returns 404: since 2025-08-28 the Bitnami free tier carries only rolling tags, and this is the one bundled subchart that pins a versioned one. The versioned image lives in bitnamilegacy/*, which needs global.security.allowInsecureImages above. Same fix as overrides/rabbitmq/values.local.yaml and charts/preflight. @schema type: object additionalProperties: true @schema |
+| rabbitmq.fullnameOverride | string | `"labs64io-rabbitmq"` | Pinned so `global.rabbitmq.host` above can be a plain string. Also used directly by templates/rabbitmq.yaml (this is not a chart dependency — see the Chart.yaml comment). |
+| rabbitmq.image | object | `{"registry":"docker.io","repository":"library/rabbitmq","tag":"4.3-management"}` | The official image, not Bitnami: pinned to the 4.3.x track (matches Amazon MQ) rather than the floating `4-management` tag, which would silently jump to RabbitMQ 5.x on the next pull. @schema type: object additionalProperties: true @schema |
+| rabbitmq.persistence | object | `{"size":"1Gi"}` | Size of the RabbitMQ data volume (StatefulSet volumeClaimTemplate). |
 | redis.architecture | string | `"standalone"` |  |
 | redis.auth.existingSecret | string | `"labs64io-shared-secret"` |  |
 | redis.auth.existingSecretPasswordKey | string | `"SPRING_DATA_REDIS_PASSWORD"` |  |
 | redis.enabled | bool | `true` |  |
 | redis.fullnameOverride | string | `"labs64io-redis"` | Pinned so `global.redis.host` above can be a plain string (standalone architecture: the primary service is named "<fullnameOverride>-primary") |
+| redis.networkPolicy.allowExternalEgress | bool | `false` |  |
 | secrets.data | object | `{}` | Additional key/value pairs merged into the shared Secret verbatim. Same shape as every module chart's `secrets.data`, so one caller code path covers both. Keys here win over the aliases above on collision. @schema type: object additionalProperties: true @schema |
 | secrets.postgresqlPassword | string | `"labs64_dev_password"` | Convenience aliases for the three bundled-infra passwords, injected into labs64io-shared-secret. The shipped values are dev defaults — with `demoMode: false` (the default) the chart fails to render until they change. |
 | secrets.rabbitmqPassword | string | `"labs64_dev_password"` | See `secrets.postgresqlPassword`. |

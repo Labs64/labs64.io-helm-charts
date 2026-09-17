@@ -712,6 +712,14 @@
           "title": "enabled",
           "type": "boolean"
         },
+        "extraEgress": {
+          "description": "Additional raw egress rules (e.g. VPC-CIDR access to externally-managed data stores)",
+          "items": {
+            "required": []
+          },
+          "title": "extraEgress",
+          "type": "array"
+        },
         "extraIngress": {
           "description": "Additional raw ingress rules",
           "items": {
@@ -795,6 +803,7 @@
         "gatewayNamespace",
         "observabilityNamespace",
         "extraIngress",
+        "extraEgress",
         "toolsEgress",
         "egress"
       ],

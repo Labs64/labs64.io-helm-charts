@@ -1,7 +1,7 @@
 apiVersion: v2
 name: labs64io-ecosystem
 type: application
-version: 0.17.0
+version: 0.19.0
 appVersion: 0.0.1
 description: "Labs64.IO :: Umbrella Chart for entire Ecosystem"
 home: https://labs64.io
@@ -39,10 +39,11 @@ dependencies:
     version: 18.7.11
     repository: https://charts.bitnami.com/bitnami
     condition: postgresql.enabled
-  - name: rabbitmq
-    version: 16.0.14
-    repository: https://charts.bitnami.com/bitnami
-    condition: rabbitmq.enabled
+  # RabbitMQ is NOT a chart dependency — see templates/rabbitmq.yaml. Bitnami's chart pins the
+  # bitnamilegacy/rabbitmq image, frozen at 4.1.3 with no path to a newer version (verified:
+  # neither bitnami/rabbitmq nor bitnamilegacy/rabbitmq publish anything newer). A hand-rolled
+  # StatefulSet on the official `rabbitmq` image gets RabbitMQ 4.3 — matching Amazon MQ
+  # (labs64.io-devops) and the local-dev standalone tool (overrides/rabbitmq/rabbitmq.yaml).
   # Valkey, aliased as "redis" so `.Values.redis`, the Secret key names
   # (SPRING_DATA_REDIS_*) and the rendered object names (fullnameOverride below) don't
   # change. AWS ElastiCache (labs64.io-devops) runs Valkey, not Redis OSS — this keeps

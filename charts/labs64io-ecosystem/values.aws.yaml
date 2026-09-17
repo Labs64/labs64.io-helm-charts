@@ -48,7 +48,17 @@ traefik:
     spec:
       type: ClusterIP
 
+# Data-store egress (`networkPolicy.extraEgress`) is VPC-CIDR-scoped and rendered per environment
+# by `just helm-values <env>` (labs64.io-devops) — it needs each environment's actual VPC CIDR,
+# which differs per environment (dev/qa/prod each get their own /16) and so can't live in this
+# shared file. `networkPolicy.enabled` is what's true everywhere and belongs here.
+#
+# api-gateway/api-docs/authz-pdp aren't in this list yet: they don't talk to a data store
+# directly, but their exact egress needs (e.g. a real external IdP once Keycloak lands) haven't
+# been characterized against a default-deny policy — see the README's Known gaps.
 auditflow:
+  networkPolicy:
+    enabled: true
   externalSecrets:
     enabled: true
     storeName: aws-secretsmanager-cluster
@@ -65,6 +75,8 @@ auditflow:
             enabled: true
 
 payment-gateway:
+  networkPolicy:
+    enabled: true
   # The database exists before the release (RDS), so the pre-install migration Job can run.
   migrationJob:
     enabled: true
@@ -79,6 +91,8 @@ payment-gateway:
             enabled: true
 
 checkout:
+  networkPolicy:
+    enabled: true
   migrationJob:
     enabled: true
   externalSecrets:

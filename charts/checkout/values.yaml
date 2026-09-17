@@ -302,6 +302,8 @@ networkPolicy:
   observabilityNamespace: monitoring
   # -- Additional raw ingress rules
   extraIngress: []
+  # -- Additional raw egress rules (e.g. VPC-CIDR access to externally-managed data stores)
+  extraEgress: []
   # -- Tools-namespace destinations this service needs (name + port pairs); rendered as
   # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
   # database-per-service isolation.

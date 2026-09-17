@@ -59,13 +59,30 @@ spec:
             # psql's own variable names are read from the environment rather than
             # remapped in `env:`, because envFrom values cannot be referenced by
             # $(VAR) expansion there.
+            #
+            # RDS_ADMIN_USERNAME/PASSWORD (set on AWS — see labs64.io-devops app-secrets.tf) are
+            # bootstrap-only credentials, used here to create SPRING_DATASOURCE_USERNAME as a
+            # least-privilege role instead of the application ever authenticating as the RDS
+            # master user. Without them (local dev / bundled infra, where there is no separate
+            # admin account) this falls back to creating the database with the app's own
+            # credentials, same as before.
             - |
               set -eu
-              export PGPASSWORD="$SPRING_DATASOURCE_PASSWORD"
-              DB_USER="$SPRING_DATASOURCE_USERNAME"
+              DB_NAME="{{ .Chart.Name | replace "-" "_" }}"
               DB_HOST=$(echo {{ tpl .Values.applicationYaml.spring.datasource.url $ }} | sed -E 's|jdbc:postgresql://([^:/]+):?.*|\1|')
-              psql -h $DB_HOST -U $DB_USER -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='{{ .Chart.Name | replace "-" "_" }}'" | grep -q 1 || \
-              psql -h $DB_HOST -U $DB_USER -d postgres -c "CREATE DATABASE {{ .Chart.Name | replace "-" "_" }};"
+              ADMIN_USER="${RDS_ADMIN_USERNAME:-$SPRING_DATASOURCE_USERNAME}"
+              export PGPASSWORD="${RDS_ADMIN_PASSWORD:-$SPRING_DATASOURCE_PASSWORD}"
+
+              psql -h "$DB_HOST" -U "$ADMIN_USER" -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1 || \
+              psql -h "$DB_HOST" -U "$ADMIN_USER" -d postgres -c "CREATE DATABASE \"$DB_NAME\";"
+
+              if [ -n "${RDS_ADMIN_USERNAME:-}" ]; then
+                psql -h "$DB_HOST" -U "$ADMIN_USER" -d postgres -tc "SELECT 1 FROM pg_roles WHERE rolname='$SPRING_DATASOURCE_USERNAME'" | grep -q 1 && \
+                  psql -h "$DB_HOST" -U "$ADMIN_USER" -d postgres -c "ALTER ROLE \"$SPRING_DATASOURCE_USERNAME\" WITH LOGIN PASSWORD '$SPRING_DATASOURCE_PASSWORD';" || \
+                  psql -h "$DB_HOST" -U "$ADMIN_USER" -d postgres -c "CREATE ROLE \"$SPRING_DATASOURCE_USERNAME\" LOGIN PASSWORD '$SPRING_DATASOURCE_PASSWORD';"
+                psql -h "$DB_HOST" -U "$ADMIN_USER" -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO \"$SPRING_DATASOURCE_USERNAME\";"
+                psql -h "$DB_HOST" -U "$ADMIN_USER" -d "$DB_NAME" -c "GRANT ALL ON SCHEMA public TO \"$SPRING_DATASOURCE_USERNAME\";"
+              fi
 
       containers:
         - name: migrate

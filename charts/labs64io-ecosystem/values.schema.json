@@ -291,6 +291,22 @@
       "title": "mock-oidc",
       "type": "object"
     },
+    "networkPolicy": {
+      "additionalProperties": false,
+      "description": "NetworkPolicy for this chart's own workload (templates/rabbitmq.yaml — the only\nlong-running workload this chart declares itself; every module's own NetworkPolicy is\nconfigured under that module's own key, e.g. `auditflow.networkPolicy`).",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "networkPolicy",
+      "type": "object"
+    },
     "payment-gateway": {
       "additionalProperties": true,
       "properties": {
@@ -412,6 +428,22 @@
               "required": [],
               "title": "initdb",
               "type": "object"
+            },
+            "networkPolicy": {
+              "additionalProperties": true,
+              "properties": {
+                "allowExternalEgress": {
+                  "default": false,
+                  "description": "The chart default (true) allows all-ports/all-destinations egress from the primary\npod — Postgres never initiates outbound connections, so it needs none.",
+                  "title": "allowExternalEgress",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "allowExternalEgress"
+              ],
+              "title": "networkPolicy",
+              "type": "object"
             }
           },
           "required": [],
@@ -463,13 +495,13 @@
         },
         "fullnameOverride": {
           "default": "labs64io-rabbitmq",
-          "description": "Pinned so `global.rabbitmq.host` above can be a plain string",
+          "description": "Pinned so `global.rabbitmq.host` above can be a plain string. Also used directly by\ntemplates/rabbitmq.yaml (this is not a chart dependency — see the Chart.yaml comment).",
           "title": "fullnameOverride",
           "type": "string"
         },
         "image": {
           "additionalProperties": true,
-          "description": "docker.io/bitnami/rabbitmq:4.1.3-debian-12-r1 (the subchart default) returns\n404: since 2025-08-28 the Bitnami free tier carries only rolling tags, and this\nis the one bundled subchart that pins a versioned one. The versioned image lives\nin bitnamilegacy/*, which needs global.security.allowInsecureImages above. Same\nfix as overrides/rabbitmq/values.local.yaml and charts/preflight.",
+          "description": "The official image, not Bitnami: pinned to the 4.3.x track (matches Amazon MQ) rather than\nthe floating `4-management` tag, which would silently jump to RabbitMQ 5.x on the next pull.",
           "properties": {
             "registry": {
               "default": "docker.io",
@@ -477,12 +509,12 @@
               "type": "string"
             },
             "repository": {
-              "default": "bitnamilegacy/rabbitmq",
+              "default": "library/rabbitmq",
               "title": "repository",
               "type": "string"
             },
             "tag": {
-              "default": "4.1.3-debian-12-r1",
+              "default": "4.3-management",
               "title": "tag",
               "type": "string"
             }
@@ -494,11 +526,28 @@
           ],
           "title": "image",
           "type": "object"
+        },
+        "persistence": {
+          "additionalProperties": false,
+          "description": "Size of the RabbitMQ data volume (StatefulSet volumeClaimTemplate).",
+          "properties": {
+            "size": {
+              "default": "1Gi",
+              "title": "size",
+              "type": "string"
+            }
+          },
+          "required": [
+            "size"
+          ],
+          "title": "persistence",
+          "type": "object"
         }
       },
       "required": [
         "enabled",
-        "fullnameOverride"
+        "fullnameOverride",
+        "persistence"
       ],
       "title": "rabbitmq",
       "type": "object"
@@ -543,6 +592,22 @@
           "description": "Pinned so `global.redis.host` above can be a plain string (standalone architecture:\nthe primary service is named \"\u003cfullnameOverride\u003e-primary\")",
           "title": "fullnameOverride",
           "type": "string"
+        },
+        "networkPolicy": {
+          "additionalProperties": true,
+          "properties": {
+            "allowExternalEgress": {
+              "default": false,
+              "description": "The chart default (true) allows all-ports/all-destinations egress from the primary\npod — Valkey never initiates outbound connections, so it needs none.",
+              "title": "allowExternalEgress",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowExternalEgress"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
         }
       },
       "required": [
@@ -748,6 +813,7 @@
     }
   },
   "required": [
+    "networkPolicy",
     "demoMode",
     "secrets",
     "tests"
