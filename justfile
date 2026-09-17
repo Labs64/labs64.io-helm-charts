@@ -167,7 +167,17 @@ uninstall-app app:
 
 # Install all core tools
 install-tools: install-crds
-    helmfile -e {{ENV}} apply -l layer=infra
+    # traefik is applied separately with --skip-crds: its chart bundles its own copy of
+    # the Traefik CRDs, which can now drift ahead of the traefik-crds chart pinned in
+    # install-crds (e.g. a middlewares CRD field newer than TRAEFIK_CRDS_CHART_VERSION).
+    # Helm's own CRD installer applies its bundled copy via server-side apply, which then
+    # conflicts with the field manager from install-crds' `kubectl apply --server-side`
+    # instead of the plain create-skip-if-exists this was designed around. Since helmfile
+    # has no per-release skip-crds (only the global apply flag), traefik is selected out
+    # of the blanket apply below and given its own --skip-crds run — the other layer=infra
+    # charts (e.g. external-secrets) still need normal CRD install.
+    helmfile -e {{ENV}} apply -l layer=infra,name!=traefik
+    helmfile -e {{ENV}} apply -l name=traefik --skip-crds
     kubectl apply -f overrides/traefik/dashboard-httproute.yaml
     kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
     # The ClusterSecretStore goes through ESO's validating webhook — wait for it to be
