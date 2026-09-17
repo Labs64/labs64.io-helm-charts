@@ -28,9 +28,9 @@ dependencies:
   version: 6.3.0
 - name: traefik
   repository: https://traefik.github.io/charts
-  version: 41.0.1
+  version: 41.6.0
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.0
-digest: sha256:a26f2970717263152b99322816f6ee239cfe92a2c265a2248f27bca88dd16a9d
-generated: "2026-09-17T06:26:41.667795+02:00"
+digest: sha256:8155d9af049d967668698fbf74782b577c9adeb1e21c16c76dc4720ceba01f06
+generated: "2026-09-17T08:49:54.326651964Z"

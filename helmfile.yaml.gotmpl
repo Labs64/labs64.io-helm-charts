@@ -51,7 +51,7 @@ releases:
   - name: traefik
     namespace: tools
     chart: traefik/traefik
-    version: 41.0.1
+    version: 41.6.0
     values:
       - overrides/traefik/values.{{ .Environment.Name }}.yaml
     labels:
@@ -222,6 +222,12 @@ releases:
       layer: apps
     needs:
       - tools/rabbitmq
+      # Its HTTPRoute's ExtensionRef filters resolve gateway.sharedMiddlewares
+      # (compress/buffering) by name against the Middleware CRDs api-gateway
+      # creates; without this edge helmfile can schedule both releases
+      # concurrently, and Traefik logs transient "middleware ... does not
+      # exist" errors if the route is reconciled before the Middleware exists.
+      - labs64io/labs64io-api-gateway
 
   - name: labs64io-checkout
     installed: false # TODO: restore when GA
@@ -239,6 +245,9 @@ releases:
     needs:
       - tools/rabbitmq
       - tools/postgresql
+      # See labs64io-auditflow above: its HTTPRoute also resolves shared
+      # Middlewares by name against what api-gateway creates.
+      - labs64io/labs64io-api-gateway
 
   - name: labs64io-payment-gateway
     namespace: labs64io
@@ -270,3 +279,6 @@ releases:
       layer: apps
     needs:
       - tools/traefik
+      # See labs64io-auditflow above: its HTTPRoute also resolves shared
+      # Middlewares by name against what api-gateway creates.
+      - labs64io/labs64io-api-gateway

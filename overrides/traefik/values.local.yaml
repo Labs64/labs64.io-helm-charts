@@ -8,6 +8,20 @@ ports:
   traefik:
     expose:
       default: true
+  # All Labs64.IO backends are OpenAPI-first Java/Python services that don't rely on
+  # raw encoded slashes/nulls/etc surviving in the path — reject them at the edge so
+  # Traefik's routing decision can never diverge from what the backend sees (the
+  # "split-view" RFC 3986 risk called out at startup).
+  web:
+    http:
+      encodedCharacters:
+        allowEncodedSlash: false
+        allowEncodedBackSlash: false
+        allowEncodedNullCharacter: false
+        allowEncodedSemicolon: false
+        allowEncodedPercent: false
+        allowEncodedQuestionMark: false
+        allowEncodedHash: false
 ingressRoute:
   dashboard:
     enabled: false

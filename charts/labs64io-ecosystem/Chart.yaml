@@ -61,7 +61,7 @@ dependencies:
   # version the justfile uses (TRAEFIK_CHART_VERSION) so local dev and the published
   # path agree.
   - name: traefik
-    version: "41.0.1"
+    version: "41.6.0"
     repository: https://traefik.github.io/charts
     condition: traefik.enabled
   # Dev-only IdP (opt-in, additionally gated on demoMode — see templates/_guards.tpl).

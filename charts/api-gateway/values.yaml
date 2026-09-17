@@ -281,6 +281,10 @@ authProxy:
   port: 8081
   # -- Trust X-Forwarded-* headers from the proxy
   trustForwardHeader: true
+  # -- Maximum size (bytes) of the authproxy's /auth response Traefik will read. The
+  # response carries only identity headers and no body, so this is a DoS guard, not a
+  # functional limit — set well above authResponseHeaders' combined size.
+  maxResponseBodySize: 8192
   # -- Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through)
   authResponseHeaders:
     - X-Auth-User

@@ -340,7 +340,7 @@ networkPolicy:
   toolsEgress:
     - name: postgresql
       port: 5432
-    - name: redis
+    - name: valkey
       port: 6379
   # -- Egress rules enforcing database-per-service isolation.
   egress:

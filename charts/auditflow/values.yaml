@@ -518,7 +518,7 @@ networkPolicy:
   toolsEgress:
     - name: rabbitmq
       port: 5672
-    - name: redis
+    - name: valkey
       port: 6379
   # -- Egress rules enforcing database-per-service isolation.
   egress:

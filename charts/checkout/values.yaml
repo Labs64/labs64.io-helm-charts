@@ -312,6 +312,8 @@ networkPolicy:
       port: 5672
     - name: postgresql
       port: 5432
+    - name: valkey
+      port: 6379
   # -- Egress rules enforcing database-per-service isolation.
   egress:
     # Cerbos PDP: @Authorize decisions over gRPC.

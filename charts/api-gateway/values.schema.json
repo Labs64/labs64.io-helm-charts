@@ -46,6 +46,12 @@
           "title": "authResponseHeaders",
           "type": "array"
         },
+        "maxResponseBodySize": {
+          "default": 8192,
+          "description": "Maximum size (bytes) of the authproxy's /auth response Traefik will read. The\nresponse carries only identity headers and no body, so this is a DoS guard, not a\nfunctional limit — set well above authResponseHeaders' combined size.",
+          "title": "maxResponseBodySize",
+          "type": "integer"
+        },
         "port": {
           "default": 8081,
           "description": "Service port of the authproxy container",
@@ -70,6 +76,7 @@
         "serviceName",
         "port",
         "trustForwardHeader",
+        "maxResponseBodySize",
         "authResponseHeaders"
       ],
       "title": "authProxy",
