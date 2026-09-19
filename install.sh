@@ -724,7 +724,7 @@ EOF
 
   detect_infra POSTGRES labs64io-postgresql
   detect_infra RABBITMQ labs64io-rabbitmq
-  detect_infra REDIS    labs64io-redis-master
+  detect_infra REDIS    labs64io-redis-primary
 
   # Decided once and remembered, for the same reason detect_infra remembers: after
   # the first install our OWN Gateway is present, and re-probing would "adopt" it,

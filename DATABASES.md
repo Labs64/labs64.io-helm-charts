@@ -24,7 +24,7 @@ All services connect to shared instances in the `tools` namespace:
 | Component | Service | Database names |
 |-----------|---------|---------------|
 | PostgreSQL | `postgresql.tools.svc.cluster.local:5432` | `checkout`, `payment_gateway` |
-| Redis | `redis-master.tools.svc.cluster.local:6379` | (key-value, no DB isolation needed) |
+| Redis | `redis-primary.tools.svc.cluster.local:6379` | (key-value, no DB isolation needed) |
 | RabbitMQ | `rabbitmq.tools.svc.cluster.local:5672` | (exchange/queue isolation at app level) |
 
 Each service uses its own **logical database name** on the shared PostgreSQL
