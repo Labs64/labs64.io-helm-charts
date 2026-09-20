@@ -47,6 +47,36 @@ traefik:
     # a top-level service.type is silently ignored.)
     spec:
       type: ClusterIP
+  # The chart ships with resources: {} (no requests) and a single fixed replica — meaning the
+  # one thing every request in the cluster passes through has no CPU baseline for the HPA metric
+  # below to scale against, and no redundancy at all. Sized off observed idle usage (~3m CPU /
+  # 27Mi) with real headroom for burst, not off the fixed 1-replica request math above.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  # Omit spec.replicas entirely once autoscaling owns it (chart's own documented convention —
+  # see deployment.replicas' description) rather than leaving a stale fixed value for Helm and
+  # the HPA to fight over.
+  deployment:
+    replicas: null
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 80
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
 
 # Data-store egress (`networkPolicy.extraEgress`) is VPC-CIDR-scoped and rendered per environment
 # by `just helm-values <env>` (labs64.io-devops) — it needs each environment's actual VPC CIDR,
@@ -56,6 +86,28 @@ traefik:
 # api-gateway/api-docs/authz-pdp aren't in this list yet: they don't talk to a data store
 # directly, but their exact egress needs (e.g. a real external IdP once Keycloak lands) haven't
 # been characterized against a default-deny policy — see the README's Known gaps.
+#
+# HPA + PDB, every module below: chart defaults ship both disabled (fixed replicaCount, no
+# scale-out, nothing stopping a voluntary node drain from taking a 1-replica module's only pod
+# with no replacement ready). minReplicas: 2 is what actually buys availability during a drain
+# or a SPOT interruption — a PDB alone on an unchanged 1-replica Deployment just blocks the
+# drain rather than surviving it. maxReplicas/targetCPUUtilizationPercentage are left at chart
+# defaults (3 / 80%). authz-pdp is deliberately absent here — its chart has no hpa.yaml (not
+# built to scale) and already ships podDisruptionBudget.enabled: true / replicaCount: 2 itself.
+api-gateway:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+  # podDisruptionBudget already enabled by chart default (replicaCount: 2 already, unlike the
+  # modules below) — nothing to add here.
+
+api-docs:
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+  podDisruptionBudget:
+    enabled: true
+
 auditflow:
   networkPolicy:
     enabled: true
@@ -73,6 +125,11 @@ auditflow:
           ssl:
             # ElastiCache in-transit encryption is mandatory.
             enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+  podDisruptionBudget:
+    enabled: true
 
 payment-gateway:
   networkPolicy:
@@ -89,6 +146,11 @@ payment-gateway:
         redis:
           ssl:
             enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+  podDisruptionBudget:
+    enabled: true
 
 checkout:
   networkPolicy:
@@ -103,3 +165,8 @@ checkout:
       rabbitmq:
         ssl:
           enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+  podDisruptionBudget:
+    enabled: true

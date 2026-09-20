@@ -153,6 +153,10 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
 # -- Additional volumes on the output Deployment definition. Mounts the swagger-config
 # ConfigMap (rendered from `swaggerUI` below) into the image's webroot so CONFIG_URL (see
 # `env` below) can serve it — without this, the container falls back to its baked-in

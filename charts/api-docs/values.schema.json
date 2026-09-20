@@ -365,6 +365,27 @@
       "title": "podAnnotations",
       "type": "object"
     },
+    "podDisruptionBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "minAvailable": {
+          "default": 1,
+          "title": "minAvailable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minAvailable"
+      ],
+      "title": "podDisruptionBudget",
+      "type": "object"
+    },
     "podLabels": {
       "additionalProperties": false,
       "description": "This is for setting Kubernetes Labels to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
@@ -865,6 +886,7 @@
     "livenessProbe",
     "readinessProbe",
     "autoscaling",
+    "podDisruptionBudget",
     "volumes",
     "volumeMounts",
     "nodeSelector",
