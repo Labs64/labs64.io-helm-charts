@@ -15,8 +15,9 @@ keywords:
 sources:
   - https://github.com/Labs64/labs64.io-helm-charts
 maintainers:
-  - name: labs64
+  - name: Labs64
     email: info@labs64.com
+    url: https://labs64.io
 dependencies:
   - name: chart-libs
     version: 0.8.0
