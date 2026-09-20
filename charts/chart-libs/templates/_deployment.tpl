@@ -136,4 +136,17 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      {{- $selectorLabels := include "chart-libs.selectorLabels" $ | fromYaml }}
+      {{- $constraints := list }}
+      {{- range . }}
+        {{- $constraint := . }}
+        {{- if not $constraint.labelSelector }}
+          {{- $constraint = merge $constraint (dict "labelSelector" (dict "matchLabels" $selectorLabels)) }}
+        {{- end }}
+        {{- $constraints = append $constraints $constraint }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- toYaml $constraints | nindent 8 }}
+      {{- end }}
 {{- end }}

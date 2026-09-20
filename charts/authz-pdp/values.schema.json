@@ -516,6 +516,14 @@
       "title": "tolerations",
       "type": "array"
     },
+    "topologySpreadConstraints": {
+      "description": "Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).\nlabelSelector defaults to this chart's own selector labels when a constraint omits one.",
+      "items": {
+        "required": []
+      },
+      "title": "topologySpreadConstraints",
+      "type": "array"
+    },
     "volumeMounts": {
       "items": {
         "required": []
@@ -555,6 +563,7 @@
     "nodeSelector",
     "tolerations",
     "affinity",
+    "topologySpreadConstraints",
     "volumes",
     "volumeMounts",
     "env",

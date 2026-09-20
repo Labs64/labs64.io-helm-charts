@@ -107,6 +107,9 @@ terminationGracePeriodSeconds: 30
 nodeSelector: {}
 tolerations: []
 affinity: {}
+# -- Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).
+# labelSelector defaults to this chart's own selector labels when a constraint omits one.
+topologySpreadConstraints: []
 volumes: []
 volumeMounts: []
 env: []

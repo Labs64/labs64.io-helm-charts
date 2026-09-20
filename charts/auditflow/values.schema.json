@@ -540,7 +540,7 @@
       "type": "object"
     },
     "extraContainers": {
-      "default": "- name: auditflow-transformer\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.transformer.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'\n  ports:\n    - name: http-trn\n      containerPort: {{ .Values.transformer.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-transformer\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.transformer.promotedKeys }}\n    - name: AUDITFLOW_PROMOTED_KEYS\n      value: {{ $.Values.transformer.promotedKeys | toJson | quote }}\n  {{- end }}\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-transformer\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-trn\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-trn\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n\n- name: auditflow-sink\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.sink.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'\n  ports:\n    - name: http-snk\n      containerPort: {{ .Values.sink.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-sink\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-sink\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-snk\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-snk\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n",
+      "default": "- name: auditflow-transformer\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.transformer.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-trn\n      containerPort: {{ .Values.transformer.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-transformer\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.transformer.promotedKeys }}\n    - name: AUDITFLOW_PROMOTED_KEYS\n      value: {{ $.Values.transformer.promotedKeys | toJson | quote }}\n  {{- end }}\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-transformer\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-trn\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-trn\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.transformer.resources | nindent 8 }}\n\n- name: auditflow-sink\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.sink.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-snk\n      containerPort: {{ .Values.sink.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-sink\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-sink\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-snk\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-snk\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.sink.resources | nindent 8 }}\n",
       "title": "extraContainers",
       "type": "string"
     },
@@ -1558,7 +1558,7 @@
     },
     "resources": {
       "additionalProperties": false,
-      "description": "Resource limits and requests for the container\nFor production, it's recommended to set both requests and limits",
+      "description": "Resource limits and requests for the container\nFor production, it's recommended to set both requests and limits\nSized off observed steady-state usage (~3m CPU / 310Mi mem on labs64-io-dev — JVM heap holds\nsteady once warmed up) with headroom for GC/startup spikes.",
       "properties": {
         "limits": {
           "additionalProperties": false,
@@ -1569,7 +1569,7 @@
               "type": "string"
             },
             "memory": {
-              "default": "1Gi",
+              "default": "768Mi",
               "title": "memory",
               "type": "string"
             }
@@ -1590,7 +1590,7 @@
               "type": "string"
             },
             "memory": {
-              "default": "512Mi",
+              "default": "384Mi",
               "title": "memory",
               "type": "string"
             }
@@ -1769,18 +1769,18 @@
         },
         "resources": {
           "additionalProperties": false,
-          "description": "Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service).",
+          "description": "Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service).\nSized off observed steady-state usage (~3m CPU / 77Mi mem on labs64-io-dev) with headroom.",
           "properties": {
             "limits": {
               "additionalProperties": false,
               "properties": {
                 "cpu": {
-                  "default": "200m",
+                  "default": "150m",
                   "title": "cpu",
                   "type": "string"
                 },
                 "memory": {
-                  "default": "256Mi",
+                  "default": "192Mi",
                   "title": "memory",
                   "type": "string"
                 }
@@ -1796,12 +1796,12 @@
               "additionalProperties": false,
               "properties": {
                 "cpu": {
-                  "default": "50m",
+                  "default": "30m",
                   "title": "cpu",
                   "type": "string"
                 },
                 "memory": {
-                  "default": "128Mi",
+                  "default": "96Mi",
                   "title": "memory",
                   "type": "string"
                 }
@@ -2043,6 +2043,14 @@
       "title": "tolerations",
       "type": "array"
     },
+    "topologySpreadConstraints": {
+      "description": "Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).\nlabelSelector defaults to this chart's own selector labels when a constraint omits one.",
+      "items": {
+        "required": []
+      },
+      "title": "topologySpreadConstraints",
+      "type": "array"
+    },
     "transformer": {
       "additionalProperties": false,
       "properties": {
@@ -2089,18 +2097,18 @@
         },
         "resources": {
           "additionalProperties": false,
-          "description": "Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service).",
+          "description": "Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service).\nSized off observed steady-state usage (~3m CPU / 38Mi mem on labs64-io-dev) with headroom.",
           "properties": {
             "limits": {
               "additionalProperties": false,
               "properties": {
                 "cpu": {
-                  "default": "200m",
+                  "default": "100m",
                   "title": "cpu",
                   "type": "string"
                 },
                 "memory": {
-                  "default": "256Mi",
+                  "default": "128Mi",
                   "title": "memory",
                   "type": "string"
                 }
@@ -2116,12 +2124,12 @@
               "additionalProperties": false,
               "properties": {
                 "cpu": {
-                  "default": "50m",
+                  "default": "20m",
                   "title": "cpu",
                   "type": "string"
                 },
                 "memory": {
-                  "default": "128Mi",
+                  "default": "64Mi",
                   "title": "memory",
                   "type": "string"
                 }
@@ -2214,6 +2222,7 @@
     "nodeSelector",
     "tolerations",
     "affinity",
+    "topologySpreadConstraints",
     "env",
     "envFrom",
     "observability",

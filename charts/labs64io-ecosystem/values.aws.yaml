@@ -77,6 +77,24 @@ traefik:
   podDisruptionBudget:
     enabled: true
     minAvailable: 1
+  # Unlike the chart-libs-based modules below, this chart's own template `tpl`s
+  # topologySpreadConstraints but does NOT auto-fill a missing labelSelector — an omitted one
+  # renders as null, which matches no pod and makes the constraint a no-op. Can't fix this the
+  # way chart-libs does (an include producing a nested map): tpl(toYaml(...)) serializes the
+  # values structure to YAML text BEFORE evaluating {{ }}, so an include under matchLabels
+  # renders as a quoted string, not a re-parsed map. Hardcoded instead — this file already
+  # assumes the release is named "labs64io" elsewhere (e.g. the authz-pdp PDP address below), and
+  # traefik's own instance label is `<release>-<namespace>` (chart's traefik.instance-name
+  # helper), both fixed by convention (justfile's RELEASE/NAMESPACE constants). Verified against
+  # the live pod's actual labels.
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+          app.kubernetes.io/instance: labs64io-labs64io
 
 # Data-store egress (`networkPolicy.extraEgress`) is VPC-CIDR-scoped and rendered per environment
 # by `just helm-values <env>` (labs64.io-devops) — it needs each environment's actual VPC CIDR,
@@ -87,19 +105,27 @@ traefik:
 # directly, but their exact egress needs (e.g. a real external IdP once Keycloak lands) haven't
 # been characterized against a default-deny policy — see the README's Known gaps.
 #
-# HPA + PDB, every module below: chart defaults ship both disabled (fixed replicaCount, no
-# scale-out, nothing stopping a voluntary node drain from taking a 1-replica module's only pod
-# with no replacement ready). minReplicas: 2 is what actually buys availability during a drain
-# or a SPOT interruption — a PDB alone on an unchanged 1-replica Deployment just blocks the
-# drain rather than surviving it. maxReplicas/targetCPUUtilizationPercentage are left at chart
-# defaults (3 / 80%). authz-pdp is deliberately absent here — its chart has no hpa.yaml (not
-# built to scale) and already ships podDisruptionBudget.enabled: true / replicaCount: 2 itself.
+# HPA + PDB + topologySpreadConstraints, every module below: chart defaults ship all three
+# absent/disabled (fixed replicaCount, no scale-out, no anti-collocation — the default spread
+# behaviour is the soft ScheduleAnyway, which does not stop both replicas of a module landing on
+# the same node). minReplicas: 2 is what actually buys availability during a drain or a SPOT
+# interruption; the hard DoNotSchedule spread constraint is what actually keeps the two replicas
+# on different nodes so that availability isn't accidental — a PDB alone on an unchanged
+# 1-replica Deployment just blocks the drain rather than surviving it, and a soft spread
+# preference can still be violated under pressure. DoNotSchedule is safe now that Cluster
+# Autoscaler is running: if the constraint can't be satisfied on current capacity, the pending
+# pod triggers a scale-up rather than sitting stuck forever. maxReplicas/
+# targetCPUUtilizationPercentage are left at chart defaults (3 / 80%).
 api-gateway:
   autoscaling:
     enabled: true
     minReplicas: 2
   # podDisruptionBudget already enabled by chart default (replicaCount: 2 already, unlike the
   # modules below) — nothing to add here.
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
 
 api-docs:
   autoscaling:
@@ -107,6 +133,10 @@ api-docs:
     minReplicas: 2
   podDisruptionBudget:
     enabled: true
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
 
 auditflow:
   networkPolicy:
@@ -130,6 +160,10 @@ auditflow:
     minReplicas: 2
   podDisruptionBudget:
     enabled: true
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
 
 payment-gateway:
   networkPolicy:
@@ -151,6 +185,10 @@ payment-gateway:
     minReplicas: 2
   podDisruptionBudget:
     enabled: true
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
 
 checkout:
   networkPolicy:
@@ -170,3 +208,15 @@ checkout:
     minReplicas: 2
   podDisruptionBudget:
     enabled: true
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+
+# No hpa.yaml in this chart (not built to scale) and it already ships podDisruptionBudget.
+# enabled: true / replicaCount: 2 by default — only the spread constraint is missing.
+authz-pdp:
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule

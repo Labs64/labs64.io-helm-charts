@@ -77,6 +77,8 @@ securityContext:
   runAsGroup: 1064
   seccompProfile:
     type: RuntimeDefault
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
 
 # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
@@ -85,13 +87,15 @@ service:
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8080
 
+# Sized off observed steady-state usage (~2m CPU / 327Mi mem on labs64-io-dev — JVM heap holds
+# steady once warmed up) with headroom for GC/startup spikes.
 resources:
   limits:
     cpu: 500m
-    memory: 1Gi
+    memory: 768Mi
   requests:
     cpu: 100m
-    memory: 512Mi
+    memory: 384Mi
 
 # -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
@@ -154,6 +158,8 @@ autoscaling:
   # targetMemoryUtilizationPercentage: 80
 
 # -- Additional volumes on the output Deployment definition.
+# No manual tmp entry needed here (unlike api-gateway): chart-libs auto-provisions a tmp emptyDir
+# + mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on.
 volumes: []
 # - name: foo
 #   secret:
@@ -171,6 +177,10 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# -- Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).
+# labelSelector defaults to this chart's own selector labels when a constraint omits one.
+topologySpreadConstraints: []
 
 env: []
 envFrom: []

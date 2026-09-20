@@ -548,17 +548,18 @@
     },
     "resources": {
       "additionalProperties": false,
+      "description": "Sized off observed steady-state usage (~1m CPU / 3Mi mem on labs64-io-dev — a static Swagger UI\nbehind nginx) with headroom for burst. The chart's original 100m/512Mi request was ~170x actual\nmemory use.",
       "properties": {
         "limits": {
           "additionalProperties": false,
           "properties": {
             "cpu": {
-              "default": "500m",
+              "default": "100m",
               "title": "cpu",
               "type": "string"
             },
             "memory": {
-              "default": "1Gi",
+              "default": "64Mi",
               "title": "memory",
               "type": "string"
             }
@@ -574,12 +575,12 @@
           "additionalProperties": false,
           "properties": {
             "cpu": {
-              "default": "100m",
+              "default": "20m",
               "title": "cpu",
               "type": "string"
             },
             "memory": {
-              "default": "512Mi",
+              "default": "32Mi",
               "title": "memory",
               "type": "string"
             }
@@ -617,6 +618,11 @@
     "securityContext": {
       "additionalProperties": false,
       "properties": {
+        "allowPrivilegeEscalation": {
+          "default": false,
+          "title": "allowPrivilegeEscalation",
+          "type": "boolean"
+        },
         "capabilities": {
           "additionalProperties": false,
           "properties": {
@@ -675,7 +681,8 @@
         "runAsNonRoot",
         "runAsUser",
         "runAsGroup",
-        "seccompProfile"
+        "seccompProfile",
+        "allowPrivilegeEscalation"
       ],
       "title": "securityContext",
       "type": "object"
@@ -780,6 +787,14 @@
         "required": []
       },
       "title": "tolerations",
+      "type": "array"
+    },
+    "topologySpreadConstraints": {
+      "description": "Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).\nlabelSelector defaults to this chart's own selector labels when a constraint omits one.",
+      "items": {
+        "required": []
+      },
+      "title": "topologySpreadConstraints",
       "type": "array"
     },
     "volumeMounts": {
@@ -892,6 +907,7 @@
     "nodeSelector",
     "tolerations",
     "affinity",
+    "topologySpreadConstraints",
     "env",
     "envFrom",
     "swaggerUI",

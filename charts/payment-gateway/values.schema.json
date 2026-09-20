@@ -924,7 +924,7 @@
                 "additionalProperties": false,
                 "properties": {
                   "name": {
-                    "default": "redis",
+                    "default": "valkey",
                     "title": "name",
                     "type": "string"
                   },
@@ -1126,6 +1126,7 @@
     },
     "resources": {
       "additionalProperties": false,
+      "description": "Sized off observed steady-state usage (~2m CPU / 327Mi mem on labs64-io-dev — JVM heap holds\nsteady once warmed up) with headroom for GC/startup spikes.",
       "properties": {
         "limits": {
           "additionalProperties": false,
@@ -1136,7 +1137,7 @@
               "type": "string"
             },
             "memory": {
-              "default": "1Gi",
+              "default": "768Mi",
               "title": "memory",
               "type": "string"
             }
@@ -1157,7 +1158,7 @@
               "type": "string"
             },
             "memory": {
-              "default": "512Mi",
+              "default": "384Mi",
               "title": "memory",
               "type": "string"
             }
@@ -1194,6 +1195,11 @@
     "securityContext": {
       "additionalProperties": false,
       "properties": {
+        "allowPrivilegeEscalation": {
+          "default": false,
+          "title": "allowPrivilegeEscalation",
+          "type": "boolean"
+        },
         "capabilities": {
           "additionalProperties": false,
           "properties": {
@@ -1215,6 +1221,11 @@
           ],
           "title": "capabilities",
           "type": "object"
+        },
+        "readOnlyRootFilesystem": {
+          "default": true,
+          "title": "readOnlyRootFilesystem",
+          "type": "boolean"
         },
         "runAsGroup": {
           "default": 1064,
@@ -1252,7 +1263,9 @@
         "runAsNonRoot",
         "runAsUser",
         "runAsGroup",
-        "seccompProfile"
+        "seccompProfile",
+        "allowPrivilegeEscalation",
+        "readOnlyRootFilesystem"
       ],
       "title": "securityContext",
       "type": "object"
@@ -1459,6 +1472,14 @@
       "title": "tolerations",
       "type": "array"
     },
+    "topologySpreadConstraints": {
+      "description": "Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).\nlabelSelector defaults to this chart's own selector labels when a constraint omits one.",
+      "items": {
+        "required": []
+      },
+      "title": "topologySpreadConstraints",
+      "type": "array"
+    },
     "volumeMounts": {
       "description": "Additional volumeMounts on the output Deployment definition.",
       "items": {
@@ -1468,7 +1489,7 @@
       "type": "array"
     },
     "volumes": {
-      "description": "Additional volumes on the output Deployment definition.",
+      "description": "Additional volumes on the output Deployment definition.\nNo manual tmp entry needed here (unlike api-gateway): chart-libs auto-provisions a tmp emptyDir\n+ mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on.",
       "items": {
         "required": []
       },
@@ -1505,6 +1526,7 @@
     "nodeSelector",
     "tolerations",
     "affinity",
+    "topologySpreadConstraints",
     "env",
     "envFrom",
     "migrationJob",

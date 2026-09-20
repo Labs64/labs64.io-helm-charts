@@ -172,6 +172,10 @@ tolerations: []
 
 affinity: {}
 
+# -- Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).
+# labelSelector defaults to this chart's own selector labels when a constraint omits one.
+topologySpreadConstraints: []
+
 env: []
 envFrom: []
 

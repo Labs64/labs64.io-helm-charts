@@ -85,6 +85,12 @@ securityContext:
   runAsGroup: 1064
   seccompProfile:
     type: RuntimeDefault
+  allowPrivilegeEscalation: false
+  # readOnlyRootFilesystem intentionally NOT set here: swagger-ui's docker-entrypoint.d scripts
+  # rewrite config directly into files under the nginx docroot (/usr/share/nginx/html) at
+  # container startup from env vars — making root read-only needs that path (plus nginx's own
+  # /var/cache/nginx, /var/run) as additional writable mounts, untested here. Revisit with those
+  # mounts added rather than guessing at exactly what swagger-ui's entrypoint touches.
 
 # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
@@ -117,13 +123,16 @@ gateway:
       pathType: Exact
       redirectTo: /swagger-ui/
 
+# Sized off observed steady-state usage (~1m CPU / 3Mi mem on labs64-io-dev — a static Swagger UI
+# behind nginx) with headroom for burst. The chart's original 100m/512Mi request was ~170x actual
+# memory use.
 resources:
   limits:
-    cpu: 500m
-    memory: 1Gi
-  requests:
     cpu: 100m
-    memory: 512Mi
+    memory: 64Mi
+  requests:
+    cpu: 20m
+    memory: 32Mi
 
 # -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
@@ -178,6 +187,10 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# -- Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).
+# labelSelector defaults to this chart's own selector labels when a constraint omits one.
+topologySpreadConstraints: []
 
 # -- CONFIG_URL tells the swagger-ui image's configurator script (/docker-entrypoint.d/40-swagger-ui.sh)
 # to fetch this path client-side (browser-side, not container-side) for its full config

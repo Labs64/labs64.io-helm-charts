@@ -20,5 +20,5 @@ maintainers:
     url: https://labs64.io
 dependencies:
   - name: chart-libs
-    version: 0.8.0
+    version: 0.8.1
     repository: file://../chart-libs

@@ -73,6 +73,8 @@ securityContext:
   runAsGroup: 1064
   seccompProfile:
     type: RuntimeDefault
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
 
 # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
@@ -81,13 +83,17 @@ service:
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8081
 
+# Sized off observed steady-state usage (~3m CPU / 65Mi mem on labs64-io-dev) with headroom for
+# burst — the chart's original 100m/512Mi request was ~35x actual memory use. Right-sizing this
+# matters beyond cost: the HPA's CPU-utilization target is actual-usage / this request, so an
+# inflated request silently mutes the signal HPA scales on.
 resources:
   limits:
     cpu: 200m
-    memory: 512Mi
+    memory: 256Mi
   requests:
-    cpu: 100m
-    memory: 512Mi
+    cpu: 50m
+    memory: 128Mi
 
 # -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
@@ -166,6 +172,10 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# -- Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).
+# labelSelector defaults to this chart's own selector labels when a constraint omits one.
+topologySpreadConstraints: []
 
 # -- OIDC provider settings. Rendered into this chart's ConfigMap and delivered via
 # envFrom, as scalars rather than a raw env list: Helm replaces lists wholesale on
@@ -336,6 +346,9 @@ extraConfigChecksums:
   - configmap-routes
   - configmap-static-policies
 
+# tmp: readOnlyRootFilesystem above means the app needs somewhere writable for whatever a
+# Python process ends up wanting (tempfile module, etc.) — same pattern as auditflow's main
+# container.
 volumeMounts:
   - name: routes
     mountPath: /app/routes
@@ -343,6 +356,8 @@ volumeMounts:
   - name: static-policies
     mountPath: /opt/application-config
     readOnly: true
+  - name: tmp
+    mountPath: /tmp
 
 volumes:
   - name: routes
@@ -351,3 +366,5 @@ volumes:
   - name: static-policies
     configMap:
       name: '{{ include "chart-libs.fullname" . }}-static-policies'
+  - name: tmp
+    emptyDir: {}

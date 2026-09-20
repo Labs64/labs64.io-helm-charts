@@ -51,13 +51,14 @@ transformer:
   # @schema
   promotedKeys: {}
   # -- Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service).
+  # Sized off observed steady-state usage (~3m CPU / 38Mi mem on labs64-io-dev) with headroom.
   resources:
     limits:
-      cpu: 200m
-      memory: 256Mi
-    requests:
-      cpu: 50m
+      cpu: 100m
       memory: 128Mi
+    requests:
+      cpu: 20m
+      memory: 64Mi
 
 sink:
   image:
@@ -71,13 +72,14 @@ sink:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
     port: 8082
   # -- Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service).
+  # Sized off observed steady-state usage (~3m CPU / 77Mi mem on labs64-io-dev) with headroom.
   resources:
     limits:
-      cpu: 200m
-      memory: 256Mi
+      cpu: 150m
+      memory: 192Mi
     requests:
-      cpu: 50m
-      memory: 128Mi
+      cpu: 30m
+      memory: 96Mi
 
 # -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -152,13 +154,15 @@ service:
 
 # -- Resource limits and requests for the container
 # For production, it's recommended to set both requests and limits
+# Sized off observed steady-state usage (~3m CPU / 310Mi mem on labs64-io-dev — JVM heap holds
+# steady once warmed up) with headroom for GC/startup spikes.
 resources:
   limits:
     cpu: 500m
-    memory: 1Gi
+    memory: 768Mi
   requests:
     cpu: 100m
-    memory: 512Mi
+    memory: 384Mi
 
 # -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 livenessProbe:
@@ -251,6 +255,10 @@ affinity: {}
 #                values:
 #                  - auditflow
 #          topologyKey: kubernetes.io/hostname
+
+# -- Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).
+# labelSelector defaults to this chart's own selector labels when a constraint omits one.
+topologySpreadConstraints: []
 
 # -- Environment variables to add to the container
 env: []
@@ -570,6 +578,12 @@ extraContainers: |
     - name: auditflow-transformer
       image: '{{ include "chart-libs.image" (dict "imageRoot" .Values.transformer.image "context" $) }}'
       imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
       ports:
         - name: http-trn
           containerPort: {{ .Values.transformer.service.port }}
@@ -630,6 +644,12 @@ extraContainers: |
     - name: auditflow-sink
       image: '{{ include "chart-libs.image" (dict "imageRoot" .Values.sink.image "context" $) }}'
       imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
       ports:
         - name: http-snk
           containerPort: {{ .Values.sink.service.port }}
