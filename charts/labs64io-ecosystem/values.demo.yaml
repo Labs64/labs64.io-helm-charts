@@ -14,6 +14,13 @@ global:
 
 api-gateway:
   enabled: true
+  # Chart default points at an unbundled Keycloak that doesn't exist in a demo install —
+  # this profile bundles mock-oidc instead (see demoMode comment above), so the gateway
+  # must be pointed at it explicitly. Short DNS name (no namespace) so this resolves
+  # correctly whatever namespace the release is installed into, since mock-oidc is always
+  # in the same namespace as api-gateway.
+  oidc:
+    discoveryUrl: http://mock-oidc:8080/labs64io/.well-known/openid-configuration
 authz-pdp:
   enabled: true
 api-docs:
