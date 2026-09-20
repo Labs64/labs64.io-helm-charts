@@ -624,7 +624,9 @@ extraContainers: |
       volumeMounts:
         - name: tmp
           mountPath: /tmp
-  
+      resources:
+        {{- toYaml .Values.transformer.resources | nindent 8 }}
+
     - name: auditflow-sink
       image: '{{ include "chart-libs.image" (dict "imageRoot" .Values.sink.image "context" $) }}'
       imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'
@@ -678,3 +680,5 @@ extraContainers: |
       volumeMounts:
         - name: tmp
           mountPath: /tmp
+      resources:
+        {{- toYaml .Values.sink.resources | nindent 8 }}
