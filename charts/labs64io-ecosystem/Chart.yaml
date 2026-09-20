@@ -1,10 +1,21 @@
 apiVersion: v2
 name: labs64io-ecosystem
 type: application
-version: 0.19.3
-appVersion: 0.0.1
-description: "Labs64.IO :: Umbrella Chart for entire Ecosystem"
+version: 0.19.4
+description: "Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure"
+icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
 home: https://labs64.io
+keywords:
+  - labs64
+  - labs64io
+  - ecosystem
+  - microservices
+  - platform
+sources:
+  - https://github.com/Labs64/labs64.io-helm-charts
+maintainers:
+  - name: labs64
+    email: info@labs64.com
 dependencies:
   - name: api-gateway
     version: ">=0.1.0"
