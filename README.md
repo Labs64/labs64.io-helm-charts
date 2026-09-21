@@ -135,8 +135,9 @@ Users are expected to deploy to their own clusters (GCP, Azure, on-prem).
 
 Network policies also accept `networkPolicy.ingressControllerLabels` (pod-selector labels for a
 non-Traefik ingress controller, e.g. `app.kubernetes.io/name: nginx`) and
-`networkPolicy.observabilityNamespace` (default `monitoring`) when your cluster's naming differs
-from the defaults.
+`networkPolicy.observabilityNamespace` (default `monitoring`; namespace of Prometheus and the OTel
+collector — used for both the metrics-scrape ingress and the OTLP egress) when your cluster's naming
+differs from the defaults.
 
 ### Capability requirements (bring-your-own infrastructure)
 

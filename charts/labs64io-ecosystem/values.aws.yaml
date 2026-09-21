@@ -77,16 +77,13 @@ traefik:
   podDisruptionBudget:
     enabled: true
     minAvailable: 1
-  # Unlike the chart-libs-based modules below, this chart's own template `tpl`s
-  # topologySpreadConstraints but does NOT auto-fill a missing labelSelector — an omitted one
-  # renders as null, which matches no pod and makes the constraint a no-op. Can't fix this the
-  # way chart-libs does (an include producing a nested map): tpl(toYaml(...)) serializes the
-  # values structure to YAML text BEFORE evaluating {{ }}, so an include under matchLabels
-  # renders as a quoted string, not a re-parsed map. Hardcoded instead — this file already
-  # assumes the release is named "labs64io" elsewhere (e.g. the authz-pdp PDP address below), and
-  # traefik's own instance label is `<release>-<namespace>` (chart's traefik.instance-name
-  # helper), both fixed by convention (justfile's RELEASE/NAMESPACE constants). Verified against
-  # the live pod's actual labels.
+  # Unlike the chart-libs-based modules below, this chart does NOT auto-fill a missing
+  # labelSelector — an omitted one renders as null, which matches no pod and makes the constraint
+  # a no-op. So it is spelled out here. The instance label is `<release>-<namespace>`; it is
+  # computed with the chart's own `traefik.instance-name` helper (the constraints go through
+  # `tpl`) rather than hardcoded, so it stays correct for any release name or namespace. A
+  # hardcoded value that stops matching the pods fails silently (selects nothing, spreads nothing).
+  # A scalar include works under tpl; only an include returning a nested map does not.
   topologySpreadConstraints:
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
@@ -94,7 +91,15 @@ traefik:
       labelSelector:
         matchLabels:
           app.kubernetes.io/name: traefik
-          app.kubernetes.io/instance: labs64io-labs64io
+          app.kubernetes.io/instance: '{{ include "traefik.instance-name" . }}'
+    - maxSkew: 1
+      minDomains: 2
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+          app.kubernetes.io/instance: '{{ include "traefik.instance-name" . }}'
 
 # Data-store egress (`networkPolicy.extraEgress`) is VPC-CIDR-scoped and rendered per environment
 # by `just helm-values <env>` (labs64.io-devops) — it needs each environment's actual VPC CIDR,
@@ -126,6 +131,10 @@ api-gateway:
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      minDomains: 2
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
 
 api-docs:
   autoscaling:
@@ -136,6 +145,10 @@ api-docs:
   topologySpreadConstraints:
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      minDomains: 2
+      topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: DoNotSchedule
 
 auditflow:
@@ -164,6 +177,10 @@ auditflow:
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      minDomains: 2
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
 
 payment-gateway:
   networkPolicy:
@@ -189,6 +206,10 @@ payment-gateway:
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      minDomains: 2
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
 
 checkout:
   networkPolicy:
@@ -211,6 +232,10 @@ checkout:
   topologySpreadConstraints:
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      minDomains: 2
+      topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: DoNotSchedule
 
 # No hpa.yaml in this chart (not built to scale) and it already ships podDisruptionBudget.

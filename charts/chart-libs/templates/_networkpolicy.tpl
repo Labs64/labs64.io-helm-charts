@@ -1,11 +1,13 @@
 {{/*
-NetworkPolicy: allow ingress from Traefik (gateway namespace) and same-namespace
-pods. Egress is restricted to DNS, the monitoring namespace (OTLP, when
-observability is enabled), specific tools-namespace destinations declared via
+NetworkPolicy: allow ingress from Traefik (gateway namespace), same-namespace
+pods and the observability namespace (metrics scrape). Egress is restricted to DNS,
+the observability namespace (OTLP, when observability is enabled), specific tools-namespace destinations declared via
 .Values.networkPolicy.toolsEgress (name + port pairs — NOT a blanket allow to the
 whole tools namespace, to preserve database-per-service isolation), and any
 base destinations listed in .Values.networkPolicy.egress plus chart/environment-specific
 rules in .Values.networkPolicy.extraEgress.
+The observability namespace is .Values.networkPolicy.observabilityNamespace
+(default "monitoring") and is used for both the scrape ingress and the OTLP egress.
 Usage: {{ include "chart-libs.networkpolicy" . }}
 */}}
 {{- define "chart-libs.networkpolicy" -}}
@@ -39,7 +41,7 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: monitoring
+              kubernetes.io/metadata.name: {{ .Values.networkPolicy.observabilityNamespace | default "monitoring" }}
       ports:
         - protocol: TCP
           port: {{ .Values.service.port }}

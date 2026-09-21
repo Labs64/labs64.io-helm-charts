@@ -236,7 +236,7 @@ spec:
     - from:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: monitoring
+              kubernetes.io/metadata.name: {{ .Values.ui.networkPolicy.observabilityNamespace | default "monitoring" }}
       ports:
         - protocol: TCP
           port: {{ .Values.ui.service.port }}
@@ -260,7 +260,7 @@ spec:
     - to:
         - namespaceSelector:
             matchLabels:
-              kubernetes.io/metadata.name: monitoring
+              kubernetes.io/metadata.name: {{ .Values.ui.networkPolicy.observabilityNamespace | default "monitoring" }}
       ports:
         - protocol: TCP
           port: 4317

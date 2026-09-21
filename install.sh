@@ -22,7 +22,9 @@ NS_GATEWAY="${LABS64_GATEWAY_NAMESPACE:-tools}"
 STATE_CM="labs64io-installer-state"
 WORKDIR="${LABS64_WORKDIR:-./labs64io-install}"
 LOGFILE="$WORKDIR/install.log"
-GATEWAY_API_VERSION="${LABS64_GATEWAY_API_VERSION:-v1.6.0}"
+GATEWAY_API_VERSION="${LABS64_GATEWAY_API_VERSION:-v1.6.2}"
+# Published chart version to install; recorded so a re-run reproduces the same release.
+CHART_VERSION="${LABS64_CHART_VERSION:-0.19.5}"
 # Chart to install. Defaults to the local directory if it exists, otherwise the published one.
 # Point it at a local directory to exercise chart changes that are not published yet ("./charts/labs64io-ecosystem").
 if [ -d "./charts/labs64io-ecosystem" ] && [ -z "${LABS64_CHART:-}" ]; then
@@ -47,19 +49,22 @@ the first prompt is the cluster confirmation.
                          # it once automatically); exits non-zero on failure
   LABS64_YES=1 install.sh stop
 
-Set LABS64_PROFILE=quickstart|custom to install without any prompts.
+Set LABS64_PROFILE=quickstart|byo to install without any prompts.
 
 Environment:
-  LABS64_PROFILE              quickstart | custom — skips the menu and every prompt
+  LABS64_PROFILE              quickstart | byo — skips the menu and every prompt
+                              (`custom` is accepted as a deprecated alias of `byo`)
   LABS64_NAMESPACE            namespace for modules, bundled infra, and the gateway workload
                               itself (Traefik, the ForwardAuth proxy) (default: labs64io)
   LABS64_GATEWAY_NAMESPACE    namespace for the Gateway API `Gateway` object only — no pods
                               ever run here (default: tools)
   LABS64_RELEASE              Helm release name (default: labs64io)
   LABS64_WORKDIR              where generated values/logs go (default: ./labs64io-install)
-  LABS64_OIDC_DISCOVERY_URL   issuer discovery URL (required by the custom profile)
+  LABS64_OIDC_DISCOVERY_URL   issuer discovery URL (required by the byo profile)
   LABS64_CHART                chart to install (default: labs64io/labs64io-ecosystem);
                               set to a local path to test unpublished chart changes
+  LABS64_CHART_VERSION        published chart version to install (default: 0.19.5);
+                              ignored for a local chart path
   LABS64_YES=1                accept every default without asking
 USAGE
 }
@@ -400,7 +405,27 @@ detect_infra() {
 
 # --- values generation --------------------------------------------------------
 
+# Escape a value for a double-quoted YAML scalar. Newlines are rejected rather than escaped:
+# no endpoint, URL or credential legitimately contains one.
+yaml_quote() {
+  case "$1" in
+    *$'\n'*|*$'\r'*) die "Values written by the installer may not contain newlines." ;;
+  esac
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' -e 's/	/\\t/g'
+}
+
+
 write_values() {
+  local yaml_oidc yaml_postgres_host yaml_rabbitmq_host yaml_redis_host
+  local yaml_pg_password yaml_rmq_password yaml_redis_password
+  yaml_oidc=$(yaml_quote "$OIDC_DISCOVERY_URL")
+  yaml_postgres_host=$(yaml_quote "$POSTGRES_HOST")
+  yaml_rabbitmq_host=$(yaml_quote "$RABBITMQ_HOST")
+  yaml_redis_host=$(yaml_quote "$REDIS_HOST")
+  yaml_pg_password=$(yaml_quote "$PG_PASSWORD")
+  yaml_rmq_password=$(yaml_quote "$RMQ_PASSWORD")
+  yaml_redis_password=$(yaml_quote "$REDIS_PASSWORD")
+
   # mock-oidc's personas stamp tenant "t_mock", and the chart ships only the
   # reserved `platform` tenant — without this an authenticated demo call is
   # rejected 403 for an unknown tenant. Demo installs only; a real deployment
@@ -473,7 +498,7 @@ demoMode: $DEMO_MODE
 api-gateway:
   enabled: $ENABLE_API_GATEWAY
   oidc:
-    discoveryUrl: "$OIDC_DISCOVERY_URL"
+    discoveryUrl: "$yaml_oidc"
 authz-pdp:
   enabled: $ENABLE_AUTHZ_PDP
 api-docs:
@@ -546,11 +571,11 @@ global:
     # HTTPRoute 404s every request that arrives by IP or port-forward.
     anyHost: true
   postgresql:
-    host: "$POSTGRES_HOST"
+    host: "$yaml_postgres_host"
   rabbitmq:
-    host: "$RABBITMQ_HOST"
+    host: "$yaml_rabbitmq_host"
   redis:
-    host: "$REDIS_HOST"
+    host: "$yaml_redis_host"
 
 traefik:
   enabled: $TRAEFIK_ENABLED
@@ -562,9 +587,9 @@ EOF
     cat > "$WORKDIR/secrets.yaml" <<EOF
 # Generated credentials — chmod 600, gitignored. Keep them out of support tickets.
 secrets:
-  postgresqlPassword: "$PG_PASSWORD"
-  rabbitmqPassword: "$RMQ_PASSWORD"
-  redisPassword: "$REDIS_PASSWORD"
+  postgresqlPassword: "$yaml_pg_password"
+  rabbitmqPassword: "$yaml_rmq_password"
+  redisPassword: "$yaml_redis_password"
 EOF
   )
   chmod 600 "$WORKDIR/secrets.yaml"
@@ -685,14 +710,15 @@ do_install() {
     cat > "$PROMPT_OUT" <<'EOF'
 
   1) Quickstart  — bundled infra, demo IdP, ready to curl in minutes
-  2) Custom      — pick modules, bring your own infra / OIDC issuer
+  2) BYO         — pick modules, bring your own infra / OIDC issuer
 EOF
     prompt c "Choose" "1"
-    case "$c" in 2|custom) profile=custom ;; *) profile=quickstart ;; esac
+    case "$c" in 2|byo|custom) profile=byo ;; *) profile=quickstart ;; esac
   fi
   case "$profile" in
-    quickstart|custom) ;;
-    *) die "Unknown profile '$profile' (expected quickstart or custom)." ;;
+    quickstart|byo) ;;
+    custom) warn "LABS64_PROFILE=custom is deprecated; use byo."; profile=byo ;;
+    *) die "Unknown profile '$profile' (expected quickstart or byo)." ;;
   esac
 
   state_init
@@ -761,6 +787,7 @@ EOF
   fi
 
   # A local chart path needs no repo; only resolve the published repo when using it.
+  local -a chart_args=()
   case "$CHART" in
     ./*|/*|../*)
       info "Installing from the local chart $CHART (not the published one)"
@@ -782,13 +809,14 @@ EOF
     *)
       helm repo add "$REPO_ALIAS" "$REPO_URL" >/dev/null 2>&1 || true
       helm repo update "$REPO_ALIAS" >/dev/null 2>&1 || helm repo update >/dev/null 2>&1
+      chart_args=(--version "$CHART_VERSION")
       ;;
   esac
 
-  # No --version: let Helm resolve the newest published chart, then record what
-  # it actually resolved so Status can report drift and Uninstall knows what it
+  # Published charts are pinned to CHART_VERSION; what Helm actually installed is
+  # still recorded below so Status can report drift and Uninstall knows what it
   # installed.
-  log "Installing (this takes a few minutes on first run)..."
+  log "Installing ${CHART}${chart_args[*]:+ ${chart_args[*]}} (this takes a few minutes on first run)..."
   
   local watcher_pid=""
   if [ -z "$DRY_RUN" ]; then
@@ -799,6 +827,7 @@ EOF
   if ! helm upgrade --install "$RELEASE" "$CHART" \
     --namespace "$NS_MODULES" --create-namespace \
     -f "$WORKDIR/values-overrides.yaml" -f "$WORKDIR/secrets.yaml" \
+    ${chart_args[@]+"${chart_args[@]}"} \
     ${DRY_RUN:+$DRY_RUN} --wait --timeout 15m 2>&1 | tee -a "$LOGFILE"; then
     stop_pod_watcher "$watcher_pid"
     install_failed
@@ -1079,7 +1108,7 @@ do_smoke() {
 
   # 3. The actual first-good-request flow: get a demo token, then use it.
   if [ "$(state_get demoMode)" != "true" ]; then
-    step_skip "demoMode is off (custom profile / your own OIDC issuer) — no demo token to fetch"
+    step_skip "demoMode is off (byo profile / your own OIDC issuer) — no demo token to fetch"
   else
     # `|| true` on both curl calls below is load-bearing: without it, a refused
     # connection or a non-2xx (curl -f) exits nonzero, and this bare assignment

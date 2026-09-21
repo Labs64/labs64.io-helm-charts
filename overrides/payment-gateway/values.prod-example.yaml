@@ -22,6 +22,8 @@ applicationYaml:
   labs64:
     auditflow:
       enabled: true
+      # In-cluster AuditFlow Service: http://<release>-auditflow.<namespace>.svc.cluster.local:8080.
+      # Assumes release and namespace are both "labs64io" — adjust if yours differ.
       url: http://labs64io-auditflow.labs64io.svc.cluster.local:8080
 
 secrets:
