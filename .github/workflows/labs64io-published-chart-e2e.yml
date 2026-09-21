@@ -38,7 +38,9 @@ jobs:
       - name: Create k3d cluster
         run: |
           set -euo pipefail
-          curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+          K3D_VERSION=v5.8.3
+          curl -fsSL -o install-k3d.sh "https://raw.githubusercontent.com/k3d-io/k3d/${K3D_VERSION}/install.sh"
+          bash install-k3d.sh
           # Traefik is disabled in k3s: the umbrella brings its own, and two
           # Traefik installs would fight over the same Gateway.
           k3d cluster create e2e --agents 1 --wait \
@@ -46,9 +48,9 @@ jobs:
 
       - name: Install Helm 4
         run: |
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-4
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/v4.1.0/scripts/get-helm-4
           chmod 700 get_helm.sh
-          ./get_helm.sh
+          DESIRED_VERSION=v4.1.0 ./get_helm.sh
 
       - name: Select the chart under test
         run: |
