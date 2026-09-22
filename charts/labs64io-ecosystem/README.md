@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.18.0](https://img.shields.io/badge/Version-0.18.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.19.1](https://img.shields.io/badge/Version-0.19.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Umbrella Chart for entire Ecosystem
 
@@ -16,11 +16,12 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | file://../authz-pdp | authz-pdp | >=0.1.0 |
 | file://../checkout | checkout | >=0.1.0 |
 | file://../customer-portal | customer-portal | >=0.1.0 |
+| file://../keycloak | keycloak | >=0.1.0 |
 | file://../mock-oidc | mock-oidc | >=0.1.0 |
 | file://../payment-gateway | payment-gateway | >=0.1.0 |
 | https://charts.bitnami.com/bitnami | postgresql | 18.7.11 |
 | https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.0 |
-| https://traefik.github.io/charts | traefik | 41.0.1 |
+| https://traefik.github.io/charts | traefik | 41.6.0 |
 
 ## Values
 
@@ -47,6 +48,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | global.sharedConfig.name | string | `"labs64io-shared-config"` |  |
 | global.sharedSecret.enabled | bool | `true` |  |
 | global.sharedSecret.name | string | `"labs64io-shared-secret"` |  |
+| keycloak | object | `{"enabled":false,"gateway":{"parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}]}}` | Optional in-cluster Keycloak. Leave disabled when using an externally managed OIDC issuer and configure api-gateway.oidc for that issuer instead. |
 | mock-oidc | object | `{"enabled":false}` | Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render otherwise. Issues tokens to anyone who asks and authenticates nobody; never enable it outside a throwaway demo. |
 | networkPolicy | object | `{"enabled":false}` | NetworkPolicy for this chart's own workload (templates/rabbitmq.yaml — the only long-running workload this chart declares itself; every module's own NetworkPolicy is configured under that module's own key, e.g. `auditflow.networkPolicy`). |
 | payment-gateway.enabled | bool | `true` |  |

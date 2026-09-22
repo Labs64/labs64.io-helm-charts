@@ -1,0 +1,990 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "affinity": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "affinity",
+      "type": "object"
+    },
+    "chart-libs": {
+      "additionalProperties": true,
+      "description": "Values key injected for the library dependency.",
+      "required": [],
+      "title": "chart-libs",
+      "type": "object"
+    },
+    "database": {
+      "additionalProperties": false,
+      "properties": {
+        "database": {
+          "default": "keycloak",
+          "title": "database",
+          "type": "string"
+        },
+        "existingSecret": {
+          "default": "",
+          "title": "existingSecret",
+          "type": "string"
+        },
+        "host": {
+          "default": "",
+          "title": "host",
+          "type": "string"
+        },
+        "port": {
+          "default": 5432,
+          "title": "port",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "host",
+        "port",
+        "database",
+        "existingSecret"
+      ],
+      "title": "database",
+      "type": "object"
+    },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
+    "env": {
+      "items": {
+        "required": []
+      },
+      "title": "env",
+      "type": "array"
+    },
+    "externalSecrets": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "secretKey": {
+          "default": "",
+          "title": "secretKey",
+          "type": "string"
+        },
+        "storeName": {
+          "default": "local-kubernetes-store",
+          "title": "storeName",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "storeName",
+        "secretKey"
+      ],
+      "title": "externalSecrets",
+      "type": "object"
+    },
+    "fullnameOverride": {
+      "default": "keycloak",
+      "description": "Stable service/workload name used by api-gateway discovery URLs.",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "gateway": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "hostnames": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "hostnames",
+          "type": "array"
+        },
+        "parentRefs": {
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "gateway",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "namespace": {
+                    "default": "tools",
+                    "title": "namespace",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "namespace"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "parentRefs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "parentRefs",
+        "hostnames"
+      ],
+      "title": "gateway",
+      "type": "object"
+    },
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "hostname": {
+      "additionalProperties": false,
+      "properties": {
+        "backchannelDynamic": {
+          "default": true,
+          "title": "backchannelDynamic",
+          "type": "boolean"
+        },
+        "frontendUrl": {
+          "default": "http://keycloak.localhost",
+          "description": "Canonical public base URL. This determines the realm issuer.",
+          "title": "frontendUrl",
+          "type": "string"
+        },
+        "proxyHeaders": {
+          "default": "xforwarded",
+          "title": "proxyHeaders",
+          "type": "string"
+        }
+      },
+      "required": [
+        "frontendUrl",
+        "backchannelDynamic",
+        "proxyHeaders"
+      ],
+      "title": "hostname",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "default": "",
+          "title": "digest",
+          "type": "string"
+        },
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "title": "pullPolicy",
+          "type": "string"
+        },
+        "repository": {
+          "default": "quay.io/keycloak/keycloak",
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "pullPolicy",
+        "tag",
+        "digest"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "items": {
+        "required": []
+      },
+      "title": "imagePullSecrets",
+      "type": "array"
+    },
+    "livenessProbe": {
+      "additionalProperties": false,
+      "properties": {
+        "failureThreshold": {
+          "default": 3,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/health/live",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": "management",
+              "title": "port",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 10,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "livenessProbe",
+      "type": "object"
+    },
+    "mode": {
+      "default": "development",
+      "description": "Runtime profile. Development uses Keycloak's embedded dev database;\nproduction requires an external PostgreSQL database and HTTPS hostname.",
+      "title": "mode",
+      "type": "string"
+    },
+    "nameOverride": {
+      "default": "",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "networkPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "apiGatewayLabels": {
+          "additionalProperties": false,
+          "properties": {
+            "app.kubernetes.io/name": {
+              "default": "api-gateway",
+              "title": "app.kubernetes.io/name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "app.kubernetes.io/name"
+          ],
+          "title": "apiGatewayLabels",
+          "type": "object"
+        },
+        "applicationNamespace": {
+          "default": "",
+          "description": "Namespace allowed to call Keycloak directly. Empty means the release namespace.",
+          "title": "applicationNamespace",
+          "type": "string"
+        },
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "extraEgress": {
+          "description": "Production database egress must be explicitly scoped here.",
+          "items": {
+            "required": []
+          },
+          "title": "extraEgress",
+          "type": "array"
+        },
+        "gatewayNamespace": {
+          "default": "tools",
+          "title": "gatewayNamespace",
+          "type": "string"
+        },
+        "ingressControllerLabels": {
+          "additionalProperties": false,
+          "properties": {
+            "app.kubernetes.io/name": {
+              "default": "traefik",
+              "title": "app.kubernetes.io/name",
+              "type": "string"
+            }
+          },
+          "required": [
+            "app.kubernetes.io/name"
+          ],
+          "title": "ingressControllerLabels",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "gatewayNamespace",
+        "applicationNamespace",
+        "ingressControllerLabels",
+        "apiGatewayLabels",
+        "extraEgress"
+      ],
+      "title": "networkPolicy",
+      "type": "object"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "persistence": {
+      "additionalProperties": false,
+      "description": "Persist Keycloak's embedded dev database across pod restarts. Enable only\nfor the single-replica development mode; production uses an external database.",
+      "properties": {
+        "accessModes": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "accessModes",
+          "type": "array"
+        },
+        "annotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "size": {
+          "default": "1Gi",
+          "title": "size",
+          "type": "string"
+        },
+        "storageClass": {
+          "default": "",
+          "title": "storageClass",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "accessModes",
+        "size",
+        "storageClass",
+        "annotations"
+      ],
+      "title": "persistence",
+      "type": "object"
+    },
+    "podAnnotations": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "podAnnotations",
+      "type": "object"
+    },
+    "podDisruptionBudget": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "minAvailable": {
+          "default": 1,
+          "title": "minAvailable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minAvailable"
+      ],
+      "title": "podDisruptionBudget",
+      "type": "object"
+    },
+    "podLabels": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "podLabels",
+      "type": "object"
+    },
+    "podSecurityContext": {
+      "additionalProperties": false,
+      "properties": {
+        "fsGroup": {
+          "default": 1000,
+          "title": "fsGroup",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "fsGroup"
+      ],
+      "title": "podSecurityContext",
+      "type": "object"
+    },
+    "readinessProbe": {
+      "additionalProperties": false,
+      "properties": {
+        "failureThreshold": {
+          "default": 6,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/health/ready",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": "management",
+              "title": "port",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 5,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "readinessProbe",
+      "type": "object"
+    },
+    "realmConfig": {
+      "additionalProperties": false,
+      "description": "Declarative realm reconciliation. Keep ecosystem-specific definitions outside\nthis reusable chart and inject a file with --set-file realmConfig.config=realm.json.",
+      "properties": {
+        "backoffLimit": {
+          "default": 6,
+          "title": "backoffLimit",
+          "type": "integer"
+        },
+        "config": {
+          "default": "",
+          "description": "Realm JSON or YAML consumed by keycloak-config-cli.",
+          "title": "config",
+          "type": "string"
+        },
+        "existingConfigMap": {
+          "default": "",
+          "description": "Use an externally managed ConfigMap instead of realmConfig.config. Every\nJSON/YAML file in it is reconciled, so this also supports multiple realms.",
+          "title": "existingConfigMap",
+          "type": "string"
+        },
+        "image": {
+          "additionalProperties": false,
+          "properties": {
+            "digest": {
+              "default": "",
+              "title": "digest",
+              "type": "string"
+            },
+            "pullPolicy": {
+              "default": "IfNotPresent",
+              "title": "pullPolicy",
+              "type": "string"
+            },
+            "repository": {
+              "default": "docker.io/adorsys/keycloak-config-cli",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "6.5.1-26",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "repository",
+            "pullPolicy",
+            "tag",
+            "digest"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "resources": {
+          "additionalProperties": false,
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "250m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "256Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "25m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "128Mi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "requests",
+            "limits"
+          ],
+          "title": "resources",
+          "type": "object"
+        },
+        "secretName": {
+          "default": "",
+          "description": "Secret exposed only to the reconciler for $(env:NAME) substitutions.\nDefaults to this release's Secret.",
+          "title": "secretName",
+          "type": "string"
+        },
+        "timeout": {
+          "default": "180s",
+          "title": "timeout",
+          "type": "string"
+        }
+      },
+      "required": [
+        "config",
+        "existingConfigMap",
+        "secretName",
+        "image",
+        "backoffLimit",
+        "timeout",
+        "resources"
+      ],
+      "title": "realmConfig",
+      "type": "object"
+    },
+    "replicaCount": {
+      "default": 1,
+      "title": "replicaCount",
+      "type": "integer"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "properties": {
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "1",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "1Gi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
+          "type": "object"
+        },
+        "requests": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "100m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "512Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "requests",
+          "type": "object"
+        }
+      },
+      "required": [
+        "limits",
+        "requests"
+      ],
+      "title": "resources",
+      "type": "object"
+    },
+    "secrets": {
+      "additionalProperties": false,
+      "description": "Credentials are always rendered into Secret/ExternalSecret, never ConfigMap.\nReplace these development placeholders through an ignored local override.",
+      "properties": {
+        "data": {
+          "additionalProperties": true,
+          "properties": {
+            "KC_BOOTSTRAP_ADMIN_PASSWORD": {
+              "default": "change-me",
+              "title": "KC_BOOTSTRAP_ADMIN_PASSWORD",
+              "type": "string"
+            },
+            "KC_BOOTSTRAP_ADMIN_USERNAME": {
+              "default": "admin",
+              "title": "KC_BOOTSTRAP_ADMIN_USERNAME",
+              "type": "string"
+            },
+            "KC_DB_PASSWORD": {
+              "default": "change-me",
+              "title": "KC_DB_PASSWORD",
+              "type": "string"
+            },
+            "KC_DB_USERNAME": {
+              "default": "keycloak",
+              "title": "KC_DB_USERNAME",
+              "type": "string"
+            }
+          },
+          "required": [
+            "KC_BOOTSTRAP_ADMIN_USERNAME",
+            "KC_BOOTSTRAP_ADMIN_PASSWORD",
+            "KC_DB_USERNAME",
+            "KC_DB_PASSWORD"
+          ],
+          "title": "data",
+          "type": "object"
+        }
+      },
+      "required": [],
+      "title": "secrets",
+      "type": "object"
+    },
+    "securityContext": {
+      "additionalProperties": false,
+      "properties": {
+        "allowPrivilegeEscalation": {
+          "default": false,
+          "title": "allowPrivilegeEscalation",
+          "type": "boolean"
+        },
+        "capabilities": {
+          "additionalProperties": false,
+          "properties": {
+            "drop": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "drop",
+              "type": "array"
+            }
+          },
+          "required": [
+            "drop"
+          ],
+          "title": "capabilities",
+          "type": "object"
+        },
+        "readOnlyRootFilesystem": {
+          "default": false,
+          "title": "readOnlyRootFilesystem",
+          "type": "boolean"
+        },
+        "runAsGroup": {
+          "default": 1000,
+          "title": "runAsGroup",
+          "type": "integer"
+        },
+        "runAsNonRoot": {
+          "default": true,
+          "title": "runAsNonRoot",
+          "type": "boolean"
+        },
+        "runAsUser": {
+          "default": 1000,
+          "title": "runAsUser",
+          "type": "integer"
+        },
+        "seccompProfile": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "default": "RuntimeDefault",
+              "title": "type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "title": "seccompProfile",
+          "type": "object"
+        }
+      },
+      "required": [
+        "allowPrivilegeEscalation",
+        "capabilities",
+        "runAsNonRoot",
+        "runAsUser",
+        "runAsGroup",
+        "readOnlyRootFilesystem",
+        "seccompProfile"
+      ],
+      "title": "securityContext",
+      "type": "object"
+    },
+    "service": {
+      "additionalProperties": false,
+      "properties": {
+        "managementPort": {
+          "default": 9000,
+          "title": "managementPort",
+          "type": "integer"
+        },
+        "port": {
+          "default": 8080,
+          "title": "port",
+          "type": "integer"
+        },
+        "type": {
+          "default": "ClusterIP",
+          "title": "type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "port",
+        "managementPort"
+      ],
+      "title": "service",
+      "type": "object"
+    },
+    "serviceAccount": {
+      "additionalProperties": false,
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "automount": {
+          "default": false,
+          "title": "automount",
+          "type": "boolean"
+        },
+        "create": {
+          "default": true,
+          "title": "create",
+          "type": "boolean"
+        },
+        "name": {
+          "default": "",
+          "title": "name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "create",
+        "automount",
+        "annotations",
+        "name"
+      ],
+      "title": "serviceAccount",
+      "type": "object"
+    },
+    "startupProbe": {
+      "additionalProperties": false,
+      "properties": {
+        "failureThreshold": {
+          "default": 60,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/health/started",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": "management",
+              "title": "port",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 5,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "startupProbe",
+      "type": "object"
+    },
+    "terminationGracePeriodSeconds": {
+      "default": 30,
+      "title": "terminationGracePeriodSeconds",
+      "type": "integer"
+    },
+    "tolerations": {
+      "items": {
+        "required": []
+      },
+      "title": "tolerations",
+      "type": "array"
+    },
+    "volumeMounts": {
+      "items": {
+        "required": []
+      },
+      "title": "volumeMounts",
+      "type": "array"
+    },
+    "volumes": {
+      "items": {
+        "required": []
+      },
+      "title": "volumes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "enabled",
+    "mode",
+    "replicaCount",
+    "persistence",
+    "image",
+    "imagePullSecrets",
+    "nameOverride",
+    "fullnameOverride",
+    "serviceAccount",
+    "podAnnotations",
+    "podLabels",
+    "podSecurityContext",
+    "securityContext",
+    "service",
+    "hostname",
+    "gateway",
+    "database",
+    "realmConfig",
+    "externalSecrets",
+    "secrets",
+    "resources",
+    "livenessProbe",
+    "readinessProbe",
+    "startupProbe",
+    "podDisruptionBudget",
+    "networkPolicy",
+    "terminationGracePeriodSeconds",
+    "nodeSelector",
+    "tolerations",
+    "affinity",
+    "env",
+    "volumes",
+    "volumeMounts"
+  ],
+  "type": "object"
+}

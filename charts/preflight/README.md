@@ -1,6 +1,6 @@
 # preflight
 
-![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.2.2](https://img.shields.io/badge/Version-0.2.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Preflight - verify tenant infrastructure (broker, database, cache, OIDC) before installing modules
 
@@ -26,7 +26,7 @@ Labs64.IO :: Preflight - verify tenant infrastructure (broker, database, cache, 
 | checks.rabbitmq | object | `{"enabled":false,"host":"rabbitmq.infra.example.com","port":5672}` | AMQP broker reachability (TCP connect) |
 | checks.redis | object | `{"enabled":false,"host":"redis.infra.example.com","password":"","port":6379}` | Redis connectivity (PING) |
 | enabled | bool | `true` |  |
-| images | object | `{"busybox":"busybox:1.36","curl":"curlimages/curl:8.10.1","postgresql":"postgres:18-alpine","redis":"redis:7-alpine"}` | Images used by the check containers |
+| images | object | `{"busybox":"busybox:1.36","curl":"curlimages/curl:8.10.1","postgresql":"postgres:18-alpine","redis":"redis:8-alpine"}` | Images used by the check containers |
 | images.postgresql | string | `"postgres:18-alpine"` | Official images rather than bitnamilegacy/*, which is an unsupported namespace on a deprecation path. These run the same SELECT 1 / PING checks; both put psql / redis-cli on PATH, which is all job.yaml relies on. |
 
 ----------------------------------------------

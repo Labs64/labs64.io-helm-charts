@@ -1170,7 +1170,7 @@
                 "additionalProperties": false,
                 "properties": {
                   "name": {
-                    "default": "redis",
+                    "default": "valkey",
                     "title": "name",
                     "type": "string"
                   },

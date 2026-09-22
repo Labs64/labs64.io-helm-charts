@@ -275,8 +275,64 @@
       "title": "global",
       "type": "object"
     },
-    "mock-oidc": {
+    "keycloak": {
       "additionalProperties": true,
+      "description": "Optional in-cluster Keycloak. Leave disabled when using an externally\nmanaged OIDC issuer and configure api-gateway.oidc for that issuer instead.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "gateway": {
+          "additionalProperties": false,
+          "properties": {
+            "parentRefs": {
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "name": {
+                        "default": "labs64io-gateway",
+                        "title": "name",
+                        "type": "string"
+                      },
+                      "namespace": {
+                        "default": "tools",
+                        "title": "namespace",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "namespace"
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "required": []
+              },
+              "title": "parentRefs",
+              "type": "array"
+            }
+          },
+          "required": [
+            "parentRefs"
+          ],
+          "title": "gateway",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "gateway"
+      ],
+      "title": "keycloak",
+      "type": "object"
+    },
+    "mock-oidc": {
+      "additionalProperties": false,
       "description": "Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render\notherwise. Issues tokens to anyone who asks and authenticates nobody; never\nenable it outside a throwaway demo.",
       "properties": {
         "enabled": {
@@ -816,6 +872,7 @@
     "networkPolicy",
     "demoMode",
     "secrets",
+    "mock-oidc",
     "tests"
   ],
   "type": "object"

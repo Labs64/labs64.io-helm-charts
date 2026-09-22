@@ -790,6 +790,26 @@
                   "port"
                 ],
                 "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "valkey",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 6379,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
               }
             ],
             "required": []

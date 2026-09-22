@@ -1,6 +1,6 @@
 # mock-oidc
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.10](https://img.shields.io/badge/AppVersion-2.1.10-informational?style=flat-square)
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 2.1.10](https://img.shields.io/badge/AppVersion-2.1.10-informational?style=flat-square)
 
 Labs64.IO :: Mock OIDC provider — DEV/DEMO ONLY, never for production
 
@@ -28,8 +28,9 @@ Labs64.IO :: Mock OIDC provider — DEV/DEMO ONLY, never for production
 | image | object | `{"pullPolicy":"IfNotPresent","repository":"ghcr.io/navikt/mock-oauth2-server","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
-| networkPolicy | object | `{"enabled":true,"gatewayNamespace":"tools"}` | Restrict this pod's traffic. Egress is DNS-only: the server calls nothing, it signs tokens from the static config mounted at startup. |
-| networkPolicy.gatewayNamespace | string | `"tools"` | Namespace the shared Gateway runs in; ingress is accepted from there and from this release's own namespace. |
+| networkPolicy | object | `{"applicationNamespace":"","enabled":true,"gatewayNamespace":"tools"}` | Restrict this pod's traffic. Egress is DNS-only: the server calls nothing, it signs tokens from the static config mounted at startup. |
+| networkPolicy.applicationNamespace | string | `""` | Namespace containing api-gateway when it differs from this release. |
+| networkPolicy.gatewayNamespace | string | `"tools"` | Namespace the shared Gateway runs in. |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources | object | `{"limits":{"cpu":"200m","memory":"256Mi"},"requests":{"cpu":"50m","memory":"128Mi"}}` | Resource requests/limits. The server holds a handful of static personas in memory and signs short-lived tokens; it needs very little. |
 | service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
