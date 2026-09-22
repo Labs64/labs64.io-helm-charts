@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.19.6](https://img.shields.io/badge/Version-0.19.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.19.7](https://img.shields.io/badge/Version-0.19.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 

@@ -332,7 +332,7 @@
       "type": "object"
     },
     "mock-oidc": {
-      "additionalProperties": false,
+      "additionalProperties": true,
       "description": "Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render\notherwise. Issues tokens to anyone who asks and authenticates nobody; never\nenable it outside a throwaway demo.",
       "properties": {
         "enabled": {
@@ -872,7 +872,6 @@
     "networkPolicy",
     "demoMode",
     "secrets",
-    "mock-oidc",
     "tests"
   ],
   "type": "object"

@@ -331,6 +331,10 @@ keycloak:
       - name: labs64io-gateway
         namespace: tools
 
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 # -- Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render
 # otherwise. Issues tokens to anyone who asks and authenticates nobody; never
 # enable it outside a throwaway demo.
