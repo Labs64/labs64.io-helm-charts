@@ -22,7 +22,7 @@ Labs64.IO :: Keycloak identity provider
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.0 |
+| file://../chart-libs | chart-libs | 0.8.2 |
 
 ## Values
 

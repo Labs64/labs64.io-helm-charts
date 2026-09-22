@@ -1,10 +1,20 @@
 # labs64io-ecosystem
 
-![Version: 0.19.1](https://img.shields.io/badge/Version-0.19.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.19.6](https://img.shields.io/badge/Version-0.19.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-Labs64.IO :: Umbrella Chart for entire Ecosystem
+Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 
 **Homepage:** <https://labs64.io>
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| Labs64 | <info@labs64.com> | <https://labs64.io> |
+
+## Source Code
+
+* <https://github.com/Labs64/labs64.io-helm-charts>
 
 ## Requirements
 

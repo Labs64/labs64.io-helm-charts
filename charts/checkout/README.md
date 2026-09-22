@@ -1,6 +1,6 @@
 # checkout
 
-![Version: 0.11.0](https://img.shields.io/badge/Version-0.11.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.11.2](https://img.shields.io/badge/Version-0.11.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
@@ -10,7 +10,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| labs64 | <info@labs64.com> |  |
+| Labs64 | <info@labs64.com> | <https://labs64.io> |
 
 ## Source Code
 
@@ -21,7 +21,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.0 |
+| file://../chart-libs | chart-libs | 0.8.2 |
 
 ## Values
 
@@ -117,6 +117,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | tests | object | `{"enabled":true,"healthPath":"/actuator/health"}` | helm test hook (rendered by chart-libs.test-connection) |
 | tests.healthPath | string | `"/actuator/health"` | Health endpoint probed by `helm test` |
 | tolerations | list | `[]` |  |
+| topologySpreadConstraints | list | `[]` | Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable). labelSelector defaults to this chart's own selector labels when a constraint omits one. |
 | ui.application.runtimeEnv.enabled | bool | `true` | Enable loading a runtime config file (env.json). |
 | ui.application.runtimeEnv.env | object | `{"VITE_API_URL":"https://<HOST>/checkout/api/v1"}` | Key-value pairs written into env.json. Keys should match variables your UI reads (for Vite, use the VITE_* prefix). |
 | ui.application.runtimeEnv.env.VITE_API_URL | string | `"https://<HOST>/checkout/api/v1"` | Primary API base URL — replace <HOST> with your domain/host. |

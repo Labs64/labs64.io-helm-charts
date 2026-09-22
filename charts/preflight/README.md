@@ -10,7 +10,7 @@ Labs64.IO :: Preflight - verify tenant infrastructure (broker, database, cache, 
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| labs64 | <info@labs64.com> |  |
+| Labs64 | <info@labs64.com> | <https://labs64.io> |
 
 ## Source Code
 
