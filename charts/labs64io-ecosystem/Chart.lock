@@ -34,6 +34,6 @@ dependencies:
   version: 0.1.0
 - name: mock-oidc
   repository: file://../mock-oidc
-  version: 0.1.0
-digest: sha256:981d19db43ee15da73b90f56e886839e39772a5c0f090d919cccd2e7e1aec545
-generated: "2026-09-21T21:22:01.649338+02:00"
+  version: 0.1.1
+digest: sha256:9e5a485f1ee4ff28e43a8fc113cf4a27ba912de8751b519921e7a5e7583cdab5
+generated: "2026-09-22T15:14:36.720556529Z"
