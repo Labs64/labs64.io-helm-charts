@@ -20,5 +20,5 @@ maintainers:
     email: info@labs64.com
 dependencies:
   - name: chart-libs
-    version: 0.8.0
+    version: 0.8.2
     repository: file://../chart-libs
