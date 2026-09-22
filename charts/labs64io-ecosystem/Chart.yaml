@@ -76,6 +76,12 @@ dependencies:
     version: "41.6.0"
     repository: https://traefik.github.io/charts
     condition: traefik.enabled
+  # Identity providers are opt-in infrastructure. Both can stay disabled when
+  # api-gateway points at an externally managed OIDC issuer.
+  - name: keycloak
+    version: ">=0.1.0"
+    repository: file://../keycloak
+    condition: keycloak.enabled
   # Dev-only IdP (opt-in, additionally gated on demoMode — see templates/_guards.tpl).
   - name: mock-oidc
     version: ">=0.1.0"

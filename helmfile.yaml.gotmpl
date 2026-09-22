@@ -44,8 +44,12 @@ environments:
   local:
     values:
       - overrides/global-values.yaml
+      - overrides/helmfile/values.local.yaml
 
 ---
+{{ if and .Values.identity.mockOidc.enabled .Values.identity.keycloak.enabled }}
+{{ fail "identity.mockOidc.enabled and identity.keycloak.enabled cannot both be true" }}
+{{ end }}
 releases:
   # === INFRASTRUCTURE ===
   - name: traefik
@@ -73,6 +77,7 @@ releases:
       layer: infra
 
   - name: rabbitmq
+    installed: {{ .Values.tools.rabbitmq.enabled }}
     namespace: tools
     chart: bitnami/rabbitmq
     version: 16.0.14
@@ -83,6 +88,7 @@ releases:
       layer: infra
 
   - name: postgresql
+    installed: {{ .Values.tools.postgresql.enabled }}
     namespace: tools
     chart: bitnami/postgresql
     version: 18.7.11
@@ -96,6 +102,7 @@ releases:
   # project. Release name stays "redis" (overrides/redis/values.local.yaml pins
   # fullnameOverride: "redis" so the resulting Service name doesn't change).
   - name: redis
+    installed: {{ .Values.tools.redis.enabled }}
     namespace: tools
     chart: bitnami/valkey
     version: 6.3.0
@@ -103,6 +110,42 @@ releases:
       - overrides/redis/values.{{ .Environment.Name }}.yaml
     labels:
       layer: infra
+
+  # === IDENTITY ===
+  # Provider lifecycle is declarative. Environment overrides decide which
+  # in-cluster provider, if any, is installed; both may be disabled when the
+  # gateway points at an externally managed OIDC issuer.
+  - name: mock-oidc
+    installed: {{ .Values.identity.mockOidc.enabled }}
+    namespace: tools
+    chart: ./charts/mock-oidc
+    values:
+      - ./charts/mock-oidc/values.yaml
+      - ./overrides/mock-oidc/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: identity
+      provider: mock
+    needs:
+      - tools/traefik
+
+  - name: keycloak
+    installed: {{ .Values.identity.keycloak.enabled }}
+    namespace: tools
+    chart: ./charts/keycloak
+    values:
+      - ./charts/keycloak/values.yaml
+      - ./overrides/keycloak/values.{{ .Environment.Name }}.yaml
+      {{- if isFile (printf "./overrides/keycloak/values.secrets.%s.yaml" .Environment.Name) }}
+      - ./overrides/keycloak/values.secrets.{{ .Environment.Name }}.yaml
+      {{- end }}
+    set:
+      - name: realmConfig.config
+        file: ./overrides/keycloak/realm.{{ .Environment.Name }}.json
+    labels:
+      layer: identity
+      provider: keycloak
+    needs:
+      - tools/traefik
 
   # === MONITORING ===
   - name: metrics-server

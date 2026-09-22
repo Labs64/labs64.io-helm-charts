@@ -1,0 +1,19 @@
+mode: development
+
+persistence:
+  enabled: true
+
+hostname:
+  frontendUrl: http://keycloak.localhost
+  backchannelDynamic: true
+
+gateway:
+  enabled: true
+  parentRefs:
+    - name: labs64io-gateway
+      namespace: tools
+  hostnames:
+    - keycloak.localhost
+
+networkPolicy:
+  applicationNamespace: labs64io

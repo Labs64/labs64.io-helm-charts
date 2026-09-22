@@ -23,5 +23,8 @@ outside demoMode would let a production install silently accept forged identitie
 {{- if and (index .Values "mock-oidc" "enabled") (not .Values.demoMode) -}}
   {{- fail "mock-oidc.enabled requires demoMode=true — it issues tokens to anyone who asks and must never run outside a throwaway demo." -}}
 {{- end -}}
+{{- if and (index .Values "mock-oidc" "enabled") .Values.keycloak.enabled -}}
+  {{- fail "mock-oidc.enabled and keycloak.enabled cannot both be true" -}}
+{{- end -}}
 {{- end -}}
 

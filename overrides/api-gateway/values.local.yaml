@@ -5,12 +5,24 @@ image:
   tag: latest
   pullPolicy: Always
 
+# Keep the allowed egress and OIDC URLs on the same provider.
+# To switch to bundled Keycloak:
+#   1. Set identity.mockOidc.enabled=false and identity.keycloak.enabled=true
+#      in overrides/helmfile/values.local.yaml.
+#   2. Change toolsEgress.name below to keycloak.
+#   3. Swap the active mock URLs for the commented Keycloak URLs.
 networkPolicy:
   enabled: true
+  toolsEgress:
+    - name: mock-oidc
+      port: 8080
 
-# mock-oauth2-server (just install-tool-mock-oidc)
 oidc:
   discoveryUrl: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
+  issuer: http://mock-oidc.localhost/labs64io
+  # Keycloak:
+  # discoveryUrl: http://keycloak.tools.svc.cluster.local:8080/realms/labs64io/.well-known/openid-configuration
+  # issuer: http://keycloak.localhost/realms/labs64io
 
 logLevel: DEBUG
 

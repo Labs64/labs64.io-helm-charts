@@ -33,6 +33,9 @@ Bundled infrastructure:
 {{- if .Values.redis.enabled }}
   - Redis      ({{ .Release.Name }}-redis)
 {{- end }}
+{{- if .Values.keycloak.enabled }}
+  - Keycloak   ({{ .Release.Name }}-keycloak)
+{{- end }}
 Credentials are pre-wired end-to-end via the shared Secret "{{ .Values.global.sharedSecret.name }}"
 (dev-grade defaults in `secrets.*Password` — change them before using this anywhere but local/demo).
 

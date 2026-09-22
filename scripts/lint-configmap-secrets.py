@@ -65,11 +65,27 @@ RENDER_SETS = {
     "labs64io-ecosystem": ["demoMode=true"],
 }
 
+# Values sourced from files are invisible to the ordinary override scan. Keep
+# deployment-specific configs in their own files while still scanning the exact
+# ConfigMaps that local Helm/Helmfile renders.
+RENDER_SET_FILES = {
+    "keycloak": [
+        ("realmConfig.config", OVERRIDES_DIR / "keycloak" / "realm.local.json"),
+    ],
+}
+
 
 def render_sets_for(chart: str) -> list[str]:
     args: list[str] = []
     for expr in RENDER_SETS.get(chart, []):
         args += ["--set", expr]
+    return args
+
+
+def render_set_files_for(chart: str) -> list[str]:
+    args: list[str] = []
+    for name, path in RENDER_SET_FILES.get(chart, []):
+        args += ["--set-file", f"{name}={path}"]
     return args
 
 
@@ -120,6 +136,7 @@ PLACEHOLDER_PATTERN = re.compile(
     r"^\s*(?:"
     r"|<[^>]*>"                      # <your-password-here>
     r"|\$\{[^}]*\}"                  # ${SOME_ENV}  (Spring/helm indirection)
+    r"|\$\((?:env|file):[^)]*\)"     # $(env:NAME) / $(file:...) indirection
     r"|\{\{[^}]*\}\}"                # leftover template
     r"|change[-_ ]?me|changeit|replace[-_ ]?me|placeholder|example|dummy|none|null|nil"
     r"|todo|tbd|xxx+|\*+|redacted|omitted"
@@ -196,6 +213,7 @@ def render(chart_dir: Path, values: list[Path]) -> str:
     for api in API_VERSIONS:
         cmd += ["--api-versions", api]
     cmd += render_sets_for(chart_dir.name)
+    cmd += render_set_files_for(chart_dir.name)
     for v in values:
         cmd += ["-f", str(v)]
     proc = subprocess.run(cmd, capture_output=True, text=True)

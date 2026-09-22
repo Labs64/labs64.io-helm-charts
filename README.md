@@ -294,14 +294,22 @@ helm install traefik traefik/traefik -n tools --create-namespace -f traefik-valu
 Point your DNS/`/etc/hosts` (or an `Ingress`/`LoadBalancer` in front of Traefik) at that
 Service, and every module's `gateway.parentRefs` will resolve without any further change.
 
-Local testing: `just install-tool-mock-oidc` (dev-only M2M tokens),
-`just install-app <module>`, `helm test labs64io-<module> -n labs64io`.
+Local testing uses one command, `just up`. The environment composition is declarative:
+`overrides/helmfile/values.local.yaml` enables bundled tools/providers, while
+`overrides/api-gateway/values.local.yaml` selects the OIDC discovery URL, issuer and allowed
+provider egress. For bundled Keycloak, disable `identity.mockOidc`, enable
+`identity.keycloak`, and point the gateway override and its `networkPolicy.toolsEgress` at
+Keycloak.
+Set both providers to `false` when using an external issuer. Then use
+`just install-app <module>` and `helm test labs64io-<module> -n labs64io` as usual.
 
 ### One-click full stack (umbrella chart)
 
 `labs64io-ecosystem` is an umbrella chart that installs every module plus optional bundled
-PostgreSQL/RabbitMQ/Redis (`postgresql.enabled` / `rabbitmq.enabled` / `redis.enabled`, on by
-default) with credentials pre-wired end-to-end via a shared `Secret`. Cherry-pick within it
+PostgreSQL/RabbitMQ/Redis and Keycloak. Data stores use `postgresql.enabled` /
+`rabbitmq.enabled` / `redis.enabled` (on by default); Keycloak is explicitly opt-in through
+`keycloak.enabled`. External infrastructure and identity providers remain valid: disable the
+bundled component and provide its connection/OIDC values. Cherry-pick within it
 with `--set <module>.enabled=false`:
 
 ```

@@ -132,7 +132,16 @@ def test_ignores_pointers_to_secrets(key):
 
 @pytest.mark.parametrize(
     "value",
-    ["", "<your-password>", "${DB_PASSWORD}", "changeme", "REDACTED", "TBD"],
+    [
+        "",
+        "<your-password>",
+        "${DB_PASSWORD}",
+        "$(env:DB_PASSWORD)",
+        "$(file:UTF-8:/run/secrets/db-password)",
+        "changeme",
+        "REDACTED",
+        "TBD",
+    ],
 )
 def test_ignores_placeholders(value):
     assert not scan(configmap(f'  password: "{value}"'))

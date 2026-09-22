@@ -1,0 +1,6 @@
+gateway:
+  hostnames:
+    - mock-oidc.localhost
+
+networkPolicy:
+  applicationNamespace: labs64io

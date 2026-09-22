@@ -1,0 +1,18 @@
+# Local release switches consumed by helmfile.yaml.gotmpl. They control whether
+# an in-cluster dependency exists; application connection settings remain in
+# overrides/global-values.yaml and each application's own override.
+tools:
+  rabbitmq:
+    enabled: true
+  postgresql:
+    enabled: true
+  redis:
+    enabled: true
+
+# At most one bundled identity provider may be enabled. Set both to false when
+# api-gateway points at an externally managed OIDC issuer.
+identity:
+  mockOidc:
+    enabled: true
+  keycloak:
+    enabled: false

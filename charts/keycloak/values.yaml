@@ -1,0 +1,180 @@
+enabled: true
+
+# -- Runtime profile. Development uses Keycloak's embedded dev database;
+# production requires an external PostgreSQL database and HTTPS hostname.
+mode: development
+
+replicaCount: 1
+
+# -- Persist Keycloak's embedded dev database across pod restarts. Enable only
+# for the single-replica development mode; production uses an external database.
+persistence:
+  enabled: false
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  storageClass: ""
+  annotations: {}
+
+image:
+  repository: quay.io/keycloak/keycloak
+  pullPolicy: IfNotPresent
+  tag: ""
+  digest: ""
+
+imagePullSecrets: []
+nameOverride: ""
+# -- Stable service/workload name used by api-gateway discovery URLs.
+fullnameOverride: keycloak
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+podSecurityContext:
+  fsGroup: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  readOnlyRootFilesystem: false
+  seccompProfile:
+    type: RuntimeDefault
+
+service:
+  type: ClusterIP
+  port: 8080
+  managementPort: 9000
+
+hostname:
+  # -- Canonical public base URL. This determines the realm issuer.
+  frontendUrl: http://keycloak.localhost
+  backchannelDynamic: true
+  proxyHeaders: xforwarded
+
+gateway:
+  enabled: true
+  parentRefs:
+    - name: gateway
+      namespace: tools
+  hostnames:
+    - keycloak.localhost
+
+database:
+  host: ""
+  port: 5432
+  database: keycloak
+  existingSecret: ""
+
+# -- Declarative realm reconciliation. Keep ecosystem-specific definitions outside
+# this reusable chart and inject a file with --set-file realmConfig.config=realm.json.
+realmConfig:
+  # -- Realm JSON or YAML consumed by keycloak-config-cli.
+  config: ""
+  # -- Use an externally managed ConfigMap instead of realmConfig.config. Every
+  # JSON/YAML file in it is reconciled, so this also supports multiple realms.
+  existingConfigMap: ""
+  # -- Secret exposed only to the reconciler for $(env:NAME) substitutions.
+  # Defaults to this release's Secret.
+  secretName: ""
+  image:
+    repository: docker.io/adorsys/keycloak-config-cli
+    pullPolicy: IfNotPresent
+    tag: "6.5.1-26"
+    digest: ""
+  backoffLimit: 6
+  timeout: 180s
+  resources:
+    requests:
+      cpu: 25m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+externalSecrets:
+  enabled: false
+  storeName: local-kubernetes-store
+  secretKey: ""
+
+# -- Credentials are always rendered into Secret/ExternalSecret, never ConfigMap.
+# Replace these development placeholders through an ignored local override.
+secrets:
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  data:
+    KC_BOOTSTRAP_ADMIN_USERNAME: admin
+    KC_BOOTSTRAP_ADMIN_PASSWORD: change-me
+    KC_DB_USERNAME: keycloak
+    KC_DB_PASSWORD: change-me
+
+resources:
+  limits:
+    cpu: "1"
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 512Mi
+
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: management
+  periodSeconds: 10
+  failureThreshold: 3
+  timeoutSeconds: 2
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: management
+  periodSeconds: 5
+  failureThreshold: 6
+  timeoutSeconds: 2
+startupProbe:
+  httpGet:
+    path: /health/started
+    port: management
+  periodSeconds: 5
+  failureThreshold: 60
+  timeoutSeconds: 2
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  gatewayNamespace: tools
+  # -- Namespace allowed to call Keycloak directly. Empty means the release namespace.
+  applicationNamespace: ""
+  ingressControllerLabels:
+    app.kubernetes.io/name: traefik
+  apiGatewayLabels:
+    app.kubernetes.io/name: api-gateway
+  # -- Production database egress must be explicitly scoped here.
+  extraEgress: []
+
+terminationGracePeriodSeconds: 30
+nodeSelector: {}
+tolerations: []
+affinity: {}
+env: []
+volumes: []
+volumeMounts: []
+
+# -- Values key injected for the library dependency.
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}

@@ -253,28 +253,47 @@ just repo-update
 
 This adds repositories for: traefik, bitnami (RabbitMQ, PostgreSQL, Redis), open-telemetry, grafana, prometheus-community, metrics-server.
 
-### 3-5. Install core tools (Traefik, ESO, RabbitMQ, PostgreSQL, Redis, mock OIDC)
+### 3-5. Install core tools and identity
 
-All infra tools are declared as [Helmfile](https://helmfile.io/) releases (`helmfile.yaml.gotmpl`,
-`layer: infra`) and installed together:
+All local infrastructure and identity providers are declared as
+[Helmfile](https://helmfile.io/) releases. One command reconciles the environment:
 
 ```bash
 just install-tools
 ```
 
-This installs the Gateway API + Traefik CRDs (`just install-crds`, run first since Helmfile
-has no per-release CRD-skip equivalent), then via Helmfile: Traefik v3, [External Secrets
-Operator](https://external-secrets.io/) (ESO), RabbitMQ, PostgreSQL, and Redis — then applies
-the Traefik dashboard HTTPRoute, the mock OIDC provider, and the local `ClusterSecretStore`
-(`overrides/eso/cluster-secret-store.yaml`) that lets any chart opt into ESO-backed secrets via
-`externalSecrets.enabled` (see [Unified secret management](#unified-secret-management) below).
+Release switches live in `overrides/helmfile/values.local.yaml`. RabbitMQ, PostgreSQL and Redis
+are enabled independently from identity. To use Keycloak, change the identity switches to:
 
-To install/inspect a single tool, use its own recipe, e.g. `just install-tool-traefik`,
-`just install-tool-rabbitmq`, `just install-tool-postgresql`, `just install-tool-redis`,
-`just install-tool-mock-oidc` — or target just that Helmfile release/layer directly:
+```yaml
+identity:
+  mockOidc:
+    enabled: false
+  keycloak:
+    enabled: true
+```
+
+Then update `overrides/api-gateway/values.local.yaml` to use Keycloak discovery and issuer URLs,
+and set `networkPolicy.toolsEgress` to `name: keycloak`, `port: 8080`. For mock OIDC, use
+`http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration`,
+`http://mock-oidc.localhost/labs64io`, and egress `name: mock-oidc`, `port: 8080`. Run
+`just up`; Helmfile installs the enabled provider and uninstalls the disabled one. Both may be
+disabled when the gateway points at an externally managed OIDC issuer.
+
+This installs the Gateway API + Traefik CRDs (`just install-crds`), Traefik v3,
+[External Secrets Operator](https://external-secrets.io/), enabled data stores, the selected
+identity provider, and the local `ClusterSecretStore`. Keycloak declaratively reconciles
+`overrides/keycloak/realm.local.json`; its embedded local database uses a single-replica PVC.
+
+To target one declared release directly:
+
 ```bash
 helmfile -e local -l name=rabbitmq apply
+helmfile -e local -l layer=identity apply
 ```
+
+API tests still need to know how to obtain a token. Run the normal test command for mock, or pass
+`IDENTITY_PROVIDER=keycloak` when the deployed issuer is Keycloak.
 
 Wait for all pods:
 ```bash
@@ -478,6 +497,7 @@ just uninstall-tool-rabbitmq
 just uninstall-tool-postgresql
 just uninstall-tool-redis
 just uninstall-tool-mock-oidc
+just uninstall-tool-keycloak
 just cluster-down             # delete the k3d cluster
 ```
 

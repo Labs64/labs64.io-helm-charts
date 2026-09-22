@@ -39,6 +39,14 @@ rabbitmq:
 redis:
   enabled: false
 
+# Identity is deployment-owned as well: enable the bundled Keycloak in an
+# environment-specific values file, or leave it off and point api-gateway.oidc
+# at an externally managed issuer.
+keycloak:
+  enabled: false
+mock-oidc:
+  enabled: false
+
 traefik:
   service:
     # Never let the gateway Service provision a public AWS load balancer as a side effect.

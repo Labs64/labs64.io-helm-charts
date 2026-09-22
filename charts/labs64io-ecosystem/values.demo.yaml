@@ -87,5 +87,7 @@ redis:
 # authenticate against.
 traefik:
   enabled: true
+keycloak:
+  enabled: false
 mock-oidc:
   enabled: true

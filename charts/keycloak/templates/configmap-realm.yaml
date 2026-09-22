@@ -1,0 +1,11 @@
+{{- if and .Values.realmConfig.config (not .Values.realmConfig.existingConfigMap) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-realm-config
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+data:
+  realm.json: |
+{{ .Values.realmConfig.config | nindent 4 }}
+{{- end }}

@@ -1,0 +1,65 @@
+{{- if or .Values.realmConfig.config .Values.realmConfig.existingConfigMap }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-realm-config
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    helm.sh/hook-weight: "5"
+spec:
+  backoffLimit: {{ .Values.realmConfig.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        {{- include "chart-libs.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: realm-config
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "chart-libs.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      containers:
+        - name: realm-config
+          image: {{ include "chart-libs.image" (dict "imageRoot" .Values.realmConfig.image "context" $) | quote }}
+          imagePullPolicy: {{ .Values.realmConfig.image.pullPolicy }}
+          env:
+            - name: KEYCLOAK_URL
+              value: http://{{ include "chart-libs.fullname" . }}:{{ .Values.service.port }}
+            - name: KEYCLOAK_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chart-libs.fullname" . }}
+                  key: KC_BOOTSTRAP_ADMIN_USERNAME
+            - name: KEYCLOAK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "chart-libs.fullname" . }}
+                  key: KC_BOOTSTRAP_ADMIN_PASSWORD
+            - name: KEYCLOAK_AVAILABILITYCHECK_ENABLED
+              value: "true"
+            - name: KEYCLOAK_AVAILABILITYCHECK_TIMEOUT
+              value: {{ .Values.realmConfig.timeout | quote }}
+            - name: IMPORT_FILES_LOCATIONS
+              value: /config/*
+            - name: IMPORT_VARSUBSTITUTION_ENABLED
+              value: "true"
+            - name: IMPORT_VARSUBSTITUTION_UNDEFINEDISERROR
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: {{ .Values.realmConfig.secretName | default (include "chart-libs.fullname" .) }}
+          volumeMounts:
+            - name: realm-config
+              mountPath: /config
+              readOnly: true
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.realmConfig.resources | nindent 12 }}
+      volumes:
+        - name: realm-config
+          configMap:
+            name: {{ .Values.realmConfig.existingConfigMap | default (printf "%s-realm-config" (include "chart-libs.fullname" .)) }}
+{{- end }}

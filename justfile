@@ -18,7 +18,7 @@ TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
 LOKI_CHART_VERSION := "6.24.0"
 
-LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal mock-oidc"
+LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal"
 # Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
 # `up-otel` enables observability on these once the monitoring stack is present.
 OBSERVABILITY_APPS := "api-gateway auditflow payment-gateway"
@@ -36,8 +36,13 @@ cluster-up:
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/0\.0\.0\.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/127\.0\.0\.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
 
-# start local k3d cluster + registry, install toolset and all Labs64.IO components
+# Start the local stack described by the local overrides.
 up: generate-secrets cluster-up
+    just deploy
+
+# Deploy after the cluster/images are ready. Provider selection belongs to
+# overrides/helmfile/values.local.yaml, not to the command line.
+deploy:
     just repo-update
     just install-tools
     just install-all-apps
@@ -86,7 +91,7 @@ generate-secrets:
 
 ## 📦 Labs64.IO Apps ##
 
-# Install all Labs64.IO apps
+# Install all Labs64.IO apps with the environment's declarative overrides.
 install-all-apps:
     helmfile -e {{ENV}} apply -l layer=apps
 
@@ -165,8 +170,10 @@ uninstall-app app:
 
 ## 🛠️ Core Tools ##
 
-# Install all core tools
+# Install all core tools and reconcile optional identity providers from overrides.
 install-tools: install-crds
+    #!/usr/bin/env bash
+    set -euo pipefail
     # traefik is applied separately with --skip-crds: its chart bundles its own copy of
     # the Traefik CRDs, which can now drift ahead of the traefik-crds chart pinned in
     # install-crds (e.g. a middlewares CRD field newer than TRAEFIK_CRDS_CHART_VERSION).
@@ -179,15 +186,15 @@ install-tools: install-crds
     helmfile -e {{ENV}} apply -l layer=infra,name!=traefik
     helmfile -e {{ENV}} apply -l name=traefik --skip-crds
     kubectl apply -f overrides/traefik/dashboard-httproute.yaml
-    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
     # The ClusterSecretStore goes through ESO's validating webhook — wait for it to be
     # ready first, since `helmfile apply` above returns as soon as objects are applied,
     # not once the webhook deployment is actually serving.
     kubectl -n {{NAMESPACE_TOOLS}} wait --for=condition=available --timeout=120s deployment/external-secrets-webhook
     kubectl apply -f overrides/eso/cluster-secret-store.yaml
+    helmfile -e {{ENV}} apply -l layer=identity
 
 # Uninstall all core tools
-uninstall-tools: uninstall-tool-traefik uninstall-tool-external-secrets uninstall-tool-mock-oidc uninstall-tool-rabbitmq uninstall-tool-postgresql uninstall-tool-redis
+uninstall-tools: uninstall-tool-keycloak uninstall-tool-traefik uninstall-tool-external-secrets uninstall-tool-mock-oidc uninstall-tool-rabbitmq uninstall-tool-postgresql uninstall-tool-redis
 
 # Install the Gateway API (standard channel) + Traefik CRDs before the `traefik` Helm
 # release (Helmfile's release schema has no per-release skip-crds equivalent, and Helm
@@ -256,14 +263,12 @@ install-tool-redis:
 uninstall-tool-redis:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}} || true
 
-# install mock OIDC provider (DEV ONLY - M2M tokens for local testing)
-install-tool-mock-oidc:
-    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
-    kubectl apply -f overrides/eso/cluster-secret-store.yaml
-
-# uninstall mock OIDC provider
+# Uninstall local identity providers regardless of the current override state.
 uninstall-tool-mock-oidc:
-    kubectl delete -f overrides/mock-oidc/mock-oidc.yaml || true
+    helm uninstall mock-oidc --namespace {{NAMESPACE_TOOLS}} || true
+
+uninstall-tool-keycloak:
+    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}} || true
 
 
 ## 📊 Monitoring Tools ##
@@ -439,8 +444,17 @@ helm-tools:
 
 # Generate Helm chart documentation (README.md) for all charts
 generate-docu:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    repo_name="$(basename "$(pwd)")"
+    host_repo="$(pwd)"
+    if [ -n "${LOCAL_WORKSPACE_FOLDER:-}" ]; then
+        # Docker Desktop resolves bind sources on the host, not inside this
+        # DevContainer. All ecosystem repos are siblings of the workspace.
+        host_repo="${LOCAL_WORKSPACE_FOLDER}/../${repo_name}"
+    fi
     docker run --rm \
-        --volume "$(pwd):/helm-docs" \
+        --mount "type=bind,source=${host_repo},target=/helm-docs" \
         --user "$(id -u):$(id -g)" \
         jnorwood/helm-docs:{{ HELM_DOCS_VERSION }} \
         --chart-search-root ./charts \
@@ -448,28 +462,25 @@ generate-docu:
 
 # Generate Helm values schema (values.schema.json) for all charts
 #
-# helm-schema exits non-zero when it cannot parse a *vendored subchart's* own
-# @schema comments: Traefik's values.yaml uses a single-line
-# `@schema type: [boolean, null]` form its parser rejects. It still writes every
-# schema in this repo correctly, so the run is judged by its output rather than its
-# exit code — fail only when a chart ends up without a schema. (--dependencies-filter
-# silences the message but writes 1 schema instead of 11; do not "fix" it that way.)
+# Generate each first-party chart independently. A single search rooted at
+# ./charts with --no-dependencies skips charts that are also umbrella
+# dependencies, leaving their existing schemas silently stale.
 generate-schema: helm-tools
     #!/usr/bin/env bash
     set -uo pipefail
-    helm schema \
-        --chart-search-root ./charts \
-        --no-dependencies \
-        --append-newline || true
-    missing=0
-    for chart in charts/*/values.yaml; do
-        dir=$(dirname "$chart")
+    failed=0
+    for values in charts/*/values.yaml; do
+        dir=$(dirname "$values")
+        helm schema \
+            --chart-search-root "$dir" \
+            --no-dependencies \
+            --append-newline || failed=1
         if [ ! -f "$dir/values.schema.json" ]; then
             echo "generate-schema: no schema written for $dir" >&2
-            missing=1
+            failed=1
         fi
     done
-    exit $missing
+    exit $failed
 
 # Generate all — Helm charts docs and schema
 generate-all: generate-docu generate-schema

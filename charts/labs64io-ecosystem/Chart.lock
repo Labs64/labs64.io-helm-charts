@@ -29,6 +29,9 @@ dependencies:
 - name: traefik
   repository: https://traefik.github.io/charts
   version: 41.6.0
+- name: keycloak
+  repository: file://../keycloak
+  version: 0.1.0
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.0

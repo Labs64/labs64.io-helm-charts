@@ -1,0 +1,4 @@
+Keycloak base URL: {{ .Values.hostname.frontendUrl }}
+Realm issuer pattern: {{ .Values.hostname.frontendUrl }}/realms/<realm>
+Cluster discovery pattern: http://{{ include "chart-libs.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}/realms/<realm>/.well-known/openid-configuration
+Admin access is intentionally not exposed separately; use kubectl port-forward when needed.

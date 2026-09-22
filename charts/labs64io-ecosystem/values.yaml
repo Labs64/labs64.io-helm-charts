@@ -322,6 +322,15 @@ traefik:
 # type: object
 # additionalProperties: true
 # @schema
+# -- Optional in-cluster Keycloak. Leave disabled when using an externally
+# managed OIDC issuer and configure api-gateway.oidc for that issuer instead.
+keycloak:
+  enabled: false
+  gateway:
+    parentRefs:
+      - name: labs64io-gateway
+        namespace: tools
+
 # -- Dev-only OIDC provider. Requires demoMode=true — the chart refuses to render
 # otherwise. Issues tokens to anyone who asks and authenticates nobody; never
 # enable it outside a throwaway demo.
