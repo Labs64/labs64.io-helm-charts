@@ -294,8 +294,10 @@ helm install traefik traefik/traefik -n tools --create-namespace -f traefik-valu
 Point your DNS/`/etc/hosts` (or an `Ingress`/`LoadBalancer` in front of Traefik) at that
 Service, and every module's `gateway.parentRefs` will resolve without any further change.
 
-Local testing: `just install-tool-mock-oidc` (dev-only M2M tokens),
-`just install-app <module>`, `helm test labs64io-<module> -n labs64io`.
+Local testing uses the identity provider selected in
+`overrides/helmfile/values.local.yaml` (mock OIDC by default, or the pinned upstream
+`codecentric/keycloakx` chart with the official Keycloak image), then `just install-tools`, `just install-app <module>`, and
+`helm test labs64io-<module> -n labs64io`.
 
 ### One-click full stack (umbrella chart)
 

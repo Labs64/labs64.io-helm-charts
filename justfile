@@ -18,7 +18,7 @@ TEMPO_CHART_VERSION := "1.24.4"
 GRAFANA_CHART_VERSION := "10.5.15"
 LOKI_CHART_VERSION := "6.24.0"
 
-LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal mock-oidc"
+LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal"
 # Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
 # `up-otel` enables observability on these once the monitoring stack is present.
 OBSERVABILITY_APPS := "api-gateway auditflow payment-gateway"
@@ -36,8 +36,13 @@ cluster-up:
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/0\.0\.0\.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/127\.0\.0\.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
 
-# start local k3d cluster + registry, install toolset and all Labs64.IO components
+# Start the local k3d cluster, then reconcile the stack from Helm overrides.
 up: generate-secrets cluster-up
+    just deploy
+
+# Reconcile tools, the selected identity provider, and all applications.
+# The workspace-level `just up` calls this after building first-party images.
+deploy:
     just repo-update
     just install-tools
     just install-all-apps
@@ -165,7 +170,7 @@ uninstall-app app:
 
 ## 🛠️ Core Tools ##
 
-# Install all core tools
+# Install core tools and reconcile the identity provider selected by overrides.
 install-tools: install-crds
     # traefik is applied separately with --skip-crds: its chart bundles its own copy of
     # the Traefik CRDs, which can now drift ahead of the traefik-crds chart pinned in
@@ -179,15 +184,15 @@ install-tools: install-crds
     helmfile -e {{ENV}} apply -l layer=infra,name!=traefik
     helmfile -e {{ENV}} apply -l name=traefik --skip-crds
     kubectl apply -f overrides/traefik/dashboard-httproute.yaml
-    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
     # The ClusterSecretStore goes through ESO's validating webhook — wait for it to be
     # ready first, since `helmfile apply` above returns as soon as objects are applied,
     # not once the webhook deployment is actually serving.
     kubectl -n {{NAMESPACE_TOOLS}} wait --for=condition=available --timeout=120s deployment/external-secrets-webhook
     kubectl apply -f overrides/eso/cluster-secret-store.yaml
+    helmfile -e {{ENV}} apply -l layer=identity
 
 # Uninstall all core tools
-uninstall-tools: uninstall-tool-traefik uninstall-tool-external-secrets uninstall-tool-mock-oidc uninstall-tool-rabbitmq uninstall-tool-postgresql uninstall-tool-redis
+uninstall-tools: uninstall-tool-keycloak uninstall-tool-traefik uninstall-tool-external-secrets uninstall-tool-mock-oidc uninstall-tool-rabbitmq uninstall-tool-postgresql uninstall-tool-redis
 
 # Install the Gateway API (standard channel) + Traefik CRDs before the `traefik` Helm
 # release (Helmfile's release schema has no per-release skip-crds equivalent, and Helm
@@ -256,14 +261,25 @@ install-tool-redis:
 uninstall-tool-redis:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}} || true
 
-# install mock OIDC provider (DEV ONLY - M2M tokens for local testing)
+# Install mock OIDC only when it is the provider selected by the environment overrides.
+# Provider switching remains declarative: this recipe never edits values files itself.
 install-tool-mock-oidc:
-    kubectl apply -f overrides/mock-oidc/mock-oidc.yaml
-    kubectl apply -f overrides/eso/cluster-secret-store.yaml
+    #!/usr/bin/env bash
+    set -euo pipefail
+    selected=$(helmfile -e {{ENV}} list -l name=mock-oidc --output json --skip-charts | jq -r '.[0].installed')
+    if [ "$selected" != "true" ]; then
+        echo "mock-oidc is disabled in overrides/helmfile/values.{{ENV}}.yaml" >&2
+        echo "Enable identity.mockOidc and disable identity.keycloak first." >&2
+        exit 1
+    fi
+    helmfile -e {{ENV}} apply -l layer=identity
 
-# uninstall mock OIDC provider
+# Uninstall local identity providers regardless of the current override state.
 uninstall-tool-mock-oidc:
-    kubectl delete -f overrides/mock-oidc/mock-oidc.yaml || true
+    helm uninstall mock-oidc --namespace {{NAMESPACE_TOOLS}} || true
+
+uninstall-tool-keycloak:
+    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}} || true
 
 
 ## 📊 Monitoring Tools ##

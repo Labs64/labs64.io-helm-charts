@@ -1,6 +1,6 @@
 # api-gateway
 
-![Version: 0.14.0](https://img.shields.io/badge/Version-0.14.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
+![Version: 0.14.3](https://img.shields.io/badge/Version-0.14.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
 
 Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
@@ -73,9 +73,10 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | observability.enabled | bool | `false` | Enable runtime auto-instrumentation (traces + logs + metrics via OTLP) |
 | observability.metricsScrape | bool | `false` | Emit prometheus.io/* scrape annotations. Disabled here: the authproxy is a FastAPI service that pushes metrics over OTLP and serves no Prometheus endpoint (its only routes are /health, /health/ready, /reload and /auth). With this on, the collector scraped /actuator/prometheus on the service port and logged a 404 every interval. |
 | observability.otlpEndpoint | string | `"http://$(NODE_IP):4318"` | OTLP endpoint of the OpenTelemetry Collector |
-| oidc | object | `{"audience":"account","discoveryUrl":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration","scopesClaimPaths":"scope,realm_access.roles,resource_access.{audience}.roles","tenantClaimPath":"tenant"}` | OIDC provider settings. Rendered into this chart's ConfigMap and delivered via envFrom, as scalars rather than a raw env list: Helm replaces lists wholesale on merge, so with a list a caller overriding one field had to restate all eight — and silently lost any entry added upstream later. |
+| oidc | object | `{"audience":"account","discoveryUrl":"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration","issuer":"","scopesClaimPaths":"scope,realm_access.roles,resource_access.{audience}.roles","tenantClaimPath":"tenant"}` | OIDC provider settings. Rendered into this chart's ConfigMap and delivered via envFrom, as scalars rather than a raw env list: Helm replaces lists wholesale on merge, so with a list a caller overriding one field had to restate all eight — and silently lost any entry added upstream later. |
 | oidc.audience | string | `"account"` | Expected JWT audience. |
 | oidc.discoveryUrl | string | `"http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration"` | Discovery URL. There is no in-repo default IdP; point this at your issuer.   demo/dev: http://mock-oidc.<namespace>.svc.cluster.local:8080/labs64io/.well-known/openid-configuration   keycloak: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration |
+| oidc.issuer | string | `""` | Canonical JWT issuer. Set this when discovery uses an internal service URL while tokens carry a public issuer; empty falls back to discovery metadata. |
 | oidc.scopesClaimPaths | string | `"scope,realm_access.roles,resource_access.{audience}.roles"` | Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to oidc.audience. |
 | oidc.tenantClaimPath | string | `"tenant"` | Dot-path to the tenant claim for X-Auth-Tenant; "-" is emitted when absent. |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |

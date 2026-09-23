@@ -52,6 +52,7 @@ gateway:
 # it signs tokens from the static config mounted at startup.
 networkPolicy:
   enabled: true
-  # -- Namespace the shared Gateway runs in; ingress is accepted from there and
-  # from this release's own namespace.
+  # -- Namespace the shared Gateway runs in.
   gatewayNamespace: tools
+  # -- Namespace containing api-gateway when it differs from this release.
+  applicationNamespace: ""
