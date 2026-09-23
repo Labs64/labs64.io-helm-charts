@@ -12,18 +12,18 @@ networkPolicy:
   enabled: true
   toolsEgress:
     # Mock OIDC:
-    # - name: mock-oidc
+    - name: mock-oidc
     # Keycloak:
-    - name: keycloak
+    # - name: keycloak
       port: 8080
 
 oidc:
   # Mock OIDC:
-  # discoveryUrl: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
-  # issuer: http://mock-oidc.localhost/labs64io
+  discoveryUrl: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
+  issuer: http://mock-oidc.localhost/labs64io
   # Keycloak:
-  discoveryUrl: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
-  issuer: http://keycloak.localhost/realms/labs64io
+  # discoveryUrl: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  # issuer: http://keycloak.localhost/realms/labs64io
 
 logLevel: DEBUG
 

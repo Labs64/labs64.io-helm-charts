@@ -3,6 +3,6 @@
 # Gateway points at an externally managed issuer.
 identity:
   mockOidc:
-    enabled: false
-  keycloak:
     enabled: true
+  keycloak:
+    enabled: false
