@@ -196,7 +196,8 @@
           "type": "string"
         },
         "redis": {
-          "default": "redis:7-alpine",
+          "default": "redis:8-alpine",
+          "description": "redis-cli speaks RESP, so it works unchanged against Valkey (AWS ElastiCache, local dev).",
           "title": "redis",
           "type": "string"
         }
