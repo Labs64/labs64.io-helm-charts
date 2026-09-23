@@ -44,8 +44,12 @@ environments:
   local:
     values:
       - overrides/global-values.yaml
+      - overrides/helmfile/values.local.yaml
 
 ---
+{{ if and .Values.identity.mockOidc.enabled .Values.identity.keycloak.enabled }}
+{{ fail "identity.mockOidc.enabled and identity.keycloak.enabled cannot both be true" }}
+{{ end }}
 releases:
   # === INFRASTRUCTURE ===
   - name: traefik
@@ -103,6 +107,41 @@ releases:
       - overrides/redis/values.{{ .Environment.Name }}.yaml
     labels:
       layer: infra
+
+  # === IDENTITY ===
+  # Environment overrides choose the in-cluster provider. Both may be disabled
+  # when api-gateway points at an externally managed OIDC issuer.
+  - name: mock-oidc
+    installed: {{ .Values.identity.mockOidc.enabled }}
+    namespace: tools
+    chart: ./charts/mock-oidc
+    values:
+      - ./charts/mock-oidc/values.yaml
+      - ./overrides/mock-oidc/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: identity
+      provider: mock
+    needs:
+      - tools/traefik
+
+  - name: keycloak
+    installed: {{ .Values.identity.keycloak.enabled }}
+    namespace: tools
+    chart: oci://ghcr.io/codecentric/helm-charts/keycloakx
+    version: 7.2.2
+    values:
+      - ./overrides/keycloak/values.{{ .Environment.Name }}.yaml
+      {{- if isFile (printf "./overrides/keycloak/values.secrets.%s.yaml" .Environment.Name) }}
+      - ./overrides/keycloak/values.secrets.{{ .Environment.Name }}.yaml
+      {{- end }}
+    set:
+      - name: realmConfig
+        file: ./overrides/keycloak/realm.{{ .Environment.Name }}.json
+    labels:
+      layer: identity
+      provider: keycloak
+    needs:
+      - tools/traefik
 
   # === MONITORING ===
   - name: metrics-server

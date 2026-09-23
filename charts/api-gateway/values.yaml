@@ -187,6 +187,9 @@ oidc:
   #   demo/dev: http://mock-oidc.<namespace>.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
   #   keycloak: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
   discoveryUrl: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  # -- Canonical JWT issuer. Set this when discovery uses an internal service URL
+  # while tokens carry a public issuer; empty falls back to discovery metadata.
+  issuer: ""
   # -- Expected JWT audience.
   audience: account
   # -- Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to oidc.audience.

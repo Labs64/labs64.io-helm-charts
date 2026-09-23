@@ -634,6 +634,12 @@
           "title": "discoveryUrl",
           "type": "string"
         },
+        "issuer": {
+          "default": "",
+          "description": "Canonical JWT issuer. Set this when discovery uses an internal service URL\nwhile tokens carry a public issuer; empty falls back to discovery metadata.",
+          "title": "issuer",
+          "type": "string"
+        },
         "scopesClaimPaths": {
           "default": "scope,realm_access.roles,resource_access.{audience}.roles",
           "description": "Dot-paths (comma-separated) to collect scopes from the JWT; \"{audience}\" expands to oidc.audience.",
@@ -649,6 +655,7 @@
       },
       "required": [
         "discoveryUrl",
+        "issuer",
         "audience",
         "scopesClaimPaths",
         "tenantClaimPath"

@@ -27,11 +27,6 @@ metadata:
   annotations:
     labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
 data:
-  name: mock-oidc-config
-  namespace: tools
-  annotations:
-    labs64.io/warning: "DEV ONLY - mock OIDC provider; never deploy outside local environments"
-data:
   config.json: |
     {
       "interactiveLogin": false,

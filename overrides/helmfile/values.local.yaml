@@ -1,0 +1,8 @@
+# Local identity-provider selection consumed by helmfile.yaml.gotmpl.
+# At most one bundled provider may be enabled. Set both to false when the API
+# Gateway points at an externally managed issuer.
+identity:
+  mockOidc:
+    enabled: false
+  keycloak:
+    enabled: true
