@@ -116,6 +116,12 @@ install-app app extra_values="":
       "-f" "./overrides/global-values.yaml"
       "-f" "./overrides/{{app}}/values.{{ENV}}.yaml"
     )
+    if [ "{{app}}" = "api-gateway" ]; then
+      # Same provider-specific OIDC file helmfile layers on (see helmfile.yaml.gotmpl).
+      IDP=$(just identity-provider)
+      echo "Identity provider: $IDP"
+      ARGS+=("-f" "./overrides/api-gateway/oidc-${IDP}.{{ENV}}.yaml")
+    fi
     if [ -f "./overrides/{{app}}/values.secrets.{{ENV}}.yaml" ]; then
       echo "Using secrets override: overrides/{{app}}/values.secrets.{{ENV}}.yaml"
       ARGS+=("-f" "./overrides/{{app}}/values.secrets.{{ENV}}.yaml")
@@ -189,6 +195,7 @@ install-tools: install-crds
     # not once the webhook deployment is actually serving.
     kubectl -n {{NAMESPACE_TOOLS}} wait --for=condition=available --timeout=120s deployment/external-secrets-webhook
     kubectl apply -f overrides/eso/cluster-secret-store.yaml
+    just migrate-legacy-mock-oidc
     helmfile -e {{ENV}} apply -l layer=identity
 
 # Uninstall all core tools
@@ -261,15 +268,41 @@ install-tool-redis:
 uninstall-tool-redis:
     helm uninstall redis --namespace {{NAMESPACE_TOOLS}} || true
 
-# Install mock OIDC only when it is the provider selected by the environment overrides.
-# Provider switching remains declarative: this recipe never edits values files itself.
-install-tool-mock-oidc:
+# print the identity provider selected in overrides/helmfile/values.<env>.yaml
+identity-provider:
+    @sed -n -E 's/^identityProvider:[[:space:]]*([a-z]+).*/\1/p' overrides/helmfile/values.{{ENV}}.yaml | grep . || echo mock
+
+# One-time migration for clusters created before mock-oidc became a Helm release: it used to be
+# applied as raw manifests (overrides/mock-oidc/mock-oidc.yaml, removed), and Helm refuses to adopt
+# objects it does not own ("exists and cannot be imported into the current release"). Deletes only
+# those four legacy objects, and only when the Deployment carries no Helm ownership annotation;
+# Helmfile then recreates them as the `mock-oidc` release. No-op on every other cluster.
+migrate-legacy-mock-oidc:
     #!/usr/bin/env bash
     set -euo pipefail
-    selected=$(helmfile -e {{ENV}} list -l name=mock-oidc --output json --skip-charts | jq -r '.[0].installed')
-    if [ "$selected" != "true" ]; then
-        echo "mock-oidc is disabled in overrides/helmfile/values.{{ENV}}.yaml" >&2
-        echo "Enable identity.mockOidc and disable identity.keycloak first." >&2
+    kubectl -n {{NAMESPACE_TOOLS}} get deployment mock-oidc >/dev/null 2>&1 || exit 0
+    owner=$(kubectl -n {{NAMESPACE_TOOLS}} get deployment mock-oidc -o jsonpath='{.metadata.annotations.meta\.helm\.sh/release-name}')
+    [ -z "$owner" ] || exit 0
+    echo "Migrating legacy raw-manifest mock-oidc to a Helm release..."
+    kubectl -n {{NAMESPACE_TOOLS}} delete httproute/mock-oidc service/mock-oidc deployment/mock-oidc configmap/mock-oidc-config --ignore-not-found
+
+# Install mock OIDC only when it is the provider selected by the environment overrides.
+# Provider switching remains declarative: this recipe never edits values files itself.
+install-tool-mock-oidc: migrate-legacy-mock-oidc
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "$(just identity-provider)" != "mock" ]; then
+        echo "identityProvider is not 'mock' in overrides/helmfile/values.{{ENV}}.yaml" >&2
+        exit 1
+    fi
+    helmfile -e {{ENV}} apply -l layer=identity
+
+# Install Keycloak only when it is the provider selected by the environment overrides.
+install-tool-keycloak:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "$(just identity-provider)" != "keycloak" ]; then
+        echo "identityProvider is not 'keycloak' in overrides/helmfile/values.{{ENV}}.yaml" >&2
         exit 1
     fi
     helmfile -e {{ENV}} apply -l layer=identity
@@ -640,14 +673,33 @@ grafana:
     @echo "Opening Grafana... (Press Ctrl+C to quit)"
     open http://gateway.localhost/grafana/ || echo "Visit http://gateway.localhost/grafana/"
 
-# generate an M2M JWT from the mock OIDC provider.
-# Pass a persona (admin|auditflow|ecommerce|no-access) for a curated scope set,
-# or ANY exact scope string(s) to mint a token carrying precisely those scopes,
-# e.g. `just generate-jwt audit-event:read` (echoed verbatim into the token).
+# generate an M2M JWT from the selected identity provider (identityProvider).
+# mock: pass a persona (admin|auditflow|ecommerce|no-access) for a curated scope set, or ANY exact
+# scope string(s) to mint a token carrying precisely those scopes, e.g.
+# `just generate-jwt audit-event:read` (echoed verbatim into the token).
+# keycloak: a persona selects the realm client whose role grants that scope set (arbitrary scope
+# strings are not a thing a real IdP does).
 generate-jwt scope="admin":
-    curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
-      -H 'Content-Type: application/x-www-form-urlencoded' \
-      --data-urlencode 'grant_type=client_credentials' \
-      --data-urlencode 'client_id=local-test' \
-      --data-urlencode 'client_secret=local-test' \
-      --data-urlencode 'scope={{scope}}' | jq .
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "$(just identity-provider)" = "keycloak" ]; then
+        case "{{scope}}" in
+            admin) CLIENT=local-tooling; KEY=LOCAL_TOOLING_CLIENT_SECRET ;;
+            auditflow) CLIENT=auditflow; KEY=AUDITFLOW_CLIENT_SECRET ;;
+            ecommerce) CLIENT=payment-gateway; KEY=PAYMENT_GATEWAY_CLIENT_SECRET ;;
+            no-access) CLIENT=preflight; KEY=PREFLIGHT_CLIENT_SECRET ;;
+            *) echo "keycloak: persona must be admin|auditflow|ecommerce|no-access" >&2; exit 1 ;;
+        esac
+        SECRET=$(sed -n -E "s/^[[:space:]]*${KEY}:[[:space:]]*\"?([^\"]*)\"?[[:space:]]*$/\1/p" overrides/keycloak/values.secrets.{{ENV}}.yaml)
+        curl -s -X POST 'http://keycloak.localhost/realms/labs64io/protocol/openid-connect/token' \
+          --data-urlencode 'grant_type=client_credentials' \
+          --data-urlencode "client_id=$CLIENT" \
+          --data-urlencode "client_secret=$SECRET" | jq .
+    else
+        curl -s -X POST 'http://mock-oidc.localhost/labs64io/token' \
+          -H 'Content-Type: application/x-www-form-urlencoded' \
+          --data-urlencode 'grant_type=client_credentials' \
+          --data-urlencode 'client_id=local-test' \
+          --data-urlencode 'client_secret=local-test' \
+          --data-urlencode 'scope={{scope}}' | jq .
+    fi
