@@ -265,14 +265,12 @@ just install-tools
 This installs the Gateway API + Traefik CRDs (`just install-crds`, run first since Helmfile
 has no per-release CRD-skip equivalent), then via Helmfile: Traefik v3, [External Secrets
 Operator](https://external-secrets.io/) (ESO), RabbitMQ, PostgreSQL, Redis, and the identity
-provider selected by `identityProvider` in `overrides/helmfile/values.local.yaml` — `mock`
-(default), `keycloak` or `external`. That one value selects the provider release **and**
-api-gateway's OIDC settings + NetworkPolicy egress (`overrides/api-gateway/oidc-<provider>.local.yaml`);
-apply a switch with `just install-tools && just install-app api-gateway`. Keycloak comes from the
-pinned upstream `codecentric/keycloakx` chart (official Keycloak image), configured in
-`overrides/keycloak/`: `values.yaml` (shared with AWS), `values.local.yaml`, the realm contract
-`realm.base.json` (shared with AWS) and the local-only test clients `realm.local-fixtures.json`.
-`just generate-jwt <persona>` mints a token from whichever provider is selected. The command also applies the Traefik dashboard HTTPRoute and local
+provider selected in `overrides/helmfile/values.local.yaml`. Mock OIDC is enabled by default.
+For local Keycloak, disable `identity.mockOidc`, enable `identity.keycloak`, and activate the
+commented Keycloak settings in `overrides/api-gateway/values.local.yaml`. Keycloak comes
+from the pinned upstream `codecentric/keycloakx` chart using the official Keycloak image;
+local configuration stays in
+`overrides/keycloak/`. The command also applies the Traefik dashboard HTTPRoute and local
 `ClusterSecretStore` (`overrides/eso/cluster-secret-store.yaml`) used by charts with
 `externalSecrets.enabled` (see [Unified secret management](#unified-secret-management) below).
 

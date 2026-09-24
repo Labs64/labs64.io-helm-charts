@@ -1,0 +1,293 @@
+{
+  "realm": "labs64io",
+  "displayName": "Labs64.IO",
+  "enabled": true,
+  "accessTokenLifespan": 300,
+  "registrationAllowed": false,
+  "resetPasswordAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "audit-event:write" },
+      { "name": "customer:read" },
+      { "name": "customer:write" },
+      { "name": "purchase-order:read" },
+      { "name": "purchase-order:write" },
+      { "name": "purchase-order:checkout" },
+      { "name": "checkout-transaction:read" },
+      { "name": "payment:read" },
+      { "name": "payment:write" },
+      { "name": "payment:pay" },
+      { "name": "payment-provider:read" },
+      { "name": "payment-provider:write" },
+      { "name": "payment-transaction:read" },
+      { "name": "no-access-role" },
+      {
+        "name": "auditflow-role",
+        "composite": true,
+        "composites": { "realm": ["audit-event:write"] }
+      },
+      {
+        "name": "ecommerce-role",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "customer:read", "customer:write",
+            "purchase-order:read", "purchase-order:write", "purchase-order:checkout",
+            "checkout-transaction:read",
+            "payment:read", "payment:write", "payment:pay",
+            "payment-provider:read", "payment-transaction:read"
+          ]
+        }
+      },
+      {
+        "name": "admin-role",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "audit-event:write",
+            "customer:read", "customer:write",
+            "purchase-order:read", "purchase-order:write", "purchase-order:checkout",
+            "checkout-transaction:read",
+            "payment:read", "payment:write", "payment:pay",
+            "payment-provider:read", "payment-provider:write",
+            "payment-transaction:read"
+          ]
+        }
+      }
+    ]
+  },
+  "clientScopes": [
+    {
+      "name": "platform-claims",
+      "protocol": "openid-connect",
+      "attributes": { "include.in.token.scope": "false" },
+      "protocolMappers": [
+        {
+          "name": "api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "labs64io-api",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "gateway-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "account",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "tenant",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "tenant",
+            "claim.name": "tenant",
+            "jsonType.label": "String",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "realm-permissions",
+      "protocol": "openid-connect",
+      "attributes": { "include.in.token.scope": "false" },
+      "protocolMappers": [
+        {
+          "name": "permissions-as-scope",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "scope",
+            "multivalued": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    },
+    { "name": "audit-event:read", "protocol": "openid-connect" },
+    { "name": "audit-event:write", "protocol": "openid-connect" },
+    { "name": "customer:read", "protocol": "openid-connect" },
+    { "name": "customer:write", "protocol": "openid-connect" },
+    { "name": "purchase-order:read", "protocol": "openid-connect" },
+    { "name": "purchase-order:write", "protocol": "openid-connect" },
+    { "name": "purchase-order:checkout", "protocol": "openid-connect" },
+    { "name": "checkout-transaction:read", "protocol": "openid-connect" },
+    { "name": "payment:read", "protocol": "openid-connect" },
+    { "name": "payment:write", "protocol": "openid-connect" },
+    { "name": "payment:pay", "protocol": "openid-connect" },
+    { "name": "payment-provider:read", "protocol": "openid-connect" },
+    { "name": "payment-provider:write", "protocol": "openid-connect" },
+    { "name": "payment-transaction:read", "protocol": "openid-connect" }
+  ],
+  "defaultDefaultClientScopes": ["roles", "platform-claims", "realm-permissions"],
+  "clients": [
+    {
+      "clientId": "labs64io-api",
+      "name": "API audience",
+      "enabled": true,
+      "bearerOnly": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "auditflow",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:AUDITFLOW_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "payment-gateway",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:PAYMENT_GATEWAY_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "local-tooling",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TOOLING_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "local-test",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TEST_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": ["platform-claims"],
+      "optionalClientScopes": [
+        "audit-event:read", "audit-event:write",
+        "customer:read", "customer:write",
+        "purchase-order:read", "purchase-order:write", "purchase-order:checkout",
+        "checkout-transaction:read",
+        "payment:read", "payment:write", "payment:pay",
+        "payment-provider:read", "payment-provider:write",
+        "payment-transaction:read"
+      ]
+    },
+    {
+      "clientId": "auditflow-regression",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TEST_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "auditflow-regression-quota",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TEST_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "auditflow-tenant-2",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TEST_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "preflight",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:PREFLIGHT_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-auditflow",
+      "enabled": true,
+      "serviceAccountClientId": "auditflow",
+      "attributes": { "tenant": ["platform"] },
+      "realmRoles": ["auditflow-role"]
+    },
+    {
+      "username": "service-account-payment-gateway",
+      "enabled": true,
+      "serviceAccountClientId": "payment-gateway",
+      "attributes": { "tenant": ["platform"] },
+      "realmRoles": ["ecommerce-role"]
+    },
+    {
+      "username": "service-account-local-tooling",
+      "enabled": true,
+      "serviceAccountClientId": "local-tooling",
+      "attributes": { "tenant": ["local"] },
+      "realmRoles": ["admin-role"]
+    },
+    {
+      "username": "service-account-local-test",
+      "enabled": true,
+      "serviceAccountClientId": "local-test",
+      "attributes": { "tenant": ["t_mock"] }
+    },
+    {
+      "username": "service-account-auditflow-regression",
+      "enabled": true,
+      "serviceAccountClientId": "auditflow-regression",
+      "attributes": { "tenant": ["t_regression"] },
+      "realmRoles": ["auditflow-role"]
+    },
+    {
+      "username": "service-account-auditflow-regression-quota",
+      "enabled": true,
+      "serviceAccountClientId": "auditflow-regression-quota",
+      "attributes": { "tenant": ["t_regression_quota"] },
+      "realmRoles": ["auditflow-role"]
+    },
+    {
+      "username": "service-account-auditflow-tenant-2",
+      "enabled": true,
+      "serviceAccountClientId": "auditflow-tenant-2",
+      "attributes": { "tenant": ["t_mock_2"] },
+      "realmRoles": ["auditflow-role"]
+    },
+    {
+      "username": "service-account-preflight",
+      "enabled": true,
+      "serviceAccountClientId": "preflight",
+      "attributes": { "tenant": ["preflight"] },
+      "realmRoles": ["no-access-role"]
+    }
+  ]
+}

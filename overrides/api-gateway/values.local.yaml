@@ -5,10 +5,25 @@ image:
   tag: latest
   pullPolicy: Always
 
-# OIDC settings and the matching NetworkPolicy egress come from oidc-<provider>.local.yaml,
-# selected by identityProvider in overrides/helmfile/values.local.yaml (one switch, no edits here).
+# OIDC URLs and allowed egress must reference the same provider. To switch
+# to bundled Keycloak, flip overrides/helmfile/values.local.yaml, change
+# toolsEgress.name to keycloak, and swap in the commented Keycloak URLs.
 networkPolicy:
   enabled: true
+  toolsEgress:
+    # Mock OIDC:
+    - name: mock-oidc
+    # Keycloak:
+    # - name: keycloak
+      port: 8080
+
+oidc:
+  # Mock OIDC:
+  discoveryUrl: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
+  issuer: http://mock-oidc.localhost/labs64io
+  # Keycloak:
+  # discoveryUrl: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  # issuer: http://keycloak.localhost/realms/labs64io
 
 logLevel: DEBUG
 

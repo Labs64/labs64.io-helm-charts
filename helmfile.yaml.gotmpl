@@ -47,9 +47,8 @@ environments:
       - overrides/helmfile/values.local.yaml
 
 ---
-{{ $idp := .Values | get "identityProvider" "mock" }}
-{{ if not (has $idp (list "mock" "keycloak" "external")) }}
-{{ fail (printf "identityProvider must be mock, keycloak or external (got %q)" $idp) }}
+{{ if and .Values.identity.mockOidc.enabled .Values.identity.keycloak.enabled }}
+{{ fail "identity.mockOidc.enabled and identity.keycloak.enabled cannot both be true" }}
 {{ end }}
 releases:
   # === INFRASTRUCTURE ===
@@ -110,10 +109,10 @@ releases:
       layer: infra
 
   # === IDENTITY ===
-  # overrides/helmfile/values.<env>.yaml `identityProvider` installs at most one provider and
-  # (see labs64io-api-gateway below) points api-gateway at it. `external` installs neither.
+  # Environment overrides choose the in-cluster provider. Both may be disabled
+  # when api-gateway points at an externally managed OIDC issuer.
   - name: mock-oidc
-    installed: {{ eq $idp "mock" }}
+    installed: {{ .Values.identity.mockOidc.enabled }}
     namespace: tools
     chart: ./charts/mock-oidc
     values:
@@ -126,24 +125,18 @@ releases:
       - tools/traefik
 
   - name: keycloak
-    installed: {{ eq $idp "keycloak" }}
+    installed: {{ .Values.identity.keycloak.enabled }}
     namespace: tools
     chart: oci://ghcr.io/codecentric/helm-charts/keycloakx
     version: 7.2.2
     values:
-      - ./overrides/keycloak/values.yaml
       - ./overrides/keycloak/values.{{ .Environment.Name }}.yaml
       {{- if isFile (printf "./overrides/keycloak/values.secrets.%s.yaml" .Environment.Name) }}
       - ./overrides/keycloak/values.secrets.{{ .Environment.Name }}.yaml
       {{- end }}
-    # The realm contract (realm.base.json) is shared with AWS; the fixture clients are local-only.
     set:
       - name: realmConfig
-        file: ./overrides/keycloak/realm.base.json
-      {{- if isFile (printf "./overrides/keycloak/realm.%s-fixtures.json" .Environment.Name) }}
-      - name: realmFixtures
-        file: ./overrides/keycloak/realm.{{ .Environment.Name }}-fixtures.json
-      {{- end }}
+        file: ./overrides/keycloak/realm.{{ .Environment.Name }}.json
     labels:
       layer: identity
       provider: keycloak
@@ -234,8 +227,6 @@ releases:
       - ./charts/api-gateway/values.yaml
       - ./overrides/global-values.yaml
       - ./overrides/api-gateway/values.{{ .Environment.Name }}.yaml
-      # OIDC discovery/issuer/audience + egress for the selected identity provider.
-      - ./overrides/api-gateway/oidc-{{ $idp }}.{{ .Environment.Name }}.yaml
     labels:
       layer: apps
     needs:

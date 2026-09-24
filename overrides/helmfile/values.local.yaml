@@ -1,7 +1,8 @@
-# Local identity provider, consumed by helmfile.yaml.gotmpl — the ONE switch:
-#   mock     — charts/mock-oidc (default; deterministic, authenticates nobody)
-#   keycloak — charts/keycloak (real OIDC, labs64io realm with the test fixtures)
-#   external — nothing installed; supply api-gateway's oidc.* via overrides/api-gateway/oidc-external.local.yaml
-# It selects the provider release AND api-gateway's OIDC values/egress together. Apply with
-# `just install-tools && just install-app api-gateway` (or `just deploy`).
-identityProvider: mock
+# Local identity-provider selection consumed by helmfile.yaml.gotmpl.
+# At most one bundled provider may be enabled. Set both to false when the API
+# Gateway points at an externally managed issuer.
+identity:
+  mockOidc:
+    enabled: true
+  keycloak:
+    enabled: false
