@@ -183,10 +183,14 @@ topologySpreadConstraints: []
 # merge, so with a list a caller overriding one field had to restate all eight — and
 # silently lost any entry added upstream later.
 oidc:
-  # -- Discovery URL. There is no in-repo default IdP; point this at your issuer.
+  # -- Discovery URL (in-cluster transport; the token issuer is `oidc.issuer`). Defaults to the
+  # charts/keycloak release in the `tools` namespace (Service `keycloak-http`).
+  #   keycloak: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
   #   demo/dev: http://mock-oidc.<namespace>.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
-  #   keycloak: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
-  discoveryUrl: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  discoveryUrl: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  # -- Canonical JWT issuer. Set this when discovery uses an internal service URL
+  # while tokens carry a public issuer; empty falls back to discovery metadata.
+  issuer: ""
   # -- Expected JWT audience.
   audience: account
   # -- Dot-paths (comma-separated) to collect scopes from the JWT; "{audience}" expands to oidc.audience.

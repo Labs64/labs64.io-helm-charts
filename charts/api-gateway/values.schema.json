@@ -629,9 +629,15 @@
           "type": "string"
         },
         "discoveryUrl": {
-          "default": "http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
-          "description": "Discovery URL. There is no in-repo default IdP; point this at your issuer.\n  demo/dev: http://mock-oidc.\u003cnamespace\u003e.svc.cluster.local:8080/labs64io/.well-known/openid-configuration\n  keycloak: http://keycloak.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
+          "default": "http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
+          "description": "Discovery URL (in-cluster transport; the token issuer is `oidc.issuer`). Defaults to the\ncharts/keycloak release in the `tools` namespace (Service `keycloak-http`).\n  keycloak: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration\n  demo/dev: http://mock-oidc.\u003cnamespace\u003e.svc.cluster.local:8080/labs64io/.well-known/openid-configuration",
           "title": "discoveryUrl",
+          "type": "string"
+        },
+        "issuer": {
+          "default": "",
+          "description": "Canonical JWT issuer. Set this when discovery uses an internal service URL\nwhile tokens carry a public issuer; empty falls back to discovery metadata.",
+          "title": "issuer",
           "type": "string"
         },
         "scopesClaimPaths": {
@@ -649,6 +655,7 @@
       },
       "required": [
         "discoveryUrl",
+        "issuer",
         "audience",
         "scopesClaimPaths",
         "tenantClaimPath"

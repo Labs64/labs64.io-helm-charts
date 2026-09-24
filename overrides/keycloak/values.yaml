@@ -1,0 +1,352 @@
+# Shared values for the upstream codecentric/keycloakx chart (pinned in helmfile.yaml.gotmpl and in
+# labs64.io-devops' justfile), layered UNDER the environment file:
+#   local (k3d):   values.yaml + values.local.yaml (+ values.secrets.local.yaml)  — helmfile
+#   AWS dev/qa/prod: values.yaml + values.aws.yaml + devops-generated values     — devops `just keycloak-install <env>`
+# The realm comes in as strings via --set-file: realmConfig (realm.base.json, every environment) and
+# realmFixtures (realm.local-fixtures.json, local only).
+nameOverride: keycloak
+# Stable names (keycloak-http, keycloak-admin, ...): api-gateway's discovery URL and the
+# NetworkPolicies of other releases reference them.
+fullnameOverride: keycloak
+replicas: 1
+
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: "26.6.4"
+  pullPolicy: IfNotPresent
+
+# Labs64.IO settings consumed by extraEnv/extraManifests below (not upstream chart keys).
+labs64io:
+  # -- local | aws. Test fixtures are refused outside `local`.
+  profile: local
+  # -- Canonical frontend URL (KC_HOSTNAME). Every token's `iss` is <hostname>/realms/labs64io,
+  # whichever URL the client used — api-gateway's oidc.issuer must match it exactly.
+  hostname: ""
+  # -- Realm sslRequired: "external" (TLS except from private networks) or "none" (local http only).
+  realmSslRequired: external
+  # -- HTTPRoute for /realms/labs64io/ + /resources/ only (never /realms/master or /admin).
+  gateway:
+    enabled: false
+    hostnames: []
+  # -- AWS: sync keycloak-admin / keycloak-realm-secrets / keycloak-db from one Secrets Manager
+  # secret (pre-install hooks, so the DB bootstrap Job can use them).
+  externalSecrets:
+    enabled: false
+    storeName: aws-secretsmanager-cluster
+    secretKey: ""
+  # -- AWS: create the Keycloak database + least-privilege role with RDS_ADMIN_* before install
+  # (same SQL as chart-libs' migration Job), so Keycloak never connects as the RDS master user.
+  databaseBootstrap:
+    enabled: false
+
+realmConfig: ""
+realmFixtures: ""
+
+# KC_HOSTNAME is fixed, so tokens always carry the canonical issuer; backchannel URLs follow the
+# request, so in-cluster discovery/JWKS/token calls stay on the keycloak-http Service.
+extraEnv: |
+  - name: KC_HOSTNAME
+    value: {{ required "labs64io.hostname is required" .Values.labs64io.hostname | quote }}
+  - name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+    value: "true"
+  - name: KC_HOSTNAME_STRICT
+    value: "true"
+  - name: KC_BOOTSTRAP_ADMIN_USERNAME
+    value: admin
+  - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: keycloak-admin
+        key: password
+
+proxy:
+  enabled: true
+  mode: forwarded
+  http:
+    enabled: true
+
+http:
+  relativePath: "/"
+
+metrics:
+  enabled: true
+health:
+  enabled: true
+
+serviceAccount:
+  automountServiceAccountToken: false
+
+podSecurityContext:
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: ["ALL"]
+
+networkPolicy:
+  enabled: true
+  extraFrom:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: tools
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: labs64io
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: api-gateway
+    # The post-install hook reconciles the realm through Keycloak's HTTP Service.
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: keycloak-config-cli
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+extraManifests:
+  # The labs64io realm: realm.base.json, plus realm.local-fixtures.json (local profile only).
+  # Client secrets stay $(env:NAME) placeholders — keycloak-config-cli substitutes them from
+  # keycloak-realm-secrets, so no credential lands in this ConfigMap.
+  - |
+    {{- $realm := required "realmConfig is required (--set-file realmConfig=overrides/keycloak/realm.base.json)" .Values.realmConfig | fromJson }}
+    {{- $_ := set $realm "sslRequired" .Values.labs64io.realmSslRequired }}
+    {{- with .Values.realmFixtures }}
+    {{- if ne $.Values.labs64io.profile "local" }}
+    {{- fail "realmFixtures (fixed test clients and secrets) are allowed in the local profile only" }}
+    {{- end }}
+    {{- $fx := fromJson . }}
+    {{- $_ := set $realm "clients" (concat $realm.clients $fx.clients) }}
+    {{- $_ := set $realm "users" (concat $realm.users $fx.users) }}
+    {{- end }}
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: keycloak-realm-config
+      namespace: {{ .Release.Namespace }}
+    data:
+      realm.json: |
+        {{- toPrettyJson $realm | nindent 8 }}
+  # Declarative realm reconciliation after every install/upgrade. Unlike --import-realm (skipped
+  # once the realm exists), keycloak-config-cli converges an existing realm, incl. rotated secrets.
+  - |
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: keycloak-config-cli
+      namespace: {{ .Release.Namespace }}
+      annotations:
+        helm.sh/hook: post-install,post-upgrade
+        helm.sh/hook-weight: "10"
+        helm.sh/hook-delete-policy: before-hook-creation
+    spec:
+      backoffLimit: 6
+      ttlSecondsAfterFinished: 600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: keycloak-config-cli
+            app.kubernetes.io/instance: {{ .Release.Name }}
+          annotations:
+            checksum/realm: {{ .Values.realmConfig | cat .Values.realmFixtures | sha256sum }}
+        spec:
+          automountServiceAccountToken: false
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: keycloak-config-cli
+              image: docker.io/adorsys/keycloak-config-cli:6.5.1-26
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              env:
+                - name: KEYCLOAK_URL
+                  value: http://keycloak-http:80
+                - name: KEYCLOAK_USER
+                  value: admin
+                - name: KEYCLOAK_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: keycloak-admin
+                      key: password
+                - name: KEYCLOAK_AVAILABILITYCHECK_ENABLED
+                  value: "true"
+                - name: KEYCLOAK_AVAILABILITYCHECK_TIMEOUT
+                  value: 300s
+                - name: IMPORT_FILES_LOCATIONS
+                  value: /config/*
+                - name: IMPORT_VARSUBSTITUTION_ENABLED
+                  value: "true"
+                - name: IMPORT_CACHE_ENABLED
+                  value: "false"
+              envFrom:
+                - secretRef:
+                    name: keycloak-realm-secrets
+              volumeMounts:
+                - name: realm-config
+                  mountPath: /config
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 25m
+                  memory: 128Mi
+                limits:
+                  cpu: 250m
+                  memory: 256Mi
+          volumes:
+            - name: realm-config
+              configMap:
+                name: keycloak-realm-config
+  # Public OIDC endpoints of the labs64io realm only — not a blanket /realms/, which would also
+  # publish /realms/master (the admin realm's login + token endpoint). /admin stays unrouted.
+  - |
+    {{- if .Values.labs64io.gateway.enabled }}
+    apiVersion: gateway.networking.k8s.io/v1
+    kind: HTTPRoute
+    metadata:
+      name: keycloak
+      namespace: {{ .Release.Namespace }}
+    spec:
+      parentRefs:
+        - name: labs64io-gateway
+          namespace: tools
+      hostnames:
+        {{- toYaml .Values.labs64io.gateway.hostnames | nindent 8 }}
+      rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /realms/labs64io/
+            - path:
+                type: PathPrefix
+                value: /resources/
+          backendRefs:
+            - name: keycloak-http
+              port: 80
+    {{- end }}
+  # AWS: credentials from Secrets Manager. Pre-install hooks (weight -5) so the DB bootstrap Job
+  # (weight 0) can read them; before-hook-creation, or the next upgrade fails with AlreadyExists.
+  - |
+    {{- if .Values.labs64io.externalSecrets.enabled }}
+    {{- $es := .Values.labs64io.externalSecrets }}
+    {{- range $name, $keys := dict "admin" (dict "password" "KC_BOOTSTRAP_ADMIN_PASSWORD") "realm-secrets" (dict "AUDITFLOW_CLIENT_SECRET" "AUDITFLOW_CLIENT_SECRET" "PAYMENT_GATEWAY_CLIENT_SECRET" "PAYMENT_GATEWAY_CLIENT_SECRET" "PREFLIGHT_CLIENT_SECRET" "PREFLIGHT_CLIENT_SECRET") "db" (dict "password" "KC_DB_PASSWORD" "RDS_ADMIN_USERNAME" "RDS_ADMIN_USERNAME" "RDS_ADMIN_PASSWORD" "RDS_ADMIN_PASSWORD") }}
+    ---
+    apiVersion: external-secrets.io/v1
+    kind: ExternalSecret
+    metadata:
+      name: keycloak-{{ $name }}
+      namespace: {{ $.Release.Namespace }}
+      annotations:
+        helm.sh/hook: pre-install,pre-upgrade
+        helm.sh/hook-weight: "-5"
+        helm.sh/hook-delete-policy: before-hook-creation
+    spec:
+      refreshInterval: 1h
+      secretStoreRef:
+        name: {{ $es.storeName }}
+        kind: ClusterSecretStore
+      target:
+        name: keycloak-{{ $name }}
+        creationPolicy: Owner
+      data:
+        {{- range $secretKey, $property := $keys }}
+        - secretKey: {{ $secretKey }}
+          remoteRef:
+            key: {{ required "labs64io.externalSecrets.secretKey is required" $es.secretKey }}
+            property: {{ $property }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+  - |
+    {{- if .Values.labs64io.databaseBootstrap.enabled }}
+    {{- $db := .Values.database }}
+    apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: keycloak-db-bootstrap
+      namespace: {{ .Release.Namespace }}
+      annotations:
+        helm.sh/hook: pre-install,pre-upgrade
+        helm.sh/hook-weight: "0"
+        helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+    spec:
+      backoffLimit: 3
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: keycloak-db-bootstrap
+            app.kubernetes.io/instance: {{ .Release.Name }}
+        spec:
+          restartPolicy: OnFailure
+          automountServiceAccountToken: false
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: ensure-db
+              image: postgres:18
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                runAsUser: 999
+                capabilities:
+                  drop: ["ALL"]
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  memory: 128Mi
+              env:
+                - name: DB_HOST
+                  value: {{ required "database.hostname is required" $db.hostname | quote }}
+                - name: DB_PORT
+                  value: {{ $db.port | quote }}
+                - name: DB_NAME
+                  value: {{ $db.database | quote }}
+                - name: DB_USER
+                  value: {{ $db.username | quote }}
+                - name: DB_PASSWORD
+                  valueFrom: {secretKeyRef: {name: keycloak-db, key: password}}
+                - name: ADMIN_USER
+                  valueFrom: {secretKeyRef: {name: keycloak-db, key: RDS_ADMIN_USERNAME}}
+                - name: PGPASSWORD
+                  valueFrom: {secretKeyRef: {name: keycloak-db, key: RDS_ADMIN_PASSWORD}}
+              command: ["sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  q() { psql -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -v ON_ERROR_STOP=1 "$@"; }
+                  q -d postgres -tc "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1 && \
+                    q -d postgres -c "ALTER ROLE \"$DB_USER\" WITH LOGIN PASSWORD '$DB_PASSWORD';" || \
+                    q -d postgres -c "CREATE ROLE \"$DB_USER\" LOGIN PASSWORD '$DB_PASSWORD';"
+                  q -d postgres -tc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" | grep -q 1 || \
+                    q -d postgres -c "CREATE DATABASE \"$DB_NAME\";"
+                  q -d postgres -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO \"$DB_USER\";"
+                  q -d "$DB_NAME" -c "GRANT ALL ON SCHEMA public TO \"$DB_USER\";"
+                  echo "keycloak database '$DB_NAME' and role '$DB_USER' ensured"
+    {{- end }}

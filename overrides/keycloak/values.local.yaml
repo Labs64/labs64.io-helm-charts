@@ -1,0 +1,39 @@
+# Local (k3d) deltas on top of values.yaml: start-dev with the embedded dev-file store on a PVC,
+# plain-http issuer, the test-fixture clients (realm.local-fixtures.json) and a public route.
+labs64io:
+  profile: local
+  hostname: http://keycloak.localhost
+  realmSslRequired: none
+  gateway:
+    enabled: true
+    hostnames:
+      - keycloak.localhost
+
+command:
+  - /opt/keycloak/bin/kc.sh
+  - start-dev
+
+cache:
+  stack: custom
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+volumeClaimTemplates: |
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+
+extraVolumeMounts: |
+  - name: data
+    mountPath: /opt/keycloak/data

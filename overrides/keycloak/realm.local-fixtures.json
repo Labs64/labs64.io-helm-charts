@@ -1,0 +1,142 @@
+{
+  "clients": [
+    {
+      "clientId": "local-tooling",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TOOLING_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "local-test",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TEST_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "platform-claims"
+      ],
+      "optionalClientScopes": [
+        "audit-event:read",
+        "audit-event:write",
+        "customer:read",
+        "customer:write",
+        "purchase-order:read",
+        "purchase-order:write",
+        "purchase-order:checkout",
+        "checkout-transaction:read",
+        "payment:read",
+        "payment:write",
+        "payment:pay",
+        "payment-provider:read",
+        "payment-provider:write",
+        "payment-transaction:read"
+      ]
+    },
+    {
+      "clientId": "auditflow-regression",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TEST_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "auditflow-regression-quota",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TEST_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "auditflow-tenant-2",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "$(env:LOCAL_TEST_CLIENT_SECRET)",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-local-tooling",
+      "enabled": true,
+      "serviceAccountClientId": "local-tooling",
+      "attributes": {
+        "tenant": [
+          "local"
+        ]
+      },
+      "realmRoles": [
+        "admin-role"
+      ]
+    },
+    {
+      "username": "service-account-local-test",
+      "enabled": true,
+      "serviceAccountClientId": "local-test",
+      "attributes": {
+        "tenant": [
+          "t_mock"
+        ]
+      }
+    },
+    {
+      "username": "service-account-auditflow-regression",
+      "enabled": true,
+      "serviceAccountClientId": "auditflow-regression",
+      "attributes": {
+        "tenant": [
+          "t_regression"
+        ]
+      },
+      "realmRoles": [
+        "auditflow-role"
+      ]
+    },
+    {
+      "username": "service-account-auditflow-regression-quota",
+      "enabled": true,
+      "serviceAccountClientId": "auditflow-regression-quota",
+      "attributes": {
+        "tenant": [
+          "t_regression_quota"
+        ]
+      },
+      "realmRoles": [
+        "auditflow-role"
+      ]
+    },
+    {
+      "username": "service-account-auditflow-tenant-2",
+      "enabled": true,
+      "serviceAccountClientId": "auditflow-tenant-2",
+      "attributes": {
+        "tenant": [
+          "t_mock_2"
+        ]
+      },
+      "realmRoles": [
+        "auditflow-role"
+      ]
+    }
+  ]
+}

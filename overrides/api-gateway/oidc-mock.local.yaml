@@ -1,0 +1,11 @@
+# identityProvider: mock — charts/mock-oidc in the tools namespace (DEV ONLY).
+# Tokens are minted through http://mock-oidc.localhost (tests, `just token`), which is the issuer
+# they carry; discovery/JWKS are fetched over the in-cluster Service.
+networkPolicy:
+  toolsEgress:
+    - name: mock-oidc
+      port: 8080
+
+oidc:
+  discoveryUrl: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
+  issuer: http://mock-oidc.localhost/labs64io

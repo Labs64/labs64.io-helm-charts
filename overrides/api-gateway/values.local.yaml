@@ -5,12 +5,10 @@ image:
   tag: latest
   pullPolicy: Always
 
+# OIDC settings and the matching NetworkPolicy egress come from oidc-<provider>.local.yaml,
+# selected by identityProvider in overrides/helmfile/values.local.yaml (one switch, no edits here).
 networkPolicy:
   enabled: true
-
-# mock-oauth2-server (just install-tool-mock-oidc)
-oidc:
-  discoveryUrl: http://mock-oidc.tools.svc.cluster.local:8080/labs64io/.well-known/openid-configuration
 
 logLevel: DEBUG
 
