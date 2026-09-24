@@ -3,7 +3,7 @@
 #   local (k3d):   values.yaml + values.local.yaml (+ values.secrets.local.yaml)  — helmfile
 #   AWS dev/qa/prod: values.yaml + values.aws.yaml + devops-generated values     — devops `just keycloak-install <env>`
 # The realm comes in as strings via --set-file: realmConfig (realm.base.json, every environment) and
-# realmFixtures (realm.local-fixtures.json, local only).
+# realmFixtures (realm.test-fixtures.json — only honoured with labs64io.testFixtures: local, AWS dev).
 nameOverride: keycloak
 # Stable names (keycloak-http, keycloak-admin, ...): api-gateway's discovery URL and the
 # NetworkPolicies of other releases reference them.
@@ -17,8 +17,11 @@ image:
 
 # Labs64.IO settings consumed by extraEnv/extraManifests below (not upstream chart keys).
 labs64io:
-  # -- local | aws. Test fixtures are refused outside `local`.
-  profile: local
+  # -- Add the test-fixture clients of realm.test-fixtures.json (fixed client ids, one shared
+  # LOCAL_TEST_CLIENT_SECRET + LOCAL_TOOLING_CLIENT_SECRET). true locally; on AWS only in dev, set by
+  # labs64.io-devops from Terraform's keycloak_test_fixtures (which refuses prod). Without it a
+  # passed realmFixtures fails the render instead of silently shipping test clients.
+  testFixtures: false
   # -- Canonical frontend URL (KC_HOSTNAME). Every token's `iss` is <hostname>/realms/labs64io,
   # whichever URL the client used — api-gateway's oidc.issuer must match it exactly.
   hostname: ""
@@ -102,6 +105,16 @@ networkPolicy:
       podSelector:
         matchLabels:
           app.kubernetes.io/name: api-gateway
+    # Confidential clients of realm.base.json that request tokens themselves (client_credentials):
+    # the modules (credentials delivered as LABS64_OIDC_* by labs64.io-devops) and the preflight Job.
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: labs64io
+      podSelector:
+        matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values: [auditflow, payment-gateway, preflight]
     # The post-install hook reconciles the realm through Keycloak's HTTP Service.
     - podSelector:
         matchLabels:
@@ -121,15 +134,15 @@ networkPolicy:
           port: 53
 
 extraManifests:
-  # The labs64io realm: realm.base.json, plus realm.local-fixtures.json (local profile only).
+  # The labs64io realm: realm.base.json, plus realm.test-fixtures.json (labs64io.testFixtures only).
   # Client secrets stay $(env:NAME) placeholders — keycloak-config-cli substitutes them from
   # keycloak-realm-secrets, so no credential lands in this ConfigMap.
   - |
     {{- $realm := required "realmConfig is required (--set-file realmConfig=overrides/keycloak/realm.base.json)" .Values.realmConfig | fromJson }}
     {{- $_ := set $realm "sslRequired" .Values.labs64io.realmSslRequired }}
     {{- with .Values.realmFixtures }}
-    {{- if ne $.Values.labs64io.profile "local" }}
-    {{- fail "realmFixtures (fixed test clients and secrets) are allowed in the local profile only" }}
+    {{- if not $.Values.labs64io.testFixtures }}
+    {{- fail "realmFixtures (test clients) need labs64io.testFixtures: true — local, or AWS dev via keycloak_test_fixtures" }}
     {{- end }}
     {{- $fx := fromJson . }}
     {{- $_ := set $realm "clients" (concat $realm.clients $fx.clients) }}
@@ -251,7 +264,12 @@ extraManifests:
   - |
     {{- if .Values.labs64io.externalSecrets.enabled }}
     {{- $es := .Values.labs64io.externalSecrets }}
-    {{- range $name, $keys := dict "admin" (dict "password" "KC_BOOTSTRAP_ADMIN_PASSWORD") "realm-secrets" (dict "AUDITFLOW_CLIENT_SECRET" "AUDITFLOW_CLIENT_SECRET" "PAYMENT_GATEWAY_CLIENT_SECRET" "PAYMENT_GATEWAY_CLIENT_SECRET" "PREFLIGHT_CLIENT_SECRET" "PREFLIGHT_CLIENT_SECRET") "db" (dict "password" "KC_DB_PASSWORD" "RDS_ADMIN_USERNAME" "RDS_ADMIN_USERNAME" "RDS_ADMIN_PASSWORD" "RDS_ADMIN_PASSWORD") }}
+    {{- $realmSecrets := dict "AUDITFLOW_CLIENT_SECRET" "AUDITFLOW_CLIENT_SECRET" "PAYMENT_GATEWAY_CLIENT_SECRET" "PAYMENT_GATEWAY_CLIENT_SECRET" "PREFLIGHT_CLIENT_SECRET" "PREFLIGHT_CLIENT_SECRET" }}
+    {{- if .Values.labs64io.testFixtures }}
+    {{- $_ := set $realmSecrets "LOCAL_TEST_CLIENT_SECRET" "LOCAL_TEST_CLIENT_SECRET" }}
+    {{- $_ := set $realmSecrets "LOCAL_TOOLING_CLIENT_SECRET" "LOCAL_TOOLING_CLIENT_SECRET" }}
+    {{- end }}
+    {{- range $name, $keys := dict "admin" (dict "password" "KC_BOOTSTRAP_ADMIN_PASSWORD") "realm-secrets" $realmSecrets "db" (dict "password" "KC_DB_PASSWORD" "RDS_ADMIN_USERNAME" "RDS_ADMIN_USERNAME" "RDS_ADMIN_PASSWORD" "RDS_ADMIN_PASSWORD") }}
     ---
     apiVersion: external-secrets.io/v1
     kind: ExternalSecret

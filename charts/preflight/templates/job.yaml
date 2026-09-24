@@ -12,6 +12,12 @@ spec:
   activeDeadlineSeconds: 120
   ttlSecondsAfterFinished: 300
   template:
+    metadata:
+      # Pod labels (not only the Job's): NetworkPolicies of the checked targets select on them,
+      # e.g. Keycloak admits app.kubernetes.io/name=preflight for the client_credentials grant.
+      labels:
+        app.kubernetes.io/name: preflight
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       restartPolicy: Never
       securityContext:

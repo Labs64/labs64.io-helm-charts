@@ -1,4 +1,4 @@
-# identityProvider: keycloak — charts/keycloak in the tools namespace. KC_HOSTNAME fixes every
+# identityProvider: keycloak — the upstream keycloakx release in the tools namespace. KC_HOSTNAME fixes every
 # token's issuer to http://keycloak.localhost/realms/labs64io; discovery/JWKS use the in-cluster
 # Service. Egress targets the pod port (8080), not the Service port (80).
 networkPolicy:

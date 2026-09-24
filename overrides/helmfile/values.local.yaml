@@ -1,6 +1,6 @@
 # Local identity provider, consumed by helmfile.yaml.gotmpl — the ONE switch:
 #   mock     — charts/mock-oidc (default; deterministic, authenticates nobody)
-#   keycloak — charts/keycloak (real OIDC, labs64io realm with the test fixtures)
+#   keycloak — upstream codecentric/keycloakx + overrides/keycloak/ (real OIDC, labs64io realm with the test fixtures)
 #   external — nothing installed; supply api-gateway's oidc.* via overrides/api-gateway/oidc-external.local.yaml
 # It selects the provider release AND api-gateway's OIDC values/egress together. Apply with
 # `just install-tools && just install-app api-gateway` (or `just deploy`).
