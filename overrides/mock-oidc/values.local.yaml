@@ -1,0 +1,11 @@
+enabled: true
+
+gateway:
+  parentRefs:
+    - name: labs64io-gateway
+      namespace: tools
+  hostnames:
+    - mock-oidc.localhost
+
+networkPolicy:
+  applicationNamespace: labs64io

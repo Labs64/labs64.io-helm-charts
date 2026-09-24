@@ -44,8 +44,13 @@ environments:
   local:
     values:
       - overrides/global-values.yaml
+      - overrides/helmfile/values.local.yaml
 
 ---
+{{ $idp := .Values | get "identityProvider" "mock" }}
+{{ if not (has $idp (list "mock" "keycloak" "external")) }}
+{{ fail (printf "identityProvider must be mock, keycloak or external (got %q)" $idp) }}
+{{ end }}
 releases:
   # === INFRASTRUCTURE ===
   - name: traefik
@@ -103,6 +108,47 @@ releases:
       - overrides/redis/values.{{ .Environment.Name }}.yaml
     labels:
       layer: infra
+
+  # === IDENTITY ===
+  # overrides/helmfile/values.<env>.yaml `identityProvider` installs at most one provider and
+  # (see labs64io-api-gateway below) points api-gateway at it. `external` installs neither.
+  - name: mock-oidc
+    installed: {{ eq $idp "mock" }}
+    namespace: tools
+    chart: ./charts/mock-oidc
+    values:
+      - ./charts/mock-oidc/values.yaml
+      - ./overrides/mock-oidc/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: identity
+      provider: mock
+    needs:
+      - tools/traefik
+
+  - name: keycloak
+    installed: {{ eq $idp "keycloak" }}
+    namespace: tools
+    chart: oci://ghcr.io/codecentric/helm-charts/keycloakx
+    version: 7.2.2
+    values:
+      - ./overrides/keycloak/values.yaml
+      - ./overrides/keycloak/values.{{ .Environment.Name }}.yaml
+      {{- if isFile (printf "./overrides/keycloak/values.secrets.%s.yaml" .Environment.Name) }}
+      - ./overrides/keycloak/values.secrets.{{ .Environment.Name }}.yaml
+      {{- end }}
+    # The realm contract (realm.base.json) is shared with AWS; the fixture clients are local-only.
+    set:
+      - name: realmConfig
+        file: ./overrides/keycloak/realm.base.json
+      {{- if isFile (printf "./overrides/keycloak/realm.%s-fixtures.json" .Environment.Name) }}
+      - name: realmFixtures
+        file: ./overrides/keycloak/realm.{{ .Environment.Name }}-fixtures.json
+      {{- end }}
+    labels:
+      layer: identity
+      provider: keycloak
+    needs:
+      - tools/traefik
 
   # === MONITORING ===
   - name: metrics-server
@@ -188,6 +234,8 @@ releases:
       - ./charts/api-gateway/values.yaml
       - ./overrides/global-values.yaml
       - ./overrides/api-gateway/values.{{ .Environment.Name }}.yaml
+      # OIDC discovery/issuer/audience + egress for the selected identity provider.
+      - ./overrides/api-gateway/oidc-{{ $idp }}.{{ .Environment.Name }}.yaml
     labels:
       layer: apps
     needs:

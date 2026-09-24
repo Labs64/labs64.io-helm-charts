@@ -1,0 +1,14 @@
+# identityProvider: keycloak — charts/keycloak in the tools namespace. KC_HOSTNAME fixes every
+# token's issuer to http://keycloak.localhost/realms/labs64io; discovery/JWKS use the in-cluster
+# Service. Egress targets the pod port (8080), not the Service port (80).
+networkPolicy:
+  toolsEgress:
+    - name: keycloak
+      port: 8080
+
+oidc:
+  discoveryUrl: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration
+  issuer: http://keycloak.localhost/realms/labs64io
+  # The realm emits both audiences during the migration (RFC 17); Keycloak tokens are validated
+  # against the long-term API audience.
+  audience: labs64io-api

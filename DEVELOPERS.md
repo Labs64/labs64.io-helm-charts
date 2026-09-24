@@ -253,7 +253,7 @@ just repo-update
 
 This adds repositories for: traefik, bitnami (RabbitMQ, PostgreSQL, Redis), open-telemetry, grafana, prometheus-community, metrics-server.
 
-### 3-5. Install core tools (Traefik, ESO, RabbitMQ, PostgreSQL, Redis, mock OIDC)
+### 3-5. Install core tools and the selected identity provider
 
 All infra tools are declared as [Helmfile](https://helmfile.io/) releases (`helmfile.yaml.gotmpl`,
 `layer: infra`) and installed together:
@@ -264,16 +264,25 @@ just install-tools
 
 This installs the Gateway API + Traefik CRDs (`just install-crds`, run first since Helmfile
 has no per-release CRD-skip equivalent), then via Helmfile: Traefik v3, [External Secrets
-Operator](https://external-secrets.io/) (ESO), RabbitMQ, PostgreSQL, and Redis — then applies
-the Traefik dashboard HTTPRoute, the mock OIDC provider, and the local `ClusterSecretStore`
-(`overrides/eso/cluster-secret-store.yaml`) that lets any chart opt into ESO-backed secrets via
+Operator](https://external-secrets.io/) (ESO), RabbitMQ, PostgreSQL, Redis, and the identity
+provider selected by `identityProvider` in `overrides/helmfile/values.local.yaml` — `mock`
+(default), `keycloak` or `external`. That one value selects the provider release **and**
+api-gateway's OIDC settings + NetworkPolicy egress (`overrides/api-gateway/oidc-<provider>.local.yaml`);
+apply a switch with `just install-tools && just install-app api-gateway`. Keycloak comes from the
+pinned upstream `codecentric/keycloakx` chart (official Keycloak image), configured in
+`overrides/keycloak/`: `values.yaml` (shared with AWS), `values.local.yaml`, the realm contract
+`realm.base.json` (shared with AWS) and the local-only test clients `realm.local-fixtures.json`.
+`just generate-jwt <persona>` mints a token from whichever provider is selected. The command also applies the Traefik dashboard HTTPRoute and local
+`ClusterSecretStore` (`overrides/eso/cluster-secret-store.yaml`) used by charts with
 `externalSecrets.enabled` (see [Unified secret management](#unified-secret-management) below).
 
 To install/inspect a single tool, use its own recipe, e.g. `just install-tool-traefik`,
 `just install-tool-rabbitmq`, `just install-tool-postgresql`, `just install-tool-redis`,
-`just install-tool-mock-oidc` — or target just that Helmfile release/layer directly:
+`just install-tool-mock-oidc` (when mock is selected in the identity overrides) — or target a
+Helmfile release/layer directly:
 ```bash
 helmfile -e local -l name=rabbitmq apply
+helmfile -e local -l layer=identity apply
 ```
 
 Wait for all pods:
@@ -478,6 +487,7 @@ just uninstall-tool-rabbitmq
 just uninstall-tool-postgresql
 just uninstall-tool-redis
 just uninstall-tool-mock-oidc
+just uninstall-tool-keycloak
 just cluster-down             # delete the k3d cluster
 ```
 

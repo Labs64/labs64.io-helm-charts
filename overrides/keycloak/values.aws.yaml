@@ -1,0 +1,51 @@
+# AWS (dev/qa/prod) deltas on top of values.yaml — production mode on RDS PostgreSQL, credentials
+# from Secrets Manager. Installed by labs64.io-devops (`just keycloak-install <env>`), which appends
+# its Terraform-rendered generated/keycloak.<env>.yaml as the last values file with:
+#   labs64io.hostname, labs64io.externalSecrets.secretKey, database.hostname/port/username,
+#   networkPolicy.egress (full list — DNS, replicas, the VPC CIDR on 5432), replicas.
+# Realm: realm.base.json only — the local test fixtures are refused outside the local profile.
+labs64io:
+  profile: aws
+  realmSslRequired: external
+  externalSecrets:
+    enabled: true
+  databaseBootstrap:
+    enabled: true
+
+command:
+  - /opt/keycloak/bin/kc.sh
+  - start
+
+database:
+  vendor: postgres
+  port: 5432
+  database: keycloak
+  existingSecret: keycloak-db
+  existingSecretKey: password
+
+dbchecker:
+  enabled: true
+
+# jdbc-ping cluster cache (chart default when cache.stack=default): replicas discover each other
+# through the database and talk JGroups on 7800 (+57800 failure detection). Declared as pod ports so
+# the chart's NetworkPolicy admits replica-to-replica traffic on them (it only lists 8080/8443 plus
+# extraPorts).
+cache:
+  stack: default
+extraPorts:
+  - name: jgroups
+    containerPort: 7800
+    protocol: TCP
+  - name: jgroups-fd
+    containerPort: 57800
+    protocol: TCP
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 768Mi
+  limits:
+    memory: 1536Mi
+
+podDisruptionBudget:
+  maxUnavailable: 1

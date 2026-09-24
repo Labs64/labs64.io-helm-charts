@@ -6,6 +6,7 @@ metadata:
     {{- include "chart-libs.labels" . | nindent 4 }}
 data:
   OIDC_DISCOVERY_URL: {{ .Values.oidc.discoveryUrl | quote }}
+  OIDC_ISSUER: {{ .Values.oidc.issuer | quote }}
   OIDC_AUDIENCE: {{ .Values.oidc.audience | quote }}
   TOKEN_SCOPES_CLAIM_PATHS: {{ .Values.oidc.scopesClaimPaths | quote }}
   TOKEN_TENANT_CLAIM_PATH: {{ .Values.oidc.tenantClaimPath | quote }}

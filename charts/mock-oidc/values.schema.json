@@ -111,6 +111,12 @@
       "additionalProperties": false,
       "description": "Restrict this pod's traffic. Egress is DNS-only: the server calls nothing,\nit signs tokens from the static config mounted at startup.",
       "properties": {
+        "applicationNamespace": {
+          "default": "",
+          "description": "Namespace containing api-gateway when it differs from this release.",
+          "title": "applicationNamespace",
+          "type": "string"
+        },
         "enabled": {
           "default": true,
           "title": "enabled",
@@ -118,14 +124,15 @@
         },
         "gatewayNamespace": {
           "default": "tools",
-          "description": "Namespace the shared Gateway runs in; ingress is accepted from there and\nfrom this release's own namespace.",
+          "description": "Namespace the shared Gateway runs in.",
           "title": "gatewayNamespace",
           "type": "string"
         }
       },
       "required": [
         "enabled",
-        "gatewayNamespace"
+        "gatewayNamespace",
+        "applicationNamespace"
       ],
       "title": "networkPolicy",
       "type": "object"
