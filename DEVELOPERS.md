@@ -271,7 +271,8 @@ api-gateway's OIDC settings + NetworkPolicy egress (`overrides/api-gateway/oidc-
 apply a switch with `just install-tools && just install-app api-gateway`. Keycloak comes from the
 pinned upstream `codecentric/keycloakx` chart (official Keycloak image), configured in
 `overrides/keycloak/`: `values.yaml` (shared with AWS), `values.local.yaml`, the realm contract
-`realm.base.json` (shared with AWS) and the local-only test clients `realm.local-fixtures.json`.
+`realm.base.json` (shared with AWS) and the test clients `realm.test-fixtures.json` (local, and AWS dev
+only — enabled there by labs64.io-devops' `keycloak_test_fixtures`).
 `just generate-jwt <persona>` mints a token from whichever provider is selected. The command also applies the Traefik dashboard HTTPRoute and local
 `ClusterSecretStore` (`overrides/eso/cluster-secret-store.yaml`) used by charts with
 `externalSecrets.enabled` (see [Unified secret management](#unified-secret-management) below).

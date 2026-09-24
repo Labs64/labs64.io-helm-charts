@@ -136,14 +136,13 @@ releases:
       {{- if isFile (printf "./overrides/keycloak/values.secrets.%s.yaml" .Environment.Name) }}
       - ./overrides/keycloak/values.secrets.{{ .Environment.Name }}.yaml
       {{- end }}
-    # The realm contract (realm.base.json) is shared with AWS; the fixture clients are local-only.
+    # The realm contract (realm.base.json) is shared with AWS; the test-fixture clients are added
+    # locally (values.local.yaml sets labs64io.testFixtures) and, on AWS, in dev only (devops).
     set:
       - name: realmConfig
         file: ./overrides/keycloak/realm.base.json
-      {{- if isFile (printf "./overrides/keycloak/realm.%s-fixtures.json" .Environment.Name) }}
       - name: realmFixtures
-        file: ./overrides/keycloak/realm.{{ .Environment.Name }}-fixtures.json
-      {{- end }}
+        file: ./overrides/keycloak/realm.test-fixtures.json
     labels:
       layer: identity
       provider: keycloak

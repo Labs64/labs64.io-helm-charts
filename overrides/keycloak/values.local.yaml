@@ -1,7 +1,7 @@
 # Local (k3d) deltas on top of values.yaml: start-dev with the embedded dev-file store on a PVC,
-# plain-http issuer, the test-fixture clients (realm.local-fixtures.json) and a public route.
+# plain-http issuer, the test-fixture clients (realm.test-fixtures.json) and a public route.
 labs64io:
-  profile: local
+  testFixtures: true
   hostname: http://keycloak.localhost
   realmSslRequired: none
   gateway:

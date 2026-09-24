@@ -630,7 +630,7 @@
         },
         "discoveryUrl": {
           "default": "http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration",
-          "description": "Discovery URL (in-cluster transport; the token issuer is `oidc.issuer`). Defaults to the\ncharts/keycloak release in the `tools` namespace (Service `keycloak-http`).\n  keycloak: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration\n  demo/dev: http://mock-oidc.\u003cnamespace\u003e.svc.cluster.local:8080/labs64io/.well-known/openid-configuration",
+          "description": "Discovery URL (in-cluster transport; the token issuer is `oidc.issuer`). Defaults to the\nupstream codecentric/keycloakx release `keycloak` in the `tools` namespace (Service `keycloak-http`).\n  keycloak: http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration\n  demo/dev: http://mock-oidc.\u003cnamespace\u003e.svc.cluster.local:8080/labs64io/.well-known/openid-configuration",
           "title": "discoveryUrl",
           "type": "string"
         },
