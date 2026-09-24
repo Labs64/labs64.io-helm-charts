@@ -129,7 +129,7 @@ releases:
     installed: {{ eq $idp "keycloak" }}
     namespace: tools
     chart: oci://ghcr.io/codecentric/helm-charts/keycloakx
-    version: 7.2.2
+    version: 7.3.2
     values:
       - ./overrides/keycloak/values.yaml
       - ./overrides/keycloak/values.{{ .Environment.Name }}.yaml
