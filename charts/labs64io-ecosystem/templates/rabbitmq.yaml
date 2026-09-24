@@ -31,6 +31,13 @@ spec:
         runAsUser: 999
         runAsGroup: 999
         fsGroup: 999
+        # Without this kubelet re-applies g+rw to the whole volume on EVERY pod start, which turns
+        # RabbitMQ's own 0400 /var/lib/rabbitmq/.erlang.cookie into 0660 — Erlang then refuses to
+        # boot ("Cookie file ... must be accessible by owner only"). A fresh volume starts fine and
+        # every restart (upgrade, node drain, spot interruption, `install.sh stop/start`)
+        # crash-loops. OnRootMismatch re-owns the volume only when its root does not match yet,
+        # i.e. once, before RabbitMQ has created the cookie.
+        fsGroupChangePolicy: OnRootMismatch
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
