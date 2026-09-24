@@ -401,76 +401,15 @@
     },
     "rbac": {
       "additionalProperties": false,
-      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
+      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)\nNothing in this chart reads the K8s API (static swagger-ui) — no Role, no rules.",
       "properties": {
         "create": {
-          "default": true,
+          "default": false,
           "title": "create",
           "type": "boolean"
         },
         "rules": {
           "items": {
-            "anyOf": [
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "apiGroups": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "apiGroups",
-                    "type": "array"
-                  },
-                  "resources": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "resources",
-                    "type": "array"
-                  },
-                  "verbs": {
-                    "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "string"
-                        }
-                      ],
-                      "required": []
-                    },
-                    "title": "verbs",
-                    "type": "array"
-                  }
-                },
-                "required": [
-                  "apiGroups",
-                  "resources",
-                  "verbs"
-                ],
-                "type": "object"
-              }
-            ],
             "required": []
           },
           "title": "rules",
@@ -723,8 +662,8 @@
           "type": "object"
         },
         "automount": {
-          "default": true,
-          "description": "Automatically mount a ServiceAccount's API credentials?",
+          "default": false,
+          "description": "Automatically mount a ServiceAccount's API credentials? swagger-ui is a static site and\nnever calls the Kubernetes API.",
           "title": "automount",
           "type": "boolean"
         },

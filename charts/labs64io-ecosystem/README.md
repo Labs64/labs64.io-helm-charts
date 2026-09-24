@@ -1,10 +1,20 @@
 # labs64io-ecosystem
 
-![Version: 0.18.0](https://img.shields.io/badge/Version-0.18.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.19.7](https://img.shields.io/badge/Version-0.19.7-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-Labs64.IO :: Umbrella Chart for entire Ecosystem
+Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 
 **Homepage:** <https://labs64.io>
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| Labs64 | <info@labs64.com> | <https://labs64.io> |
+
+## Source Code
+
+* <https://github.com/Labs64/labs64.io-helm-charts>
 
 ## Requirements
 
@@ -20,7 +30,7 @@ Labs64.IO :: Umbrella Chart for entire Ecosystem
 | file://../payment-gateway | payment-gateway | >=0.1.0 |
 | https://charts.bitnami.com/bitnami | postgresql | 18.7.11 |
 | https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.0 |
-| https://traefik.github.io/charts | traefik | 41.0.1 |
+| https://traefik.github.io/charts | traefik | 41.6.0 |
 
 ## Values
 

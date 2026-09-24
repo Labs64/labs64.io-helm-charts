@@ -1,6 +1,6 @@
 # api-docs
 
-![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.33.0](https://img.shields.io/badge/AppVersion-v5.33.0-informational?style=flat-square)
+![Version: 0.9.3](https://img.shields.io/badge/Version-0.9.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.33.0](https://img.shields.io/badge/AppVersion-v5.33.0-informational?style=flat-square)
 
 Labs64.IO :: Swagger UI
 
@@ -10,7 +10,7 @@ Labs64.IO :: Swagger UI
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| labs64 | <info@labs64.com> |  |
+| Labs64 | <info@labs64.com> | <https://labs64.io> |
 
 ## Source Code
 
@@ -20,7 +20,7 @@ Labs64.IO :: Swagger UI
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.0 |
+| file://../chart-libs | chart-libs | 0.8.3 |
 
 ## Values
 
@@ -56,23 +56,20 @@ Labs64.IO :: Swagger UI
 | networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
+| podDisruptionBudget.enabled | bool | `false` |  |
+| podDisruptionBudget.minAvailable | int | `1` |  |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
-| rbac.create | bool | `true` |  |
-| rbac.rules[0].apiGroups[0] | string | `""` |  |
-| rbac.rules[0].resources[0] | string | `"pods"` |  |
-| rbac.rules[0].resources[1] | string | `"services"` |  |
-| rbac.rules[0].resources[2] | string | `"endpoints"` |  |
-| rbac.rules[0].verbs[0] | string | `"get"` |  |
-| rbac.rules[0].verbs[1] | string | `"list"` |  |
-| rbac.rules[0].verbs[2] | string | `"watch"` |  |
+| rbac.create | bool | `false` |  |
+| rbac.rules | list | `[]` |  |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":10,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
-| resources.limits.cpu | string | `"500m"` |  |
-| resources.limits.memory | string | `"1Gi"` |  |
-| resources.requests.cpu | string | `"100m"` |  |
-| resources.requests.memory | string | `"512Mi"` |  |
+| resources.limits.cpu | string | `"100m"` |  |
+| resources.limits.memory | string | `"64Mi"` |  |
+| resources.requests.cpu | string | `"20m"` |  |
+| resources.requests.memory | string | `"32Mi"` |  |
 | secrets | object | `{"data":{}}` | Secret data to be used as environment variables (delivered via envFrom) |
+| securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | securityContext.capabilities.drop[0] | string | `"ALL"` |  |
 | securityContext.runAsGroup | int | `1064` |  |
 | securityContext.runAsNonRoot | bool | `true` |  |
@@ -81,9 +78,9 @@ Labs64.IO :: Swagger UI
 | service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
-| serviceAccount | object | `{"annotations":{},"automount":true,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
+| serviceAccount | object | `{"annotations":{},"automount":false,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA) @schema type: object additionalProperties: true @schema |
-| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
+| serviceAccount.automount | bool | `false` | Automatically mount a ServiceAccount's API credentials? swagger-ui is a static site and never calls the Kubernetes API. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | swaggerUI | object | `{"dom_id":"#swagger-ui","urls":[],"validatorUrl":"https://validator.swagger.io/validator"}` | Swagger UI configuration (ref: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/) |
@@ -91,6 +88,7 @@ Labs64.IO :: Swagger UI
 | swaggerUI.urls | list | `[]` | An array of API definition objects used by Topbar plugin. When used and Topbar plugin is enabled, the url parameter will not be parsed. Names and URLs must be unique among all items in this array, since they’re used as identifiers. |
 | swaggerUI.validatorUrl | string | `"https://validator.swagger.io/validator"` | By default, Swagger UI attempts to validate specs against swagger.io’s online validator. You can use this parameter to set a different validator URL, for example for locally deployed validators. Setting it to either none, 127.0.0.1 or localhost will disable validation. |
 | tolerations | list | `[]` |  |
+| topologySpreadConstraints | list | `[]` | Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable). labelSelector defaults to this chart's own selector labels when a constraint omits one. |
 | volumeMounts | list | `[{"mountPath":"/usr/share/nginx/html/swagger-config.yaml","name":"swagger-config","readOnly":true,"subPath":"swagger-config.yaml"}]` | Additional volumeMounts on the output Deployment definition. |
 | volumes | list | `[{"configMap":{"name":"{{ include \"chart-libs.fullname\" . }}-swagger-config"},"name":"swagger-config"}]` | Additional volumes on the output Deployment definition. Mounts the swagger-config ConfigMap (rendered from `swaggerUI` below) into the image's webroot so CONFIG_URL (see `env` below) can serve it — without this, the container falls back to its baked-in petstore.swagger.io demo config and the ConfigMap is never actually consumed. |
 

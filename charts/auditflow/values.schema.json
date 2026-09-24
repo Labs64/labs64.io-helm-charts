@@ -544,6 +544,12 @@
       "title": "extraContainers",
       "type": "string"
     },
+    "fastStartup": {
+      "default": false,
+      "description": "Optimize for container startup time (-XX:TieredStopAtLevel=1, C1-only JIT) instead of\nsustained throughput. Local dev wants it on; prod wants it off (the default).",
+      "title": "fastStartup",
+      "type": "boolean"
+    },
     "fullnameOverride": {
       "default": "",
       "title": "fullnameOverride",
@@ -1170,7 +1176,7 @@
                 "additionalProperties": false,
                 "properties": {
                   "name": {
-                    "default": "redis",
+                    "default": "valkey",
                     "title": "name",
                     "type": "string"
                   },
@@ -1658,12 +1664,31 @@
           "default": true,
           "title": "readOnlyRootFilesystem",
           "type": "boolean"
+        },
+        "runAsGroup": {
+          "default": 1064,
+          "title": "runAsGroup",
+          "type": "integer"
+        },
+        "runAsNonRoot": {
+          "default": true,
+          "description": "All three auditflow images (be/transformer/sink) run as uid 1064 — see the Dockerfiles'\nUSER_ID in labs64.io-auditflow.",
+          "title": "runAsNonRoot",
+          "type": "boolean"
+        },
+        "runAsUser": {
+          "default": 1064,
+          "title": "runAsUser",
+          "type": "integer"
         }
       },
       "required": [
         "allowPrivilegeEscalation",
         "capabilities",
-        "readOnlyRootFilesystem"
+        "readOnlyRootFilesystem",
+        "runAsNonRoot",
+        "runAsUser",
+        "runAsGroup"
       ],
       "title": "securityContext",
       "type": "object"
@@ -2234,6 +2259,7 @@
     "slo",
     "tests",
     "applicationType",
+    "fastStartup",
     "extraContainers"
   ],
   "type": "object"

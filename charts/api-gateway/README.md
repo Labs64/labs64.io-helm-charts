@@ -1,6 +1,6 @@
 # api-gateway
 
-![Version: 0.14.0](https://img.shields.io/badge/Version-0.14.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
+![Version: 0.14.3](https://img.shields.io/badge/Version-0.14.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
 
 Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
@@ -10,7 +10,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| labs64 | <info@labs64.com> |  |
+| Labs64 | <info@labs64.com> | <https://labs64.io> |
 
 ## Source Code
 
@@ -21,7 +21,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.0 |
+| file://../chart-libs | chart-libs | 0.8.3 |
 
 ## Values
 
@@ -29,9 +29,10 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | applicationType | string | `"python"` | Security response headers are now emitted as a native Gateway API ResponseHeaderModifier filter on each HTTPRoute rule; the canonical values live in the chart-libs "chart-libs.securityHeaders" helper. (The former Traefik security-headers Middleware has been removed.) |
-| authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"],"port":8081,"serviceName":"gateway-common","trustForwardHeader":true}` | ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container) |
+| authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"],"maxResponseBodySize":8192,"port":8081,"serviceName":"gateway-common","trustForwardHeader":true}` | ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container) |
 | authProxy.address | string | `""` | Full URL override for the /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth |
 | authProxy.authResponseHeaders | list | `["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"]` | Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through) |
+| authProxy.maxResponseBodySize | int | `8192` | Maximum size (bytes) of the authproxy's /auth response Traefik will read. The response carries only identity headers and no body, so this is a DoS guard, not a functional limit — set well above authResponseHeaders' combined size. |
 | authProxy.port | int | `8081` | Service port of the authproxy container |
 | authProxy.serviceName | string | `"gateway-common"` | Service name backing the ForwardAuth address. Must match fullnameOverride above since the authproxy Service is rendered by this same chart. |
 | authProxy.trustForwardHeader | bool | `true` | Trust X-Forwarded-* headers from the proxy |
@@ -89,12 +90,14 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/health/ready","port":8081},"initialDelaySeconds":0,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `2` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ The authproxy sits on the hot path of every protected request - keep at least 2 replicas. |
 | resources.limits.cpu | string | `"200m"` |  |
-| resources.limits.memory | string | `"512Mi"` |  |
-| resources.requests.cpu | string | `"100m"` |  |
-| resources.requests.memory | string | `"512Mi"` |  |
+| resources.limits.memory | string | `"256Mi"` |  |
+| resources.requests.cpu | string | `"50m"` |  |
+| resources.requests.memory | string | `"128Mi"` |  |
 | routesDir | string | `"/app/routes"` | Directory of generated <module>.routes.yaml manifests (mounted ConfigMap). |
 | secrets | object | `{"data":{}}` | Secret data to be used as environment variables (delivered via envFrom) |
+| securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| securityContext.readOnlyRootFilesystem | bool | `true` |  |
 | securityContext.runAsGroup | int | `1064` |  |
 | securityContext.runAsNonRoot | bool | `true` |  |
 | securityContext.runAsUser | int | `1064` |  |
@@ -102,9 +105,9 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | service | object | `{"port":8081,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8081` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
-| serviceAccount | object | `{"annotations":{},"automount":true,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
+| serviceAccount | object | `{"annotations":{},"automount":false,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA) @schema type: object additionalProperties: true @schema |
-| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
+| serviceAccount.automount | bool | `false` | Automatically mount a ServiceAccount's API credentials? This workload never calls the Kubernetes API — a mounted token is pure attack surface. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | startupProbe | object | `{"failureThreshold":20,"httpGet":{"path":"/health/ready","port":8081},"periodSeconds":3,"timeoutSeconds":2}` | Startup probe (rendered by chart-libs.startupProbe): guards cold start so the liveness probe never kills a still-booting pod. Max boot budget = failureThreshold * periodSeconds. |
@@ -112,6 +115,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | staticRoutesFile | string | `"/opt/application-config/static_routes.yaml"` | Static prefix policies file (rendered from .Values.staticPolicies). |
 | terminationGracePeriodSeconds | int | `45` | Graceful shutdown: drain on rolling updates / scale-in (uvicorn handles SIGTERM; preStop gives Traefik/kube-proxy time to deregister the pod first). |
 | tolerations | list | `[]` |  |
+| topologySpreadConstraints | list | `[]` | Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable). labelSelector defaults to this chart's own selector labels when a constraint omits one. |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
 | volumeMounts[0].mountPath | string | `"/app/routes"` |  |
 | volumeMounts[0].name | string | `"routes"` |  |
@@ -119,11 +123,15 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | volumeMounts[1].mountPath | string | `"/opt/application-config"` |  |
 | volumeMounts[1].name | string | `"static-policies"` |  |
 | volumeMounts[1].readOnly | bool | `true` |  |
+| volumeMounts[2].mountPath | string | `"/tmp"` |  |
+| volumeMounts[2].name | string | `"tmp"` |  |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |
 | volumes[0].configMap.name | string | `"{{ include \"chart-libs.fullname\" . }}-routes"` |  |
 | volumes[0].name | string | `"routes"` |  |
 | volumes[1].configMap.name | string | `"{{ include \"chart-libs.fullname\" . }}-static-policies"` |  |
 | volumes[1].name | string | `"static-policies"` |  |
+| volumes[2].emptyDir | object | `{}` |  |
+| volumes[2].name | string | `"tmp"` |  |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

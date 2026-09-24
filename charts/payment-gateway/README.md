@@ -1,6 +1,6 @@
 # payment-gateway
 
-![Version: 0.10.0](https://img.shields.io/badge/Version-0.10.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.10.3](https://img.shields.io/badge/Version-0.10.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
@@ -10,7 +10,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| labs64 | <info@labs64.com> |  |
+| Labs64 | <info@labs64.com> | <https://labs64.io> |
 
 ## Source Code
 
@@ -21,7 +21,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.0 |
+| file://../chart-libs | chart-libs | 0.8.3 |
 
 ## Values
 
@@ -52,6 +52,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | externalSecrets.enabled | bool | `false` |  |
 | externalSecrets.secretKey | string | `""` | Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname. |
 | externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
+| fastStartup | bool | `false` | Optimize for container startup time (-XX:TieredStopAtLevel=1, C1-only JIT) instead of sustained throughput. Local dev wants it on; prod wants it off (the default). |
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"annotations":{},"authPolicy":{"basePath":"","enabled":true},"enabled":false,"ingressClassName":"","parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
 | gateway.annotations | object | `{}` | Annotations for fallback Ingress |
@@ -76,16 +77,18 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/liveness","port":8080},"initialDelaySeconds":0,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
-| migrationJob | object | `{"enabled":true}` | Pre-install Job that creates the database and runs migrations. Leave enabled when pointing at infrastructure that already exists. Set false when the database is provisioned by the same Helm release (the umbrella's bundled PostgreSQL): the Job is a pre-install hook and would wait for a server that cannot start until it finishes. The application runs Flyway itself either way. |
+| migrationJob | object | `{"enabled":true,"initResources":{},"resources":{}}` | Pre-install Job that creates the database and runs migrations. Leave enabled when pointing at infrastructure that already exists. Set false when the database is provisioned by the same Helm release (the umbrella's bundled PostgreSQL): the Job is a pre-install hook and would wait for a server that cannot start until it finishes. The application runs Flyway itself either way. |
+| migrationJob.initResources | object | `{}` | Resources for the ensure-db initContainer (a single psql client). @schema type: object additionalProperties: true @schema |
+| migrationJob.resources | object | `{}` | Resources for the migrate container (the application image running Flyway). Defaults to the workload's own `resources` when empty. @schema type: object additionalProperties: true @schema |
 | nameOverride | string | `""` | This is to override the chart name. |
-| networkPolicy | object | `{"egress":[{"ports":[{"port":8080,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"auditflow"}}}]},{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]}],"enabled":false,"extraEgress":[],"extraIngress":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring","toolsEgress":[{"name":"postgresql","port":5432},{"name":"redis","port":6379}]}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy | object | `{"egress":[{"ports":[{"port":8080,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"auditflow"}}}]},{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]}],"enabled":false,"extraEgress":[],"extraIngress":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring","toolsEgress":[{"name":"postgresql","port":5432},{"name":"valkey","port":6379}]}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
 | networkPolicy.egress | list | `[{"ports":[{"port":8080,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"auditflow"}}}]},{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]}]` | Egress rules enforcing database-per-service isolation. |
 | networkPolicy.extraEgress | list | `[]` | Additional raw egress rules |
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
 | networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
-| networkPolicy.toolsEgress | list | `[{"name":"postgresql","port":5432},{"name":"redis","port":6379}]` | Tools-namespace destinations this service needs (name + port pairs); rendered as scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve database-per-service isolation. |
+| networkPolicy.toolsEgress | list | `[{"name":"postgresql","port":5432},{"name":"valkey","port":6379}]` | Tools-namespace destinations this service needs (name + port pairs); rendered as scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve database-per-service isolation. |
 | nodeSelector | object | `{}` |  |
 | observability | object | `{"enabled":false,"metricsPath":"/actuator/prometheus","otlpEndpoint":"http://$(NODE_IP):4318"}` | Observability is infrastructure-owned: the same image runs with or without it. When enabled, the bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and Prometheus scrape annotations (Micrometer /actuator/prometheus) are added. |
 | observability.enabled | bool | `false` | Enable runtime instrumentation (traces + logs via OTLP; metrics via Prometheus scrape) |
@@ -100,11 +103,13 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":0,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources.limits.cpu | string | `"500m"` |  |
-| resources.limits.memory | string | `"1Gi"` |  |
+| resources.limits.memory | string | `"768Mi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
-| resources.requests.memory | string | `"512Mi"` |  |
+| resources.requests.memory | string | `"384Mi"` |  |
 | secrets | object | `{"data":{}}` | Secret data to be used as environment variables (delivered via envFrom). External installs supply database/cache credentials here, e.g.   SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD and SPRING_DATA_REDIS_PASSWORD. Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed). Note: the Secret is hook-managed (pre-install) and survives helm uninstall. @schema type: object properties:   data:     type: object     additionalProperties: true @schema |
+| securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | securityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| securityContext.readOnlyRootFilesystem | bool | `true` |  |
 | securityContext.runAsGroup | int | `1064` |  |
 | securityContext.runAsNonRoot | bool | `true` |  |
 | securityContext.runAsUser | int | `1064` |  |
@@ -112,9 +117,9 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |
-| serviceAccount | object | `{"annotations":{},"automount":true,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
+| serviceAccount | object | `{"annotations":{},"automount":false,"create":true,"name":""}` | This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/ |
 | serviceAccount.annotations | object | `{}` | Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA) @schema type: object additionalProperties: true @schema |
-| serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
+| serviceAccount.automount | bool | `false` | Automatically mount a ServiceAccount's API credentials? This workload never calls the Kubernetes API — a mounted token is pure attack surface. |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
 | slo | object | `{"availability":{"targetRatio":0.999},"enabled":true,"latency":{"targetRatio":0.99,"thresholdSeconds":0.5}}` | SLO recording rules and dashboards (rendered by chart-libs.slo.*) |
@@ -123,8 +128,9 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | tests | object | `{"enabled":true,"healthPath":"/actuator/health"}` | helm test hook (rendered by chart-libs.test-connection) |
 | tests.healthPath | string | `"/actuator/health"` | Health endpoint probed by `helm test` |
 | tolerations | list | `[]` |  |
+| topologySpreadConstraints | list | `[]` | Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable). labelSelector defaults to this chart's own selector labels when a constraint omits one. |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
-| volumes | list | `[]` | Additional volumes on the output Deployment definition. |
+| volumes | list | `[]` | Additional volumes on the output Deployment definition. No manual tmp entry needed here (unlike api-gateway): chart-libs auto-provisions a tmp emptyDir + mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

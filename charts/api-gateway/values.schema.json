@@ -980,8 +980,8 @@
           "type": "object"
         },
         "automount": {
-          "default": true,
-          "description": "Automatically mount a ServiceAccount's API credentials?",
+          "default": false,
+          "description": "Automatically mount a ServiceAccount's API credentials? This workload never calls the\nKubernetes API — a mounted token is pure attack surface.",
           "title": "automount",
           "type": "boolean"
         },

@@ -42,8 +42,9 @@ fullnameOverride: gateway-common
 serviceAccount:
   # -- Specifies whether a service account should be created
   create: true
-  # -- Automatically mount a ServiceAccount's API credentials?
-  automount: true
+  # -- Automatically mount a ServiceAccount's API credentials? This workload never calls the
+  # Kubernetes API — a mounted token is pure attack surface.
+  automount: false
   # -- Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA)
   # @schema
   # type: object

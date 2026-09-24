@@ -73,7 +73,7 @@
           "type": "boolean"
         },
         "migrationJob": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "description": "See payment-gateway.migrationJob above.",
           "properties": {
             "enabled": {
@@ -90,8 +90,7 @@
         }
       },
       "required": [
-        "enabled",
-        "migrationJob"
+        "enabled"
       ],
       "title": "checkout",
       "type": "object"
@@ -316,7 +315,7 @@
           "type": "boolean"
         },
         "migrationJob": {
-          "additionalProperties": false,
+          "additionalProperties": true,
           "description": "The bundled PostgreSQL above creates this database at initdb; the app runs its\nown Flyway. See the migrationJob comment in charts/payment-gateway/values.yaml.",
           "properties": {
             "enabled": {
@@ -333,8 +332,7 @@
         }
       },
       "required": [
-        "enabled",
-        "migrationJob"
+        "enabled"
       ],
       "title": "payment-gateway",
       "type": "object"

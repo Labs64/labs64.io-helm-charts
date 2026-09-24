@@ -298,6 +298,12 @@
       "title": "externalSecrets",
       "type": "object"
     },
+    "fastStartup": {
+      "default": false,
+      "description": "Optimize for container startup time (-XX:TieredStopAtLevel=1, C1-only JIT) instead of\nsustained throughput. Local dev wants it on; prod wants it off (the default).",
+      "title": "fastStartup",
+      "type": "boolean"
+    },
     "fullnameOverride": {
       "default": "",
       "title": "fullnameOverride",
@@ -664,6 +670,20 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "initResources": {
+          "additionalProperties": true,
+          "description": "Resources for the ensure-db initContainer (a single psql client).",
+          "required": [],
+          "title": "initResources",
+          "type": "object"
+        },
+        "resources": {
+          "additionalProperties": true,
+          "description": "Resources for the migrate container (the application image running Flyway).\nDefaults to the workload's own `resources` when empty.",
+          "required": [],
+          "title": "resources",
+          "type": "object"
         }
       },
       "required": [
@@ -1306,8 +1326,8 @@
           "type": "object"
         },
         "automount": {
-          "default": true,
-          "description": "Automatically mount a ServiceAccount's API credentials?",
+          "default": false,
+          "description": "Automatically mount a ServiceAccount's API credentials? This workload never calls the\nKubernetes API — a mounted token is pure attack surface.",
           "title": "automount",
           "type": "boolean"
         },
@@ -1535,7 +1555,8 @@
     "networkPolicy",
     "slo",
     "tests",
-    "applicationType"
+    "applicationType",
+    "fastStartup"
   ],
   "type": "object"
 }

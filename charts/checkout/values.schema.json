@@ -231,6 +231,12 @@
       "title": "externalSecrets",
       "type": "object"
     },
+    "fastStartup": {
+      "default": false,
+      "description": "Optimize for container startup time (-XX:TieredStopAtLevel=1, C1-only JIT) instead of\nsustained throughput. Local dev wants it on; prod wants it off (the default).",
+      "title": "fastStartup",
+      "type": "boolean"
+    },
     "fullnameOverride": {
       "default": "",
       "title": "fullnameOverride",
@@ -597,6 +603,20 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "initResources": {
+          "additionalProperties": true,
+          "description": "Resources for the ensure-db initContainer (a single psql client).",
+          "required": [],
+          "title": "initResources",
+          "type": "object"
+        },
+        "resources": {
+          "additionalProperties": true,
+          "description": "Resources for the migrate container (the application image running Flyway).\nDefaults to the workload's own `resources` when empty.",
+          "required": [],
+          "title": "resources",
+          "type": "object"
         }
       },
       "required": [
@@ -781,6 +801,26 @@
                   },
                   "port": {
                     "default": 5432,
+                    "title": "port",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "name",
+                  "port"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "valkey",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 6379,
                     "title": "port",
                     "type": "integer"
                   }
@@ -1045,6 +1085,11 @@
     "securityContext": {
       "additionalProperties": false,
       "properties": {
+        "allowPrivilegeEscalation": {
+          "default": false,
+          "title": "allowPrivilegeEscalation",
+          "type": "boolean"
+        },
         "capabilities": {
           "additionalProperties": false,
           "properties": {
@@ -1066,6 +1111,12 @@
           ],
           "title": "capabilities",
           "type": "object"
+        },
+        "readOnlyRootFilesystem": {
+          "default": true,
+          "description": "The image runs as uid 1064 with a read-only root filesystem (chart-libs mounts /tmp as\nemptyDir for Java apps) — same posture as payment-gateway, which runs the same stack.",
+          "title": "readOnlyRootFilesystem",
+          "type": "boolean"
         },
         "runAsGroup": {
           "default": 1064,
@@ -1103,7 +1154,9 @@
         "runAsNonRoot",
         "runAsUser",
         "runAsGroup",
-        "seccompProfile"
+        "seccompProfile",
+        "allowPrivilegeEscalation",
+        "readOnlyRootFilesystem"
       ],
       "title": "securityContext",
       "type": "object"
@@ -1144,8 +1197,8 @@
           "type": "object"
         },
         "automount": {
-          "default": true,
-          "description": "Automatically mount a ServiceAccount's API credentials?",
+          "default": false,
+          "description": "Automatically mount a ServiceAccount's API credentials? This workload never calls the\nKubernetes API — a mounted token is pure attack surface.",
           "title": "automount",
           "type": "boolean"
         },
@@ -2070,7 +2123,8 @@
     "slo",
     "tests",
     "ui",
-    "applicationType"
+    "applicationType",
+    "fastStartup"
   ],
   "type": "object"
 }

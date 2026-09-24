@@ -46,8 +46,9 @@ fullnameOverride: ""
 serviceAccount:
   # -- Specifies whether a service account should be created
   create: true
-  # -- Automatically mount a ServiceAccount's API credentials?
-  automount: true
+  # -- Automatically mount a ServiceAccount's API credentials? swagger-ui is a static site and
+  # never calls the Kubernetes API.
+  automount: false
   # -- Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA)
   # @schema
   # type: object
@@ -59,12 +60,10 @@ serviceAccount:
   name: ""
 
 # RBAC configuration (create RBAC resources: Role, RoleBinding)
+# Nothing in this chart reads the K8s API (static swagger-ui) — no Role, no rules.
 rbac:
-  create: true
-  rules:
-    - apiGroups: [""]
-      resources: ["pods", "services", "endpoints"]
-      verbs: ["get", "list", "watch"]
+  create: false
+  rules: []
 
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/

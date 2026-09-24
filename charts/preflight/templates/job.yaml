@@ -9,14 +9,32 @@ metadata:
     app.kubernetes.io/part-of: "Labs64.IO"
 spec:
   backoffLimit: 0
+  activeDeadlineSeconds: 120
+  ttlSecondsAfterFinished: 300
   template:
     spec:
       restartPolicy: Never
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         {{- with .Values.checks.rabbitmq }}
         {{- if .enabled }}
         - name: check-rabbitmq
           image: {{ $.Values.images.busybox }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65534
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
           command: ["sh", "-c"]
           args:
             - |
@@ -28,31 +46,108 @@ spec:
         {{- if .enabled }}
         - name: check-postgresql
           image: {{ $.Values.images.postgresql }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 999
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 5m
+              memory: 32Mi
+            limits:
+              memory: 64Mi
           env:
+            {{- if .existingSecret }}
+            # Credentials by reference, never inline in the pod spec (readable via `get pod`).
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecret }}
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecret }}
+                  key: password
+            {{- else }}
             - name: PGPASSWORD
               value: {{ .password | quote }}
+            {{- end }}
           command: ["sh", "-c"]
           args:
             - |
               echo "preflight: PostgreSQL login {{ .host }}:{{ .port }}/{{ .database }}"
-              psql -h {{ .host }} -p {{ .port }} -U {{ .username }} -d {{ .database }} -tc "SELECT 1" && echo "preflight: postgresql OK"
+              psql -h {{ .host }} -p {{ .port }} -U {{ ternary "${PGUSER}" .username (not (empty .existingSecret)) }} -d {{ .database }} -tc "SELECT 1" && echo "preflight: postgresql OK"
         {{- end }}
         {{- end }}
         {{- with .Values.checks.redis }}
         {{- if .enabled }}
         - name: check-redis
           image: {{ $.Values.images.redis }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 999
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
+          {{- if .existingSecret }}
+          env:
+            # REDISCLI_AUTH keeps the password out of argv (visible in /proc) and off the
+            # pod spec alike.
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecret }}
+                  key: password
+          {{- end }}
           command: ["sh", "-c"]
           args:
             - |
               echo "preflight: Redis PING {{ .host }}:{{ .port }}"
-              redis-cli -h {{ .host }} -p {{ .port }} {{- if .password }} -a {{ .password | quote }} {{- end }} ping | grep -q PONG && echo "preflight: redis OK"
+              redis-cli -h {{ .host }} -p {{ .port }} {{- if .existingSecret }} {{- else if .password }} -a {{ .password | quote }} {{- end }} ping | grep -q PONG && echo "preflight: redis OK"
         {{- end }}
         {{- end }}
         {{- with .Values.checks.oidc }}
         {{- if .enabled }}
         - name: check-oidc
           image: {{ $.Values.images.curl }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # curl_user in curlimages/curl.
+            runAsUser: 100
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
+          {{- if .existingSecret }}
+          env:
+            - name: OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecret }}
+                  key: client-id
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .existingSecret }}
+                  key: client-secret
+          {{- end }}
           command: ["sh", "-c"]
           args:
             - |
@@ -63,8 +158,8 @@ spec:
               echo "preflight: client_credentials grant at $TOKEN_ENDPOINT"
               RESPONSE=$(curl -sSf -X POST "$TOKEN_ENDPOINT" \
                 --data-urlencode "grant_type=client_credentials" \
-                --data-urlencode "client_id={{ .clientId }}" \
-                --data-urlencode "client_secret={{ .clientSecret }}" \
+                --data-urlencode "client_id={{ ternary "${OIDC_CLIENT_ID}" .clientId (not (empty .existingSecret)) }}" \
+                --data-urlencode "client_secret={{ ternary "${OIDC_CLIENT_SECRET}" .clientSecret (not (empty .existingSecret)) }}" \
                 {{- if .scope }}
                 --data-urlencode "scope={{ .scope }}" \
                 {{- end }}

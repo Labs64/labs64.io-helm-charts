@@ -45,9 +45,25 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # The image defaults to root (USER 0); the JVM app needs no root and runs fine as the
+            # distroless nonroot uid with a read-only root fs (only /tmp written, emptyDir below).
+            runAsUser: 65532
+            capabilities:
+              drop: ["ALL"]
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       volumes:
         - name: config
           configMap:
             name: mock-oidc-config
+        - name: tmp
+          emptyDir: {}

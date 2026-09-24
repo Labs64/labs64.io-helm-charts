@@ -16,10 +16,22 @@ spec:
   selector:
     matchLabels:
       {{- include "chart-libs.selectorLabels" . | nindent 6 }}
+  {{- with .Values.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
   template:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        # Roll pods when the credential-bearing values change — the pre-install hook Secret is
+        # recreated on upgrade, but running pods keep their already-injected env vars without this.
+        # Hashes the values (never the rendered Secret), so no credential material leaks into the
+        # annotation.
+        checksum/secret-values: {{ dict "secrets" .Values.secrets "externalSecrets" .Values.externalSecrets | toYaml | sha256sum }}
         {{- range .Values.extraConfigChecksums }}
         checksum/{{ . }}: {{ include (print $.Template.BasePath (printf "/%s.yaml" .)) $ | sha256sum }}
         {{- end }}
@@ -75,7 +87,9 @@ spec:
             - name: SPRING_CONFIG_IMPORT
               value: "optional:file:/opt/application-config/application.yaml"
             - name: JAVA_TOOL_OPTIONS
-              value: "-XX:MaxRAMPercentage=75.0 -XX:TieredStopAtLevel=1 {{ if and .Values.observability .Values.observability.enabled }} -javaagent:/otel/opentelemetry-javaagent.jar{{ end }}"
+              # TieredStopAtLevel=1 (C1-only JIT) trades sustained throughput for startup time —
+              # opt in per environment (fastStartup) rather than paying for it in prod.
+              value: "-XX:MaxRAMPercentage=75.0 {{ if .Values.fastStartup }}-XX:TieredStopAtLevel=1{{ end }} {{ if and .Values.observability .Values.observability.enabled }}-javaagent:/otel/opentelemetry-javaagent.jar{{ end }}"
           {{- include "chart-libs.gracefulShutdown.springEnv" . | nindent 12 }}
           {{- include "chart-libs.observability.javaEnv" . | nindent 12 }}
           {{- else if eq .Values.applicationType "python" }}

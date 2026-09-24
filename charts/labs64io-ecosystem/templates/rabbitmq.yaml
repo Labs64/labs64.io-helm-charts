@@ -26,9 +26,23 @@ spec:
         app.kubernetes.io/name: rabbitmq
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      securityContext:
+        # rabbitmq uid/gid in the official image.
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: rabbitmq
           image: {{ include "chart-libs.image" (dict "imageRoot" .Values.rabbitmq.image "context" $) }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            # NOT readOnlyRootFilesystem: the entrypoint renders config into /etc/rabbitmq and
+            # logs to /var/log/rabbitmq — demo/local-scoped component, both paths unmounted.
           ports:
             - containerPort: 5672
               name: amqp
@@ -64,6 +78,7 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 10
+            failureThreshold: 3
   volumeClaimTemplates:
     - metadata:
         name: data

@@ -1,6 +1,6 @@
 # preflight
 
-![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.2.3](https://img.shields.io/badge/Version-0.2.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Preflight - verify tenant infrastructure (broker, database, cache, OIDC) before installing modules
 
@@ -10,7 +10,7 @@ Labs64.IO :: Preflight - verify tenant infrastructure (broker, database, cache, 
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| labs64 | <info@labs64.com> |  |
+| Labs64 | <info@labs64.com> | <https://labs64.io> |
 
 ## Source Code
 
@@ -20,13 +20,16 @@ Labs64.IO :: Preflight - verify tenant infrastructure (broker, database, cache, 
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| checks | object | `{"oidc":{"clientId":"","clientSecret":"","discoveryUrl":"https://idp.example.com/realms/example/.well-known/openid-configuration","enabled":false,"scope":""},"postgresql":{"database":"postgres","enabled":false,"host":"postgres.infra.example.com","password":"","port":5432,"username":""},"rabbitmq":{"enabled":false,"host":"rabbitmq.infra.example.com","port":5672},"redis":{"enabled":false,"host":"redis.infra.example.com","password":"","port":6379}}` | Connectivity checks to run; enable only what your modules need. |
-| checks.oidc | object | `{"clientId":"","clientSecret":"","discoveryUrl":"https://idp.example.com/realms/example/.well-known/openid-configuration","enabled":false,"scope":""}` | OIDC discovery + client_credentials token grant |
-| checks.postgresql | object | `{"database":"postgres","enabled":false,"host":"postgres.infra.example.com","password":"","port":5432,"username":""}` | PostgreSQL connectivity and login (SELECT 1) |
+| checks | object | `{"oidc":{"clientId":"","clientSecret":"","discoveryUrl":"https://idp.example.com/realms/example/.well-known/openid-configuration","enabled":false,"existingSecret":"","scope":""},"postgresql":{"database":"postgres","enabled":false,"existingSecret":"","host":"postgres.infra.example.com","password":"","port":5432,"username":""},"rabbitmq":{"enabled":false,"host":"rabbitmq.infra.example.com","port":5672},"redis":{"enabled":false,"existingSecret":"","host":"redis.infra.example.com","password":"","port":6379}}` | Connectivity checks to run; enable only what your modules need. |
+| checks.oidc | object | `{"clientId":"","clientSecret":"","discoveryUrl":"https://idp.example.com/realms/example/.well-known/openid-configuration","enabled":false,"existingSecret":"","scope":""}` | OIDC discovery + client_credentials token grant |
+| checks.oidc.existingSecret | string | `""` | Existing Secret with `client-id`/`client-secret` keys — preferred over inline values. |
+| checks.postgresql | object | `{"database":"postgres","enabled":false,"existingSecret":"","host":"postgres.infra.example.com","password":"","port":5432,"username":""}` | PostgreSQL connectivity and login (SELECT 1) |
+| checks.postgresql.existingSecret | string | `""` | Existing Secret with `username`/`password` keys — preferred over the inline values above, which land in the pod spec in plaintext (readable by anyone with `get pods`). |
 | checks.rabbitmq | object | `{"enabled":false,"host":"rabbitmq.infra.example.com","port":5672}` | AMQP broker reachability (TCP connect) |
-| checks.redis | object | `{"enabled":false,"host":"redis.infra.example.com","password":"","port":6379}` | Redis connectivity (PING) |
+| checks.redis | object | `{"enabled":false,"existingSecret":"","host":"redis.infra.example.com","password":"","port":6379}` | Redis connectivity (PING) |
+| checks.redis.existingSecret | string | `""` | Existing Secret with a `password` key (passed via REDISCLI_AUTH, never argv/pod spec). |
 | enabled | bool | `true` |  |
-| images | object | `{"busybox":"busybox:1.36","curl":"curlimages/curl:8.10.1","postgresql":"postgres:18-alpine","redis":"redis:7-alpine"}` | Images used by the check containers |
+| images | object | `{"busybox":"busybox:1.36","curl":"curlimages/curl:8.10.1","postgresql":"postgres:18-alpine","redis":"redis:8-alpine"}` | Images used by the check containers |
 | images.postgresql | string | `"postgres:18-alpine"` | Official images rather than bitnamilegacy/*, which is an unsupported namespace on a deprecation path. These run the same SELECT 1 / PING checks; both put psql / redis-cli on PATH, which is all job.yaml relies on. |
 
 ----------------------------------------------

@@ -1,7 +1,7 @@
 apiVersion: v2
 name: labs64io-ecosystem
 type: application
-version: 0.19.6
+version: 0.19.7
 description: "Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure"
 icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
 home: https://labs64.io

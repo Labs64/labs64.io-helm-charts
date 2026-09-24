@@ -46,12 +46,40 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   backoffLimit: 3
+  # hook-delete-policy already removes the Job on success; this is the safety net for a
+  # permanently failing run, so it can't pile up in the namespace between releases.
+  ttlSecondsAfterFinished: 3600
   template:
     spec:
       restartPolicy: OnFailure
+      # The Job carries the data-store admin credential (RDS_ADMIN_*) — it gets the same
+      # restricted security posture as the workload itself, not a free pass because it is
+      # short-lived. Both containers run read-only root filesystems; the Java migrate container
+      # gets the same /tmp emptyDir the Deployment does.
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
         - name: ensure-db
           image: postgres:18
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            # postgres uid in the official image; psql runs fine as any non-root uid.
+            runAsUser: 999
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- with $mj.initResources }}
+            {{- toYaml . | nindent 12 }}
+            {{- else }}
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+            {{- end }}
           envFrom:
             {{- include "chart-libs.migration-job-credentials" . | nindent 12 }}
           command: ["sh","-c"]
@@ -88,6 +116,20 @@ spec:
         - name: migrate
           image: {{ include "chart-libs.image" (dict "imageRoot" .Values.image "context" $) | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          # Same container securityContext as the workload (runAsNonRoot, readOnlyRootFilesystem,
+          # drop ALL) — the migrate container IS the application image, so the chart's own
+          # .Values.securityContext applies to it unchanged.
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with ($mj.resources | default .Values.resources) }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           env:
             - name: SPRING_FLYWAY_ENABLED
               value: "true"
@@ -113,5 +155,8 @@ spec:
             {{- include "chart-libs.migration-job-credentials" . | nindent 12 }}
 
           terminationMessagePolicy: FallbackToLogsOnError
+      volumes:
+        - name: tmp
+          emptyDir: {}
 {{- end }}
 {{- end }}

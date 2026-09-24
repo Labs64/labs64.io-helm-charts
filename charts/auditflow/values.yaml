@@ -142,8 +142,11 @@ securityContext:
     drop:
       - ALL
   readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1064
+  # All three auditflow images (be/transformer/sink) run as uid 1064 — see the Dockerfiles'
+  # USER_ID in labs64.io-auditflow.
+  runAsNonRoot: true
+  runAsUser: 1064
+  runAsGroup: 1064
 
 # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
@@ -573,6 +576,10 @@ tests:
   healthPath: /actuator/health
 
 applicationType: "java"
+
+# -- Optimize for container startup time (-XX:TieredStopAtLevel=1, C1-only JIT) instead of
+# sustained throughput. Local dev wants it on; prod wants it off (the default).
+fastStartup: false
 
 extraContainers: |
     - name: auditflow-transformer

@@ -8,6 +8,11 @@ metadata:
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
+    # Same as the plain-Secret branch below: without before-hook-creation the next
+    # `helm upgrade` fails with AlreadyExists (hooks aren't tracked in the release), and
+    # uninstall would orphan the ExternalSecret — and with creationPolicy: Owner its target
+    # Secret with it.
+    "helm.sh/hook-delete-policy": before-hook-creation
 spec:
   refreshInterval: 1h
   secretStoreRef:

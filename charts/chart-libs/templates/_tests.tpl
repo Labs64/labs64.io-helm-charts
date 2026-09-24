@@ -14,11 +14,27 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
   containers:
     - name: wget
       image: busybox:1.36
       command: ['wget']
       args: ['-qO-', '{{ include "chart-libs.fullname" . }}:{{ .Values.service.port }}{{ .Values.tests.healthPath }}']
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 65534
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests:
+          cpu: 5m
+          memory: 16Mi
+        limits:
+          memory: 32Mi
   restartPolicy: Never
 {{- end }}
 {{- end }}
@@ -36,11 +52,27 @@ metadata:
   annotations:
     "helm.sh/hook": test
 spec:
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
   containers:
     - name: wget
       image: busybox:1.36
       command: ['wget']
       args: ['-qO-', '{{ include "chart-libs.fullname" . }}-ui:{{ .Values.ui.service.port }}{{ .Values.ui.tests.healthPath }}']
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        runAsUser: 65534
+        capabilities:
+          drop: ["ALL"]
+      resources:
+        requests:
+          cpu: 5m
+          memory: 16Mi
+        limits:
+          memory: 32Mi
   restartPolicy: Never
 {{- end }}
 {{- end }}

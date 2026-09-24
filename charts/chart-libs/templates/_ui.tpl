@@ -27,8 +27,12 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
-      {{- with .Values.ui.podAnnotations }}
       annotations:
+        # Roll UI pods when their ConfigMaps change (incl. the runtime-env env.json rendered
+        # inside them) — env.json is mounted with subPath (no live kubelet sync), so a rollout is
+        # the only delivery mechanism.
+        checksum/ui-config: {{ include "chart-libs.ui-configmap" . | sha256sum }}
+      {{- with .Values.ui.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -67,8 +71,18 @@ spec:
             - name: http
               containerPort: {{ .Values.ui.service.port }}
               protocol: TCP
-          {{- include "chart-libs.preStopDrain" . | nindent 10 }}
-          {{- include "chart-libs.startupProbe" . | nindent 10 }}
+          {{- $uiLifecycle := .Values.ui.lifecycle | default dict -}}
+          {{- $uiDrain := int ($uiLifecycle.preStopDrainSeconds | default 5) -}}
+          {{- if gt $uiDrain 0 }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep {{ $uiDrain }}"]
+          {{- end }}
+          {{- with .Values.ui.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.ui.livenessProbe }}
           livenessProbe:
             {{- toYaml . | nindent 12 }}
@@ -81,7 +95,15 @@ spec:
           resources:
             {{- toYaml .Values.ui.resources | nindent 12 }}
           {{- else }}
-          {{- include "chart-libs.defaultResources" . | nindent 10 }}
+          # A static-nginx UI needs a fraction of the backend default (500m/1Gi) — sized off
+          # observed usage, same ballpark as api-docs.
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 20m
+              memory: 32Mi
           {{- end }}
           env:
           {{- with .Values.ui.env }}
@@ -122,6 +144,19 @@ spec:
       {{- with .Values.ui.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ui.topologySpreadConstraints }}
+      {{- $uiSelectorLabels := dict "app.kubernetes.io/name" (printf "%s-ui" (include "chart-libs.name" $)) "app.kubernetes.io/instance" $.Release.Name }}
+      {{- $uiConstraints := list }}
+      {{- range . }}
+        {{- $constraint := . }}
+        {{- if not $constraint.labelSelector }}
+          {{- $constraint = merge $constraint (dict "labelSelector" (dict "matchLabels" $uiSelectorLabels)) }}
+        {{- end }}
+        {{- $uiConstraints = append $uiConstraints $constraint }}
+      {{- end }}
+      topologySpreadConstraints:
+        {{- toYaml $uiConstraints | nindent 8 }}
       {{- end }}
 {{- end }}
 {{- end }}
@@ -413,10 +448,24 @@ stringData:
 {{- end }}
 
 {{/*
-UI PodDisruptionBudget macro.
+UI PodDisruptionBudget macro. UI-scoped (own name, own selector, own config) — delegating to
+chart-libs.pdb instead would render a second PDB named after the *backend*, selecting the
+backend's pods: the create conflicts with the backend PDB and the UI pods get nothing.
 */}}
 {{- define "chart-libs.ui-pdb" -}}
-{{- if and .Values.ui .Values.ui.enabled }}
-{{ include "chart-libs.pdb" . }}
+{{- if and .Values.ui .Values.ui.enabled .Values.ui.podDisruptionBudget .Values.ui.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-ui
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ui
+spec:
+  minAvailable: {{ .Values.ui.podDisruptionBudget.minAvailable | default 1 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+      app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 {{- end }}

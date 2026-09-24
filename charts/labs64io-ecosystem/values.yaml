@@ -33,6 +33,10 @@ authz-pdp:
 checkout:
   enabled: false
   # See payment-gateway.migrationJob above.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
   migrationJob:
     enabled: false
 # @schema
@@ -43,6 +47,10 @@ payment-gateway:
   enabled: true
   # The bundled PostgreSQL above creates this database at initdb; the app runs its
   # own Flyway. See the migrationJob comment in charts/payment-gateway/values.yaml.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
   migrationJob:
     enabled: false
 # @schema

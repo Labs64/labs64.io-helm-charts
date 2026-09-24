@@ -30,6 +30,12 @@
               "title": "enabled",
               "type": "boolean"
             },
+            "existingSecret": {
+              "default": "",
+              "description": "Existing Secret with `client-id`/`client-secret` keys — preferred over inline values.",
+              "title": "existingSecret",
+              "type": "string"
+            },
             "scope": {
               "default": "",
               "title": "scope",
@@ -41,6 +47,7 @@
             "discoveryUrl",
             "clientId",
             "clientSecret",
+            "existingSecret",
             "scope"
           ],
           "title": "oidc",
@@ -59,6 +66,12 @@
               "default": false,
               "title": "enabled",
               "type": "boolean"
+            },
+            "existingSecret": {
+              "default": "",
+              "description": "Existing Secret with `username`/`password` keys — preferred over the inline values\nabove, which land in the pod spec in plaintext (readable by anyone with `get pods`).",
+              "title": "existingSecret",
+              "type": "string"
             },
             "host": {
               "default": "postgres.infra.example.com",
@@ -87,7 +100,8 @@
             "port",
             "database",
             "username",
-            "password"
+            "password",
+            "existingSecret"
           ],
           "title": "postgresql",
           "type": "object"
@@ -129,6 +143,12 @@
               "title": "enabled",
               "type": "boolean"
             },
+            "existingSecret": {
+              "default": "",
+              "description": "Existing Secret with a `password` key (passed via REDISCLI_AUTH, never argv/pod spec).",
+              "title": "existingSecret",
+              "type": "string"
+            },
             "host": {
               "default": "redis.infra.example.com",
               "title": "host",
@@ -149,7 +169,8 @@
             "enabled",
             "host",
             "port",
-            "password"
+            "password",
+            "existingSecret"
           ],
           "title": "redis",
           "type": "object"
@@ -196,7 +217,8 @@
           "type": "string"
         },
         "redis": {
-          "default": "redis:7-alpine",
+          "default": "redis:8-alpine",
+          "description": "redis-cli speaks RESP, so it works unchanged against Valkey (AWS ElastiCache, local dev).",
           "title": "redis",
           "type": "string"
         }

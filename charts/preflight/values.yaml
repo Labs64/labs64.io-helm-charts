@@ -15,18 +15,25 @@ checks:
     database: postgres
     username: ""
     password: ""
+    # -- Existing Secret with `username`/`password` keys — preferred over the inline values
+    # above, which land in the pod spec in plaintext (readable by anyone with `get pods`).
+    existingSecret: ""
   # -- Redis connectivity (PING)
   redis:
     enabled: false
     host: redis.infra.example.com
     port: 6379
     password: ""
+    # -- Existing Secret with a `password` key (passed via REDISCLI_AUTH, never argv/pod spec).
+    existingSecret: ""
   # -- OIDC discovery + client_credentials token grant
   oidc:
     enabled: false
     discoveryUrl: https://idp.example.com/realms/example/.well-known/openid-configuration
     clientId: ""
     clientSecret: ""
+    # -- Existing Secret with `client-id`/`client-secret` keys — preferred over inline values.
+    existingSecret: ""
     scope: ""
 
 # -- Images used by the check containers

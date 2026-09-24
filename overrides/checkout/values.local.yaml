@@ -40,3 +40,6 @@ ui:
   networkPolicy:
     enabled: true
 
+
+# Local dev favors startup speed over peak JIT throughput (see chart-libs JAVA_TOOL_OPTIONS).
+fastStartup: true
