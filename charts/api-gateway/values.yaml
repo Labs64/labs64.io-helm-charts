@@ -315,6 +315,10 @@ rateLimit:
   burst: 50
   # -- Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent
   perUser: true
+  # -- One bucket per request host instead of per user: a fixed ceiling on the gateway's total
+  # ingress, identical for every caller, with per-tenant limits left to the services. Overrides
+  # perUser. Traefik keeps buckets in memory, so the ceiling applies per Traefik replica.
+  global: false
 
 # -- Buffering middleware configuration (limits payload sizes to prevent OOM / large event attacks)
 buffering:

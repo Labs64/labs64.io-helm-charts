@@ -26,7 +26,10 @@ spec:
   rateLimit:
     average: {{ .Values.rateLimit.average }}
     burst: {{ .Values.rateLimit.burst }}
-    {{- if .Values.rateLimit.perUser }}
+    {{- if .Values.rateLimit.global }}
+    sourceCriterion:
+      requestHost: true
+    {{- else if .Values.rateLimit.perUser }}
     sourceCriterion:
       requestHeaderName: X-Auth-User
     {{- end }}
