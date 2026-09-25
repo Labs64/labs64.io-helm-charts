@@ -4,8 +4,8 @@
 #   labs64io.hostname, labs64io.externalSecrets.secretKey, database.hostname/port/username,
 #   networkPolicy.egress (full list — DNS, replicas, the VPC CIDR on 5432), replicas.
 # Realm: realm.base.json; plus realm.test-fixtures.json in dev only (generated labs64io.testFixtures,
-# from Terraform's keycloak_test_fixtures, which refuses prod); plus realm.aws.json (netlicensing +
-# canary clients) wherever the environment has a public edge (generated labs64io.awsClients).
+# from Terraform's keycloak_test_fixtures, which refuses prod); plus the machine clients of the
+# environment's tenants (generated labs64io.serviceClients).
 labs64io:
   realmSslRequired: external
   externalSecrets:

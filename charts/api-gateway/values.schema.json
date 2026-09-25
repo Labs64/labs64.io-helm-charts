@@ -721,6 +721,12 @@
           "title": "burst",
           "type": "integer"
         },
+        "global": {
+          "default": false,
+          "description": "One bucket per request host instead of per user: a fixed ceiling on the gateway's total\ningress, identical for every caller, with per-tenant limits left to the services. Overrides\nperUser. Traefik keeps buckets in memory, so the ceiling applies per Traefik replica.",
+          "title": "global",
+          "type": "boolean"
+        },
         "perUser": {
           "default": true,
           "description": "Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent",
@@ -731,7 +737,8 @@
       "required": [
         "average",
         "burst",
-        "perUser"
+        "perUser",
+        "global"
       ],
       "title": "rateLimit",
       "type": "object"

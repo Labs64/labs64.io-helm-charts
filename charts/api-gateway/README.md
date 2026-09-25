@@ -1,6 +1,6 @@
 # api-gateway
 
-![Version: 0.14.5](https://img.shields.io/badge/Version-0.14.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
+![Version: 0.15.0](https://img.shields.io/badge/Version-0.15.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
 
 Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
@@ -84,9 +84,10 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | podDisruptionBudget | object | `{"enabled":true,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext | object | `{}` |  |
-| rateLimit | object | `{"average":100,"burst":50,"perUser":true}` | Rate limit middleware configuration |
+| rateLimit | object | `{"average":100,"burst":50,"global":false,"perUser":true}` | Rate limit middleware configuration |
 | rateLimit.average | int | `100` | Average requests per second |
 | rateLimit.burst | int | `50` | Burst size |
+| rateLimit.global | bool | `false` | One bucket per request host instead of per user: a fixed ceiling on the gateway's total ingress, identical for every caller, with per-tenant limits left to the services. Overrides perUser. Traefik keeps buckets in memory, so the ceiling applies per Traefik replica. |
 | rateLimit.perUser | bool | `true` | Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/health/ready","port":8081},"initialDelaySeconds":0,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `2` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ The authproxy sits on the hot path of every protected request - keep at least 2 replicas. |
