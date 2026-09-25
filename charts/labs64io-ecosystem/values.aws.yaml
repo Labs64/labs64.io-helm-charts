@@ -141,6 +141,9 @@ api-gateway:
       whenUnsatisfiable: DoNotSchedule
 
 api-docs:
+  # Off on AWS: the public edge routes no docs path, so it would run replicas no one can reach.
+  # Switch it on together with a route; the settings below then apply as they are.
+  enabled: false
   autoscaling:
     enabled: true
     minReplicas: 2
