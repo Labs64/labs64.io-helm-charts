@@ -40,11 +40,15 @@ redis:
   enabled: false
 
 traefik:
+  # The in-cluster gateway (Gateway API implementation) every module route attaches to. On AWS the
+  # public edge is a Terraform-owned ALB + WAF (labs64.io-devops terraform/edge.tf) whose target
+  # group is kept in sync with these pods by a TargetGroupBinding — so the Service stays ClusterIP.
+  # The ALB's X-Forwarded-* headers are trusted from the VPC CIDR only (ports.web.forwardedHeaders,
+  # rendered per environment by `just helm-values`).
+  enabled: true
   service:
     # Never let the gateway Service provision a public AWS load balancer as a side effect.
-    # Expose it deliberately (AWS Load Balancer Controller + TLS) once DNS and certificates exist;
-    # until then reach it with `kubectl port-forward`. (Traefik's chart reads service.spec.type —
-    # a top-level service.type is silently ignored.)
+    # (Traefik's chart reads service.spec.type — a top-level service.type is silently ignored.)
     spec:
       type: ClusterIP
   # The chart ships with resources: {} (no requests) and a single fixed replica — meaning the
@@ -152,6 +156,10 @@ api-docs:
       whenUnsatisfiable: DoNotSchedule
 
 auditflow:
+  # Publish the AuditFlow route (POST /auditflow/api/v1/audit/publish behind ForwardAuth) on the
+  # gateway. The route host is gateway.<global.domain>; `just helm-values` sets global.domain.
+  gateway:
+    enabled: true
   networkPolicy:
     enabled: true
   externalSecrets:

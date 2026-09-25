@@ -103,7 +103,7 @@ sequenceDiagram
 Provisioned and installed from [`labs64.io-devops`](https://github.com/Labs64/labs64.io-devops) — `Helmfile` is **not** used here. GitOps (ArgoCD) will take over the install step later.
 
 - **Infrastructure**: Terraform — EKS, RDS PostgreSQL and ElastiCache Valkey per module, Amazon MQ (RabbitMQ, AMQPS only), S3.
-- **Install**: `just modules-install <env>` in `labs64.io-devops` installs `labs64io-ecosystem` with [`values.aws.yaml`](charts/labs64io-ecosystem/values.aws.yaml) (bundled infra off, per-module hosts, TLS to the managed services, `ClusterIP` gateway) plus values rendered from Terraform outputs.
+- **Install**: `just modules-install <env>` in `labs64.io-devops` installs `labs64io-ecosystem` with [`values.aws.yaml`](charts/labs64io-ecosystem/values.aws.yaml) (bundled infra off, per-module hosts, TLS to the managed services, Traefik + the AuditFlow route on a `ClusterIP` gateway behind devops' Terraform-owned ALB + WAF) plus values rendered from Terraform outputs.
 - **Secrets**: `externalSecrets.enabled: true`; each module's `ExternalSecret` (`external-secrets.io/v1`) reads `labs64/<env>/<module>` from AWS Secrets Manager through the `aws-secretsmanager-cluster` `ClusterSecretStore`.
 
 ```mermaid

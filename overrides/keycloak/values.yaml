@@ -2,8 +2,9 @@
 # labs64.io-devops' justfile), layered UNDER the environment file:
 #   local (k3d):   values.yaml + values.local.yaml (+ values.secrets.local.yaml)  — helmfile
 #   AWS dev/qa/prod: values.yaml + values.aws.yaml + devops-generated values     — devops `just keycloak-install <env>`
-# The realm comes in as strings via --set-file: realmConfig (realm.base.json, every environment) and
-# realmFixtures (realm.test-fixtures.json — only honoured with labs64io.testFixtures: local, AWS dev).
+# The realm comes in as strings via --set-file: realmConfig (realm.base.json, every environment),
+# realmFixtures (realm.test-fixtures.json — only honoured with labs64io.testFixtures: local, AWS dev)
+# and realmAws (realm.aws.json — only with labs64io.awsClients: AWS environments with a public edge).
 nameOverride: keycloak
 # Stable names (keycloak-http, keycloak-admin, ...): api-gateway's discovery URL and the
 # NetworkPolicies of other releases reference them.
@@ -22,6 +23,11 @@ labs64io:
   # labs64.io-devops from Terraform's keycloak_test_fixtures (which refuses prod). Without it a
   # passed realmFixtures fails the render instead of silently shipping test clients.
   testFixtures: false
+  # -- Add the clients of realm.aws.json: netlicensing (the Phase 1 producer, tenant netlicensing)
+  # and canary (the edge's synthetic check, tenant _platform). Set by labs64.io-devops wherever an
+  # environment has a public edge; their secrets come from the same Secrets Manager secret. Without
+  # it a passed realmAws fails the render.
+  awsClients: false
   # -- Canonical frontend URL (KC_HOSTNAME). Every token's `iss` is <hostname>/realms/labs64io,
   # whichever URL the client used — api-gateway's oidc.issuer must match it exactly.
   hostname: ""
@@ -44,6 +50,7 @@ labs64io:
 
 realmConfig: ""
 realmFixtures: ""
+realmAws: ""
 
 # KC_HOSTNAME is fixed, so tokens always carry the canonical issuer; backchannel URLs follow the
 # request, so in-cluster discovery/JWKS/token calls stay on the keycloak-http Service.
@@ -99,6 +106,14 @@ networkPolicy:
       podSelector:
         matchLabels:
           app.kubernetes.io/name: traefik
+    # On AWS the umbrella chart runs Traefik in the modules namespace (public edge: ALB → Traefik →
+    # the HTTPRoute below).
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: labs64io
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/name: traefik
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: labs64io
@@ -134,7 +149,8 @@ networkPolicy:
           port: 53
 
 extraManifests:
-  # The labs64io realm: realm.base.json, plus realm.test-fixtures.json (labs64io.testFixtures only).
+  # The labs64io realm: realm.base.json, plus realm.test-fixtures.json (labs64io.testFixtures only)
+  # and realm.aws.json (labs64io.awsClients only).
   # Client secrets stay $(env:NAME) placeholders — keycloak-config-cli substitutes them from
   # keycloak-realm-secrets, so no credential lands in this ConfigMap.
   - |
@@ -147,6 +163,14 @@ extraManifests:
     {{- $fx := fromJson . }}
     {{- $_ := set $realm "clients" (concat $realm.clients $fx.clients) }}
     {{- $_ := set $realm "users" (concat $realm.users $fx.users) }}
+    {{- end }}
+    {{- with .Values.realmAws }}
+    {{- if not $.Values.labs64io.awsClients }}
+    {{- fail "realmAws (netlicensing/canary clients) needs labs64io.awsClients: true — AWS environments with a public edge" }}
+    {{- end }}
+    {{- $aws := fromJson . }}
+    {{- $_ := set $realm "clients" (concat $realm.clients $aws.clients) }}
+    {{- $_ := set $realm "users" (concat $realm.users $aws.users) }}
     {{- end }}
     apiVersion: v1
     kind: ConfigMap
@@ -177,7 +201,7 @@ extraManifests:
             app.kubernetes.io/name: keycloak-config-cli
             app.kubernetes.io/instance: {{ .Release.Name }}
           annotations:
-            checksum/realm: {{ .Values.realmConfig | cat .Values.realmFixtures | sha256sum }}
+            checksum/realm: {{ .Values.realmConfig | cat .Values.realmFixtures .Values.realmAws | sha256sum }}
         spec:
           automountServiceAccountToken: false
           restartPolicy: Never
@@ -268,6 +292,10 @@ extraManifests:
     {{- if .Values.labs64io.testFixtures }}
     {{- $_ := set $realmSecrets "LOCAL_TEST_CLIENT_SECRET" "LOCAL_TEST_CLIENT_SECRET" }}
     {{- $_ := set $realmSecrets "LOCAL_TOOLING_CLIENT_SECRET" "LOCAL_TOOLING_CLIENT_SECRET" }}
+    {{- end }}
+    {{- if .Values.labs64io.awsClients }}
+    {{- $_ := set $realmSecrets "NETLICENSING_CLIENT_SECRET" "NETLICENSING_CLIENT_SECRET" }}
+    {{- $_ := set $realmSecrets "CANARY_CLIENT_SECRET" "CANARY_CLIENT_SECRET" }}
     {{- end }}
     {{- range $name, $keys := dict "admin" (dict "password" "KC_BOOTSTRAP_ADMIN_PASSWORD") "realm-secrets" $realmSecrets "db" (dict "password" "KC_DB_PASSWORD" "RDS_ADMIN_USERNAME" "RDS_ADMIN_USERNAME" "RDS_ADMIN_PASSWORD" "RDS_ADMIN_PASSWORD") }}
     ---

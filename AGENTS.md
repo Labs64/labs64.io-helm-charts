@@ -51,7 +51,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 |---------|-------------|----------|
 | Local Development | `overrides/<module>/values.local.yaml` | Dev cluster with shared toolset via Helmfile (`just up`) |
 | AWS QA / Staging / Prod Environment | `charts/labs64io-ecosystem/values.aws.yaml` + values rendered by `labs64.io-devops` | Umbrella chart on EKS against Terraform-provisioned RDS / ElastiCache / Amazon MQ (ArgoCD later) |
-| AWS identity provider | `overrides/keycloak/values.yaml` + `values.aws.yaml` + `realm.base.json` (+ `realm.test-fixtures.json` in dev only) + values rendered by `labs64.io-devops` | Upstream `codecentric/keycloakx` release in `tools`, installed by devops (`just keycloak-install <env>`) before the umbrella chart — third-party charts are consumed from their publisher, never wrapped in a Labs64 chart |
+| AWS identity provider | `overrides/keycloak/values.yaml` + `values.aws.yaml` + `realm.base.json` (+ `realm.test-fixtures.json` in dev only, + `realm.aws.json` — netlicensing/canary clients — where the environment has a public edge) + values rendered by `labs64.io-devops` | Upstream `codecentric/keycloakx` release in `tools`, installed by devops (`just keycloak-install <env>`) before the umbrella chart — third-party charts are consumed from their publisher, never wrapped in a Labs64 chart |
 | Users' Own Infrastructure (BYO Infra) | `overrides/<module>/values.prod-example.yaml` | Copy & adapt for your own infrastructure and external services |
 
 Infrastructure is decoupled from application charts — no module chart bundles RabbitMQ/PostgreSQL/Redis

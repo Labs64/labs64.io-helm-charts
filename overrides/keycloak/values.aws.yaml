@@ -4,7 +4,8 @@
 #   labs64io.hostname, labs64io.externalSecrets.secretKey, database.hostname/port/username,
 #   networkPolicy.egress (full list — DNS, replicas, the VPC CIDR on 5432), replicas.
 # Realm: realm.base.json; plus realm.test-fixtures.json in dev only (generated labs64io.testFixtures,
-# from Terraform's keycloak_test_fixtures, which refuses prod).
+# from Terraform's keycloak_test_fixtures, which refuses prod); plus realm.aws.json (netlicensing +
+# canary clients) wherever the environment has a public edge (generated labs64io.awsClients).
 labs64io:
   realmSslRequired: external
   externalSecrets:
@@ -15,6 +16,11 @@ labs64io:
 command:
   - /opt/keycloak/bin/kc.sh
   - start
+
+# The public edge is ALB → Traefik → Keycloak; both send X-Forwarded-* (not RFC 7239 Forwarded).
+# Traefik only passes the ALB's headers through from the VPC CIDR (labs64.io-devops helm-values).
+proxy:
+  mode: xforwarded
 
 database:
   vendor: postgres
