@@ -29,9 +29,9 @@ default:
 
 ## 🚀 Getting Started (Cluster & Setup) ##
 
-# create the local k3d cluster + registry only
+# create the local k3d cluster + registry only, starting it back up if it already exists but is stopped
 cluster-up:
-    k3d cluster create --config k3d/labs64io.yaml || true
+    k3d cluster list labs64io >/dev/null 2>&1 && k3d cluster start labs64io || k3d cluster create --config k3d/labs64io.yaml
     k3d kubeconfig merge -d labs64io
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/0\.0\.0\.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/127\.0\.0\.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
