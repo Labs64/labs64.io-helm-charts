@@ -553,6 +553,10 @@ status:
     @echo "\n=== Monitoring ==="
     @kubectl get pods,svc,ingress -n {{NAMESPACE_MONITORING}}
 
+# report this deployment's status (read-only)
+reconcile:
+    @bash scripts/reconcile.sh
+
 # show logs for a specific application in real-time
 logs app:
     kubectl logs -f -n {{NAMESPACE_LABS64IO}} -l app.kubernetes.io/name={{app}}
