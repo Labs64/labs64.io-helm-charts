@@ -13,7 +13,7 @@ dependencies:
   version: 0.10.3
 - name: auditflow
   repository: file://../auditflow
-  version: 0.15.5
+  version: 0.15.6
 - name: api-docs
   repository: file://../api-docs
   version: 0.9.3
@@ -32,5 +32,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.2
-digest: sha256:58fc4c46add5d8b5681faf3e45c98f0a853f429d0ad46be04bd253c0b6ee08be
-generated: "2026-10-02T15:55:24.262262129Z"
+digest: sha256:432c028fe1c4a5deb3d6e640af521de1fdcc34be0aa8431fad809267a1e1c8e0
+generated: "2026-10-02T18:04:41.732422491Z"
