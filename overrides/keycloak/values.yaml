@@ -13,7 +13,7 @@ replicas: 1
 
 image:
   repository: quay.io/keycloak/keycloak
-  tag: "26.7.4"
+  tag: "26.8.0"
   pullPolicy: IfNotPresent
 
 # Labs64.IO settings consumed by extraEnv/extraManifests below (not upstream chart keys).

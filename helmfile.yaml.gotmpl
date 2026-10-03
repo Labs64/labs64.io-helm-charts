@@ -25,8 +25,11 @@ repositories:
     url: https://charts.bitnami.com/bitnami
   - name: open-telemetry
     url: https://open-telemetry.github.io/opentelemetry-helm-charts
-  - name: grafana
-    url: https://grafana.github.io/helm-charts
+  # Loki, Tempo and Grafana charts live here now. The old grafana.github.io repo marks its
+  # tempo and grafana charts deprecated (last release 2026-01-30) and its loki chart trails
+  # the community one by years of Loki releases.
+  - name: grafana-community
+    url: https://grafana-community.github.io/helm-charts
   - name: prometheus-community
     url: https://prometheus-community.github.io/helm-charts
   # NOTE: external-secrets is intentionally absent. Its classic chart repo
@@ -56,7 +59,7 @@ releases:
   - name: traefik
     namespace: tools
     chart: traefik/traefik
-    version: 41.6.0
+    version: 41.6.1
     values:
       - overrides/traefik/values.{{ .Environment.Name }}.yaml
     labels:
@@ -70,19 +73,21 @@ releases:
     # overrides/eso to match). Keep in lockstep with ESO_CHART_VERSION in labs64.io-devops (the
     # AWS path).
     chart: oci://ghcr.io/external-secrets/charts/external-secrets
-    version: 2.10.0
+    version: 2.11.0
     set:
       - name: installCRDs
         value: true
     labels:
       layer: infra
 
+  # Local RabbitMQ on the official image (overrides/rabbitmq/chart). The Bitnami chart is frozen at
+  # 4.1.3 and its versioned images exist only in the unpatched `bitnamilegacy/*` namespace.
+  # Upgrading an existing cluster: `helm uninstall rabbitmq -n tools` first (the StatefulSet
+  # selector and volume claim differ), then `just up`; the new broker starts with a fresh volume.
   - name: rabbitmq
     namespace: tools
-    chart: bitnami/rabbitmq
-    version: 16.0.14
+    chart: ./overrides/rabbitmq/chart
     values:
-      - overrides/rabbitmq/values.{{ .Environment.Name }}.yaml
       - overrides/rabbitmq/values.secrets.{{ .Environment.Name }}.yaml
     labels:
       layer: infra
@@ -90,7 +95,7 @@ releases:
   - name: postgresql
     namespace: tools
     chart: bitnami/postgresql
-    version: 18.7.11
+    version: 18.12.4
     values:
       - overrides/postgresql/values.{{ .Environment.Name }}.yaml
     labels:
@@ -103,7 +108,7 @@ releases:
   - name: redis
     namespace: tools
     chart: bitnami/valkey
-    version: 6.3.0
+    version: 6.3.4
     values:
       - overrides/redis/values.{{ .Environment.Name }}.yaml
     labels:
@@ -153,7 +158,7 @@ releases:
   - name: metrics-server
     namespace: kube-system
     chart: metrics-server/metrics-server
-    version: 3.13.1
+    version: 3.14.0
     values:
       - overrides/metrics-server/values.{{ .Environment.Name }}.yaml
     labels:
@@ -162,7 +167,7 @@ releases:
   - name: opentelemetry-operator
     namespace: monitoring
     chart: open-telemetry/opentelemetry-operator
-    version: 0.119.0
+    version: 0.124.1
     values:
       - overrides/opentelemetry/values-operator.{{ .Environment.Name }}.yaml
     labels:
@@ -171,7 +176,7 @@ releases:
   - name: opentelemetry-collector
     namespace: monitoring
     chart: open-telemetry/opentelemetry-collector
-    version: 0.165.0
+    version: 0.175.0
     values:
       - overrides/opentelemetry/values-collector.{{ .Environment.Name }}.yaml
     labels:
@@ -180,7 +185,7 @@ releases:
   - name: prometheus
     namespace: monitoring
     chart: prometheus-community/kube-prometheus-stack
-    version: 87.15.1
+    version: 91.9.0
     values:
       - overrides/prometheus/values.{{ .Environment.Name }}.yaml
     labels:
@@ -188,8 +193,8 @@ releases:
 
   - name: loki
     namespace: monitoring
-    chart: grafana/loki
-    version: 6.24.0
+    chart: grafana-community/loki
+    version: 18.13.7
     values:
       - overrides/loki/values.{{ .Environment.Name }}.yaml
     labels:
@@ -197,8 +202,8 @@ releases:
 
   - name: tempo
     namespace: monitoring
-    chart: grafana/tempo
-    version: 1.24.4
+    chart: grafana-community/tempo
+    version: 3.1.0
     values:
       - overrides/tempo/values.{{ .Environment.Name }}.yaml
     labels:
@@ -206,8 +211,8 @@ releases:
 
   - name: grafana
     namespace: monitoring
-    chart: grafana/grafana
-    version: 10.5.15
+    chart: grafana-community/grafana
+    version: 13.2.7
     values:
       - overrides/grafana/values.{{ .Environment.Name }}.yaml
     labels:
@@ -290,7 +295,6 @@ releases:
     labels:
       layer: apps
     needs:
-      - tools/rabbitmq
       - tools/postgresql
       # See labs64io-auditflow above: its HTTPRoute also resolves shared
       # Middlewares by name against what api-gateway creates.

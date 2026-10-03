@@ -18,6 +18,14 @@ resourcePolicy:
       match:
         expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"audit-event:write\")"
   - actions:
+    - publishEvents
+    effect: EFFECT_ALLOW
+    roles:
+    - '*'
+    condition:
+      match:
+        expr: "(has(request.principal.attr.tenant) || (\"service\" in request.principal.roles)) && request.principal.attr.scopes.exists(s, s == \"audit-event:write\")"
+  - actions:
     - '*'
     effect: EFFECT_DENY
     roles:

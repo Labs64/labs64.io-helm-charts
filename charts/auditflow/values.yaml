@@ -382,7 +382,9 @@ applicationYaml:
       # -- Replacement value used by the "mask" action
       mask: "***"
       # -- One entry per field to redact: {field (dot/array path, e.g. extra.userEmail), action
-      # (mask | hash | drop)}
+      # (mask | hash | drop)}. "hash" is an HMAC-SHA256 and needs a secret key of at least 32
+      # characters in `secrets.data.AUDITFLOW_REDACTION_HASH_KEY` (or the module's external secret);
+      # without it the backend does not start. Never put the key into applicationYaml.
       # @schema
       # type: array
       # items:
@@ -411,8 +413,8 @@ applicationYaml:
       # application default "in-memory" is single-replica only)
       backend: redis
     consumer:
-      # -- Max concurrently-processed events per tenant on the consumer side (fairness layer 2)
-      max-in-flight-per-tenant: 4
+      # -- Deliveries of one tenant processed at once per pod (fairness layer 2); over it a delivery waits briefly, then is deferred without spending a retry attempt. Half of the pod's delivery units (4 consumers x 16)
+      max-in-flight-per-tenant: 32
 
   # -- Resolver for `${secretRef:<key>}` sink-credential indirection; "k8s-secret" reads the
   # tenant's own Secret `auditflow-tenant-<tenantId>-creds` (requires rbac.create), "env" reads

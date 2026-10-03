@@ -1,6 +1,5 @@
-image:
-  tag: 13.1.0
-
+# No image tag pin: grafana-community/grafana 13.x ships Grafana 13.2.x as its appVersion, and
+# the chart version is pinned in helmfile.yaml.gotmpl.
 service:
   type: LoadBalancer
   port: 3000
@@ -50,9 +49,6 @@ sidecar:
     labelValue: "1"
     searchNamespace: "ALL"
     enableUniqueFilenames: true
-    env:
-      - name: ENABLE_UNIQUE_FILENAMES
-        value: "true"
 initChownData:
   enabled: false
 grafana.ini:

@@ -188,18 +188,18 @@ tenants:
     # Dedicated regression-test tenant (item 12): pipeline routing, condition
     # operators, and secretRef resolution, all observed via DLQ growth.
     #
-    # DLQ semantics this fixture depends on: a DLQ entry is per EVENT, not per
-    # failing pipeline — AuditService.dispatchToPipelines fans one event out to
-    # every matching pipeline, and if ANY of them fails retryably the WHOLE event
-    # is redelivered and (on retry exhaustion) dead-lettered ONCE, regardless of
-    # how many pipelines failed on it. That is why every "probe_*" pipeline below
-    # is ANDed with a unique `extra.op` (and, for probe_eq_intentional_fail/probe_any_mode_intentional_fail's
-    # fan-out case, `extra.value`/`extra.op_any`) discriminator: exactly one probe
-    # may match a given test event, so "this event's DLQ entry" is unambiguously
-    # attributable to that one probe, and an event matching NO probe produces NO
-    # DLQ entry at all (never mix in a permanently-unconditional failing pipeline
-    # here — it would turn every other test's "no match" case into a false "DLQ
-    # grew").
+    # DLQ semantics this fixture depends on: a DLQ entry is per FAILED PIPELINE of
+    # an event — the router enqueues one delivery per matching pipeline, and each
+    # failing delivery is dead-lettered on its own (into labs64-audit-dlq.t_regression).
+    # Every "*_intentional_fail" probe sets retry.maxAttempts: 1 so it dead-letters on
+    # the first failure instead of retrying for the default 24h. Every "probe_*"
+    # pipeline below is ANDed with a unique `extra.op` (and, for
+    # probe_eq_intentional_fail/probe_any_mode_intentional_fail's fan-out case,
+    # `extra.value`/`extra.op_any`) discriminator: exactly one probe may match a given
+    # test event (two for the fan-out case), so DLQ growth is attributable, and an event
+    # matching NO probe produces NO DLQ entry at all (never mix in a permanently-
+    # unconditional failing pipeline here — it would turn every other test's "no match"
+    # case into a false "DLQ grew").
     #
     # Every probe is deliberately broken via a ${secretRef:...} that never
     # resolves (EnvSecretRefResolver throws RetryableDeliveryException
@@ -213,6 +213,9 @@ tenants:
       pipelines:
         - name: 'probe_eq_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -231,6 +234,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_neq_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -249,6 +255,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_contains_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -267,6 +276,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_startswith_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -285,6 +297,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_endswith_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -303,6 +318,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_in_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -321,6 +339,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_notin_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -339,6 +360,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_regex_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -357,6 +381,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_gt_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -375,6 +402,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_gte_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -393,6 +423,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_lt_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -411,6 +444,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_lte_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -429,6 +465,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_eqignorecase_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -447,6 +486,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_exists_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -464,6 +506,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_notexists_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:
@@ -481,6 +526,9 @@ tenants:
               probe-trigger: "${secretRef:regressionMissingKey}"
         - name: 'probe_any_mode_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'any'
             rules:
@@ -514,6 +562,9 @@ tenants:
               probe-trigger: "${secretRef:regressionTestKey}"
         - name: 'test_secretref_missing_intentional_fail'
           enabled: true
+          # Always fails (unresolvable secretRef): dead-letter at once, don't retry for 24h.
+          retry:
+            maxAttempts: 1
           condition:
             match: 'all'
             rules:

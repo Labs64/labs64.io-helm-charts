@@ -185,9 +185,9 @@ env: []
 envFrom: []
 
 # -- Secret data to be used as environment variables (delivered via envFrom).
-# External installs supply broker/database credentials here, e.g.
-#   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD.
-# When rabbitmq.enabled=true / postgresql.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth.
+# External installs supply database credentials here, e.g.
+#   SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD.
+# When postgresql.enabled=true the chart adds these keys automatically from postgresql.auth.
 # Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).
 # Note: the Secret is hook-managed (pre-install) and survives helm uninstall.
 # @schema
@@ -221,13 +221,6 @@ migrationJob:
   # @schema
   initResources: {}
 
-# -- Optional bundled RabbitMQ (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own broker instead.
-# @schema
-# type: object
-# additionalProperties: true
-# @schema
-
 # -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
 # Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own database instead.
 # @schema
@@ -245,14 +238,6 @@ applicationYaml:
       # Set credentials via `secrets.data.SPRING_DATASOURCE_USERNAME`/`SPRING_DATASOURCE_PASSWORD`
       # (a Secret, injected via envFrom) instead — see `secrets.data` below.
       url: "jdbc:postgresql://{{ if and .Values.global .Values.global.postgresql }}{{ .Values.global.postgresql.host | default \"postgresql.tools.svc.cluster.local\" }}:{{ .Values.global.postgresql.port | default 5432 }}{{ else }}postgresql.tools.svc.cluster.local:5432{{ end }}/checkout"
-    rabbitmq:
-      # -- RabbitMQ host
-      host: "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}"
-      # -- RabbitMQ port
-      port: '{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}'
-      ssl:
-        # -- Use TLS for AMQP (Amazon MQ accepts AMQPS on 5671 only)
-        enabled: false
     data:
       redis:
         # -- Redis host
@@ -330,8 +315,6 @@ networkPolicy:
   # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
   # database-per-service isolation.
   toolsEgress:
-    - name: rabbitmq
-      port: 5672
     - name: postgresql
       port: 5432
     - name: valkey

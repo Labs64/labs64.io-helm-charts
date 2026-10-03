@@ -12,6 +12,9 @@ metadata:
   name: labs64io
 servers: 1
 agents: 0
+# Tracks the EKS control-plane minor the AWS path runs (labs64.io-devops eks_cluster_version), not
+# k3d's bundled default, so local dev exercises the same Kubernetes API surface as production.
+image: rancher/k3s:v1.36.5-k3s1
 ports:
   - port: 80:80
     nodeFilters:

@@ -11,3 +11,11 @@ routes:
   scopes:
   - audit-event:write
   resource: AuditEvent
+- operationId: publishEvents
+  method: POST
+  path: /audit/publish/batch
+  public: false
+  tenantRequired: true
+  scopes:
+  - audit-event:write
+  resource: AuditEvent

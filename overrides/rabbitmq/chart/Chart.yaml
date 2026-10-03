@@ -1,0 +1,6 @@
+apiVersion: v2
+name: rabbitmq-local
+type: application
+version: 0.1.0
+appVersion: "4.3"
+description: "Labs64.IO :: Local-dev RabbitMQ (official image) — DEV ONLY, never for production"

@@ -21,7 +21,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.3 |
+| file://../chart-libs | chart-libs | 0.8.4 |
 
 ## Values
 

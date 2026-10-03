@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.20.5](https://img.shields.io/badge/Version-0.20.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.20.6](https://img.shields.io/badge/Version-0.20.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 
@@ -28,9 +28,9 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | file://../customer-portal | customer-portal | >=0.1.0 |
 | file://../mock-oidc | mock-oidc | >=0.1.0 |
 | file://../payment-gateway | payment-gateway | >=0.1.0 |
-| https://charts.bitnami.com/bitnami | postgresql | 18.7.11 |
-| https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.0 |
-| https://traefik.github.io/charts | traefik | 41.6.0 |
+| https://charts.bitnami.com/bitnami | postgresql | 18.12.4 |
+| https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.4 |
+| https://traefik.github.io/charts | traefik | 41.6.1 |
 
 ## Values
 
@@ -86,8 +86,8 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | secrets.postgresqlPassword | string | `"labs64_dev_password"` | Convenience aliases for the three bundled-infra passwords, injected into labs64io-shared-secret. The shipped values are dev defaults — with `demoMode: false` (the default) the chart fails to render until they change. |
 | secrets.rabbitmqPassword | string | `"labs64_dev_password"` | See `secrets.postgresqlPassword`. |
 | secrets.redisPassword | string | `"labs64_dev_password"` | See `secrets.postgresqlPassword`. |
-| tests | object | `{"enabled":true,"image":"busybox:1.36","timeoutSeconds":10}` | `helm test` probes each enabled module's health endpoint through its Service. Paths and ports mirror each chart's own readinessProbe, so a passing test means the same thing Kubernetes means by "ready". |
-| tests.image | string | `"busybox:1.36"` | Image used to run the probes. Needs only a shell and wget. |
+| tests | object | `{"enabled":true,"image":"busybox:1.37.0","timeoutSeconds":10}` | `helm test` probes each enabled module's health endpoint through its Service. Paths and ports mirror each chart's own readinessProbe, so a passing test means the same thing Kubernetes means by "ready". |
+| tests.image | string | `"busybox:1.37.0"` | Image used to run the probes. Needs only a shell and wget. |
 | tests.timeoutSeconds | int | `10` | Per-probe timeout (seconds) |
 | traefik | object | `{"enabled":false,"gateway":{"enabled":true,"listeners":{"web":{"namespacePolicy":{"from":"All"},"port":8000,"protocol":"HTTP"}},"name":"labs64io-gateway","namespace":"tools"},"gatewayClass":{"enabled":true},"providers":{"kubernetesGateway":{"enabled":true}}}` | Opt-in Gateway. Without a GatewayClass and a Gateway named labs64io-gateway, every module's HTTPRoute renders but sits Accepted:False and receives no traffic — pods running, nothing to curl. Enable this, or provision an equivalent Gateway yourself (see "Gateway API setup" in the chart repo's README).  The Gateway API CRDs are deliberately NOT bundled: Helm never upgrades CRDs from a chart's crds/ after first install. Apply them separately (`just install-crds`, or install.sh, which does it with `kubectl apply --server-side`). |
 

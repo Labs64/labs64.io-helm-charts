@@ -4,19 +4,19 @@ NAMESPACE_KUBE_SYSTEM := "kube-system"
 NAMESPACE_MONITORING := "monitoring"
 NAMESPACE_TOOLS := "tools"
 HELM_DOCS_VERSION := "v1.14.2"
-TRAEFIK_CHART_VERSION := "41.6.0"
+TRAEFIK_CHART_VERSION := "41.6.1"
 TRAEFIK_CRDS_CHART_VERSION := "1.18.0"
 GATEWAY_API_VERSION := "v1.6.2"
-METRICS_SERVER_CHART_VERSION := "3.13.1"
+METRICS_SERVER_CHART_VERSION := "3.14.0"
 RABBITMQ_CHART_VERSION := "16.0.14"
-POSTGRESQL_CHART_VERSION := "18.7.11"
+POSTGRESQL_CHART_VERSION := "18.12.4"
 REDIS_CHART_VERSION := "27.0.13"
-OTEL_OPERATOR_CHART_VERSION := "0.120.2"
-OTEL_COLLECTOR_CHART_VERSION := "0.169.0"
-PROMETHEUS_STACK_CHART_VERSION := "87.15.1"
-TEMPO_CHART_VERSION := "1.24.4"
-GRAFANA_CHART_VERSION := "10.5.15"
-LOKI_CHART_VERSION := "6.24.0"
+OTEL_OPERATOR_CHART_VERSION := "0.124.1"
+OTEL_COLLECTOR_CHART_VERSION := "0.175.0"
+PROMETHEUS_STACK_CHART_VERSION := "91.9.0"
+TEMPO_CHART_VERSION := "3.1.0"
+GRAFANA_CHART_VERSION := "13.2.7"
+LOKI_CHART_VERSION := "18.13.7"
 
 LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal"
 # Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
@@ -230,7 +230,7 @@ uninstall-tool-external-secrets:
     kubectl delete -f overrides/eso/cluster-secret-store.yaml --ignore-not-found
     helm uninstall external-secrets --namespace {{NAMESPACE_TOOLS}} || true
 
-# install RabbitMQ (official image; standalone, bypasses helmfile/the bitnami chart)
+# install RabbitMQ (official image; standalone raw manifest, bypasses helmfile)
 install-tool-rabbitmq:
 	@echo "Installing RabbitMQ (official image)..."
 	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq-secret.yaml
@@ -439,7 +439,7 @@ uninstall-tool-prometheus:
 
 # install Loki
 install-tool-loki:
-    helm upgrade --install loki grafana/loki \
+    helm upgrade --install loki grafana-community/loki \
       --version {{LOKI_CHART_VERSION}} \
       -f overrides/loki/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
@@ -450,7 +450,7 @@ uninstall-tool-loki:
 
 # install Tempo
 install-tool-tempo:
-    helm upgrade --install tempo grafana/tempo \
+    helm upgrade --install tempo grafana-community/tempo \
       --version {{TEMPO_CHART_VERSION}} \
       -f overrides/tempo/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
@@ -461,7 +461,7 @@ uninstall-tool-tempo:
 
 # install Grafana
 install-tool-grafana:
-    helm upgrade --install grafana grafana/grafana \
+    helm upgrade --install grafana grafana-community/grafana \
       --version {{GRAFANA_CHART_VERSION}} \
       -f overrides/grafana/values.{{ENV}}.yaml \
       --namespace {{NAMESPACE_MONITORING}} --create-namespace
@@ -535,7 +535,7 @@ repo-add:
     helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
     helm repo add bitnami https://charts.bitnami.com/bitnami
     helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
-    helm repo add grafana https://grafana.github.io/helm-charts
+    helm repo add grafana-community https://grafana-community.github.io/helm-charts
     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 
 # update helm repositories
@@ -547,7 +547,7 @@ repo-add:
 repo-update: repo-add
     helm repo update \
       labs64io traefik metrics-server bitnami \
-      open-telemetry grafana prometheus-community
+      open-telemetry grafana-community prometheus-community
 
 
 ## 🧪 Testing & Debugging ##

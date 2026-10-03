@@ -86,51 +86,10 @@
               ],
               "title": "datasource",
               "type": "object"
-            },
-            "rabbitmq": {
-              "additionalProperties": false,
-              "properties": {
-                "host": {
-                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.host | default \"rabbitmq.tools.svc.cluster.local\" }}{{ else }}rabbitmq.tools.svc.cluster.local{{ end }}",
-                  "description": "RabbitMQ host",
-                  "title": "host",
-                  "type": "string"
-                },
-                "port": {
-                  "default": "{{ if and .Values.global .Values.global.rabbitmq }}{{ .Values.global.rabbitmq.port | default 5672 }}{{ else }}5672{{ end }}",
-                  "description": "RabbitMQ port",
-                  "title": "port",
-                  "type": "string"
-                },
-                "ssl": {
-                  "additionalProperties": false,
-                  "properties": {
-                    "enabled": {
-                      "default": false,
-                      "description": "Use TLS for AMQP (Amazon MQ accepts AMQPS on 5671 only)",
-                      "title": "enabled",
-                      "type": "boolean"
-                    }
-                  },
-                  "required": [
-                    "enabled"
-                  ],
-                  "title": "ssl",
-                  "type": "object"
-                }
-              },
-              "required": [
-                "host",
-                "port",
-                "ssl"
-              ],
-              "title": "rabbitmq",
-              "type": "object"
             }
           },
           "required": [
             "datasource",
-            "rabbitmq",
             "data"
           ],
           "title": "spring",
@@ -775,26 +734,6 @@
                 "additionalProperties": false,
                 "properties": {
                   "name": {
-                    "default": "rabbitmq",
-                    "title": "name",
-                    "type": "string"
-                  },
-                  "port": {
-                    "default": 5672,
-                    "title": "port",
-                    "type": "integer"
-                  }
-                },
-                "required": [
-                  "name",
-                  "port"
-                ],
-                "type": "object"
-              },
-              {
-                "additionalProperties": false,
-                "properties": {
-                  "name": {
                     "default": "postgresql",
                     "title": "name",
                     "type": "string"
@@ -1070,7 +1009,7 @@
     },
     "secrets": {
       "additionalProperties": false,
-      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply broker/database credentials here, e.g.\n  SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD, SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD.\nWhen rabbitmq.enabled=true / postgresql.enabled=true the chart adds these keys automatically from rabbitmq.auth / postgresql.auth.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
+      "description": "Secret data to be used as environment variables (delivered via envFrom).\nExternal installs supply database credentials here, e.g.\n  SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD.\nWhen postgresql.enabled=true the chart adds these keys automatically from postgresql.auth.\nKeys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed).\nNote: the Secret is hook-managed (pre-install) and survives helm uninstall.",
       "properties": {
         "data": {
           "additionalProperties": true,

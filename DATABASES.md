@@ -7,8 +7,8 @@ database credentials or connect to another service's database.
 
 | Service | PostgreSQL DB | Redis | RabbitMQ | Notes |
 |---------|:---:|:---:|:---:|-------|
-| checkout | `checkout` | — | yes | Transaction processing |
-| payment-gateway | `payment_gateway` | yes | yes | Billing + idempotency cache |
+| checkout | `checkout` | — | — | Transaction processing |
+| payment-gateway | `payment_gateway` | yes | — | Billing + idempotency cache; audit events go to AuditFlow over HTTP |
 | auditflow | — | yes | yes | Idempotency/dedup store |
 | api-gateway | — | — | — | Stateless |
 | authz-pdp | — | — | — | Stateless (policies mounted via ConfigMap) |
@@ -62,11 +62,10 @@ When `networkPolicy.enabled: true`, each service's egress rules restrict
 outbound traffic to only its designated databases:
 
 ```yaml
-# checkout egress: PostgreSQL + RabbitMQ only
+# checkout egress: PostgreSQL only (plus Cerbos PDP and DNS)
 networkPolicy:
   enabled: true
   egress:
-    - to: [RabbitMQ in tools namespace]
     - to: [PostgreSQL in tools namespace]
 ```
 

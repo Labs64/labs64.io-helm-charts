@@ -29,7 +29,7 @@ Labs64.IO :: Preflight - verify tenant infrastructure (broker, database, cache, 
 | checks.redis | object | `{"enabled":false,"existingSecret":"","host":"redis.infra.example.com","password":"","port":6379}` | Redis connectivity (PING) |
 | checks.redis.existingSecret | string | `""` | Existing Secret with a `password` key (passed via REDISCLI_AUTH, never argv/pod spec). |
 | enabled | bool | `true` |  |
-| images | object | `{"busybox":"busybox:1.36","curl":"curlimages/curl:8.10.1","postgresql":"postgres:18-alpine","redis":"redis:8-alpine"}` | Images used by the check containers |
+| images | object | `{"busybox":"busybox:1.37.0","curl":"curlimages/curl:8.22.0","postgresql":"postgres:18-alpine","redis":"valkey/valkey:9.1-alpine"}` | Images used by the check containers |
 | images.postgresql | string | `"postgres:18-alpine"` | Official images rather than bitnamilegacy/*, which is an unsupported namespace on a deprecation path. These run the same SELECT 1 / PING checks; both put psql / redis-cli on PATH, which is all job.yaml relies on. |
 
 ----------------------------------------------

@@ -663,7 +663,7 @@
           "type": "boolean"
         },
         "image": {
-          "default": "busybox:1.36",
+          "default": "busybox:1.37.0",
           "description": "Image used to run the probes. Needs only a shell and wget.",
           "title": "image",
           "type": "string"

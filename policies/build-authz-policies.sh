@@ -13,7 +13,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCES="$REPO/policies/policy-sources.yaml"
 COMMONS_DIR="${COMMONS_DIR:-$REPO/../labs64.io-commons/auth-context-java}"
-CERBOS_IMAGE="ghcr.io/cerbos/cerbos:0.51.0"
+CERBOS_IMAGE="ghcr.io/cerbos/cerbos:0.56.0"
 
 CERBOS_POLICIES="$REPO/charts/authz-pdp/policies"
 CERBOS_SCHEMAS="$REPO/charts/authz-pdp/schemas"

@@ -19,7 +19,7 @@ spec:
       type: RuntimeDefault
   containers:
     - name: wget
-      image: busybox:1.36
+      image: busybox:1.37.0
       command: ['wget']
       args: ['-qO-', '{{ include "chart-libs.fullname" . }}:{{ .Values.service.port }}{{ .Values.tests.healthPath }}']
       securityContext:
@@ -57,7 +57,7 @@ spec:
       type: RuntimeDefault
   containers:
     - name: wget
-      image: busybox:1.36
+      image: busybox:1.37.0
       command: ['wget']
       args: ['-qO-', '{{ include "chart-libs.fullname" . }}-ui:{{ .Values.ui.service.port }}{{ .Values.ui.tests.healthPath }}']
       securityContext:

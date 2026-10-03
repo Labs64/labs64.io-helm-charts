@@ -6,11 +6,11 @@ podAnnotations:
 
 image:
   repository: otel/opentelemetry-collector-contrib
-  # Pinned to the appVersion of the collector chart pinned in the justfile
-  # (OTEL_COLLECTOR_CHART_VERSION 0.169.0 -> appVersion 0.158.0), so the image and the
+  # Pinned to the appVersion of the collector chart pinned in helmfile.yaml.gotmpl and the
+  # justfile (OTEL_COLLECTOR_CHART_VERSION 0.175.0 -> appVersion 0.161.0), so the image and the
   # chart's config schema always move together. `latest` let collector behaviour shift
-  # under an unchanged chart on every pull. Bump both numbers in the same commit.
-  tag: 0.158.0
+  # under an unchanged chart on every pull. Bump all three numbers in the same commit.
+  tag: 0.161.0
 
 presets:
   logsCollection:
@@ -134,7 +134,7 @@ config:
     # per pod and otherwise dominate the trace list.
     #
     # Matched on three fronts because the runtimes disagree on attributes: the Java agent
-    # (2.29.0) emits stable HTTP semconv (`url.path`), while the Python distro (0.65b0)
+    # (2.31.1) emits stable HTTP semconv (`url.path`), while the Python distro (0.65b0)
     # may still emit legacy `http.target` unless OTEL_SEMCONV_STABILITY_OPT_IN=http is set.
     # Span name is the backstop for both. Each attribute is nil-guarded — `and`
     # short-circuits, so IsMatch never sees a nil on services that lack the attribute.

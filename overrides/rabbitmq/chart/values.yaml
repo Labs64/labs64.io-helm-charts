@@ -1,0 +1,28 @@
+# Local-development RabbitMQ on the official image. Replaces the frozen bitnami/rabbitmq chart,
+# whose versioned images now exist only under the unpatched `bitnamilegacy/*` namespace.
+#
+# Same credentials contract as the chart it replaces: `auth.username` / `auth.password` come from
+# the gitignored overrides/rabbitmq/values.secrets.local.yaml (see the .example next to it).
+# The password MUST match SPRING_RABBITMQ_PASSWORD in every app module's values.secrets.local.yaml.
+image:
+  repository: rabbitmq
+  # Tracks the 4.3.x line (Amazon MQ's RabbitMQ 4.3) instead of the floating `4-management` tag,
+  # which would silently jump to RabbitMQ 5.x on the next pull.
+  tag: 4.3-management-alpine
+  pullPolicy: IfNotPresent
+
+auth:
+  username: labs64
+  # Intentionally empty: a missing password must fail the render, not ship a default credential.
+  password: ""
+
+persistence:
+  size: 1Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

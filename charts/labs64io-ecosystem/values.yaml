@@ -344,5 +344,5 @@ tests:
   # -- Per-probe timeout (seconds)
   timeoutSeconds: 10
   # -- Image used to run the probes. Needs only a shell and wget.
-  image: busybox:1.36
+  image: busybox:1.37.0
 

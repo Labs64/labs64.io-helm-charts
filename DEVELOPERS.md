@@ -99,11 +99,10 @@ graph TB
     
     %% Internal Dependencies
     checkout_be -->|Persists Data| postgres
-    checkout_be -->|Publishes Events| rabbitmq
     
     pg_be -->|Persists Data| postgres
     pg_be -->|Idempotency| redis
-    pg_be -->|Publishes Events| rabbitmq
+    pg_be -->|"Audit events (HTTP)"| audit_be
     
     audit_be -->|Publishes Audits| rabbitmq
     rabbitmq -->|Consumes| audit_be
@@ -131,7 +130,7 @@ graph TB
 
 ### Namespaces & Infrastructure
 
-1. **`tools` Namespace**: Holds all external dependencies (3PP tools). Relies on third-party Helm repositories like Bitnami (RabbitMQ, Postgres, Redis) and Traefik.
+1. **`tools` Namespace**: Holds all external dependencies (3PP tools). Relies on third-party Helm repositories like Bitnami (Postgres, Valkey) and Traefik; RabbitMQ runs from the local chart in `overrides/rabbitmq/chart` (official image).
 2. **`labs64io` Namespace**: Where all proprietary Labs64 domains execute. All services route internal traffic through the common gateways.
 
 ### Request Flow
@@ -241,7 +240,7 @@ Verify:
 ```bash
 kubectl get nodes
 # NAME                        STATUS   ROLES                  AGE   VERSION
-# k3d-labs64io-server-0       Ready    control-plane,master   30s   v1.28.x+k3s1
+# k3d-labs64io-server-0       Ready    control-plane,master   30s   v1.36.x+k3s1
 ```
 
 ### 2. Add Helm repositories
@@ -251,7 +250,7 @@ just repo-add
 just repo-update
 ```
 
-This adds repositories for: traefik, bitnami (RabbitMQ, PostgreSQL, Redis), open-telemetry, grafana, prometheus-community, metrics-server.
+This adds repositories for: traefik, bitnami (PostgreSQL, Valkey), open-telemetry, grafana, prometheus-community, metrics-server.
 
 ### 3-5. Install core tools and the selected identity provider
 
@@ -501,7 +500,7 @@ For active development with file watching, build and run services directly inste
 ```bash
 # Checkout backend
 cd ../labs64.io-checkout/checkout-be
-just dev-up       # build JAR + docker compose up (PostgreSQL + RabbitMQ)
+just dev-up       # build JAR + docker compose up (PostgreSQL + Cerbos)
 just dev-watch    # auto-restart on code changes
 just dev-down     # stop
 

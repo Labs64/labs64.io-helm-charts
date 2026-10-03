@@ -201,12 +201,12 @@
       "description": "Images used by the check containers",
       "properties": {
         "busybox": {
-          "default": "busybox:1.36",
+          "default": "busybox:1.37.0",
           "title": "busybox",
           "type": "string"
         },
         "curl": {
-          "default": "curlimages/curl:8.10.1",
+          "default": "curlimages/curl:8.22.0",
           "title": "curl",
           "type": "string"
         },
@@ -217,7 +217,7 @@
           "type": "string"
         },
         "redis": {
-          "default": "redis:8-alpine",
+          "default": "valkey/valkey:9.1-alpine",
           "description": "redis-cli speaks RESP, so it works unchanged against Valkey (AWS ElastiCache, local dev).",
           "title": "redis",
           "type": "string"

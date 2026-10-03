@@ -63,7 +63,7 @@
                   "type": "string"
                 },
                 "rules": {
-                  "description": "One entry per field to redact: {field (dot/array path, e.g. extra.userEmail), action\n(mask | hash | drop)}",
+                  "description": "One entry per field to redact: {field (dot/array path, e.g. extra.userEmail), action\n(mask | hash | drop)}. \"hash\" is an HMAC-SHA256 and needs a secret key of at least 32\ncharacters in `secrets.data.AUDITFLOW_REDACTION_HASH_KEY` (or the module's external secret);\nwithout it the backend does not start. Never put the key into applicationYaml.",
                   "items": {
                     "additionalProperties": true,
                     "required": [],
@@ -318,8 +318,8 @@
               "additionalProperties": false,
               "properties": {
                 "max-in-flight-per-tenant": {
-                  "default": 4,
-                  "description": "Max concurrently-processed events per tenant on the consumer side (fairness layer 2)",
+                  "default": 32,
+                  "description": "Deliveries of one tenant processed at once per pod (fairness layer 2); over it a delivery waits briefly, then is deferred without spending a retry attempt. Half of the pod's delivery units (4 consumers x 16)",
                   "title": "max-in-flight-per-tenant",
                   "type": "integer"
                 }
