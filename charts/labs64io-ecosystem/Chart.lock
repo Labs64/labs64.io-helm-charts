@@ -7,7 +7,7 @@ dependencies:
   version: 0.8.4
 - name: checkout
   repository: file://../checkout
-  version: 0.11.4
+  version: 0.11.5
 - name: payment-gateway
   repository: file://../payment-gateway
   version: 0.10.4
