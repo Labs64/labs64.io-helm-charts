@@ -204,6 +204,16 @@ config:
       endpoint: "http://prometheus-kube-prometheus-prometheus:9090/api/v1/write"
       tls:
         insecure: true
+      # The exporter writes one `target_info` sample per ResourceMetrics, stamped with that
+      # resource's newest metric timestamp. The Python auto-instrumented services
+      # (auditflow-sink, auditflow-transformer) export several ResourceMetrics for the same
+      # resource, and the batch processor does not merge them, so one request carries
+      # target_info for the same series with out-of-order timestamps. Prometheus answers 400
+      # "out of order sample", which the exporter treats as permanent and logs as "Exporting
+      # failed. Dropping data" about once a minute. Nothing in the dashboards or rules joins
+      # on target_info, so it is switched off rather than worked around.
+      target_info:
+        enabled: false
       # NOTE: no sending_queue here. Unlike the OTLP exporters, prometheusremotewrite
       # rejects that key outright ("has invalid keys: sending_queue") and the collector
       # refuses to start; it keeps its own internal queue instead. Still true as of
