@@ -3,7 +3,8 @@
 #
 # Same credentials contract as the chart it replaces: `auth.username` / `auth.password` come from
 # the gitignored overrides/rabbitmq/values.secrets.local.yaml (see the .example next to it).
-# The password MUST match SPRING_RABBITMQ_PASSWORD in every app module's values.secrets.local.yaml.
+# The password MUST match SPRING_RABBITMQ_PASSWORD in overrides/auditflow/values.secrets.local.yaml
+# (AuditFlow is the only module with a broker dependency).
 image:
   repository: rabbitmq
   # Tracks the 4.3.x line (Amazon MQ's RabbitMQ 4.3) instead of the floating `4-management` tag,
