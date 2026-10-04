@@ -3,7 +3,7 @@
 # module's OpenAPI OAuth security and x-labs64.auth metadata, via the commons
 # OpenApiAuthPreprocessor.
 #
-# Outputs (committed, ArgoCD-synced — this is the RFC's provenance model):
+# Outputs (committed and shipped inside the charts — this is the RFC's provenance model):
 #   charts/authz-pdp/policies/*.yaml            resource policies (one edge + per-type domain)
 #   charts/authz-pdp/schemas/*.json             principal + per-type JSON schemas
 #   charts/api-gateway/routes/*.routes.yaml   per-module routing manifests
@@ -13,7 +13,11 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SOURCES="$REPO/policies/policy-sources.yaml"
 COMMONS_DIR="${COMMONS_DIR:-$REPO/../labs64.io-commons/auth-context-java}"
-CERBOS_IMAGE="ghcr.io/cerbos/cerbos:0.56.0"
+# Compile with the Cerbos version the authz-pdp chart deploys (its appVersion), so the
+# gate can never pass against a different PDP than the one that will load the policies.
+CERBOS_VERSION="$(sed -n -E 's/^appVersion:[[:space:]]*"?([^"[:space:]]+)"?.*/\1/p' "$REPO/charts/authz-pdp/Chart.yaml")"
+[ -n "$CERBOS_VERSION" ] || { echo "ERROR: no appVersion in charts/authz-pdp/Chart.yaml" >&2; exit 1; }
+CERBOS_IMAGE="ghcr.io/cerbos/cerbos:${CERBOS_VERSION}"
 
 CERBOS_POLICIES="$REPO/charts/authz-pdp/policies"
 CERBOS_SCHEMAS="$REPO/charts/authz-pdp/schemas"

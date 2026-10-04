@@ -1,6 +1,6 @@
 {{- /*
 Hand-rolled, not a chart dependency — see the `rabbitmq` entry comment in Chart.yaml. Modeled on
-the proven overrides/rabbitmq/rabbitmq.yaml (the local-dev standalone tool), using the official
+the local-dev chart (overrides/rabbitmq/chart), using the official
 image so this runs the same RabbitMQ 4.3 as Amazon MQ instead of a Bitnami-legacy image frozen
 at 4.1.3.
 */ -}}

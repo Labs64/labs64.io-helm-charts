@@ -2,13 +2,15 @@ name: Labs64.IO - Helm Charts - Chart Image Update
 
 # Receives a module release event and opens a PR pinning the released image
 # digests into the module's chart (values.yaml `digest:` + Chart.yaml
-# appVersion/version). This is the Helm end of the release pipeline: the module
-# repo publishes images and reports their digests, this repo decides what the
-# clusters run.
+# appVersion/version) and bumping the labs64io-ecosystem umbrella that vendors it.
+# This is the Helm end of the release pipeline: the module repo publishes images
+# and reports their digests, this repo decides what the clusters run.
 #
 # A PR rather than a direct push, deliberately — chart CI (lint, schema, docs,
 # authoring checklist, version-bump gate) must pass before a chart change can
-# reach master, and Argo CD syncs module charts straight from master.
+# reach master: every push to master that touches charts/** is published by
+# chart-releaser, and the published umbrella version is what labs64.io-devops
+# pins (CHART_VERSION, proposed there by Renovate).
 #
 # Trigger it either way:
 #   * repository_dispatch `module-released` — from the module's publish workflow
@@ -70,11 +72,11 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml pytest
 
-      - name: Install Helm 4
-        run: |
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/v4.1.0/scripts/get-helm-4
-          chmod 700 get_helm.sh
-          DESIRED_VERSION=v4.1.0 ./get_helm.sh
+      # Helm (and plugins) at the versions pinned in labs64.io-workspace/tool-versions.env —
+      # the same file the dev container installs from. Also exports HELM_DOCS_VERSION etc.
+      - uses: Labs64/labs64.io-workspace/.github/actions/setup-k8s-tools@v1
+        with:
+          helm-plugins: schema
       - name: Test the chart updater
         # A writer nobody tests silently corrupts charts. Same convention as the
         # other gates in this repo.
@@ -126,15 +128,11 @@ jobs:
         run: python3 scripts/update-chart-images.py --event-file event.json
 
       - name: Generate values schema
-        # Helm 4 verifies plugins by default, but Git sources cannot provide provenance.
-        # The plugin's signed release archive can replace this exception in a security follow-up.
-        run: |
-          helm plugin install https://github.com/dadav/helm-schema --verify=false
-          helm schema --chart-search-root ./charts --no-dependencies --append-newline
+        run: helm schema --chart-search-root ./charts --no-dependencies --append-newline
 
       - name: Generate docs
         run: |
-          docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" jnorwood/helm-docs:v1.14.2 --chart-search-root ./charts --log-level warning
+          docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" "jnorwood/helm-docs:v${HELM_DOCS_VERSION}" --chart-search-root ./charts --log-level warning
 
       - name: Update chart dependencies
         run: |
@@ -186,12 +184,13 @@ jobs:
 
             - `values.yaml` — image digests pinned to the exact artifacts the release published
             - `Chart.yaml` — `appVersion` set to the release, `version` bumped so chart-releaser republishes it
+            - `labs64io-ecosystem/Chart.yaml` — umbrella `version` bumped: it vendors this chart, and its version is the ecosystem release
 
             Deploying by digest rather than tag is what makes the rollout reproducible: neither Docker Hub
             nor GHCR can enforce tag immutability, so `:${{ steps.event.outputs.version }}` may resolve to
             different content later.
 
-            Merging this changes what Argo CD deploys — review the digests against the release before approving.
+            Merging this publishes a new umbrella chart version. Environments move to it when `CHART_VERSION` in labs64.io-devops is bumped (Renovate opens that PR) — review the digests against the release before approving.
           labels: |
             chart-update
             automated

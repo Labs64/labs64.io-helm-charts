@@ -6,10 +6,11 @@ podAnnotations:
 
 image:
   repository: otel/opentelemetry-collector-contrib
-  # Pinned to the appVersion of the collector chart pinned in helmfile.yaml.gotmpl and the
-  # justfile (OTEL_COLLECTOR_CHART_VERSION 0.175.0 -> appVersion 0.161.0), so the image and the
-  # chart's config schema always move together. `latest` let collector behaviour shift
-  # under an unchanged chart on every pull. Bump all three numbers in the same commit.
+  # Pinned to the appVersion of the collector chart pinned in helmfile.yaml.gotmpl
+  # (opentelemetry-collector 0.175.0 -> appVersion 0.161.0), so the image and the chart's
+  # config schema always move together. `latest` let collector behaviour shift under an
+  # unchanged chart on every pull. Bump both numbers in the same commit — Renovate only
+  # proposes the chart, and deliberately does not touch this tag on its own.
   tag: 0.161.0
 
 presets:

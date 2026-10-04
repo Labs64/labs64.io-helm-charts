@@ -100,7 +100,7 @@ sequenceDiagram
 
 ### 2. AWS QA / Staging / Prod Environment (Terraform + umbrella chart)
 
-Provisioned and installed from [`labs64.io-devops`](https://github.com/Labs64/labs64.io-devops) — `Helmfile` is **not** used here. GitOps (ArgoCD) will take over the install step later.
+Provisioned and installed from [`labs64.io-devops`](https://github.com/Labs64/labs64.io-devops) — `Helmfile` is **not** used here. The umbrella chart version each environment runs is the `CHART_VERSION` pinned in that repository.
 
 - **Infrastructure**: Terraform — EKS, RDS PostgreSQL and ElastiCache Valkey per module, Amazon MQ (RabbitMQ, AMQPS only), S3.
 - **Install**: `just modules-install <env>` in `labs64.io-devops` installs `labs64io-ecosystem` with [`values.aws.yaml`](charts/labs64io-ecosystem/values.aws.yaml) (bundled infra off, per-module hosts, TLS to the managed services, Traefik + the AuditFlow route on a `ClusterIP` gateway behind devops' Terraform-owned ALB + WAF) plus values rendered from Terraform outputs.
@@ -150,10 +150,11 @@ Modules need capabilities, not specific tools:
 | payment-gateway | PostgreSQL (db `payment_gateway`); Redis; reaches AuditFlow over HTTP |
 | gateway stack | any OIDC provider supporting client_credentials; scope/role claims are configurable via `TOKEN_SCOPES_CLAIM_PATHS` (default: `scope,realm_access.roles,resource_access.{audience}.roles`) |
 
-Reference versions (the shared local toolset installed by `just install-tools` /
-`helmfile.yaml.gotmpl`): RabbitMQ chart 16.0.14, PostgreSQL chart 18.7.11, Redis chart
-27.0.13. For local development, images must be built and pushed to the local registry
-(`localhost:5005`) — see DEVELOPERS.md.
+Reference versions: the shared local toolset (`just install-tools`) runs exactly the chart
+versions pinned in `helmfile.yaml.gotmpl` — the single place they are written; print one with
+`just chart-version postgresql` (or `redis`, `traefik`, …). RabbitMQ is the official image via
+`overrides/rabbitmq/chart`. For local development, images must be built and pushed to the local
+registry (`localhost:5005`) — see DEVELOPERS.md.
 
 ### Preflight: verify your infrastructure first
 

@@ -1,26 +1,23 @@
+# CLI tool versions (HELM_DOCS_VERSION, HELM_DIFF_VERSION, HELM_SCHEMA_VERSION) come from
+# the workspace's single tool-versions.env. In CI the setup-k8s-tools action exports the
+# same variables; a missing file is not an error, the recipes that need a value say so.
+set dotenv-path := "../labs64.io-workspace/tool-versions.env"
+
 ENV := "local"
 NAMESPACE_LABS64IO := "labs64io"
 NAMESPACE_KUBE_SYSTEM := "kube-system"
 NAMESPACE_MONITORING := "monitoring"
 NAMESPACE_TOOLS := "tools"
-HELM_DOCS_VERSION := "v1.14.2"
-TRAEFIK_CHART_VERSION := "41.6.1"
-TRAEFIK_CRDS_CHART_VERSION := "1.18.0"
-GATEWAY_API_VERSION := "v1.6.2"
-METRICS_SERVER_CHART_VERSION := "3.14.0"
-POSTGRESQL_CHART_VERSION := "18.12.4"
-REDIS_CHART_VERSION := "27.0.13"
-OTEL_OPERATOR_CHART_VERSION := "0.124.1"
-OTEL_COLLECTOR_CHART_VERSION := "0.175.0"
-PROMETHEUS_STACK_CHART_VERSION := "91.9.0"
-TEMPO_CHART_VERSION := "3.1.0"
-GRAFANA_CHART_VERSION := "13.2.7"
-LOKI_CHART_VERSION := "18.13.7"
 
-LABS64IO_APPS := "authz-pdp api-gateway api-docs auditflow checkout payment-gateway customer-portal"
-# Apps carrying runtime OTel instrumentation (Java agent / opentelemetry-instrument).
-# `up-otel` enables observability on these once the monitoring stack is present.
-OBSERVABILITY_APPS := "api-gateway auditflow payment-gateway"
+# Chart versions, repositories, release names and value layering all live in
+# helmfile.yaml.gotmpl and nowhere else — recipes below read them from there
+# (`just chart-version <release>`). The only versions this file owns are the two CRD
+# sets applied outside Helm (see install-crds). labs64.io-devops applies the same
+# Gateway API version on AWS; `just check-pins` (labs64.io-workspace) keeps them equal.
+# renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
+GATEWAY_API_VERSION := "v1.6.2"
+# renovate: datasource=helm depName=traefik-crds registryUrl=https://traefik.github.io/charts
+TRAEFIK_CRDS_CHART_VERSION := "1.18.0"
 
 # List available commands
 default:
@@ -64,17 +61,44 @@ docker-system-prune:
 # enable OTel instrumentation on instrumented module apps (requires the monitoring
 # stack — the collector DaemonSet must be running so OTLP export has a target).
 # Kept off in the base `up` profile so a monitoring-less cluster shows no export errors.
-# Once the collector exists, `install-app` re-enables observability automatically on
-# every (re)install, so this recipe is only needed for the initial up-otel flip.
+# Which apps are instrumented is declared in helmfile.yaml.gotmpl (label
+# `observability: "true"`); every apply below passes the same switch, so neither
+# `install-app` nor `install-all-apps` can silently drop telemetry afterwards.
 enable-observability:
+    helmfile -e {{ENV}} --state-values-set observability.enabled=true apply -l observability=true
+
+# Helmfile state flag that follows the monitoring stack: observability is on exactly when
+# the OTel collector is running.
+[private]
+_observability-args:
+    #!/usr/bin/env bash
+    if kubectl get daemonset opentelemetry-collector-agent -n {{NAMESPACE_MONITORING}} >/dev/null 2>&1; then
+        echo "--state-values-set observability.enabled=true"
+    fi
+
+# print the chart version helmfile.yaml.gotmpl pins for a release, e.g. `just chart-version prometheus`
+chart-version release:
     #!/usr/bin/env bash
     set -euo pipefail
-    for app in {{OBSERVABILITY_APPS}}; do
-        echo "=== Enabling observability: $app ==="
-        helm upgrade labs64io-"$app" ./charts/"$app" \
-          --namespace {{NAMESPACE_LABS64IO}} --reuse-values \
-          --set observability.enabled=true
-    done
+    version="$(helmfile -e {{ENV}} list --output json 2>/dev/null \
+        | jq -r --arg name "{{release}}" '.[] | select(.name == $name) | .version')"
+    if [ -z "$version" ] || [ "$version" = "null" ]; then
+        echo "helmfile.yaml.gotmpl pins no chart version for release '{{release}}'" >&2
+        exit 1
+    fi
+    echo "$version"
+
+# uninstall every release of a helmfile layer (infra | identity | monitoring | apps),
+# whether or not the current overrides still select it
+[private]
+_uninstall-layer layer:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    helmfile -e {{ENV}} list --output json 2>/dev/null \
+        | jq -r --arg layer "layer:{{layer}}" '.[] | select(.labels | split(",") | index($layer)) | "\(.name) \(.namespace)"' \
+        | while read -r name namespace; do
+            helm uninstall "$name" --namespace "$namespace" 2>/dev/null || true
+        done
 
 # automatically scaffold missing local secrets from their .example templates
 generate-secrets:
@@ -92,39 +116,19 @@ generate-secrets:
 
 # Install all Labs64.IO apps
 install-all-apps:
-    helmfile -e {{ENV}} apply -l layer=apps
+    helmfile -e {{ENV}} $(just _observability-args) apply -l layer=apps
 
 # Uninstall all Labs64.IO apps
-uninstall-all-apps:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    for app in {{LABS64IO_APPS}}; do
-        just uninstall-app "$app"
-    done
+uninstall-all-apps: (_uninstall-layer "apps")
 
-# Install a specific Labs64.IO application
+# Install a specific Labs64.IO application — the same helmfile release `install-all-apps`
+# applies (chart values, global values, per-env override, secrets, identity provider),
+# optionally with one more values file layered on top
 install-app app extra_values="":
     #!/usr/bin/env bash
     set -euo pipefail
     echo "=== Installing Labs64.IO App: {{app}} ==="
-    helm dependencies update ./charts/{{app}}
-    ARGS=(
-      "--namespace" "{{NAMESPACE_LABS64IO}}"
-      "--create-namespace"
-      "-f" "./charts/{{app}}/values.yaml"
-      "-f" "./overrides/global-values.yaml"
-      "-f" "./overrides/{{app}}/values.{{ENV}}.yaml"
-    )
-    if [ "{{app}}" = "api-gateway" ]; then
-      # Same provider-specific OIDC file helmfile layers on (see helmfile.yaml.gotmpl).
-      IDP=$(just identity-provider)
-      echo "Identity provider: $IDP"
-      ARGS+=("-f" "./overrides/api-gateway/oidc-${IDP}.{{ENV}}.yaml")
-    fi
-    if [ -f "./overrides/{{app}}/values.secrets.{{ENV}}.yaml" ]; then
-      echo "Using secrets override: overrides/{{app}}/values.secrets.{{ENV}}.yaml"
-      ARGS+=("-f" "./overrides/{{app}}/values.secrets.{{ENV}}.yaml")
-    fi
+    ARGS=()
     extra_values="{{extra_values}}"
     if [ -n "$extra_values" ]; then
       if [ ! -f "$extra_values" ]; then
@@ -132,17 +136,14 @@ install-app app extra_values="":
         exit 1
       fi
       echo "Using additional override: $extra_values"
-      ARGS+=("-f" "$extra_values")
+      ARGS+=("--values" "$extra_values")
     fi
-    # Observability follows the monitoring stack declaratively: if the OTel
-    # collector is running and this app is instrumented, enable it on every
-    # (re)install so a reinstall can never silently drop telemetry.
-    if [[ " {{OBSERVABILITY_APPS}} " == *" {{app}} "* ]] \
-       && kubectl get daemonset opentelemetry-collector-agent -n {{NAMESPACE_MONITORING}} >/dev/null 2>&1; then
-      echo "Monitoring stack detected — enabling observability for {{app}}"
-      ARGS+=("--set" "observability.enabled=true")
+    STATE_ARGS=()
+    if [ "{{app}}" = "checkout" ]; then
+      # Not GA, so not in the default set (helmfile.yaml.gotmpl); asking for it by name installs it.
+      STATE_ARGS+=("--state-values-set" "installCheckout=true")
     fi
-    helm upgrade --install labs64io-{{app}} ./charts/{{app}} "${ARGS[@]}" --force-conflicts
+    helmfile -e {{ENV}} $(just _observability-args) "${STATE_ARGS[@]}" apply -l name=labs64io-{{app}} "${ARGS[@]}"
 
 # Point only the existing local Payment Gateway deployment at the host-side PSP stub.
 # The extra values file deep-merges provider-owned Spring configuration and rolls the PG pod.
@@ -197,8 +198,11 @@ install-tools: install-crds
     just migrate-legacy-mock-oidc
     helmfile -e {{ENV}} apply -l layer=identity
 
-# Uninstall all core tools
-uninstall-tools: uninstall-tool-keycloak uninstall-tool-traefik uninstall-tool-external-secrets uninstall-tool-mock-oidc uninstall-tool-rabbitmq uninstall-tool-postgresql uninstall-tool-redis
+# Uninstall all core tools (identity providers included, whichever is selected)
+uninstall-tools: (_uninstall-layer "identity")
+    kubectl delete -f overrides/eso/cluster-secret-store.yaml --ignore-not-found
+    just _uninstall-layer infra
+    kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
 
 # Install the Gateway API (standard channel) + Traefik CRDs before the `traefik` Helm
 # release (Helmfile's release schema has no per-release skip-crds equivalent, and Helm
@@ -214,58 +218,27 @@ install-crds:
     echo "Installing Traefik CRDs..."
     helm template traefik-crds traefik/traefik-crds --version {{TRAEFIK_CRDS_CHART_VERSION}} --namespace {{NAMESPACE_TOOLS}} | kubectl apply --server-side -f -
 
-# install Traefik standalone (bypasses helmfile — for single-tool workflows only;
-# `install-tools` uses helmfile for the actual release)
+# (Re)install one core or monitoring tool exactly as `install-tools` / `install-monitoring`
+# would — same chart version, same values, straight from helmfile.yaml.gotmpl.
+# `just install-tool postgresql`, `just install-tool redis`, `just install-tool grafana`, …
+# (names: `helmfile -e local list`). Traefik and the monitoring CRD-carrying charts
+# have prerequisites: use install-tool-traefik / install-monitoring for a fresh cluster.
+install-tool name:
+    helmfile -e {{ENV}} apply -l name={{name}}
+
+# uninstall one core or monitoring tool by its helmfile release name
+uninstall-tool name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    namespace="$(helmfile -e {{ENV}} list --output json 2>/dev/null \
+        | jq -r --arg name "{{name}}" '.[] | select(.name == $name) | .namespace')"
+    [ -n "$namespace" ] || { echo "no helmfile release named '{{name}}'" >&2; exit 1; }
+    helm uninstall "{{name}}" --namespace "$namespace" || true
+
+# (re)install Traefik: CRDs first, then the helmfile release without its bundled CRDs
 install-tool-traefik: install-crds
-    helm upgrade --install traefik traefik/traefik --version {{TRAEFIK_CHART_VERSION}} -f overrides/traefik/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait --skip-crds
+    helmfile -e {{ENV}} apply -l name=traefik --skip-crds
     kubectl apply -f overrides/traefik/dashboard-httproute.yaml
-
-# uninstall Traefik
-uninstall-tool-traefik:
-    helm uninstall traefik --namespace {{NAMESPACE_TOOLS}} || true
-
-# uninstall External Secrets Operator + the local ClusterSecretStore/RBAC it serves
-uninstall-tool-external-secrets:
-    kubectl delete -f overrides/eso/cluster-secret-store.yaml --ignore-not-found
-    helm uninstall external-secrets --namespace {{NAMESPACE_TOOLS}} || true
-
-# install RabbitMQ (official image; standalone raw manifest, bypasses helmfile)
-install-tool-rabbitmq:
-	@echo "Installing RabbitMQ (official image)..."
-	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq-secret.yaml
-	kubectl apply -n {{NAMESPACE_TOOLS}} -f overrides/rabbitmq/rabbitmq.yaml
-	@echo "Waiting for RabbitMQ to be ready..."
-	kubectl wait --namespace {{NAMESPACE_TOOLS}} --for=condition=ready pod -l app=rabbitmq --timeout=120s
-	@echo "Username      : labs64"
-	@echo "Credentials   : from overrides/rabbitmq/rabbitmq-secret.yaml (rabbitmq-secret)"
-
-# uninstall RabbitMQ
-uninstall-tool-rabbitmq:
-	kubectl delete -f overrides/rabbitmq/rabbitmq.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-	kubectl delete -f overrides/rabbitmq/rabbitmq-secret.yaml --namespace {{NAMESPACE_TOOLS}} --ignore-not-found || true
-	kubectl delete pvc -l app=rabbitmq --namespace {{NAMESPACE_TOOLS}} --ignore-not-found
-
-# install PostgreSQL
-install-tool-postgresql:
-    helm upgrade --install postgresql bitnami/postgresql \
-      --version {{POSTGRESQL_CHART_VERSION}} \
-      -f overrides/postgresql/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
-    @echo "PostgreSQL pod(s):" && kubectl get pods --namespace {{NAMESPACE_TOOLS}} -l app.kubernetes.io/instance=postgresql
-    @echo "postgres password : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath='{.data.postgres-password}' | base64 -d 2>/dev/null || kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath='{.data.postgresql-password}' | base64 -d)"
-    @echo "user password     : $(kubectl get secret --namespace {{NAMESPACE_TOOLS}} postgresql -o jsonpath='{.data.password}' | base64 -d 2>/dev/null || true)"
-
-# uninstall PostgreSQL
-uninstall-tool-postgresql:
-    helm uninstall postgresql --namespace {{NAMESPACE_TOOLS}} || true
-
-# install Redis
-install-tool-redis:
-    helm upgrade --install redis bitnami/redis --version {{REDIS_CHART_VERSION}} -f overrides/redis/values.{{ENV}}.yaml --namespace {{NAMESPACE_TOOLS}} --create-namespace --wait
-
-# uninstall Redis
-uninstall-tool-redis:
-    helm uninstall redis --namespace {{NAMESPACE_TOOLS}} || true
 
 # print the identity provider selected in overrides/helmfile/values.<env>.yaml
 identity-provider:
@@ -306,13 +279,6 @@ install-tool-keycloak:
     fi
     helmfile -e {{ENV}} apply -l layer=identity
 
-# Uninstall local identity providers regardless of the current override state.
-uninstall-tool-mock-oidc:
-    helm uninstall mock-oidc --namespace {{NAMESPACE_TOOLS}} || true
-
-uninstall-tool-keycloak:
-    helm uninstall keycloak --namespace {{NAMESPACE_TOOLS}} || true
-
 
 ## 📊 Monitoring Tools ##
 
@@ -329,22 +295,10 @@ install-monitoring: install-monitoring-crds
 # "no matches for kind Prometheus/PrometheusRule/ServiceMonitor in version monitoring.coreos.com/v1"
 # on a fresh cluster. Mirrors the Traefik/Gateway API CRD pre-install in `install-crds`.
 install-monitoring-crds:
-    helm show crds prometheus-community/kube-prometheus-stack --version {{PROMETHEUS_STACK_CHART_VERSION}} | kubectl apply --server-side -f -
+    helm show crds prometheus-community/kube-prometheus-stack --version "$(just chart-version prometheus)" | kubectl apply --server-side -f -
 
 # Uninstall all monitoring tools
-uninstall-monitoring: uninstall-tool-grafana uninstall-tool-tempo uninstall-tool-loki uninstall-tool-prometheus uninstall-tool-opentelemetry uninstall-tool-metrics-server
-
-# install Metrics Server
-install-tool-metrics-server:
-    helm upgrade --install metrics-server metrics-server/metrics-server \
-      --version {{METRICS_SERVER_CHART_VERSION}} \
-      -f overrides/metrics-server/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_KUBE_SYSTEM}} \
-      --set args="{--kubelet-insecure-tls}" || echo "metrics-server install failed (possibly pre-installed), continuing"
-
-# uninstall Metrics Server
-uninstall-tool-metrics-server:
-    helm uninstall metrics-server --namespace {{NAMESPACE_KUBE_SYSTEM}} || true
+uninstall-monitoring: (_uninstall-layer "monitoring")
 
 # Validate the rendered OTel Collector config against the pinned collector binary.
 #
@@ -367,7 +321,7 @@ validate-otel-config:
     echo "=== validating against $IMAGE ==="
 
     helm template opentelemetry-collector open-telemetry/opentelemetry-collector \
-      --version {{OTEL_COLLECTOR_CHART_VERSION}} \
+      --version "$(just chart-version opentelemetry-collector)" \
       -f "$VALUES" --namespace {{NAMESPACE_MONITORING}} > "$WORK/rendered.yaml"
 
     # Pull the collector config out of the ConfigMap's `relay` key.
@@ -408,68 +362,16 @@ validate-otel-config:
         exit 1
     fi
 
-# install Open Telemetry
+# (re)install the OpenTelemetry operator + collector, validating the collector config first
 install-tool-opentelemetry: validate-otel-config
-    helm upgrade --install opentelemetry-operator open-telemetry/opentelemetry-operator \
-      --version {{OTEL_OPERATOR_CHART_VERSION}} \
-      -f overrides/opentelemetry/values-operator.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
-    helm upgrade --install opentelemetry-collector open-telemetry/opentelemetry-collector \
-      --version {{OTEL_COLLECTOR_CHART_VERSION}} \
-      -f overrides/opentelemetry/values-collector.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace --wait
+    helmfile -e {{ENV}} apply -l name=opentelemetry-operator
+    helmfile -e {{ENV}} apply -l name=opentelemetry-collector
 
-# uninstall Open Telemetry
-uninstall-tool-opentelemetry:
-    helm uninstall opentelemetry-operator --namespace {{NAMESPACE_MONITORING}} || true
-    helm uninstall opentelemetry-collector --namespace {{NAMESPACE_MONITORING}} || true
-
-# install Prometheus
-install-tool-prometheus:
-    helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
-      --version {{PROMETHEUS_STACK_CHART_VERSION}} \
-      -f overrides/prometheus/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace
-    kubectl --namespace {{NAMESPACE_MONITORING}} get pods,svc -l "release=prometheus"
-
-# uninstall Prometheus
-uninstall-tool-prometheus:
-    helm uninstall prometheus --namespace {{NAMESPACE_MONITORING}} || true
-
-# install Loki
-install-tool-loki:
-    helm upgrade --install loki grafana-community/loki \
-      --version {{LOKI_CHART_VERSION}} \
-      -f overrides/loki/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall Loki
-uninstall-tool-loki:
-    helm uninstall loki --namespace {{NAMESPACE_MONITORING}} || true
-
-# install Tempo
-install-tool-tempo:
-    helm upgrade --install tempo grafana-community/tempo \
-      --version {{TEMPO_CHART_VERSION}} \
-      -f overrides/tempo/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace
-
-# uninstall Tempo
-uninstall-tool-tempo:
-    helm uninstall tempo --namespace {{NAMESPACE_MONITORING}} || true
-
-# install Grafana
+# (re)install Grafana with its route and dashboards
 install-tool-grafana:
-    helm upgrade --install grafana grafana-community/grafana \
-      --version {{GRAFANA_CHART_VERSION}} \
-      -f overrides/grafana/values.{{ENV}}.yaml \
-      --namespace {{NAMESPACE_MONITORING}} --create-namespace
+    helmfile -e {{ENV}} apply -l name=grafana
     kubectl apply -f overrides/grafana/grafana-httproute.yaml
     kubectl apply -f overrides/grafana/grafana-dashboards.yaml
-
-# uninstall Grafana
-uninstall-tool-grafana:
-    helm uninstall grafana --namespace {{NAMESPACE_MONITORING}} || true
 
 # retrieve Grafana password
 grafana-password:
@@ -478,19 +380,26 @@ grafana-password:
 
 ## 🏗️ Build & CodeGen ##
 
-# Install required Helm plugins
+# Install required Helm plugins (versions: labs64.io-workspace/tool-versions.env)
 helm-tools:
-    @helm plugin install --verify=false https://github.com/databus23/helm-diff --version v3.15.11 2>/dev/null || true
-    @helm plugin install --verify=false https://github.com/dadav/helm-schema 2>/dev/null || true
-    @echo "Installed Helm plugins:"
-    @helm plugin list
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${HELM_DIFF_VERSION:?not set — check out labs64.io-workspace next to this repo (tool-versions.env)}"
+    : "${HELM_SCHEMA_VERSION:?not set — check out labs64.io-workspace next to this repo (tool-versions.env)}"
+    helm plugin install --verify=false https://github.com/databus23/helm-diff --version "v${HELM_DIFF_VERSION}" 2>/dev/null || true
+    helm plugin install --verify=false https://github.com/dadav/helm-schema --version "${HELM_SCHEMA_VERSION}" 2>/dev/null || true
+    echo "Installed Helm plugins:"
+    helm plugin list
 
 # Generate Helm chart documentation (README.md) for all charts
 generate-docu:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${HELM_DOCS_VERSION:?not set — check out labs64.io-workspace next to this repo (tool-versions.env)}"
     docker run --rm \
         --volume "$(pwd):/helm-docs" \
         --user "$(id -u):$(id -g)" \
-        jnorwood/helm-docs:{{ HELM_DOCS_VERSION }} \
+        "jnorwood/helm-docs:v${HELM_DOCS_VERSION}" \
         --chart-search-root ./charts \
         --log-level warning
 
@@ -527,37 +436,30 @@ generate-all: generate-docu generate-schema
 build-policies:
     ./policies/build-authz-policies.sh
 
-# add external helm repositories
-repo-add:
-    helm repo add labs64io https://labs64.github.io/labs64.io-helm-charts
-    helm repo add traefik https://traefik.github.io/charts
-    helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
-    helm repo add bitnami https://charts.bitnami.com/bitnami
-    helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
-    helm repo add grafana-community https://grafana-community.github.io/helm-charts
-    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-
-# update helm repositories
+# add + refresh exactly the helm repositories helmfile.yaml.gotmpl declares
 #
-# Named explicitly rather than a bare `helm repo update`, which updates EVERY repo in the
-# caller's local helm config and fails the whole command if any one is unreachable. A
-# stale external-secrets entry left over in a developer's config was enough to abort
-# `just up` even though repo-add never declared it and nothing here pulls from it.
-repo-update: repo-add
-    helm repo update \
-      labs64io traefik metrics-server bitnami \
-      open-telemetry grafana-community prometheus-community
+# Deliberately not a bare `helm repo update`, which updates EVERY repo in the caller's
+# local helm config and fails the whole command if any one is unreachable: a stale
+# entry left over in a developer's config was enough to abort `just up`. `helmfile repos`
+# runs `helm repo add --force-update` for the declared repositories only.
+repo-update:
+    helmfile -e {{ENV}} repos
+
+# kept for existing habits/scripts — same as repo-update
+repo-add: repo-update
 
 
 ## 🧪 Testing & Debugging ##
 
-# lint all application charts
+# lint all application charts (the charts behind helmfile's layer=apps releases)
 lint-all:
     #!/usr/bin/env bash
     set -euo pipefail
-    for app in {{LABS64IO_APPS}}; do
-        helm lint ./charts/"$app"
-    done
+    helmfile -e {{ENV}} list --output json 2>/dev/null \
+        | jq -r '.[] | select(.labels | split(",") | index("layer:apps")) | .chart' \
+        | while read -r chart; do
+            helm lint "$chart"
+        done
 
 # render every helmfile release without a cluster, failing on any template error
 #
@@ -609,20 +511,29 @@ update-chart-images chart version *ARGS:
 test-update-chart-images:
     python3 -m pytest scripts/test_update_chart_images.py -q
 
-# run helm template for an application locally to inspect output
-template app:
-    helm template labs64io-{{app}} ./charts/{{app}} \
-      --namespace {{NAMESPACE_LABS64IO}} \
-      -f ./charts/{{app}}/values.yaml \
-      -f ./overrides/{{app}}/values.{{ENV}}.yaml
+# bump a chart's version AND every chart that vendors it (chart-libs consumers, the
+# labs64io-ecosystem umbrella) — chart CI rejects a change without these bumps.
+#   just bump auditflow          # patch
+#   just bump chart-libs minor
+bump chart part="patch":
+    python3 scripts/bump-chart-version.py {{chart}} {{part}}
 
-# run helm diff for an application (requires helm-diff plugin)
+# verify every changed chart (and every chart vendoring it) is bumped against a base ref —
+# the same gate chart CI runs
+check-bumps base="origin/master":
+    python3 scripts/check-chart-version-bumps.py --base {{base}}
+
+# test the version-bump gate itself
+test-check-bumps:
+    python3 -m pytest scripts/test_check_chart_version_bumps.py -q
+
+# render an application exactly as helmfile would install it (all value layers)
+template app:
+    helmfile -e {{ENV}} $(just _observability-args) template -l name=labs64io-{{app}}
+
+# diff an application against the cluster, as helmfile would apply it (requires helm-diff plugin)
 diff app:
-    helm diff upgrade labs64io-{{app}} ./charts/{{app}} \
-      --namespace {{NAMESPACE_LABS64IO}} \
-      --allow-unreleased \
-      -f ./charts/{{app}}/values.yaml \
-      -f ./overrides/{{app}}/values.{{ENV}}.yaml
+    helmfile -e {{ENV}} $(just _observability-args) diff -l name=labs64io-{{app}}
 
 # test an application using helm test
 test app:

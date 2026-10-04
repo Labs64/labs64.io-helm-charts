@@ -2,7 +2,6 @@
 charts/**/charts/
 *.tgz
 values.secrets.*.yaml
-overrides/rabbitmq/rabbitmq-secret.yaml
 .cr-*
 /ct_*
 

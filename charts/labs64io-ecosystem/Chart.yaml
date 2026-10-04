@@ -55,7 +55,7 @@ dependencies:
   # bitnamilegacy/rabbitmq image, frozen at 4.1.3 with no path to a newer version (verified:
   # neither bitnami/rabbitmq nor bitnamilegacy/rabbitmq publish anything newer). A hand-rolled
   # StatefulSet on the official `rabbitmq` image gets RabbitMQ 4.3 — matching Amazon MQ
-  # (labs64.io-devops) and the local-dev standalone tool (overrides/rabbitmq/rabbitmq.yaml).
+  # (labs64.io-devops) and the local-dev chart (overrides/rabbitmq/chart).
   # Valkey, aliased as "redis" so `.Values.redis`, the Secret key names
   # (SPRING_DATA_REDIS_*) and the rendered object names (fullnameOverride below) don't
   # change. AWS ElastiCache (labs64.io-devops) runs Valkey, not Redis OSS — this keeps

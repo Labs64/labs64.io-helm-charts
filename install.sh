@@ -22,9 +22,14 @@ NS_GATEWAY="${LABS64_GATEWAY_NAMESPACE:-tools}"
 STATE_CM="labs64io-installer-state"
 WORKDIR="${LABS64_WORKDIR:-./labs64io-install}"
 LOGFILE="$WORKDIR/install.log"
+# Must match GATEWAY_API_VERSION in this repo's justfile (`just check-pins`, labs64.io-workspace).
+# renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
 GATEWAY_API_VERSION="${LABS64_GATEWAY_API_VERSION:-v1.6.2}"
-# Published chart version to install; recorded so a re-run reproduces the same release.
-CHART_VERSION="${LABS64_CHART_VERSION:-0.19.5}"
+# Published chart version to install. Unset, it is resolved at install time: the version
+# an earlier run recorded for this cluster (so a re-run reproduces the same release), or
+# else the latest published one. There is deliberately no hard-coded default — one would
+# go stale with every chart release. Set LABS64_CHART_VERSION to pin or to upgrade.
+CHART_VERSION="${LABS64_CHART_VERSION:-}"
 # Chart to install. Defaults to the local directory if it exists, otherwise the published one.
 # Point it at a local directory to exercise chart changes that are not published yet ("./charts/labs64io-ecosystem").
 if [ -d "./charts/labs64io-ecosystem" ] && [ -z "${LABS64_CHART:-}" ]; then
@@ -63,7 +68,8 @@ Environment:
   LABS64_OIDC_DISCOVERY_URL   issuer discovery URL (required by the byo profile)
   LABS64_CHART                chart to install (default: labs64io/labs64io-ecosystem);
                               set to a local path to test unpublished chart changes
-  LABS64_CHART_VERSION        published chart version to install (default: 0.19.5);
+  LABS64_CHART_VERSION        published chart version to install (default: the version
+                              already installed here, else the latest published);
                               ignored for a local chart path
   LABS64_YES=1                accept every default without asking
 USAGE
@@ -809,13 +815,24 @@ EOF
     *)
       helm repo add "$REPO_ALIAS" "$REPO_URL" >/dev/null 2>&1 || true
       helm repo update "$REPO_ALIAS" >/dev/null 2>&1 || helm repo update >/dev/null 2>&1
+      if [ -z "$CHART_VERSION" ]; then
+        CHART_VERSION=$(state_get resolvedVersion)
+        [ -z "$CHART_VERSION" ] || log "Re-using chart version $CHART_VERSION recorded for this installation (set LABS64_CHART_VERSION to upgrade)."
+      fi
+      if [ -z "$CHART_VERSION" ]; then
+        # `helm search repo` lists the newest stable version of each chart first.
+        CHART_VERSION=$(helm search repo "$REPO_ALIAS/labs64io-ecosystem" -o json 2>/dev/null \
+          | tr ',' '\n' | sed -n 's/.*"version":"\([^"]*\)".*/\1/p' | head -1)
+        [ -n "$CHART_VERSION" ] || die "Could not resolve the latest $REPO_ALIAS/labs64io-ecosystem version from $REPO_URL. Set LABS64_CHART_VERSION."
+        log "Latest published chart version: $CHART_VERSION"
+      fi
       chart_args=(--version "$CHART_VERSION")
       ;;
   esac
 
-  # Published charts are pinned to CHART_VERSION; what Helm actually installed is
-  # still recorded below so Status can report drift and Uninstall knows what it
-  # installed.
+  # Published charts are installed at CHART_VERSION (explicit, recorded or latest — see
+  # above); what Helm actually installed is recorded below so a re-run reproduces it,
+  # Status can report drift and Uninstall knows what it installed.
   log "Installing ${CHART}${chart_args[*]:+ ${chart_args[*]}} (this takes a few minutes on first run)..."
   
   local watcher_pid=""

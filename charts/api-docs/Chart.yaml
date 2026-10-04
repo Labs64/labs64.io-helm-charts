@@ -2,6 +2,8 @@ apiVersion: v2
 name: api-docs
 type: application
 version: 0.9.4
+# The swagger-ui image tag (values.yaml image.tag defaults to it).
+# renovate: datasource=docker depName=swaggerapi/swagger-ui
 appVersion: v5.33.1
 description: "Labs64.IO :: Swagger UI"
 icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png

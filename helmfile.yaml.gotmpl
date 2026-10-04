@@ -41,8 +41,8 @@ repositories:
 environments:
   # CI targets this same "local" profile (a self-hosted runner attached to its own
   # k3d cluster) — see labs64.io-tests' regression-suite workflow. A distinct
-  # "staging"/"prod" environment belongs to the ArgoCD/Terraform GitOps path
-  # (labs64.io-devops), not Helmfile; add one here only once real per-app
+  # "staging"/"prod" environment is installed from labs64.io-devops (Terraform +
+  # `just modules-install`, the umbrella chart), not Helmfile; add one here only once real per-app
   # values.<env>.yaml files exist for it.
   local:
     values:
@@ -51,6 +51,11 @@ environments:
 
 ---
 {{ $idp := .Values | get "identityProvider" "mock" }}
+{{- /* Telemetry switch for the instrumented apps (label `observability: "true"` below).
+       Off by default; the justfile passes `--state-values-set observability.enabled=true`
+       whenever the OTel collector is running, on EVERY apply — so reinstalling an app can
+       never silently drop its telemetry. */}}
+{{ $observability := .Values | get "observability.enabled" false }}
 {{ if not (has $idp (list "mock" "keycloak" "external")) }}
 {{ fail (printf "identityProvider must be mock, keycloak or external (got %q)" $idp) }}
 {{ end }}
@@ -70,8 +75,8 @@ releases:
     namespace: tools
     # Same chart as the classic repo, served over OCI from ghcr.io.
     # Latest release; both repos migrated to external-secrets.io/v1 only (chart-libs since 0.7.0,
-    # overrides/eso to match). Keep in lockstep with ESO_CHART_VERSION in labs64.io-devops (the
-    # AWS path).
+    # overrides/eso to match). Must equal ESO_CHART_VERSION in labs64.io-devops (the AWS path);
+    # `just check-pins` (labs64.io-workspace) fails if they differ.
     chart: oci://ghcr.io/external-secrets/charts/external-secrets
     version: 2.11.0
     set:
@@ -240,8 +245,14 @@ releases:
       - ./overrides/api-gateway/values.{{ .Environment.Name }}.yaml
       # OIDC discovery/issuer/audience + egress for the selected identity provider.
       - ./overrides/api-gateway/oidc-{{ $idp }}.{{ .Environment.Name }}.yaml
+    {{- if $observability }}
+    set:
+      - name: observability.enabled
+        value: true
+    {{- end }}
     labels:
       layer: apps
+      observability: "true"
     needs:
       - tools/traefik
 
@@ -270,8 +281,14 @@ releases:
       {{- if isFile (printf "./overrides/auditflow/values.secrets.%s.yaml" .Environment.Name) }}
       - ./overrides/auditflow/values.secrets.{{ .Environment.Name }}.yaml
       {{- end }}
+    {{- if $observability }}
+    set:
+      - name: observability.enabled
+        value: true
+    {{- end }}
     labels:
       layer: apps
+      observability: "true"
     needs:
       - tools/rabbitmq
       # Its HTTPRoute's ExtensionRef filters resolve gateway.sharedMiddlewares
@@ -282,7 +299,9 @@ releases:
       - labs64io/labs64io-api-gateway
 
   - name: labs64io-checkout
-    installed: false # TODO: restore when GA
+    # Not GA: left out of the default set. `just install-app checkout` installs it on
+    # explicit request (state value installCheckout). TODO: default to true when GA.
+    installed: {{ .Values | get "installCheckout" false }}
     namespace: labs64io
     chart: ./charts/checkout
     values:
@@ -310,8 +329,14 @@ releases:
       {{- if isFile (printf "./overrides/payment-gateway/values.secrets.%s.yaml" .Environment.Name) }}
       - ./overrides/payment-gateway/values.secrets.{{ .Environment.Name }}.yaml
       {{- end }}
+    {{- if $observability }}
+    set:
+      - name: observability.enabled
+        value: true
+    {{- end }}
     labels:
       layer: apps
+      observability: "true"
     needs:
       - tools/postgresql
       - tools/redis

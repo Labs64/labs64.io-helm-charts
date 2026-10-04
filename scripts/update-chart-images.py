@@ -21,7 +21,13 @@ What it changes, and why each part matters:
      never republished, and the change would reach no cluster. Chart CI enforces
      the same rule ("Enforce chart version bump").
 
-  3. Nothing else. Edits are line-level, so comments, ordering, and the
+  3. Every chart that depends on it through `file://../<chart>` — in practice the
+     `labs64io-ecosystem` umbrella — gets its own `version` bumped too. The umbrella
+     vendors its subcharts at package time, so an umbrella whose version did not move
+     would keep shipping the old module chart; its version is the ecosystem release
+     number that labs64.io-devops pins.
+
+  4. Nothing else. Edits are line-level, so comments, ordering, and the
      `# --` helm-docs annotations in values.yaml survive untouched — a YAML
      round-trip through PyYAML would silently strip all of them.
 
@@ -198,6 +204,100 @@ def set_scalar(lines: list[str], key: str, value: str, quote: bool = False) -> t
     raise UpdateError(f"Chart.yaml has no top-level `{key}:`")
 
 
+# --- dependents -----------------------------------------------------------------
+
+LOCAL_REPOSITORY_RE = re.compile(r"^file://\.\./(?P<name>[A-Za-z0-9][A-Za-z0-9-]*)/?$")
+
+
+def local_dependencies(chart_yaml: Path) -> dict[str, str]:
+    """Map chart name -> declared version for every `file://../<chart>` dependency."""
+    doc = yaml.safe_load(chart_yaml.read_text()) or {}
+    found: dict[str, str] = {}
+    for dep in doc.get("dependencies") or []:
+        m = LOCAL_REPOSITORY_RE.match(str(dep.get("repository", "")))
+        if m:
+            found[m.group("name")] = str(dep.get("version", ""))
+    return found
+
+
+def set_dependency_version(lines: list[str], name: str, value: str) -> bool:
+    """Rewrite `version:` of the `- name: <name>` entry under `dependencies:`."""
+    in_deps = in_entry = False
+    for i, line in enumerate(lines):
+        if re.match(r"^dependencies:\s*$", line):
+            in_deps = True
+            continue
+        if in_deps and re.match(r"^\S", line):
+            break
+        if not in_deps:
+            continue
+        m = re.match(r"^\s*-\s*name:\s*[\"']?([^\"'\s]+)", line)
+        if m:
+            in_entry = m.group(1) == name
+            continue
+        m = re.match(r"^(\s*version:\s*)(.*?)\s*$", line)
+        if in_entry and m:
+            lines[i] = f"{m.group(1)}{value}\n"
+            return True
+    return False
+
+
+def bump_dependents(
+    charts_dir: Path,
+    chart: str,
+    old_version: str,
+    new_version: str,
+    result: "Result",
+    part: str = "patch",
+    _seen: set[str] | None = None,
+) -> None:
+    """Bump every chart under `charts_dir` that depends on `chart` via file://.
+
+    An exact pin on the old version (how module charts reference chart-libs) is
+    moved to the new one; a range (how the umbrella references module charts) is
+    left alone. Either way the dependent's own version is bumped, and the bump
+    cascades to ITS dependents — chart-libs -> module chart -> umbrella.
+    """
+    seen = _seen if _seen is not None else {chart}
+    for chart_yaml in sorted(charts_dir.glob("*/Chart.yaml")):
+        dependent = chart_yaml.parent.name
+        if dependent in seen:
+            continue
+        declared = local_dependencies(chart_yaml).get(chart)
+        if declared is None:
+            continue
+        seen.add(dependent)
+        lines = chart_yaml.read_text().splitlines(keepends=True)
+        if declared == old_version and set_dependency_version(lines, chart, new_version):
+            result.changes.append(
+                Change(f"{dependent}/Chart.yaml", f"dependency {chart}", old_version, new_version)
+            )
+        current = str(yaml.safe_load(chart_yaml.read_text())["version"])
+        bumped = bump_version(current, part)
+        if bumped != current:
+            set_scalar(lines, "version", bumped)
+            result.changes.append(Change(f"{dependent}/Chart.yaml", "version", current, bumped))
+            chart_yaml.write_text("".join(lines))
+            bump_dependents(charts_dir, dependent, current, bumped, result, part, seen)
+
+
+def bump_chart(charts_dir: Path, chart: str, part: str = "patch") -> "Result":
+    """Bump one chart's version and cascade to everything that depends on it."""
+    chart_yaml = charts_dir / chart / "Chart.yaml"
+    if not chart_yaml.is_file():
+        raise UpdateError(f"{chart_yaml} not found")
+    result = Result()
+    lines = chart_yaml.read_text().splitlines(keepends=True)
+    current = str(yaml.safe_load(chart_yaml.read_text())["version"])
+    bumped = bump_version(current, part)
+    if bumped != current:
+        set_scalar(lines, "version", bumped)
+        chart_yaml.write_text("".join(lines))
+        result.changes.append(Change(f"{chart}/Chart.yaml", "version", current, bumped))
+        bump_dependents(charts_dir, chart, current, bumped, result, part)
+    return result
+
+
 # --- orchestration --------------------------------------------------------------
 
 
@@ -330,16 +430,22 @@ def update_chart(
 
     # A replayed release event must not inflate the chart version, so the bump
     # happens only when something else actually moved.
+    bumped: tuple[str, str] | None = None
     if result.changed:
         current = str(yaml.safe_load(chart_yaml.read_text())["version"])
         new_version = bump_version(current, bump)
         if new_version != current:
             set_scalar(chart_lines, "version", new_version)
             result.changes.append(Change("Chart.yaml", "version", current, new_version))
+            bumped = (current, new_version)
 
     if result.changed:
         values_yaml.write_text("".join(value_lines))
         chart_yaml.write_text("".join(chart_lines))
+    # The umbrella (and anything else depending on this chart) must be republished too.
+    # Always a patch: the dependent itself did not change, only what it vendors.
+    if bumped:
+        bump_dependents(chart_dir.parent, chart_dir.name, bumped[0], bumped[1], result)
     return result
 
 
@@ -430,9 +536,17 @@ def main() -> int:
             import tempfile
 
             with tempfile.TemporaryDirectory() as tmp:
-                copy = Path(tmp) / args.chart
-                shutil.copytree(chart_dir, copy)
-                result = update_chart(copy, args.app_version, images, args.bump, args.allow_partial)
+                # The whole charts directory (minus vendored subcharts), so the report
+                # includes the dependents that would be bumped along.
+                copy = Path(tmp) / "charts"
+                shutil.copytree(
+                    args.charts_dir,
+                    copy,
+                    ignore=lambda src, names: ["charts"] if Path(src) != Path(args.charts_dir) else [],
+                )
+                result = update_chart(
+                    copy / args.chart, args.app_version, images, args.bump, args.allow_partial
+                )
         else:
             result = update_chart(chart_dir, args.app_version, images, args.bump, args.allow_partial)
     except UpdateError as exc:

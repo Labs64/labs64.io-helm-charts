@@ -18,70 +18,40 @@ jobs:
           # Full history needed to diff each chart against the PR base ref below.
           fetch-depth: 0
 
-      - name: Install Helm 4
-        run: |
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/v4.1.0/scripts/get-helm-4
-          chmod 700 get_helm.sh
-          DESIRED_VERSION=v4.1.0 ./get_helm.sh
+      # Helm (and plugins) at the versions pinned in labs64.io-workspace/tool-versions.env —
+      # the same file the dev container installs from. Also exports HELM_DOCS_VERSION etc.
+      - uses: Labs64/labs64.io-workspace/.github/actions/setup-k8s-tools@v1
+        with:
+          helm-plugins: schema
       - name: Add dependent repositories
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add traefik https://traefik.github.io/charts
 
-      - name: Install helm-schema plugin
-        # Helm 4 verifies plugins by default, but Git sources cannot provide provenance.
-        # The plugin's signed release archive can replace this exception in a security follow-up.
-        run: helm plugin install https://github.com/dadav/helm-schema --verify=false
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
 
-      - name: Enforce chart version bump
+      - name: Install linter dependencies
+        run: pip install pyyaml pytest
+
+      - name: Test the version-bump gate
+        # A gate nobody tests reports "clean" forever.
+        run: pytest scripts/test_check_chart_version_bumps.py -q
+
+      - name: Enforce chart version bumps
         # chart-releaser skips re-publishing a chart whose Chart.yaml version already has a
-        # release tag (skip_existing: true) — silently, with no error. A chart whose files
-        # changed but whose version didn't move (or moved backwards) would simply never reach
-        # the public repo. Every chart with a diff against the PR base must bump `version:`.
+        # release tag (skip_existing: true) — silently, with no error. So every chart with a
+        # diff against the PR base must bump `version:`, and so must every chart that vendors
+        # it (chart-libs consumers; the labs64io-ecosystem umbrella, whose version is the
+        # ecosystem release number). `just bump <chart>` does all of it.
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref || 'master' }}
         run: |
           set -euo pipefail
-          BASE="origin/${{ github.event.pull_request.base.ref || 'master' }}"
-          git fetch origin "${{ github.event.pull_request.base.ref || 'master' }}" --depth=1 2>/dev/null || true
-          FAILED=0
-          for chart_dir in charts/*/; do
-            [ -f "$chart_dir/Chart.yaml" ] || continue
-            chart_name=$(basename "$chart_dir")
-
-            if git diff --quiet "$BASE" -- "$chart_dir" 2>/dev/null; then
-              continue
-            fi
-
-            old_version=$(git show "$BASE:$chart_dir/Chart.yaml" 2>/dev/null | sed -n -E 's/^version: *//p' || echo "")
-            new_version=$(sed -n -E 's/^version: *//p' "$chart_dir/Chart.yaml")
-
-            if [ -z "$old_version" ]; then
-              echo "NEW CHART: $chart_name ($new_version) — no version check needed"
-              continue
-            fi
-
-            if [ "$old_version" = "$new_version" ]; then
-              echo "FAIL: $chart_name changed but version was not bumped (still $new_version)"
-              FAILED=1
-              continue
-            fi
-
-            newer=$(printf '%s\n%s\n' "$old_version" "$new_version" | sort -V | tail -1)
-            if [ "$newer" != "$new_version" ] || [ "$old_version" = "$new_version" ]; then
-              echo "FAIL: $chart_name version $old_version -> $new_version is not an increase"
-              FAILED=1
-              continue
-            fi
-
-            echo "PASS: $chart_name $old_version -> $new_version"
-          done
-
-          if [ "$FAILED" -ne 0 ]; then
-            echo ""
-            echo "One or more changed charts did not get a version bump. Bump Chart.yaml's"
-            echo "'version:' (and, for library-chart consumers, the pinned chart-libs"
-            echo "dependency version) or the release pipeline will silently skip publishing it."
-            exit 1
-          fi
+          git fetch origin "$BASE_REF" --depth=1 2>/dev/null || true
+          python scripts/check-chart-version-bumps.py --base "origin/$BASE_REF"
 
       - name: Enforce schema generation
         run: |
@@ -93,7 +63,7 @@ jobs:
 
       - name: Enforce docs generation
         run: |
-          docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" jnorwood/helm-docs:v1.14.2 --chart-search-root ./charts --log-level warning
+          docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" "jnorwood/helm-docs:v${HELM_DOCS_VERSION}" --chart-search-root ./charts --log-level warning
           if ! git diff --exit-code; then
             echo "ERROR: README.md files are out of date. Please run 'just generate-docu' and commit the changes."
             exit 1
@@ -109,14 +79,6 @@ jobs:
             [ -f "$chart_dir/Chart.yaml" ] || continue
             helm dependency build "$chart_dir"
           done
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.14"
-
-      - name: Install linter dependencies
-        run: pip install pyyaml pytest
 
       - name: Test the ConfigMap credential linter
         # A linter nobody tests reports "clean" forever. These tests plant

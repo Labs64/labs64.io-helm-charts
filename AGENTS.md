@@ -22,7 +22,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 
 ## Critical guardrails
 
-1. **Chart version always bumps** with any chart change (chart CI enforces it); consumers of `chart-libs` bump their pinned `chart-libs` dependency too.
+1. **Chart version always bumps** with any chart change, and so does every chart that vendors it: consumers of `chart-libs` move their pinned `chart-libs` dependency and bump, and the `labs64io-ecosystem` umbrella bumps whenever any chart it bundles does (its version is the ecosystem release number `labs64.io-devops` pins as `CHART_VERSION`). `just bump <chart>` performs the whole cascade; chart CI enforces it (`just check-bumps`, `scripts/check-chart-version-bumps.py`).
 2. **All module charts depend on `chart-libs`** — do not break this dependency.
 3. **Credentials are Kubernetes Secrets** — never ConfigMaps for sensitive data. Enforced by
    `just lint-secrets` (`scripts/lint-configmap-secrets.py`) in chart CI: it renders every chart
@@ -30,7 +30,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
    ConfigMaps — including trees nested inside `applicationYaml`, which a template-level grep cannot
    see. False positives go in `scripts/configmap-secrets-allowlist.yaml` **with a stated reason**.
 4. **Observability is infrastructure-owned** — toggle it via `observability.enabled` (env/annotation injection only); never add OTel SDK deps to services. See [`OBSERVABILITY.md`](OBSERVABILITY.md).
-5. **Local + CI deployments go through Helmfile** (`helmfile.yaml.gotmpl`, drives `just up`/`install-tools`/`install-all-apps`) — do not reintroduce raw per-tool `helm upgrade --install` calls into that path; AWS QA / Staging / Prod installs the umbrella chart from `labs64.io-devops` (`just modules-install <env>`, Terraform-rendered values + `charts/labs64io-ecosystem/values.aws.yaml`); ArgoCD comes later (see [Deployment Modes](#deployment-modes) below).
+5. **Local + CI deployments go through Helmfile** (`helmfile.yaml.gotmpl`, drives `just up`/`install-tools`/`install-all-apps`) — do not reintroduce raw per-tool `helm upgrade --install` calls into that path; AWS QA / Staging / Prod installs the umbrella chart from `labs64.io-devops` (`just modules-install <env>`, Terraform-rendered values + `charts/labs64io-ecosystem/values.aws.yaml`) at the umbrella version pinned there as `CHART_VERSION` (see [Deployment Modes](#deployment-modes) below). `helmfile.yaml.gotmpl` is also the **only** place a third-party chart version, a Helm repository or a release's value layering is written — the `justfile` reads them from it (`just chart-version <release>`, `just install-tool <release>`); never add a version constant or a `helm repo add` list back to the `justfile`.
 6. **Secret management is unified via `externalSecrets.enabled`** on every chart with a `secret.yaml`: `false` (default) renders a plain `Secret` from `.Values.secrets.data`; `true` renders an `ExternalSecret` resolved through a `ClusterSecretStore` (local: `overrides/eso/cluster-secret-store.yaml`'s `kubernetes`-provider store; AWS QA / Staging / Prod Environment: `aws-secretsmanager-cluster` with `externalSecrets.secretKey: labs64/<env>/<module>`). Same object shape everywhere — only the backing store differs. The API is `external-secrets.io/v1` — keep the ESO version pinned in `helmfile.yaml.gotmpl` in lockstep with `ESO_CHART_VERSION` in `labs64.io-devops`'s `justfile` (both currently on the latest ESO release).
 7. **Chart authoring checklist** (`just lint-authoring` / `scripts/lint-chart-authoring.py`, chart CI) — four rules, each a running gate, not prose:
    - No module chart may declare `kind: Ingress` directly — only `chart-libs.gateway-routes` may (it hard-fails the render if a non-public route would be served through it, since Ingress has no ForwardAuth/Cerbos equivalent).
@@ -50,7 +50,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | Mode | File pattern | Use case |
 |---------|-------------|----------|
 | Local Development | `overrides/<module>/values.local.yaml` | Dev cluster with shared toolset via Helmfile (`just up`) |
-| AWS QA / Staging / Prod Environment | `charts/labs64io-ecosystem/values.aws.yaml` + values rendered by `labs64.io-devops` | Umbrella chart on EKS against Terraform-provisioned RDS / ElastiCache / Amazon MQ (ArgoCD later) |
+| AWS QA / Staging / Prod Environment | `charts/labs64io-ecosystem/values.aws.yaml` + values rendered by `labs64.io-devops` | Umbrella chart on EKS against Terraform-provisioned RDS / ElastiCache / Amazon MQ |
 | AWS identity provider | `overrides/keycloak/values.yaml` + `values.aws.yaml` + `realm.base.json` (+ `realm.test-fixtures.json` in dev only, + one machine client per `labs64io.serviceClients` entry) + values rendered by `labs64.io-devops` | Upstream `codecentric/keycloakx` release in `tools`, installed by devops (`just keycloak-install <env>`) before the umbrella chart — third-party charts are consumed from their publisher, never wrapped in a Labs64 chart |
 | Users' Own Infrastructure (BYO Infra) | `overrides/<module>/values.prod-example.yaml` | Copy & adapt for your own infrastructure and external services |
 
@@ -66,7 +66,9 @@ just up                      # k3d cluster + registry + all modules (Helmfile-dr
 just up-otel                 # + monitoring stack, observability enabled
 just reset                   # uninstall apps/monitoring/tools, keep the cluster
 just cluster-down            # delete the k3d cluster
-just install-app auditflow   # install/reinstall a single module
+just install-app auditflow   # install/reinstall a single module (its helmfile release)
+just install-tool postgresql # (re)install one core/monitoring tool (its helmfile release)
+just bump auditflow          # bump a chart and every chart that vendors it
 just generate-all            # regenerate chart README + values.schema.json
 ```
 
@@ -79,6 +81,8 @@ image's digest, dispatches `module-released` to this repo, and
 ```
 module release  →  docker-publish.yml (digest)  →  chart-update-dispatch.yml
                 →  labs64io-chart-image-update.yml  →  scripts/update-chart-images.py  →  PR
+                →  (merge) chart-releaser publishes module chart + umbrella
+                →  Renovate PR in labs64.io-devops bumping CHART_VERSION
 ```
 
 What the updater guarantees, and why you should not hand-edit around it:
@@ -88,6 +92,10 @@ What the updater guarantees, and why you should not hand-edit around it:
   release ever validated. Third-party wrappers (swagger-ui, cerbos) are exempt.
 - **Chart version always bumps** when anything changes, because `chart-releaser` runs with
   `skip_existing: true` and would silently not republish otherwise.
+- **The umbrella bumps with it.** `labs64io-ecosystem` vendors the module chart at package
+  time, so the same PR bumps the umbrella's version; publishing it is what makes the
+  release installable. Renovate then proposes the new umbrella version to
+  `labs64.io-devops` (`CHART_VERSION`), which is the pin of record for every AWS environment.
 - **Idempotent.** Replaying a release event is a no-op, so a redelivered dispatch cannot
   inflate the chart version.
 - **Comments survive.** Edits are line-level; a PyYAML round-trip would strip every `# --`
@@ -108,6 +116,9 @@ still succeed and print the exact `gh api` command to run manually.
 | Shared Helm helpers | `charts/chart-libs/templates/` |
 | Default values | `charts/<module>/values.yaml` |
 | Local dev overrides | `overrides/<module>/values.local.yaml` |
-| Pinned chart versions | `justfile` (version variables at top) |
+| Pinned third-party chart versions, Helm repositories | `helmfile.yaml.gotmpl` (the only place; Renovate bumps them) |
+| CRD versions applied outside Helm (Gateway API, Traefik CRDs) | `justfile` (the two constants at the top) |
+| CLI tool versions (helm, helmfile, plugins, helm-docs) | `labs64.io-workspace/tool-versions.env` |
+| Bump a chart (+ everything vendoring it) | `just bump <chart> [patch\|minor\|major]` |
 | Release digest propagation | `scripts/update-chart-images.py` + `.github/workflows/labs64io-chart-image-update.yml` |
 | Observability wiring / collector pipelines | `OBSERVABILITY.md` + `overrides/opentelemetry/` |

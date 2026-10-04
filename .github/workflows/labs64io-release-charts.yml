@@ -27,11 +27,9 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Install Helm 4
-        run: |
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/v4.1.0/scripts/get-helm-4
-          chmod 700 get_helm.sh
-          DESIRED_VERSION=v4.1.0 ./get_helm.sh
+      # Helm (and plugins) at the versions pinned in labs64.io-workspace/tool-versions.env —
+      # the same file the dev container installs from. Also exports HELM_DOCS_VERSION etc.
+      - uses: Labs64/labs64.io-workspace/.github/actions/setup-k8s-tools@v1
 
       - name: Add dependent repositories
         run: |

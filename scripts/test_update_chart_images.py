@@ -405,6 +405,148 @@ def test_cli_event_for_unknown_chart_fails_without_writing(tmp_path):
 # --- round trip against the real chart ------------------------------------------
 
 
+# --- dependents: the umbrella (and chart-libs consumers) move with what they vendor ---
+
+UMBRELLA_YAML = """apiVersion: v2
+name: umbrella
+type: application
+version: 0.20.5
+description: "umbrella"
+dependencies:
+  - name: demo
+    version: ">=0.1.0"
+    repository: file://../demo
+    condition: demo.enabled
+  - name: postgresql
+    version: 18.12.4
+    repository: https://charts.bitnami.com/bitnami
+"""
+
+LIB_YAML = """apiVersion: v2
+name: chart-libs
+type: library
+version: 0.8.4
+description: "library"
+"""
+
+CHART_WITH_LIB_YAML = CHART_YAML + """dependencies:
+  - name: chart-libs
+    version: 0.8.4
+    repository: file://../chart-libs
+"""
+
+
+def add_chart(tmp_path: Path, name: str, chart_yaml: str) -> Path:
+    d = tmp_path / name
+    d.mkdir()
+    (d / "Chart.yaml").write_text(chart_yaml)
+    return d
+
+
+def chart_version(chart_dir: Path) -> str:
+    return str(yaml.safe_load((chart_dir / "Chart.yaml").read_text())["version"])
+
+
+def test_release_bumps_the_umbrella_that_vendors_the_chart(tmp_path):
+    chart = make_chart(tmp_path)
+    umbrella = add_chart(tmp_path, "umbrella", UMBRELLA_YAML)
+    result = upd.update_chart(chart, "1.4.0", {"labs64/demo": D1, "labs64/demo-sidecar": D2})
+    assert chart_version(chart) == "0.4.1"
+    assert chart_version(umbrella) == "0.20.6"
+    assert ("umbrella/Chart.yaml", "version", "0.20.5", "0.20.6") in [
+        (c.file, c.what, c.old, c.new) for c in result.changes
+    ]
+    # A range is a range: only an exact pin on the old version is rewritten.
+    text = (umbrella / "Chart.yaml").read_text()
+    assert 'version: ">=0.1.0"' in text
+    assert "version: 18.12.4" in text
+
+
+def test_umbrella_bump_is_always_a_patch(tmp_path):
+    chart = make_chart(tmp_path)
+    umbrella = add_chart(tmp_path, "umbrella", UMBRELLA_YAML)
+    upd.update_chart(chart, "2.0.0", {"labs64/demo": D1, "labs64/demo-sidecar": D2}, bump="minor")
+    assert chart_version(chart) == "0.5.0"
+    assert chart_version(umbrella) == "0.20.6"
+
+
+def test_replayed_event_does_not_bump_the_umbrella_again(tmp_path):
+    chart = make_chart(tmp_path)
+    umbrella = add_chart(tmp_path, "umbrella", UMBRELLA_YAML)
+    images = {"labs64/demo": D1, "labs64/demo-sidecar": D2}
+    upd.update_chart(chart, "1.4.0", images)
+    again = upd.update_chart(chart, "1.4.0", images)
+    assert not again.changed
+    assert chart_version(umbrella) == "0.20.6"
+
+
+def test_bump_none_leaves_dependents_alone(tmp_path):
+    chart = make_chart(tmp_path)
+    umbrella = add_chart(tmp_path, "umbrella", UMBRELLA_YAML)
+    upd.update_chart(chart, "1.4.0", {"labs64/demo": D1, "labs64/demo-sidecar": D2}, bump="none")
+    assert chart_version(umbrella) == "0.20.5"
+
+
+def test_unrelated_charts_are_not_bumped(tmp_path):
+    chart = make_chart(tmp_path)
+    other = add_chart(tmp_path, "other", CHART_YAML.replace("name: demo", "name: other"))
+    upd.update_chart(chart, "1.4.0", {"labs64/demo": D1, "labs64/demo-sidecar": D2})
+    assert chart_version(other) == "0.4.0"
+
+
+def test_library_bump_moves_exact_pins_and_cascades_to_the_umbrella(tmp_path):
+    lib = add_chart(tmp_path, "chart-libs", LIB_YAML)
+    chart = make_chart(tmp_path, chart=CHART_WITH_LIB_YAML)
+    umbrella = add_chart(tmp_path, "umbrella", UMBRELLA_YAML)
+    result = upd.bump_chart(tmp_path, "chart-libs")
+    assert chart_version(lib) == "0.8.5"
+    assert chart_version(chart) == "0.4.1"
+    assert chart_version(umbrella) == "0.20.6"
+    deps = yaml.safe_load((chart / "Chart.yaml").read_text())["dependencies"]
+    assert deps[0]["version"] == "0.8.5"
+    assert [(c.file, c.what) for c in result.changes] == [
+        ("chart-libs/Chart.yaml", "version"),
+        ("demo/Chart.yaml", "dependency chart-libs"),
+        ("demo/Chart.yaml", "version"),
+        ("umbrella/Chart.yaml", "version"),
+    ]
+
+
+def test_bump_chart_unknown_chart_is_rejected(tmp_path):
+    with pytest.raises(upd.UpdateError, match="not found"):
+        upd.bump_chart(tmp_path, "nope")
+
+
+def test_check_mode_reports_dependents_without_writing(tmp_path):
+    chart = make_chart(tmp_path)
+    umbrella = add_chart(tmp_path, "umbrella", UMBRELLA_YAML)
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), "--chart", "demo", "--app-version", "1.4.0",
+         "--image", f"labs64/demo@{D1}", "--image", f"labs64/demo-sidecar@{D2}",
+         "--check", "--charts-dir", str(tmp_path)],
+        capture_output=True, text=True,
+    )
+    assert proc.returncode == 1, proc.stderr
+    assert "umbrella/Chart.yaml: version: 0.20.5 -> 0.20.6" in proc.stdout
+    assert chart_version(chart) == "0.4.0"
+    assert chart_version(umbrella) == "0.20.5"
+
+
+def test_bump_chart_version_cli(tmp_path):
+    make_chart(tmp_path)
+    umbrella = add_chart(tmp_path, "umbrella", UMBRELLA_YAML)
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT.parent / "bump-chart-version.py"), "demo", "minor",
+         "--charts-dir", str(tmp_path)],
+        capture_output=True, text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert "demo/Chart.yaml: version: 0.4.0 -> 0.5.0" in proc.stdout
+    # A manual bump cascades with the same part.
+    assert chart_version(umbrella) == "0.21.0"
+
+
+
 @pytest.mark.skipif(shutil.which("helm") is None, reason="helm not installed")
 def test_real_auditflow_chart_renders_by_digest_after_update(tmp_path):
     """The written value must actually reach the rendered manifest.
