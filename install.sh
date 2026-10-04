@@ -22,7 +22,8 @@ NS_GATEWAY="${LABS64_GATEWAY_NAMESPACE:-tools}"
 STATE_CM="labs64io-installer-state"
 WORKDIR="${LABS64_WORKDIR:-./labs64io-install}"
 LOGFILE="$WORKDIR/install.log"
-# Must match GATEWAY_API_VERSION in this repo's justfile (`just check-pins`, labs64.io-workspace).
+# Must match GATEWAY_API_VERSION in this repo's justfile.versions (`just check-pins`, labs64.io-workspace).
+# This script is downloaded and run standalone, so it cannot read justfile.versions.
 # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
 GATEWAY_API_VERSION="${LABS64_GATEWAY_API_VERSION:-v1.6.2}"
 # Published chart version to install. Unset, it is resolved at install time: the version

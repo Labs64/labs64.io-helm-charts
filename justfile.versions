@@ -1,0 +1,23 @@
+# Every version this repository pins OUTSIDE helmfile.yaml.gotmpl, in one place. The justfile
+# imports this file, so `{{GATEWAY_API_VERSION}}` etc. in the recipes need no change.
+#
+# What is NOT here, on purpose:
+#   * third-party chart versions and Helm repositories — helmfile.yaml.gotmpl is their only
+#     home (`just chart-version <release>` prints one), so Renovate's native helmfile support
+#     keeps each version next to its repository;
+#   * CLI tool versions — labs64.io-workspace/tool-versions.env;
+#   * the Kubernetes line — k3d/labs64io.yaml, which tracks the EKS version in labs64.io-devops.
+#
+# These two are CRD sets applied with kubectl, outside Helm, so no chart carries them
+# (see install-crds). Renovate bumps them through the `# renovate:` line above each value.
+
+# Gateway API standard-channel CRDs. Must equal GATEWAY_API_VERSION in labs64.io-devops
+# (justfile.versions) and the default in install.sh — `just check-pins` (labs64.io-workspace)
+# fails if they differ. install.sh is a standalone script users download and run, so it cannot
+# read this file and carries its own annotated copy.
+# renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
+GATEWAY_API_VERSION := "v1.6.2"
+
+# Traefik's own CRDs, installed separately from the `traefik` release (see install-tools).
+# renovate: datasource=helm depName=traefik-crds registryUrl=https://traefik.github.io/charts
+TRAEFIK_CRDS_CHART_VERSION := "1.18.0"

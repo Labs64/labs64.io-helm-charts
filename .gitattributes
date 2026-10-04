@@ -19,3 +19,6 @@
 *.woff2 binary
 *.ttf binary
 *.eot binary
+
+# GitHub syntax highlighting for the imported version pins (not a name linguist knows)
+justfile.versions linguist-language=Just

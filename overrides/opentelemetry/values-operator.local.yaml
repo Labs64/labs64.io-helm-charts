@@ -7,7 +7,7 @@ manager:
     imagePullPolicy: IfNotPresent
   # collectorImage is deliberately NOT pinned here. It is the image the operator gives to
   # any OpenTelemetryCollector CR it reconciles, and leaving it unset makes it track the
-  # default of whatever OTEL_OPERATOR_CHART_VERSION the justfile pins — i.e. the version
+  # default of whatever opentelemetry-operator chart version helmfile.yaml.gotmpl pins — i.e. the version
   # that chart was tested with. A hand-maintained pin here only rots: it had drifted to
   # 0.127.0 against a chart defaulting to 0.154.0, 27 minor versions behind, and would
   # have silently handed any future CR a stale collector.

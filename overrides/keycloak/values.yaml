@@ -1,5 +1,5 @@
 # Shared values for the upstream codecentric/keycloakx chart (pinned in helmfile.yaml.gotmpl and in
-# labs64.io-devops' justfile), layered UNDER the environment file:
+# labs64.io-devops' justfile.versions), layered UNDER the environment file:
 #   local (k3d):   values.yaml + values.local.yaml (+ values.secrets.local.yaml)  — helmfile
 #   AWS dev/qa/prod: values.yaml + values.aws.yaml + devops-generated values     — devops `just keycloak-install <env>`
 # The realm comes in as strings via --set-file: realmConfig (realm.base.json, every environment),

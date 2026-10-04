@@ -11,13 +11,9 @@ NAMESPACE_TOOLS := "tools"
 
 # Chart versions, repositories, release names and value layering all live in
 # helmfile.yaml.gotmpl and nowhere else — recipes below read them from there
-# (`just chart-version <release>`). The only versions this file owns are the two CRD
-# sets applied outside Helm (see install-crds). labs64.io-devops applies the same
-# Gateway API version on AWS; `just check-pins` (labs64.io-workspace) keeps them equal.
-# renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
-GATEWAY_API_VERSION := "v1.6.2"
-# renovate: datasource=helm depName=traefik-crds registryUrl=https://traefik.github.io/charts
-TRAEFIK_CRDS_CHART_VERSION := "1.18.0"
+# (`just chart-version <release>`). The two CRD versions applied outside Helm (Gateway API,
+# Traefik CRDs) are in justfile.versions.
+import 'justfile.versions'
 
 # List available commands
 default:
