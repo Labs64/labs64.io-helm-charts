@@ -81,7 +81,7 @@ the outside and are activated entirely by environment variables the deployment s
 
 ### Java services (Spring Boot)
 
-The OTel Java Agent (`2.29.0`) is **bundled into every service image** at
+The OTel Java Agent is **bundled into every service image** at
 `/otel/opentelemetry-javaagent.jar` (via a `Dockerfile` `ADD` from the upstream release). It is
 **inert** until the deployment sets:
 

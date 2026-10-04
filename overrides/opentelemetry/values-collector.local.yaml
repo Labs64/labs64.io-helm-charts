@@ -134,7 +134,7 @@ config:
     # per pod and otherwise dominate the trace list.
     #
     # Matched on three fronts because the runtimes disagree on attributes: the Java agent
-    # (2.31.1) emits stable HTTP semconv (`url.path`), while the Python distro (0.65b0)
+    # (2.32.0) emits stable HTTP semconv (`url.path`), while the Python distro (0.65b0)
     # may still emit legacy `http.target` unless OTEL_SEMCONV_STABILITY_OPT_IN=http is set.
     # Span name is the backstop for both. Each attribute is nil-guarded — `and`
     # short-circuits, so IsMatch never sees a nil on services that lack the attribute.
