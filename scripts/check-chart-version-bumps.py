@@ -5,7 +5,8 @@ chart-releaser runs with `skip_existing: true`: a chart whose `version` already 
 release tag is skipped silently. Three ways a change then never reaches the chart
 repository, each checked here against a base ref (the PR base, or origin/master):
 
-  1. A chart's files changed but its `version` did not increase.
+  1. A chart's files changed but its `version` did not increase. The generated README.md is
+     excluded: a README-only difference (docs regenerated after a bump) needs no republish.
   2. A chart was bumped, but a chart that vendors it through `file://../<chart>` was
      not — above all the `labs64io-ecosystem` umbrella, whose version is the ecosystem
      release number: an unbumped umbrella keeps shipping the old module chart.
@@ -113,7 +114,13 @@ def load_charts(base: str, charts_dir: Path) -> dict[str, ChartState]:
         old = _git("show", f"{base}:{rel}/Chart.yaml")
         if old.returncode == 0:
             state.old_version = str(_chart_doc(old.stdout)["version"])
-        state.changed = _git("diff", "--quiet", base, "--", rel).returncode != 0
+        # The generated README is not part of what a chart ships to run: it is regenerated from
+        # Chart.yaml/values.yaml by helm-docs (chart CI's "Enforce docs generation"), so it can lag
+        # a version bump that already happened. Demanding a republish to fix a badge would make
+        # that drift impossible to correct — a README-only difference needs no bump.
+        state.changed = (
+            _git("diff", "--quiet", base, "--", rel, f":(exclude){rel}/README.md").returncode != 0
+        )
         charts[name] = state
     return charts
 

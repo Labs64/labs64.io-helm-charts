@@ -97,3 +97,51 @@ def test_new_chart_needs_no_bump():
 def test_dependency_on_a_missing_chart_is_flagged():
     charts = fleet(auditflow=S("0.15.6", "0.15.6", local_deps={"ghost": "1.0.0"}))
     assert any("file://../ghost, which is not a chart here" in p for p in chk.find_problems(charts))
+
+
+# --- git-backed: what counts as "changed" --------------------------------------------------
+
+
+def _git_repo(tmp_path):
+    import subprocess
+
+    def git(*args):
+        subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *args], cwd=tmp_path, check=True, capture_output=True)
+
+    git("init", "-q", "-b", "master")
+    chart = tmp_path / "charts" / "demo"
+    chart.mkdir(parents=True)
+    (chart / "Chart.yaml").write_text("apiVersion: v2\nname: demo\nversion: 1.0.0\n")
+    (chart / "values.yaml").write_text("a: 1\n")
+    (chart / "README.md").write_text("Version: 1.0.0\n")
+    git("add", "-A")
+    git("commit", "-q", "-m", "base")
+    return git, chart
+
+
+def _state(tmp_path, monkeypatch):
+    monkeypatch.setattr(chk, "REPO_ROOT", tmp_path)
+    return chk.load_charts("master", tmp_path / "charts")["demo"]
+
+
+def test_readme_only_difference_is_not_a_chart_change(tmp_path, monkeypatch):
+    git, chart = _git_repo(tmp_path)
+    (chart / "README.md").write_text("Version: 1.0.1 (regenerated)\n")
+    state = _state(tmp_path, monkeypatch)
+    assert state.changed is False
+    assert chk.find_problems({"demo": state}) == []
+
+
+def test_values_change_is_still_a_chart_change(tmp_path, monkeypatch):
+    git, chart = _git_repo(tmp_path)
+    (chart / "values.yaml").write_text("a: 2\n")
+    state = _state(tmp_path, monkeypatch)
+    assert state.changed is True
+    assert any("did not increase" in p for p in chk.find_problems({"demo": state}))
+
+
+def test_readme_plus_values_change_is_a_chart_change(tmp_path, monkeypatch):
+    git, chart = _git_repo(tmp_path)
+    (chart / "README.md").write_text("changed\n")
+    (chart / "values.yaml").write_text("a: 2\n")
+    assert _state(tmp_path, monkeypatch).changed is True

@@ -23,7 +23,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 
 ## Critical guardrails
 
-1. **Chart version always bumps** with any chart change, and so does every chart that vendors it: consumers of `chart-libs` move their pinned `chart-libs` dependency and bump, and the `labs64io-ecosystem` umbrella bumps whenever any chart it bundles does (its version is the ecosystem release number `labs64.io-devops` pins as `CHART_VERSION`). `just bump <chart>` performs the whole cascade; chart CI enforces it (`just check-bumps`, `scripts/check-chart-version-bumps.py`).
+1. **Chart version always bumps** with any chart change (the generated `README.md` excepted — a README-only difference is docs regenerated after a bump and needs no republish), and so does every chart that vendors it: consumers of `chart-libs` move their pinned `chart-libs` dependency and bump, and the `labs64io-ecosystem` umbrella bumps whenever any chart it bundles does (its version is the ecosystem release number `labs64.io-devops` pins as `CHART_VERSION`). `just bump <chart>` performs the whole cascade; chart CI enforces it (`just check-bumps`, `scripts/check-chart-version-bumps.py`).
 2. **All module charts depend on `chart-libs`** — do not break this dependency.
 3. **Credentials are Kubernetes Secrets** — never ConfigMaps for sensitive data. Enforced by
    `just lint-secrets` (`scripts/lint-configmap-secrets.py`) in chart CI: it renders every chart

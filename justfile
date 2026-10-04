@@ -387,17 +387,23 @@ helm-tools:
     echo "Installed Helm plugins:"
     helm plugin list
 
-# Generate Helm chart documentation (README.md) for all charts
+# Generate Helm chart documentation (README.md) for all charts. Uses a local `helm-docs` binary
+# when it is the pinned version (the dev container installs it), else the pinned Docker image —
+# which cannot work inside the dev container, where Docker resolves bind-mount paths on the host.
 generate-docu:
     #!/usr/bin/env bash
     set -euo pipefail
     : "${HELM_DOCS_VERSION:?not set — check out labs64.io-workspace next to this repo (tool-versions.env)}"
-    docker run --rm \
-        --volume "$(pwd):/helm-docs" \
-        --user "$(id -u):$(id -g)" \
-        "jnorwood/helm-docs:v${HELM_DOCS_VERSION}" \
-        --chart-search-root ./charts \
-        --log-level warning
+    if command -v helm-docs >/dev/null 2>&1 && [ "$(helm-docs --version | awk '{print $NF}')" = "${HELM_DOCS_VERSION}" ]; then
+        helm-docs --chart-search-root ./charts --log-level warning
+    else
+        docker run --rm \
+            --volume "$(pwd):/helm-docs" \
+            --user "$(id -u):$(id -g)" \
+            "jnorwood/helm-docs:v${HELM_DOCS_VERSION}" \
+            --chart-search-root ./charts \
+            --log-level warning
+    fi
 
 # Generate Helm values schema (values.schema.json) for all charts
 #
