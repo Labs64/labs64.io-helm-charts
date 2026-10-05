@@ -33,4 +33,4 @@ __pycache__/
 .claude/
 
 # --- install.sh generated workdir (values/logs, always regenerated) ---
-labs64io-install/
+labs64.io-install/

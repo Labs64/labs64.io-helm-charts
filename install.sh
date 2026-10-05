@@ -20,7 +20,7 @@ RELEASE="${LABS64_RELEASE:-labs64io}"
 NS_MODULES="${LABS64_NAMESPACE:-labs64io}"
 NS_GATEWAY="${LABS64_GATEWAY_NAMESPACE:-tools}"
 STATE_CM="labs64io-installer-state"
-WORKDIR="${LABS64_WORKDIR:-./labs64io-install}"
+WORKDIR="${LABS64_WORKDIR:-./labs64.io-install}"
 LOGFILE="$WORKDIR/install.log"
 # Must match GATEWAY_API_VERSION in this repo's justfile.versions (`just check-pins`, labs64.io-workspace).
 # This script is downloaded and run standalone, so it cannot read justfile.versions.
@@ -65,7 +65,7 @@ Environment:
   LABS64_GATEWAY_NAMESPACE    namespace for the Gateway API `Gateway` object only — no pods
                               ever run here (default: tools)
   LABS64_RELEASE              Helm release name (default: labs64io)
-  LABS64_WORKDIR              where generated values/logs go (default: ./labs64io-install)
+  LABS64_WORKDIR              where generated values/logs go (default: ./labs64.io-install)
   LABS64_OIDC_DISCOVERY_URL   issuer discovery URL (required by the byo profile)
   LABS64_CHART                chart to install (default: labs64io/labs64io-ecosystem);
                               set to a local path to test unpublished chart changes

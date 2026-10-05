@@ -142,4 +142,4 @@ jobs:
         run: |
           kubectl -n labs64io get events --sort-by=.lastTimestamp | tail -50 || true
           kubectl -n labs64io describe pods | tail -120 || true
-          cat labs64io-install/install.log || true
+          cat labs64.io-install/install.log || true
