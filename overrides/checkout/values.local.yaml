@@ -1,6 +1,7 @@
 image:
   repository: localhost:5005/checkout
   tag: latest
+  digest: ""
   pullPolicy: Always
 
 gateway:
@@ -21,6 +22,7 @@ ui:
   image:
     repository: localhost:5005/checkout-ui
     tag: latest
+    digest: ""
     pullPolicy: Always
   
   application:

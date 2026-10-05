@@ -2,6 +2,7 @@ ui:
   image:
     repository: localhost:5005/customer-portal-ui
     tag: latest
+    digest: ""
     pullPolicy: Always
   
   application:
