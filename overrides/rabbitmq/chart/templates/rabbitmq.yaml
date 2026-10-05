@@ -60,15 +60,24 @@ spec:
           readinessProbe:
             exec:
               command: ["rabbitmq-diagnostics", "check_port_connectivity"]
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 10
-          livenessProbe:
-            exec:
-              command: ["rabbitmq-diagnostics", "status"]
+            # This starts an Erlang CLI process and can be slow while local k3d
+            # is under CPU pressure. Keep it as readiness, where a delay does
+            # not restart an otherwise working broker.
             initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 30
+            failureThreshold: 5
+          livenessProbe:
+            # A TCP listener is sufficient to decide whether the broker must
+            # be restarted. `rabbitmq-diagnostics status` is intentionally
+            # reserved for readiness because its Erlang CLI may exceed a short
+            # exec timeout under local CPU throttling.
+            tcpSocket:
+              port: amqp
+            initialDelaySeconds: 90
             periodSeconds: 30
-            timeoutSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
   volumeClaimTemplates:
     - metadata:
         name: data
