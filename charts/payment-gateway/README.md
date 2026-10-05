@@ -1,6 +1,6 @@
 # payment-gateway
 
-![Version: 0.10.5](https://img.shields.io/badge/Version-0.10.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
+![Version: 0.10.6](https://img.shields.io/badge/Version-0.10.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
 
 Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
@@ -21,7 +21,7 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.4 |
+| file://../chart-libs | chart-libs | 0.8.5 |
 
 ## Values
 

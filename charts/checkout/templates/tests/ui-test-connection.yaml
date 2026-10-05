@@ -18,7 +18,7 @@ metadata:
 spec:
   containers:
     - name: wget
-      image: busybox:1.37.0
+      image: busybox:1.38.0
       command: ['wget']
       args: ['-qO-', '{{ include "chart-libs.fullname" . }}-ui:{{ .Values.ui.service.port }}{{ .Values.ui.tests.healthPath }}']
   restartPolicy: Never

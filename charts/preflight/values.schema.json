@@ -201,7 +201,7 @@
       "description": "Images used by the check containers",
       "properties": {
         "busybox": {
-          "default": "busybox:1.37.0",
+          "default": "busybox:1.38.0",
           "title": "busybox",
           "type": "string"
         },

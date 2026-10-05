@@ -38,7 +38,7 @@ checks:
 
 # -- Images used by the check containers
 images:
-  busybox: busybox:1.37.0
+  busybox: busybox:1.38.0
   # -- Official images rather than bitnamilegacy/*, which is an unsupported
   # namespace on a deprecation path. These run the same SELECT 1 / PING checks;
   # both put psql / redis-cli on PATH, which is all job.yaml relies on.

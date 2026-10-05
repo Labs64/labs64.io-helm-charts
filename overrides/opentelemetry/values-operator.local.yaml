@@ -313,7 +313,7 @@ testFramework:
   image:
     repository: busybox
     # Only pulled by `helm test`, but pinned for the same reason as the collector image.
-    tag: 1.37.0
+    tag: 1.38.0
   securityContext:
     allowPrivilegeEscalation: false
     capabilities:
