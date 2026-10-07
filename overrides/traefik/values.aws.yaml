@@ -113,7 +113,17 @@ topologySpreadConstraints:
 # (rbac.namespaced) does not work with the Gateway provider. So the chart's RBAC is off and the
 # objects below replace it: the chart's rules for the two providers enabled above without the
 # Secret rule, plus a Role for Secrets in each served namespace.
-# When the chart version changes, compare with its templates/rbac/clusterrole.yaml.
+#
+# The rules below are a copy, so they must follow the chart. `chart-pin` names the chart version
+# they were last compared with; `just check-pins` (labs64.io-workspace) fails when the helmfile pins
+# another one. To compare, render the chart's own ClusterRole and this file's, and diff the rules
+# (N = --set 'providers.kubernetesGateway.namespaces={a}' --set 'providers.kubernetesCRD.namespaces={a}'):
+#   helm template traefik traefik/traefik --version <v> -f overrides/traefik/values.aws.yaml N \
+#     --set rbac.enabled=true --set extraObjects=null --show-only templates/rbac/clusterrole.yaml
+#   helm template traefik traefik/traefik --version <v> -f overrides/traefik/values.aws.yaml N \
+#     --show-only templates/extra-objects.yaml
+# The only difference allowed is the chart's rule on `secrets`. Then update chart-pin.
+# chart-pin: traefik 41.6.1
 rbac:
   enabled: false
 extraObjects:

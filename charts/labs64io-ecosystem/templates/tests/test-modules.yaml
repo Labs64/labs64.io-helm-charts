@@ -49,7 +49,10 @@ spec:
               echo "   FAILED"; fail=1
             fi
           }
-          {{- if .Values.auditflow.enabled }}
+          {{- /* A narrowed AuditFlow policy (networkPolicy.ingressFrom) admits its own pods only, not
+               this one. `helm test` still runs the auditflow chart's own test-connection hook. */}}
+          {{- $afPolicy := .Values.auditflow.networkPolicy | default dict }}
+          {{- if and .Values.auditflow.enabled (not (and $afPolicy.enabled $afPolicy.ingressFrom)) }}
           probe auditflow "http://{{ .Release.Name }}-auditflow:8080/actuator/health/readiness"
           {{- end }}
           {{- if index .Values "payment-gateway" "enabled" }}
