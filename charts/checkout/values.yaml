@@ -61,6 +61,10 @@ rbac:
 
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 podAnnotations: {}
 # -- This is for setting Kubernetes Labels to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/

@@ -1,0 +1,200 @@
+# AWS QA / Staging / Prod: Traefik as its own release in the tools namespace, like the local
+# helmfile release (`just traefik-install <env>` in labs64.io-devops, before the umbrella chart,
+# whose values.aws.yaml switches its bundled Traefik off). It is the in-cluster gateway (Gateway API
+# implementation) every module route attaches to, and the only pod the public edge can reach.
+#
+# What labs64.io-devops renders per environment and passes as the last values file
+# (`just helm-values <env>`):
+#   providers.kubernetesGateway.namespaces / providers.kubernetesCRD.namespaces
+#       the namespaces Traefik serves (modules + tools)
+#   gateway.listeners.web.namespacePolicy
+#       the same namespaces as the listener's allowedRoutes selector
+#   ports.web.forwardedHeaders.trustedIPs
+#       the VPC CIDR (the ALB's X-Forwarded-* headers)
+#
+# What a compromised Traefik could reach is kept small on purpose:
+#   - It is not in the modules namespace: a module's NetworkPolicy admits it as the ingress
+#     controller (on the API port only where networkPolicy.ingressPorts is set), not through a
+#     "same namespace" rule. Namespace-wide baseline policies the operator adds on top (labs64.io-devops
+#     kubernetes/network-policies/) must not re-open that.
+#   - It watches the listed namespaces only, and the Gateway accepts routes from them only: a route
+#     in any other namespace is ignored.
+#   - It may read Secrets in those namespaces only (RBAC below), not cluster-wide. It cannot do
+#     without: both Kubernetes providers list and watch Secrets of every namespace they serve (TLS
+#     certificates, middleware credentials), and their caches do not sync without that permission.
+#   - No Ingress provider: an Ingress object, in any namespace, is not a way to publish a route.
+
+service:
+  # The public edge is a Terraform-owned ALB + WAF (labs64.io-devops terraform/edge.tf) whose target
+  # group is kept in sync with these pods by a TargetGroupBinding, so the Service stays ClusterIP.
+  # (Traefik's chart reads service.spec.type; a top-level service.type is silently ignored.)
+  spec:
+    type: ClusterIP
+
+ingressRoute:
+  dashboard:
+    enabled: false
+ingressClass:
+  enabled: false
+
+providers:
+  # Routing substrate: modules own HTTPRoutes that attach to the Gateway below.
+  kubernetesGateway:
+    enabled: true
+  # ForwardAuth, rate limit and compression are Traefik Middlewares referenced from the HTTPRoutes
+  # (ExtensionRef), read by this provider.
+  kubernetesCRD:
+    enabled: true
+  kubernetesIngress:
+    enabled: false
+
+gatewayClass:
+  enabled: true
+
+# The platform Gateway (release namespace: tools). Modules attach their HTTPRoutes via parentRefs
+# {name: labs64io-gateway, namespace: tools}; which namespaces may do so is the listener's
+# namespacePolicy, rendered per environment.
+gateway:
+  enabled: true
+  name: labs64io-gateway
+  listeners:
+    web:
+      port: 8000
+      protocol: HTTP
+
+# The chart ships with resources: {} and a single fixed replica: the one thing every request passes
+# through would have no CPU baseline for the HPA to scale against and no redundancy. Sized off
+# observed idle usage (~3m CPU / 27Mi) with headroom for burst.
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+# Omit spec.replicas once autoscaling owns it (the chart's own convention).
+deployment:
+  replicas: null
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+# This chart does NOT fill in a missing labelSelector: an omitted one matches no pod and makes the
+# constraint a no-op. The instance label is computed with the chart's own helper (the constraints go
+# through `tpl`), so it stays correct for any release name or namespace.
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
+        app.kubernetes.io/instance: '{{ include "traefik.instance-name" . }}'
+  - maxSkew: 1
+    minDomains: 2
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: traefik
+        app.kubernetes.io/instance: '{{ include "traefik.instance-name" . }}'
+
+# The chart's ClusterRole reads every Secret in the cluster, and its namespaced alternative
+# (rbac.namespaced) does not work with the Gateway provider. So the chart's RBAC is off and the
+# objects below replace it: the chart's rules for the two providers enabled above without the
+# Secret rule, plus a Role for Secrets in each served namespace.
+# When the chart version changes, compare with its templates/rbac/clusterrole.yaml.
+rbac:
+  enabled: false
+extraObjects:
+  - |
+    {{- if not .Values.providers.kubernetesGateway.namespaces }}
+    {{- fail "overrides/traefik/values.aws.yaml: providers.kubernetesGateway.namespaces must list the namespaces Traefik serves (rendered by labs64.io-devops `just helm-values`)" }}
+    {{- end }}
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: {{ template "traefik.clusterRoleName" . }}
+      labels:
+        {{- include "traefik.labels" . | nindent 4 }}
+    rules:
+      - apiGroups: [""]
+        resources: ["configmaps", "nodes", "services"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["discovery.k8s.io"]
+        resources: ["endpointslices"]
+        verbs: ["list", "watch"]
+      - apiGroups: [""]
+        resources: ["pods"]
+        verbs: ["get"]
+      - apiGroups: [""]
+        resources: ["namespaces"]
+        verbs: ["list", "watch"]
+      - apiGroups: ["extensions", "networking.k8s.io"]
+        resources: ["ingressclasses"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["traefik.io"]
+        resources: ["ingressroutes", "ingressroutetcps", "ingressrouteudps", "middlewares", "middlewaretcps", "serverstransports", "serverstransporttcps", "tlsoptions", "tlsstores", "traefikservices"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["gateway.networking.k8s.io"]
+        resources: ["backendtlspolicies", "gatewayclasses", "gateways", "grpcroutes", "httproutes", "referencegrants", "tcproutes", "tlsroutes"]
+        verbs: ["get", "list", "watch"]
+      - apiGroups: ["gateway.networking.k8s.io"]
+        resources: ["backendtlspolicies/status", "gatewayclasses/status", "gateways/status", "grpcroutes/status", "httproutes/status", "tcproutes/status", "tlsroutes/status"]
+        verbs: ["update"]
+  - |
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: {{ template "traefik.clusterRoleName" . }}
+      labels:
+        {{- include "traefik.labels" . | nindent 4 }}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: {{ template "traefik.clusterRoleName" . }}
+    subjects:
+      - kind: ServiceAccount
+        name: {{ include "traefik.serviceAccountName" . }}
+        namespace: {{ template "traefik.namespace" . }}
+  - |
+    {{- range (concat .Values.providers.kubernetesGateway.namespaces .Values.providers.kubernetesCRD.namespaces | uniq) }}
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: {{ include "traefik.fullname" $ }}-secrets
+      namespace: {{ . }}
+      labels:
+        {{- include "traefik.labels" $ | nindent 4 }}
+    rules:
+      - apiGroups: [""]
+        resources: ["secrets"]
+        verbs: ["get", "list", "watch"]
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: {{ include "traefik.fullname" $ }}-secrets
+      namespace: {{ . }}
+      labels:
+        {{- include "traefik.labels" $ | nindent 4 }}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: {{ include "traefik.fullname" $ }}-secrets
+    subjects:
+      - kind: ServiceAccount
+        name: {{ include "traefik.serviceAccountName" $ }}
+        namespace: {{ template "traefik.namespace" $ }}
+    {{- end }}

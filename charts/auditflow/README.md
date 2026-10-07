@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.15.9](https://img.shields.io/badge/Version-0.15.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.19](https://img.shields.io/badge/AppVersion-0.0.19-informational?style=flat-square)
+![Version: 0.15.10](https://img.shields.io/badge/Version-0.15.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.19](https://img.shields.io/badge/AppVersion-0.0.19-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
@@ -21,7 +21,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.5 |
+| file://../chart-libs | chart-libs | 0.8.6 |
 
 ## Values
 
@@ -94,19 +94,21 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/liveness","port":8080},"initialDelaySeconds":0,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
-| networkPolicy | object | `{"egress":[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]},{"ports":[{"port":443,"protocol":"TCP"},{"port":6443,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}],"enabled":false,"extraEgress":[],"extraIngress":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring","toolsEgress":[{"name":"rabbitmq","port":5672},{"name":"valkey","port":6379}]}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy | object | `{"egress":[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]},{"ports":[{"port":443,"protocol":"TCP"},{"port":6443,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}],"enabled":false,"extraEgress":[],"extraIngress":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"ingressFrom":["payment-gateway"],"ingressPorts":[8080],"observabilityNamespace":"monitoring","toolsEgress":[{"name":"rabbitmq","port":5672},{"name":"valkey","port":6379}]}` | NetworkPolicy: allow ingress from Traefik and the listed in-namespace clients, on the API port only (rendered by chart-libs.networkpolicy) |
 | networkPolicy.egress | list | `[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]},{"ports":[{"port":443,"protocol":"TCP"},{"port":6443,"protocol":"TCP"}],"to":[{"ipBlock":{"cidr":"0.0.0.0/0"}}]}]` | Egress rules enforcing database-per-service isolation. |
 | networkPolicy.extraEgress | list | `[]` | Additional raw egress rules (e.g. VPC-CIDR access to externally-managed data stores) |
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
+| networkPolicy.ingressFrom | list | `["payment-gateway"]` | In-namespace workloads (app.kubernetes.io/name) allowed to call the API port, besides the ingress controller and this chart's own pods. /actuator (DLQ inspect, replay and purge) needs no authentication, so keep this list to the services that publish events directly. |
+| networkPolicy.ingressPorts | list | `[8080]` | TCP ports open to the gateway and the in-namespace clients below. Only the backend's API port: the transformer (8081) and sink (8082) sidecars have no authentication and are reached by the backend over localhost, never over the pod network. `kubectl port-forward` is not subject to NetworkPolicy. |
 | networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | networkPolicy.toolsEgress | list | `[{"name":"rabbitmq","port":5672},{"name":"valkey","port":6379}]` | Tools-namespace destinations this service needs (name + port pairs); rendered as scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve database-per-service isolation. |
 | nodeSelector | object | `{}` | Node labels for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/ |
 | observability | object | `{"enabled":false,"otlpEndpoint":"http://$(NODE_IP):4318"}` | Observability is an infrastructure concern: the same images run with or without it. When enabled, the backend's bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and the Python sidecars start under opentelemetry-instrument (triggered by the OTLP endpoint env). Java metrics stay on Micrometer via /actuator/prometheus (prometheus.io/* pod annotations are added automatically when enabled). |
 | observability.enabled | bool | `false` | Enable runtime instrumentation (traces + logs OTLP, Prometheus-annotation metrics scrape) |
 | observability.otlpEndpoint | string | `"http://$(NODE_IP):4318"` | OTLP endpoint of the OpenTelemetry Collector |
-| podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
+| podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ @schema type: object additionalProperties: true @schema |
 | podDisruptionBudget | object | `{"enabled":false,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
 | podSecurityContext.fsGroup | int | `1064` |  |
@@ -126,6 +128,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | rbac.rules[2].apiGroups[0] | string | `""` |  |
 | rbac.rules[2].resources[0] | string | `"services"` |  |
 | rbac.rules[2].verbs[0] | string | `"get"` |  |
+| rbac.tenantSecretsOnly | bool | `false` | Limit the Secret rule below to the credential Secrets of the tenants this release provisions (`auditflow-tenant-<tenant>-creds` for `tenants.platform` and every `tenants.additional` entry), by name. false lets the backend read every Secret of the namespace, which a tenant onboarded out-of-band (a ConfigMap applied after the install) needs for its credentials. |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":0,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | resources | object | `{"limits":{"cpu":"500m","memory":"768Mi"},"requests":{"cpu":"100m","memory":"384Mi"}}` | Resource limits and requests for the container For production, it's recommended to set both requests and limits Sized off observed steady-state usage (~3m CPU / 310Mi mem on labs64-io-dev — JVM heap holds steady once warmed up) with headroom for GC/startup spikes. |

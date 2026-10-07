@@ -3,6 +3,7 @@ replicaCount: 1
 image:
   repository: localhost:5005/traefik-authproxy
   tag: latest
+  digest: ""
   pullPolicy: Always
 
 # OIDC settings and the matching NetworkPolicy egress come from oidc-<provider>.local.yaml,

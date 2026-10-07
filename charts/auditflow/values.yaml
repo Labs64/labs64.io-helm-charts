@@ -110,6 +110,11 @@ serviceAccount:
 # (transformer/sink) needs Service get.
 rbac:
   create: true
+  # -- Limit the Secret rule below to the credential Secrets of the tenants this release provisions
+  # (`auditflow-tenant-<tenant>-creds` for `tenants.platform` and every `tenants.additional` entry),
+  # by name. false lets the backend read every Secret of the namespace, which a tenant onboarded
+  # out-of-band (a ConfigMap applied after the install) needs for its credentials.
+  tenantSecretsOnly: false
   rules:
     - apiGroups: [""]
       resources: ["configmaps"]
@@ -123,6 +128,10 @@ rbac:
 
 # -- This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
 podAnnotations: {}
 # -- This is for setting Kubernetes Labels to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -507,9 +516,20 @@ podDisruptionBudget:
   enabled: false
   minAvailable: 1
 
-# -- NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)
+# -- NetworkPolicy: allow ingress from Traefik and the listed in-namespace clients, on the API port only (rendered by chart-libs.networkpolicy)
 networkPolicy:
   enabled: false
+  # -- TCP ports open to the gateway and the in-namespace clients below. Only the backend's API
+  # port: the transformer (8081) and sink (8082) sidecars have no authentication and are reached
+  # by the backend over localhost, never over the pod network. `kubectl port-forward` is not
+  # subject to NetworkPolicy.
+  ingressPorts:
+    - 8080
+  # -- In-namespace workloads (app.kubernetes.io/name) allowed to call the API port, besides the
+  # ingress controller and this chart's own pods. /actuator (DLQ inspect, replay and purge)
+  # needs no authentication, so keep this list to the services that publish events directly.
+  ingressFrom:
+    - payment-gateway
   # -- Namespace where Traefik runs
   gatewayNamespace: tools
   # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard

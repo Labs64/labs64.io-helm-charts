@@ -1,6 +1,6 @@
 # api-gateway
 
-![Version: 0.15.2](https://img.shields.io/badge/Version-0.15.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
+![Version: 0.15.3](https://img.shields.io/badge/Version-0.15.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
 
 Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
@@ -21,7 +21,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.5 |
+| file://../chart-libs | chart-libs | 0.8.6 |
 
 ## Values
 
@@ -29,13 +29,13 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | applicationType | string | `"python"` | Security response headers are now emitted as a native Gateway API ResponseHeaderModifier filter on each HTTPRoute rule; the canonical values live in the chart-libs "chart-libs.securityHeaders" helper. (The former Traefik security-headers Middleware has been removed.) |
-| authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"],"maxResponseBodySize":8192,"port":8081,"serviceName":"gateway-common","trustForwardHeader":true}` | ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container) |
+| authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"],"maxResponseBodySize":8192,"port":8081,"serviceName":"gateway-common","trustForwardHeader":false}` | ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container) |
 | authProxy.address | string | `""` | Full URL override for the /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth |
 | authProxy.authResponseHeaders | list | `["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"]` | Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through) |
 | authProxy.maxResponseBodySize | int | `8192` | Maximum size (bytes) of the authproxy's /auth response Traefik will read. The response carries only identity headers and no body, so this is a DoS guard, not a functional limit — set well above authResponseHeaders' combined size. |
 | authProxy.port | int | `8081` | Service port of the authproxy container |
 | authProxy.serviceName | string | `"gateway-common"` | Service name backing the ForwardAuth address. Must match fullnameOverride above since the authproxy Service is rendered by this same chart. |
-| authProxy.trustForwardHeader | bool | `true` | Trust X-Forwarded-* headers from the proxy |
+| authProxy.trustForwardHeader | bool | `false` | Pass a caller-supplied X-Forwarded-Method / X-Forwarded-Uri on to the authproxy instead of the method and path Traefik actually serves. Keep it false: the authproxy authorises whatever those two headers name, so with true a caller behind a trusted proxy (the entry point's forwardedHeaders.trustedIPs, e.g. a load balancer that passes request headers through) could have a protected route checked as a public one. |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | buffering | object | `{"enabled":true,"maxRequestBodyBytes":2621440}` | Buffering middleware configuration (limits payload sizes to prevent OOM / large event attacks) |
 | buffering.enabled | bool | `true` | Enable the shared buffering middleware |
@@ -53,8 +53,8 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
 | extraConfigChecksums | list | `["configmap-routes","configmap-static-policies"]` | Roll the ACS whenever the generated routes / static-route ConfigMaps change (checksum/config already covers configmap.yaml; these are the extra dynamically generated ConfigMaps this chart mounts). |
 | fullnameOverride | string | `"gateway-common"` | Fixed resource-name prefix (instead of the default "<release>-api-gateway") so module charts can reference the shared middlewares by a stable name regardless of release name. Also fixes the name of this chart's own Deployment/Service, which is why authProxy.serviceName below must match this value. |
-| image | object | `{"digest":"","pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
-| image.digest | string | `""` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| image | object | `{"digest":"sha256:dfc6086dfbce4d58ee62bc7d44afbf1bf819928f4118b309cc380f80f20b50f9","pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image.digest | string | `"sha256:dfc6086dfbce4d58ee62bc7d44afbf1bf819928f4118b309cc380f80f20b50f9"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |

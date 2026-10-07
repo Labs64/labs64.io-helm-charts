@@ -65,8 +65,8 @@
           "type": "string"
         },
         "trustForwardHeader": {
-          "default": true,
-          "description": "Trust X-Forwarded-* headers from the proxy",
+          "default": false,
+          "description": "Pass a caller-supplied X-Forwarded-Method / X-Forwarded-Uri on to the authproxy instead of\nthe method and path Traefik actually serves. Keep it false: the authproxy authorises whatever\nthose two headers name, so with true a caller behind a trusted proxy (the entry point's\nforwardedHeaders.trustedIPs, e.g. a load balancer that passes request headers through) could\nhave a protected route checked as a public one.",
           "title": "trustForwardHeader",
           "type": "boolean"
         }
@@ -287,7 +287,7 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "",
+          "default": "sha256:dfc6086dfbce4d58ee62bc7d44afbf1bf819928f4118b309cc380f80f20b50f9",
           "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"

@@ -17,7 +17,7 @@ image:
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
   # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-  digest: ""
+  digest: "sha256:dfc6086dfbce4d58ee62bc7d44afbf1bf819928f4118b309cc380f80f20b50f9"
 
 # -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -294,8 +294,12 @@ authProxy:
   serviceName: gateway-common
   # -- Service port of the authproxy container
   port: 8081
-  # -- Trust X-Forwarded-* headers from the proxy
-  trustForwardHeader: true
+  # -- Pass a caller-supplied X-Forwarded-Method / X-Forwarded-Uri on to the authproxy instead of
+  # the method and path Traefik actually serves. Keep it false: the authproxy authorises whatever
+  # those two headers name, so with true a caller behind a trusted proxy (the entry point's
+  # forwardedHeaders.trustedIPs, e.g. a load balancer that passes request headers through) could
+  # have a protected route checked as a public one.
+  trustForwardHeader: false
   # -- Maximum size (bytes) of the authproxy's /auth response Traefik will read. The
   # response carries only identity headers and no body, so this is a DoS guard, not a
   # functional limit — set well above authResponseHeaders' combined size.

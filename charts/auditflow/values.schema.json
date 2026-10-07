@@ -802,7 +802,7 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "sha256:c7b26d3ca11cc686f0cd6feacca0b6eeedded736d4a38111c7d75a2bb439b1e3",
+          "default": "sha256:bcc129c406771d3e5d286f42aca86ea927e3189e342fdf01da896c3448c1b932",
           "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
@@ -922,7 +922,7 @@
     },
     "networkPolicy": {
       "additionalProperties": false,
-      "description": "NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)",
+      "description": "NetworkPolicy: allow ingress from Traefik and the listed in-namespace clients, on the API port only (rendered by chart-libs.networkpolicy)",
       "properties": {
         "egress": {
           "description": "Egress rules enforcing database-per-service isolation.",
@@ -1142,6 +1142,32 @@
           "title": "ingressControllerLabels",
           "type": "object"
         },
+        "ingressFrom": {
+          "description": "In-namespace workloads (app.kubernetes.io/name) allowed to call the API port, besides the\ningress controller and this chart's own pods. /actuator (DLQ inspect, replay and purge)\nneeds no authentication, so keep this list to the services that publish events directly.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              }
+            ],
+            "required": []
+          },
+          "title": "ingressFrom",
+          "type": "array"
+        },
+        "ingressPorts": {
+          "description": "TCP ports open to the gateway and the in-namespace clients below. Only the backend's API\nport: the transformer (8081) and sink (8082) sidecars have no authentication and are reached\nby the backend over localhost, never over the pod network. `kubectl port-forward` is not\nsubject to NetworkPolicy.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              }
+            ],
+            "required": []
+          },
+          "title": "ingressPorts",
+          "type": "array"
+        },
         "observabilityNamespace": {
           "default": "monitoring",
           "description": "Namespace the observability/OTel collector runs in",
@@ -1201,6 +1227,8 @@
       },
       "required": [
         "enabled",
+        "ingressPorts",
+        "ingressFrom",
         "gatewayNamespace",
         "observabilityNamespace",
         "extraIngress",
@@ -1243,7 +1271,7 @@
       "type": "object"
     },
     "podAnnotations": {
-      "additionalProperties": false,
+      "additionalProperties": true,
       "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
       "required": [],
       "title": "podAnnotations",
@@ -1491,10 +1519,17 @@
           },
           "title": "rules",
           "type": "array"
+        },
+        "tenantSecretsOnly": {
+          "default": false,
+          "description": "Limit the Secret rule below to the credential Secrets of the tenants this release provisions\n(`auditflow-tenant-\u003ctenant\u003e-creds` for `tenants.platform` and every `tenants.additional` entry),\nby name. false lets the backend read every Secret of the namespace, which a tenant onboarded\nout-of-band (a ConfigMap applied after the install) needs for its credentials.",
+          "title": "tenantSecretsOnly",
+          "type": "boolean"
         }
       },
       "required": [
         "create",
+        "tenantSecretsOnly",
         "rules"
       ],
       "title": "rbac",
@@ -1762,7 +1797,7 @@
           "additionalProperties": false,
           "properties": {
             "digest": {
-              "default": "sha256:bc4b7684b612aa43a8636ab2c9f8bf763986a89153a5b3cea461e37bfca2f7f3",
+              "default": "sha256:aeab2c1433a52679749b31f16282fc9b200c7a2ba911d7bfb8160aec509b52e8",
               "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
@@ -2083,7 +2118,7 @@
           "additionalProperties": false,
           "properties": {
             "digest": {
-              "default": "sha256:0af0ab7a50eeb4dd89587f9aab630eeed8583381647dde9546482026ef62a4f3",
+              "default": "sha256:f4df4c162917e2ad25041eba7e5660382b433350a5ca5fa75f53b0fee6640e34",
               "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
@@ -2229,7 +2264,6 @@
     "fullnameOverride",
     "serviceAccount",
     "rbac",
-    "podAnnotations",
     "podLabels",
     "podSecurityContext",
     "securityContext",

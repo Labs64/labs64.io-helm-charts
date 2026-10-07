@@ -113,8 +113,8 @@ networkPolicy:
       podSelector:
         matchLabels:
           app.kubernetes.io/name: traefik
-    # On AWS the umbrella chart runs Traefik in the modules namespace (public edge: ALB → Traefik →
-    # the HTTPRoute below).
+    # Up to umbrella 0.20.11 the AWS profile ran Traefik in the modules namespace (now a release in
+    # tools, covered by the rule above); kept so an environment that has not moved yet still works.
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: labs64io

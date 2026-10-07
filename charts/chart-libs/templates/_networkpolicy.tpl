@@ -1,6 +1,12 @@
 {{/*
 NetworkPolicy: allow ingress from Traefik (gateway namespace), same-namespace
-pods and the observability namespace (metrics scrape). Egress is restricted to DNS,
+pods and the observability namespace (metrics scrape). Two optional values narrow the
+first rule, which otherwise admits every pod of the namespace on every port:
+.Values.networkPolicy.ingressPorts limits it to the listed TCP ports (sidecar and
+other container ports are then closed to the pod network), and
+.Values.networkPolicy.ingressFrom replaces "every pod in the namespace" with the
+ingress controller, the chart's own pods (the helm test hook carries their labels)
+and the listed app.kubernetes.io/name values. Egress is restricted to DNS,
 the observability namespace (OTLP, when observability is enabled), specific tools-namespace destinations declared via
 .Values.networkPolicy.toolsEgress (name + port pairs — NOT a blanket allow to the
 whole tools namespace, to preserve database-per-service isolation), and any
@@ -37,7 +43,33 @@ spec:
               {{- else }}
               app.kubernetes.io/name: traefik
               {{- end }}
+        {{- if .Values.networkPolicy.ingressFrom }}
+        {{- /* The ingress controller may also run in the release namespace (umbrella install). */}}
+        - podSelector:
+            matchLabels:
+              {{- if .Values.networkPolicy.ingressControllerLabels }}
+              {{- toYaml .Values.networkPolicy.ingressControllerLabels | nindent 14 }}
+              {{- else }}
+              app.kubernetes.io/name: traefik
+              {{- end }}
+        - podSelector:
+            matchLabels:
+              {{- include "chart-libs.selectorLabels" . | nindent 14 }}
+        {{- range .Values.networkPolicy.ingressFrom }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ . }}
+        {{- end }}
+        {{- else }}
         - podSelector: {}
+        {{- end }}
+      {{- with .Values.networkPolicy.ingressPorts }}
+      ports:
+        {{- range . }}
+        - protocol: TCP
+          port: {{ . }}
+        {{- end }}
+      {{- end }}
     - from:
         - namespaceSelector:
             matchLabels:

@@ -45,6 +45,10 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
    content. Neither Docker Hub nor GHCR can enforce tag immutability, so the digest is the only
    deployment identity that cannot be moved out from under a running workload — shared environments
    should pin it in `overrides/<module>/values.<env>.yaml`; local dev keeps using tags.
+   Third-party images pinned in a chart's `values.yaml` (Cerbos in `authz-pdp`) carry a
+   `# renovate-digest: ... version=<tag>` annotation above the key: the digest wins over the tag, so
+   Renovate moves the annotated version and the digest together and `just check-pins`
+   (labs64.io-workspace) fails when the annotation and `appVersion` differ.
 
 ## Deployment Modes
 
@@ -53,6 +57,8 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | Local Development | `overrides/<module>/values.local.yaml` | Dev cluster with shared toolset via Helmfile (`just up`) |
 | AWS QA / Staging / Prod Environment | `charts/labs64io-ecosystem/values.aws.yaml` + values rendered by `labs64.io-devops` | Umbrella chart on EKS against Terraform-provisioned RDS / ElastiCache / Amazon MQ |
 | AWS identity provider | `overrides/keycloak/values.yaml` + `values.aws.yaml` + `realm.base.json` (+ `realm.test-fixtures.json` in dev only, + one machine client per `labs64io.serviceClients` entry) + values rendered by `labs64.io-devops` | Upstream `codecentric/keycloakx` release in `tools`, installed by devops (`just keycloak-install <env>`) before the umbrella chart — third-party charts are consumed from their publisher, never wrapped in a Labs64 chart |
+| AWS gateway | `overrides/traefik/values.aws.yaml` + values rendered by `labs64.io-devops` (served namespaces, VPC CIDR) | Upstream `traefik/traefik` release in `tools`, installed by devops (`just traefik-install <env>`) before the umbrella chart, whose `values.aws.yaml` keeps the bundled Traefik off. Providers and RBAC are scoped to the served namespaces; the chart's cluster-wide Secret access is replaced (see the file's header) |
+| AWS metrics collector | `overrides/opentelemetry/values-collector.aws.yaml` + values rendered by `labs64.io-devops` (IAM role, remote-write endpoint, egress) | Upstream `opentelemetry-collector` release in `monitoring`, installed by devops (`just metrics-install <env>`): scrapes the modules' `/actuator/prometheus` and remote-writes to Amazon Managed Service for Prometheus. Same scrape selection and `job` label as the local collector |
 | Users' Own Infrastructure (BYO Infra) | `overrides/<module>/values.prod-example.yaml` | Copy & adapt for your own infrastructure and external services |
 
 Infrastructure is decoupled from application charts — no module chart bundles RabbitMQ/PostgreSQL/Redis

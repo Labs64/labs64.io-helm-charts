@@ -1,0 +1,170 @@
+# AWS QA / Staging / Prod: the metrics collector (`just metrics-install <env>` in labs64.io-devops,
+# upstream opentelemetry-collector chart, release `metrics-collector` in the `monitoring` namespace).
+#
+# One pod scrapes the modules' /actuator/prometheus and writes the series to an Amazon Managed
+# Service for Prometheus workspace (remote write signed with SigV4). Metrics only: on AWS traces go
+# to the CloudWatch agent and logs to Fluent Bit (the amazon-cloudwatch-observability EKS add-on).
+#
+# What labs64.io-devops renders per environment and passes as the last values file
+# (`just helm-values <env>`):
+#   serviceAccount.annotations   the IAM role that may write to the workspace (IRSA)
+#   extraEnvs                    AMP_REMOTE_WRITE_ENDPOINT, AWS_REGION
+#   networkPolicy.egressRules    DNS, the API server, the module pods and HTTPS
+# and, on the module charts, the prometheus.io/* pod annotations this collector selects by.
+
+mode: deployment
+# One replica on purpose: two would scrape and write every series twice.
+replicaCount: 1
+
+image:
+  repository: otel/opentelemetry-collector-contrib
+  # The appVersion of the collector chart pinned in helmfile.yaml.gotmpl, as in
+  # values-collector.local.yaml (which says how to update it): the image and the chart's config
+  # schema move together, and `just check-pins` fails while the stamp below differs from the chart.
+  # chart-pin: opentelemetry-collector 0.175.0
+  tag: 0.161.0
+
+serviceAccount:
+  create: true
+  # The IAM role's trust policy names this ServiceAccount (labs64.io-devops terraform/metrics.tf).
+  name: metrics-collector
+
+# kubernetes_sd (role: pod) lists and watches pods; nothing else.
+clusterRole:
+  create: true
+  rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+
+# Nothing sends to this collector: no receiver ports and no Service (one without ports is invalid).
+service:
+  enabled: false
+ports:
+  otlp:
+    enabled: false
+  otlp-http:
+    enabled: false
+  jaeger-compact:
+    enabled: false
+  jaeger-thrift:
+    enabled: false
+  jaeger-grpc:
+    enabled: false
+  zipkin:
+    enabled: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    memory: 384Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# Nothing may connect to the pod (the kubelet's probes of health_check on 13133 are not subject to
+# NetworkPolicy), and it may connect only to what labs64.io-devops lists as egressRules (they name
+# the environment's namespaces). The chart's policy always has one ingress rule for the enabled
+# ports; with none enabled and no `from` that rule would admit everything, so it is given a source
+# that is only the collector itself.
+networkPolicy:
+  enabled: true
+  allowIngressFrom:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: opentelemetry-collector
+          app.kubernetes.io/instance: '{{ .Release.Name }}'
+
+# The whole configuration, not merged with the chart's default one (which defines OTLP, Jaeger and
+# Zipkin receivers and three pipelines this collector must not have).
+alternateConfig:
+  extensions:
+    health_check:
+      endpoint: ${env:MY_POD_IP}:13133
+    sigv4auth:
+      region: ${env:AWS_REGION}
+      service: aps
+
+  receivers:
+    prometheus:
+      config:
+        scrape_configs:
+          # Same selection as the local collector (values-collector.local.yaml): pods that opt in
+          # with prometheus.io/scrape, at prometheus.io/port and prometheus.io/path.
+          - job_name: kubernetes-pods
+            scrape_interval: 60s
+            scrape_timeout: 10s
+            kubernetes_sd_configs:
+              - role: pod
+            relabel_configs:
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+                action: keep
+                regex: "true"
+              - source_labels: [__meta_kubernetes_pod_phase]
+                action: drop
+                regex: Pending|Succeeded|Failed
+              - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+                action: replace
+                target_label: __metrics_path__
+                regex: (.+)
+              - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+                action: replace
+                regex: ([^:]+)(?::\d+)?;(\d+)
+                replacement: $$1:$$2
+                target_label: __address__
+              # job = <namespace>/<app.kubernetes.io/name>: the form the charts' SLO rules select by
+              # (chart-libs.slo.prometheusrule) and the rules in labs64.io-devops use. Set here in
+              # full, so it does not depend on how an exporter combines resource attributes.
+              - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app_kubernetes_io_name]
+                action: replace
+                separator: /
+                target_label: job
+              - source_labels: [__meta_kubernetes_namespace]
+                action: replace
+                target_label: k8s_namespace
+              - source_labels: [__meta_kubernetes_pod_name]
+                action: replace
+                target_label: pod
+
+  processors:
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 80
+      spike_limit_percentage: 25
+    batch:
+      send_batch_size: 1000
+      timeout: 15s
+
+  exporters:
+    prometheusremotewrite:
+      endpoint: ${env:AMP_REMOTE_WRITE_ENDPOINT}
+      auth:
+        authenticator: sigv4auth
+      # Nothing joins on target_info, and it is one extra series per pod (see the local values).
+      target_info:
+        enabled: false
+      # (No sending_queue: this exporter rejects the key and keeps its own queue.)
+      retry_on_failure:
+        enabled: true
+        initial_interval: 5s
+        max_interval: 30s
+        max_elapsed_time: 300s
+
+  service:
+    extensions: [health_check, sigv4auth]
+    pipelines:
+      metrics:
+        receivers: [prometheus]
+        processors: [memory_limiter, batch]
+        exporters: [prometheusremotewrite]

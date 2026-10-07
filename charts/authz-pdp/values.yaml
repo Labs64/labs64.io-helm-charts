@@ -10,8 +10,10 @@ image:
   pullPolicy: IfNotPresent
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
-  # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-  digest: ""
+  # renovate-digest: datasource=docker depName=ghcr.io/cerbos/cerbos version=0.56.0
+
+  # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag`, so a deployment cannot follow a moved tag. This is the image index of the Cerbos version in Chart.yaml's appVersion: Renovate moves both together (the annotation above names the version), and `just check-pins` fails if they differ.
+  digest: "sha256:540643bc67ba628011a150ad1d3370f285daa38995be5cd7a4be181da902bec1"
 
 imagePullSecrets: []
 nameOverride: ""

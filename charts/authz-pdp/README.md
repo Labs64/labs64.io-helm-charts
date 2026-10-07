@@ -1,6 +1,6 @@
 # authz-pdp
 
-![Version: 0.8.5](https://img.shields.io/badge/Version-0.8.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.56.0](https://img.shields.io/badge/AppVersion-0.56.0-informational?style=flat-square)
+![Version: 0.8.6](https://img.shields.io/badge/Version-0.8.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.56.0](https://img.shields.io/badge/AppVersion-0.56.0-informational?style=flat-square)
 
 Labs64.IO :: Cerbos PDP — central authorization decision point
 
@@ -21,7 +21,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.5 |
+| file://../chart-libs | chart-libs | 0.8.6 |
 
 ## Values
 
@@ -35,8 +35,8 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 | env | list | `[]` |  |
 | envFrom | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
-| image | object | `{"digest":"","pullPolicy":"IfNotPresent","repository":"ghcr.io/cerbos/cerbos","tag":""}` | Cerbos container image (third-party; keeps its own non-root user). |
-| image.digest | string | `""` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| image | object | `{"digest":"sha256:540643bc67ba628011a150ad1d3370f285daa38995be5cd7a4be181da902bec1","pullPolicy":"IfNotPresent","repository":"ghcr.io/cerbos/cerbos","tag":""}` | Cerbos container image (third-party; keeps its own non-root user). |
+| image.digest | string | `"sha256:540643bc67ba628011a150ad1d3370f285daa38995be5cd7a4be181da902bec1"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag`, so a deployment cannot follow a moved tag. This is the image index of the Cerbos version in Chart.yaml's appVersion: Renovate moves both together (the annotation above names the version), and `just check-pins` fails if they differ. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` |  |
 | livenessProbe.httpGet.path | string | `"/_cerbos/health"` |  |

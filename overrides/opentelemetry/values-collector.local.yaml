@@ -6,11 +6,13 @@ podAnnotations:
 
 image:
   repository: otel/opentelemetry-collector-contrib
-  # Pinned to the appVersion of the collector chart pinned in helmfile.yaml.gotmpl
-  # (opentelemetry-collector 0.175.0 -> appVersion 0.161.0), so the image and the chart's
-  # config schema always move together. `latest` let collector behaviour shift under an
-  # unchanged chart on every pull. Bump both numbers in the same commit — Renovate only
-  # proposes the chart, and deliberately does not touch this tag on its own.
+  # The appVersion of the collector chart pinned in helmfile.yaml.gotmpl, so the image and the
+  # chart's config schema always move together. `latest` let collector behaviour shift under an
+  # unchanged chart on every pull. Renovate proposes the chart and deliberately not this tag: when
+  # the chart moves, `just check-pins` fails until the chart's appVersion is read (`helm show chart
+  # open-telemetry/opentelemetry-collector --version <v>`) and both lines below are updated, here
+  # and in values-collector.aws.yaml.
+  # chart-pin: opentelemetry-collector 0.175.0
   tag: 0.161.0
 
 presets:

@@ -550,7 +550,7 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "",
+          "default": "sha256:5421f763b53ec63bc060cf16f9c504023919835a974e75507e8ebbd453b617b8",
           "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
@@ -1017,7 +1017,7 @@
       "type": "object"
     },
     "podAnnotations": {
-      "additionalProperties": false,
+      "additionalProperties": true,
       "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
       "required": [],
       "title": "podAnnotations",
@@ -1527,7 +1527,6 @@
     "fullnameOverride",
     "serviceAccount",
     "rbac",
-    "podAnnotations",
     "podLabels",
     "podSecurityContext",
     "securityContext",

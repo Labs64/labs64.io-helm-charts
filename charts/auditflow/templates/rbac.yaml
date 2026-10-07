@@ -1,1 +1,26 @@
+{{- /*
+rbac.tenantSecretsOnly: the rule on Secrets gets resourceNames, one per tenant of this release, so
+the backend can read tenant credentials and nothing else in the namespace (module credentials,
+broker and OIDC secrets). Names follow K8sSecretRefResolver: auditflow-tenant-<k8s name>-creds.
+*/}}
+{{- if and .Values.rbac.create .Values.rbac.tenantSecretsOnly }}
+{{- $names := list "auditflow-tenant-platform-creds" }}
+{{- range .Values.tenants.additional }}
+{{- $names = append $names (printf "auditflow-tenant-%s-creds" (include "auditflow.tenantK8sName" .tenantId)) }}
+{{- end }}
+{{- $rules := list }}
+{{- range .Values.rbac.rules }}
+{{- if has "secrets" .resources }}
+{{- $rules = append $rules (dict "apiGroups" .apiGroups "resources" (list "secrets") "resourceNames" ($names | uniq) "verbs" .verbs) }}
+{{- with without .resources "secrets" }}
+{{- $rules = append $rules (dict "apiGroups" $.apiGroups "resources" . "verbs" $.verbs) }}
+{{- end }}
+{{- else }}
+{{- $rules = append $rules . }}
+{{- end }}
+{{- end }}
+{{- $values := mustMergeOverwrite (deepCopy .Values) (dict "rbac" (dict "rules" $rules)) }}
+{{ include "chart-libs.rbac" (dict "Values" $values "Release" .Release "Chart" .Chart "Capabilities" .Capabilities "Template" .Template) }}
+{{- else }}
 {{ include "chart-libs.rbac" . }}
+{{- end }}
