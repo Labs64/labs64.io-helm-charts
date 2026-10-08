@@ -17,8 +17,9 @@ if ! command -v jq >/dev/null 2>&1; then
     exit 1
 fi
 
+# output cached); the others stay plain buttons.
 actions=$(jq -n '[
-  {id:"status", label:"Pods & services", type:"command", command:["just","status"]},
+  {id:"status", label:"Pods & services", type:"command", command:["just","status"], panel:true},
   {id:"identity-provider", label:"Identity provider in use", type:"command", command:["just","identity-provider"]},
   {id:"grafana", label:"Grafana", type:"browser", url:"http://gateway.localhost/grafana/"},
   {id:"traefik-dashboard", label:"Traefik dashboard", type:"browser", url:"http://dashboard.localhost/dashboard/"},
@@ -26,6 +27,8 @@ actions=$(jq -n '[
 ]')
 
 services="[]"
+facts="[]"
+releases="[]"
 
 emit() {
     local status="$1"; shift
@@ -37,8 +40,11 @@ emit() {
         --arg status "$status" \
         --argjson issues "$issues_json" \
         --argjson services "$services" \
+        --argjson facts "$facts" \
+        --argjson releases "$releases" \
         --argjson actions "$actions" \
-        '{kind: $kind, env: null, checkedAt: $checkedAt, status: $status, issues: $issues, services: $services, actions: $actions}'
+        '{kind: $kind, env: null, checkedAt: $checkedAt, status: $status, issues: $issues,
+          facts: $facts, services: $services, releases: $releases, actions: $actions}'
 }
 
 if ! kubectl get namespace "$namespace_labs64io" >/dev/null 2>&1; then
@@ -73,9 +79,27 @@ if [ -n "$short_services" ]; then
 fi
 
 releases_json=$(helm list --all-namespaces -o json 2>/dev/null || echo '[]')
+releases=$(echo "$releases_json" | jq -c '
+    [.[]? | (.chart | capture("^(?<chart>.+)-(?<version>[0-9][^-]*(-.+)?)$") // {chart: .chart, version: ""}) as $c | {
+        name: .name,
+        namespace: .namespace,
+        chart: $c.chart,
+        version: $c.version,
+        status: .status,
+        updated: (.updated | split(" ") | .[0] + "T" + (.[1] | split(".")[0]) + "Z")
+    }] | sort_by(.namespace, .name)' 2>/dev/null || echo '[]')
 bad_releases=$(echo "$releases_json" | jq -r '.[]? | select(.status != "deployed") | "\(.name) (\(.status))"')
 if [ -n "$bad_releases" ]; then
     issues+=("helm releases not deployed: $(echo "$bad_releases" | tr '\n' ' ')")
+fi
+
+umbrella=$(echo "$releases" | jq -r '[.[] | select(.name == "labs64io")] | first | .version // empty')
+if [ -n "$umbrella" ]; then
+    facts=$(jq -c --arg v "$umbrella" '. + [{label: "Ecosystem chart", value: $v, hint: "The labs64io-ecosystem umbrella release."}]' <<<"$facts")
+fi
+nodes_text=$(kubectl get nodes -o json 2>/dev/null | jq -r '. as $all | [.items[]? | select(any(.status.conditions[]?; .type == "Ready" and .status == "True"))] | "\(length) ready of \($all.items | length)"' 2>/dev/null || true)
+if [ -n "$nodes_text" ]; then
+    facts=$(jq -c --arg v "$nodes_text" '. + [{label: "Nodes", value: $v}]' <<<"$facts")
 fi
 
 if [ "${#issues[@]}" -eq 0 ]; then
