@@ -21,36 +21,38 @@ default:
 
 ## 🚀 Getting Started (Cluster & Setup) ##
 
-# create the local k3d cluster + registry only, starting it back up if it already exists but is stopped
+# Create the local k3d cluster and registry, or start them again if they are stopped
 cluster-up:
     k3d cluster list labs64io >/dev/null 2>&1 && k3d cluster start labs64io || k3d cluster create --config k3d/labs64io.yaml
     k3d kubeconfig merge -d labs64io
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/0\.0\.0\.0/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
     if [ -f /.dockerenv ]; then perl -i -pe 's/server: https:\/\/127\.0\.0\.1/server: https:\/\/host.docker.internal/g' ~/.kube/config; fi
 
-# Start the local k3d cluster, then reconcile the stack from Helm overrides.
+# Start the local k3d cluster and deploy the stack from the Helm overrides
 up: generate-secrets cluster-up
     just deploy
 
 # Reconcile tools, the selected identity provider, and all applications.
 # The workspace-level `just up` calls this after building first-party images.
+#
+# Install the core tools, the selected identity provider and all applications
 deploy:
     just repo-update
     just install-tools
     just install-all-apps
     @echo "Local environment ready: http://gateway.localhost/swagger-ui/"
 
-# start local environment with monitoring stack + module telemetry enabled
+# Start the local environment with the monitoring stack and module telemetry enabled
 up-otel: up install-monitoring enable-observability
 
-# reset the environment (uninstall all apps, monitoring, and tools) without destroying the cluster
+# Uninstall all apps, monitoring and tools but keep the cluster
 reset: uninstall-all-apps uninstall-monitoring uninstall-tools
 
-# delete the local k3d cluster (and its registry)
+# Reset the environment, then delete the local k3d cluster and its registry
 cluster-down: reset
     k3d cluster delete labs64io
 
-# prune docker system (including volumes) without prompting
+# Prune unused Docker data, including volumes, without asking for confirmation
 docker-system-prune:
     docker system prune -a --volumes -f
 
@@ -60,11 +62,15 @@ docker-system-prune:
 # Which apps are instrumented is declared in helmfile.yaml.gotmpl (label
 # `observability: "true"`); every apply below passes the same switch, so neither
 # `install-app` nor `install-all-apps` can silently drop telemetry afterwards.
+#
+# Turn on OpenTelemetry instrumentation for the instrumented module apps
 enable-observability:
     helmfile -e {{ENV}} --state-values-set observability.enabled=true apply -l observability=true
 
 # Helmfile state flag that follows the monitoring stack: observability is on exactly when
 # the OTel collector is running.
+#
+# Print the Helmfile flag that enables observability when the OTel collector is running
 [private]
 _observability-args:
     #!/usr/bin/env bash
@@ -72,7 +78,7 @@ _observability-args:
         echo "--state-values-set observability.enabled=true"
     fi
 
-# print the chart version helmfile.yaml.gotmpl pins for a release, e.g. `just chart-version prometheus`
+# Print the chart version that helmfile.yaml.gotmpl pins for a release
 chart-version release:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -86,6 +92,8 @@ chart-version release:
 
 # uninstall every release of a helmfile layer (infra | identity | monitoring | apps),
 # whether or not the current overrides still select it
+#
+# Uninstall every release of a Helmfile layer, even if the overrides no longer select it
 [private]
 _uninstall-layer layer:
     #!/usr/bin/env bash
@@ -96,7 +104,7 @@ _uninstall-layer layer:
             helm uninstall "$name" --namespace "$namespace" 2>/dev/null || true
         done
 
-# automatically scaffold missing local secrets from their .example templates
+# Create missing local secret files from their .example templates
 generate-secrets:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -120,6 +128,8 @@ uninstall-all-apps: (_uninstall-layer "apps")
 # Install a specific Labs64.IO application — the same helmfile release `install-all-apps`
 # applies (chart values, global values, per-env override, secrets, identity provider),
 # optionally with one more values file layered on top
+#
+# Install one Labs64.IO app the way install-all-apps does, optionally with an extra values file
 install-app app extra_values="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -143,6 +153,8 @@ install-app app extra_values="":
 
 # Point only the existing local Payment Gateway deployment at the host-side PSP stub.
 # The extra values file deep-merges provider-owned Spring configuration and rolls the PG pod.
+#
+# Point the local Payment Gateway at the host-side PSP stub and roll its pod
 payment-gateway-psp-stub-enable host_cidr stub_url:
     helm upgrade labs64io-payment-gateway ./charts/payment-gateway \
       --namespace {{NAMESPACE_LABS64IO}} \
@@ -159,7 +171,7 @@ payment-gateway-psp-stub-enable host_cidr stub_url:
     # startup-log text is diagnostic output, not a stable configuration contract.
     kubectl rollout status deployment/labs64io-payment-gateway --namespace {{NAMESPACE_LABS64IO}} --timeout=180s
 
-# Restore the ordinary local Payment Gateway values (official PSP endpoints).
+# Restore the default Payment Gateway values with the official PSP endpoints
 payment-gateway-psp-stub-disable:
     just install-app payment-gateway
     kubectl rollout status deployment/labs64io-payment-gateway --namespace {{NAMESPACE_LABS64IO}} --timeout=180s
@@ -172,7 +184,7 @@ uninstall-app app:
 
 ## 🛠️ Core Tools ##
 
-# Install core tools and reconcile the identity provider selected by overrides.
+# Install the core tools and the identity provider selected in the overrides
 install-tools: install-crds
     # traefik is applied separately with --skip-crds: its chart bundles its own copy of
     # the Traefik CRDs, which can now drift ahead of the traefik-crds chart pinned in
@@ -206,6 +218,8 @@ uninstall-tools: (_uninstall-layer "identity")
 # are managed here as an independently-versioned, re-appliable step. Helm/Helmfile only
 # install a chart's bundled CRDs "if not already present", so pre-seeding them here means
 # the `traefik` release's own bundled copies are simply skipped, no conflict).
+#
+# Install the Gateway API and Traefik CRDs ahead of the Traefik release
 install-crds:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -219,10 +233,12 @@ install-crds:
 # `just install-tool postgresql`, `just install-tool redis`, `just install-tool grafana`, …
 # (names: `helmfile -e local list`). Traefik and the monitoring CRD-carrying charts
 # have prerequisites: use install-tool-traefik / install-monitoring for a fresh cluster.
+#
+# Install or reinstall one core or monitoring tool exactly as install-tools and install-monitoring would
 install-tool name:
     helmfile -e {{ENV}} apply -l name={{name}}
 
-# uninstall one core or monitoring tool by its helmfile release name
+# Uninstall one core or monitoring tool by its Helmfile release name
 uninstall-tool name:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -231,12 +247,12 @@ uninstall-tool name:
     [ -n "$namespace" ] || { echo "no helmfile release named '{{name}}'" >&2; exit 1; }
     helm uninstall "{{name}}" --namespace "$namespace" || true
 
-# (re)install Traefik: CRDs first, then the helmfile release without its bundled CRDs
+# Install the Traefik CRDs, then the Traefik release without its bundled CRDs
 install-tool-traefik: install-crds
     helmfile -e {{ENV}} apply -l name=traefik --skip-crds
     kubectl apply -f overrides/traefik/dashboard-httproute.yaml
 
-# print the identity provider selected in overrides/helmfile/values.<env>.yaml
+# Print the identity provider selected in overrides/helmfile/values.<env>.yaml
 identity-provider:
     @sed -n -E 's/^identityProvider:[[:space:]]*([a-z]+).*/\1/p' overrides/helmfile/values.{{ENV}}.yaml | grep . || echo mock
 
@@ -245,6 +261,8 @@ identity-provider:
 # objects it does not own ("exists and cannot be imported into the current release"). Deletes only
 # those four legacy objects, and only when the Deployment carries no Helm ownership annotation;
 # Helmfile then recreates them as the `mock-oidc` release. No-op on every other cluster.
+#
+# Remove the legacy raw mock-oidc objects so Helm can take them over (one-time migration)
 migrate-legacy-mock-oidc:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -256,6 +274,8 @@ migrate-legacy-mock-oidc:
 
 # Install mock OIDC only when it is the provider selected by the environment overrides.
 # Provider switching remains declarative: this recipe never edits values files itself.
+#
+# Install mock OIDC if it is the identity provider selected in the overrides
 install-tool-mock-oidc: migrate-legacy-mock-oidc
     #!/usr/bin/env bash
     set -euo pipefail
@@ -266,6 +286,8 @@ install-tool-mock-oidc: migrate-legacy-mock-oidc
     helmfile -e {{ENV}} apply -l layer=identity
 
 # Install Keycloak only when it is the provider selected by the environment overrides.
+#
+# Install Keycloak if it is the identity provider selected in the overrides
 install-tool-keycloak:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -290,6 +312,8 @@ install-monitoring: install-monitoring-crds
 # already registered to resolve REST mappings — without this, `install-monitoring` fails with
 # "no matches for kind Prometheus/PrometheusRule/ServiceMonitor in version monitoring.coreos.com/v1"
 # on a fresh cluster. Mirrors the Traefik/Gateway API CRD pre-install in `install-crds`.
+#
+# Install the kube-prometheus-stack CRDs ahead of the monitoring release
 install-monitoring-crds:
     helm show crds prometheus-community/kube-prometheus-stack --version "$(just chart-version prometheus)" | kubectl apply --server-side -f -
 
@@ -306,6 +330,8 @@ uninstall-monitoring: (_uninstall-layer "monitoring")
 #
 # Requires Docker. The image tag is read from values-collector.{{ENV}}.yaml so the
 # validator always matches the collector actually deployed.
+#
+# Validate the rendered OTel Collector config with the pinned collector binary
 validate-otel-config:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -358,25 +384,25 @@ validate-otel-config:
         exit 1
     fi
 
-# (re)install the OpenTelemetry operator + collector, validating the collector config first
+# Install the OpenTelemetry operator and collector after validating the collector config
 install-tool-opentelemetry: validate-otel-config
     helmfile -e {{ENV}} apply -l name=opentelemetry-operator
     helmfile -e {{ENV}} apply -l name=opentelemetry-collector
 
-# (re)install Grafana with its route and dashboards
+# Install Grafana with its route and dashboards
 install-tool-grafana:
     helmfile -e {{ENV}} apply -l name=grafana
     kubectl apply -f overrides/grafana/grafana-httproute.yaml
     kubectl apply -f overrides/grafana/grafana-dashboards.yaml
 
-# retrieve Grafana password
+# Print the Grafana admin password
 grafana-password:
     @echo "Password: " && kubectl get secret --namespace {{NAMESPACE_MONITORING}} grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
 
 
 ## 🏗️ Build & CodeGen ##
 
-# Install required Helm plugins (versions: labs64.io-workspace/tool-versions.env)
+# Install the Helm plugins at the versions pinned in tool-versions.env
 helm-tools:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -390,6 +416,8 @@ helm-tools:
 # Generate Helm chart documentation (README.md) for all charts. Uses a local `helm-docs` binary
 # when it is the pinned version (the dev container installs it), else the pinned Docker image —
 # which cannot work inside the dev container, where Docker resolves bind-mount paths on the host.
+#
+# Generate the README.md documentation for all Helm charts
 generate-docu:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -413,6 +441,8 @@ generate-docu:
 # schema in this repo correctly, so the run is judged by its output rather than its
 # exit code — fail only when a chart ends up without a schema. (--dependencies-filter
 # silences the message but writes 1 schema instead of 11; do not "fix" it that way.)
+#
+# Generate values.schema.json for all Helm charts
 generate-schema: helm-tools
     #!/usr/bin/env bash
     set -uo pipefail
@@ -430,11 +460,13 @@ generate-schema: helm-tools
     done
     exit $missing
 
-# Generate all — Helm charts docs and schema
+# Generate the chart documentation and the values schemas
 generate-all: generate-docu generate-schema
 
 # Generate the Cerbos policy set + authproxy routes manifests from module OpenAPI
 # specs. Writes charts/authz-pdp/{policies,schemas} + charts/api-gateway/routes.
+#
+# Generate the Cerbos policies and authproxy routes from the module OpenAPI specs
 build-policies:
     ./policies/build-authz-policies.sh
 
@@ -444,16 +476,18 @@ build-policies:
 # local helm config and fails the whole command if any one is unreachable: a stale
 # entry left over in a developer's config was enough to abort `just up`. `helmfile repos`
 # runs `helm repo add --force-update` for the declared repositories only.
+#
+# Add and refresh only the Helm repositories declared in helmfile.yaml.gotmpl
 repo-update:
     helmfile -e {{ENV}} repos
 
-# kept for existing habits/scripts — same as repo-update
+# Same as repo-update, kept for existing scripts
 repo-add: repo-update
 
 
 ## 🧪 Testing & Debugging ##
 
-# lint all application charts (the charts behind helmfile's layer=apps releases)
+# Lint the application charts behind the Helmfile apps releases
 lint-all:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -470,6 +504,8 @@ lint-all:
 # non-public route that would be served over Ingress). Needs no cluster and no CRDs:
 # helmDefaults.templateArgs in helmfile.yaml.gotmpl supplies the Gateway API version that
 # would otherwise only come from a live cluster.
+#
+# Render every Helmfile release without a cluster and fail on any template error
 template-all:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -482,20 +518,22 @@ template-all:
         exit 1
     fi
 
-# fail if any chart renders a credential into a ConfigMap (guardrail 3)
+# Fail if any chart renders a credential into a ConfigMap
 lint-secrets *ARGS:
     python3 scripts/lint-configmap-secrets.py {{ARGS}}
 
-# test the ConfigMap credential linter itself
+# Run the tests of the ConfigMap credential linter
 test-lint-secrets:
     python3 -m pytest scripts/test_lint_configmap_secrets.py -q
 
 # chart authoring checklist (item 30): ingress annotations, sub-path PV mounts,
 # probe defaults, NetworkPolicy egress — a gate that runs, not prose
+#
+# Check the charts against the authoring checklist: ingress annotations, PV mounts, probes, egress policy
 lint-authoring *ARGS:
     python3 scripts/lint-chart-authoring.py {{ARGS}}
 
-# test the chart authoring checklist itself
+# Run the tests of the chart authoring checklist
 test-lint-authoring:
     python3 -m pytest scripts/test_lint_chart_authoring.py -q
 
@@ -506,10 +544,12 @@ test-lint-authoring:
 #       --image labs64/auditflow@sha256:... \
 #       --image labs64/auditflow-transformer@sha256:... \
 #       --image labs64/auditflow-sink@sha256:...
+#
+# Pin released image digests into a chart, as the release pipeline does
 update-chart-images chart version *ARGS:
     python3 scripts/update-chart-images.py --chart {{chart}} --app-version {{version}} {{ARGS}}
 
-# test the chart image updater itself
+# Run the tests of the chart image updater
 test-update-chart-images:
     python3 -m pytest scripts/test_update_chart_images.py -q
 
@@ -517,34 +557,38 @@ test-update-chart-images:
 # labs64io-ecosystem umbrella) — chart CI rejects a change without these bumps.
 #   just bump auditflow          # patch
 #   just bump chart-libs minor
+#
+# Bump a chart's version and the version of every chart that vendors it
 bump chart part="patch":
     python3 scripts/bump-chart-version.py {{chart}} {{part}}
 
 # verify every changed chart (and every chart vendoring it) is bumped against a base ref —
 # the same gate chart CI runs
+#
+# Check that every changed chart and every chart vendoring it is version-bumped against a base ref
 check-bumps base="origin/master":
     python3 scripts/check-chart-version-bumps.py --base {{base}}
 
-# test the version-bump gate itself
+# Run the tests of the version-bump gate
 test-check-bumps:
     python3 -m pytest scripts/test_check_chart_version_bumps.py -q
 
-# render an application exactly as helmfile would install it (all value layers)
+# Render one application exactly as Helmfile would install it, with all value layers
 template app:
     helmfile -e {{ENV}} $(just _observability-args) template -l name=labs64io-{{app}}
 
-# diff an application against the cluster, as helmfile would apply it (requires helm-diff plugin)
+# Show the diff between one application and the cluster, as Helmfile would apply it
 diff app:
     helmfile -e {{ENV}} $(just _observability-args) diff -l name=labs64io-{{app}}
 
-# test an application using helm test
+# Run helm test for one application
 test app:
     helm test labs64io-{{app}} --namespace {{NAMESPACE_LABS64IO}}
 
 
 ## 🔧 Utilities & Operations ##
 
-# show overall cluster status (pods, services, ingresses) across key namespaces
+# Show pods, services and ingresses in the apps, tools and monitoring namespaces
 status:
     @echo "\n=== Labs64.IO Apps ==="
     @kubectl get pods,svc,ingress -n {{NAMESPACE_LABS64IO}}
@@ -553,37 +597,37 @@ status:
     @echo "\n=== Monitoring ==="
     @kubectl get pods,svc,ingress -n {{NAMESPACE_MONITORING}}
 
-# report this deployment's status (read-only)
+# Report the status of this deployment without changing anything
 reconcile:
     @bash scripts/reconcile.sh
 
-# show logs for a specific application in real-time
+# Follow the logs of one application
 logs app:
     kubectl logs -f -n {{NAMESPACE_LABS64IO}} -l app.kubernetes.io/name={{app}}
 
-# show errors in Labs64.IO kubectl logs
+# Show warnings and errors from the Labs64.IO pod logs
 logs-errors:
     kubectl --namespace {{NAMESPACE_LABS64IO}} logs -l app.kubernetes.io/part-of=Labs64.IO | grep -E 'WARN|ERROR|FATAL|FAILURE|FAILED' || true
 
-# rollout restart a specific application
+# Restart one application with a rollout restart
 restart app:
     kubectl rollout restart deployment labs64io-{{app}} -n {{NAMESPACE_LABS64IO}}
 
-# clean all PVCs in the cluster (use with caution!)
+# Delete all persistent volume claims in the apps, tools and monitoring namespaces
 clean-pvcs:
     kubectl delete pvc --all -n {{NAMESPACE_LABS64IO}} || true
     kubectl delete pvc --all -n {{NAMESPACE_TOOLS}} || true
     kubectl delete pvc --all -n {{NAMESPACE_MONITORING}} || true
 
-# Labs64.IO :: Documentation
+# Open the Swagger UI of the local gateway in the browser
 docs:
     open "http://gateway.localhost/swagger-ui/"
 
-# Traefik Dashboard
+# Open the Traefik dashboard in the browser
 traefik-dashboard:
     open "http://dashboard.localhost/dashboard/"
 
-# open grafana and print password
+# Print the Grafana password and open Grafana in the browser
 grafana:
     @just grafana-password
     @echo "Opening Grafana... (Press Ctrl+C to quit)"
@@ -595,6 +639,8 @@ grafana:
 # `just generate-jwt audit-event:read` (echoed verbatim into the token).
 # keycloak: a persona selects the realm client whose role grants that scope set (arbitrary scope
 # strings are not a thing a real IdP does).
+#
+# Request an M2M JWT from the selected identity provider
 generate-jwt scope="admin":
     #!/usr/bin/env bash
     set -euo pipefail
