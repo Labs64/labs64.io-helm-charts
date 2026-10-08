@@ -9,10 +9,12 @@
 # environment-specific coordinates in a second values file, passed last:
 #
 #   global.domain                                   public base domain (routes use gateway.<domain>)
+#   <module>.enabled                                which modules this environment runs
 #   <module>.applicationYaml                        data-store hosts and ports
 #   <module>.externalSecrets.secretKey              the Secrets Manager entry of each module
 #   <module>.serviceAccount.annotations             the IRSA role, where a module needs AWS APIs
 #   <module>.networkPolicy.extraEgress              your VPC CIDR on the data-store ports
+#   auditflow.tenants                               the environment's tenants, quotas and pipelines
 #
 #   helm upgrade --install labs64io labs64io/labs64io-ecosystem -n labs64io \
 #     -f values.aws.yaml -f <your-environment-values>.yaml
