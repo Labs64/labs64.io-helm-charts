@@ -88,7 +88,7 @@ spec:
             # remapped in `env:`, because envFrom values cannot be referenced by
             # $(VAR) expansion there.
             #
-            # RDS_ADMIN_USERNAME/PASSWORD (set on AWS — see labs64.io-devops app-secrets.tf) are
+            # RDS_ADMIN_USERNAME/PASSWORD (set by the operator where the database is managed, e.g. RDS) are
             # bootstrap-only credentials, used here to create SPRING_DATASOURCE_USERNAME as a
             # least-privilege role instead of the application ever authenticating as the RDS
             # master user. Without them (local dev / bundled infra, where there is no separate

@@ -807,7 +807,7 @@
     },
     "resources": {
       "additionalProperties": false,
-      "description": "Sized off observed steady-state usage (~3m CPU / 65Mi mem on labs64-io-dev) with headroom for\nburst — the chart's original 100m/512Mi request was ~35x actual memory use. Right-sizing this\nmatters beyond cost: the HPA's CPU-utilization target is actual-usage / this request, so an\ninflated request silently mutes the signal HPA scales on.",
+      "description": "Sized off observed steady-state usage (~3m CPU / 65Mi mem on a small EKS development cluster) with headroom for\nburst — the chart's original 100m/512Mi request was ~35x actual memory use. Right-sizing this\nmatters beyond cost: the HPA's CPU-utilization target is actual-usage / this request, so an\ninflated request silently mutes the signal HPA scales on.",
       "properties": {
         "limits": {
           "additionalProperties": false,

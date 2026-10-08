@@ -1146,7 +1146,7 @@
     },
     "resources": {
       "additionalProperties": false,
-      "description": "Sized off observed steady-state usage (~2m CPU / 327Mi mem on labs64-io-dev — JVM heap holds\nsteady once warmed up) with headroom for GC/startup spikes.",
+      "description": "Sized off observed steady-state usage (~2m CPU / 327Mi mem on a small EKS development cluster — JVM heap holds\nsteady once warmed up) with headroom for GC/startup spikes.",
       "properties": {
         "limits": {
           "additionalProperties": false,

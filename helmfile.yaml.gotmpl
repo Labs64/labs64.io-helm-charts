@@ -41,8 +41,8 @@ repositories:
 environments:
   # CI targets this same "local" profile (a self-hosted runner attached to its own
   # k3d cluster) — see labs64.io-tests' regression-suite workflow. A distinct
-  # "staging"/"prod" environment is installed from labs64.io-devops (Terraform +
-  # `just modules-install`, the umbrella chart), not Helmfile; add one here only once real per-app
+  # "staging"/"prod" environment installs the published umbrella chart on infrastructure its
+  # operator provisions, not through Helmfile; add one here only once real per-app
   # values.<env>.yaml files exist for it.
   local:
     values:
@@ -75,8 +75,8 @@ releases:
     namespace: tools
     # Same chart as the classic repo, served over OCI from ghcr.io.
     # Latest release; both repos migrated to external-secrets.io/v1 only (chart-libs since 0.7.0,
-    # overrides/eso to match). Must equal ESO_CHART_VERSION in labs64.io-devops (the AWS path);
-    # `just check-pins` (labs64.io-workspace) fails if they differ.
+    # overrides/eso to match). Any other install path must pin the same version:
+    # `check-version-pins.py --print-pins` (labs64.io-workspace) lists it.
     chart: oci://ghcr.io/external-secrets/charts/external-secrets
     version: 2.11.0
     set:
@@ -106,7 +106,7 @@ releases:
     labels:
       layer: infra
 
-  # bitnami/valkey, not bitnami/redis — AWS ElastiCache (labs64.io-devops) runs Valkey, and
+  # bitnami/valkey, not bitnami/redis — AWS ElastiCache runs Valkey, and
   # keeping local dev on the same engine avoids drift from a different (if protocol-compatible)
   # project. Release name stays "redis" (overrides/redis/values.local.yaml pins
   # fullnameOverride: "redis" so the resulting Service name doesn't change).
@@ -147,7 +147,7 @@ releases:
       - ./overrides/keycloak/values.secrets.{{ .Environment.Name }}.yaml
       {{- end }}
     # The realm contract (realm.base.json) is shared with AWS; the test-fixture clients are added
-    # locally (values.local.yaml sets labs64io.testFixtures) and, on AWS, in dev only (devops).
+    # locally (values.local.yaml sets labs64io.testFixtures) and, on AWS, in development environments only.
     set:
       - name: realmConfig
         file: ./overrides/keycloak/realm.base.json

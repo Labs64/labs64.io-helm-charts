@@ -25,7 +25,7 @@ What it changes, and why each part matters:
      `labs64io-ecosystem` umbrella — gets its own `version` bumped too. The umbrella
      vendors its subcharts at package time, so an umbrella whose version did not move
      would keep shipping the old module chart; its version is the ecosystem release
-     number that labs64.io-devops pins.
+     number an operator pins per environment.
 
   4. Nothing else. Edits are line-level, so comments, ordering, and the
      `# --` helm-docs annotations in values.yaml survive untouched — a YAML

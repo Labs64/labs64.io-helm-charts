@@ -1,7 +1,7 @@
-# Shared values for the upstream codecentric/keycloakx chart (pinned in helmfile.yaml.gotmpl and in
-# labs64.io-devops' justfile.versions), layered UNDER the environment file:
+# Shared values for the upstream codecentric/keycloakx chart (pinned in helmfile.yaml.gotmpl),
+# layered UNDER the environment file:
 #   local (k3d):   values.yaml + values.local.yaml (+ values.secrets.local.yaml)  — helmfile
-#   AWS dev/qa/prod: values.yaml + values.aws.yaml + devops-generated values     — devops `just keycloak-install <env>`
+#   AWS:           values.yaml + values.aws.yaml + your environment values       — its own release
 # The realm comes in as strings via --set-file: realmConfig (realm.base.json, every environment),
 # and realmFixtures (realm.test-fixtures.json — only honoured with labs64io.testFixtures: local, AWS
 # dev). Machine clients of external producers come from labs64io.serviceClients.
@@ -19,8 +19,8 @@ image:
 # Labs64.IO settings consumed by extraEnv/extraManifests below (not upstream chart keys).
 labs64io:
   # -- Add the test-fixture clients of realm.test-fixtures.json (fixed client ids, one shared
-  # LOCAL_TEST_CLIENT_SECRET + LOCAL_TOOLING_CLIENT_SECRET). true locally; on AWS only in dev, set by
-  # labs64.io-devops from Terraform's keycloak_test_fixtures (which refuses prod). Without it a
+  # LOCAL_TEST_CLIENT_SECRET + LOCAL_TOOLING_CLIENT_SECRET). true locally; on AWS only in development
+  # environments, set by the operator and never in production. Without it a
   # passed realmFixtures fails the render instead of silently shipping test clients.
   testFixtures: false
   # -- Machine clients added to the realm, one per external producer (typically one per tenant).
@@ -128,7 +128,7 @@ networkPolicy:
         matchLabels:
           app.kubernetes.io/name: api-gateway
     # Confidential clients of realm.base.json that request tokens themselves (client_credentials):
-    # the modules (credentials delivered as LABS64_OIDC_* by labs64.io-devops) and the preflight Job.
+    # the modules (credentials delivered as LABS64_OIDC_*) and the preflight Job.
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: labs64io

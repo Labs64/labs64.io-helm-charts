@@ -1,10 +1,9 @@
 # AWS QA / Staging / Prod: Traefik as its own release in the tools namespace, like the local
-# helmfile release (`just traefik-install <env>` in labs64.io-devops, before the umbrella chart,
-# whose values.aws.yaml switches its bundled Traefik off). It is the in-cluster gateway (Gateway API
+# helmfile release (installed before the umbrella chart, whose values.aws.yaml switches its
+# bundled Traefik off). It is the in-cluster gateway (Gateway API
 # implementation) every module route attaches to, and the only pod the public edge can reach.
 #
-# What labs64.io-devops renders per environment and passes as the last values file
-# (`just helm-values <env>`):
+# What you supply per environment, as the last values file:
 #   providers.kubernetesGateway.namespaces / providers.kubernetesCRD.namespaces
 #       the namespaces Traefik serves (modules + tools)
 #   gateway.listeners.web.namespacePolicy
@@ -15,8 +14,8 @@
 # What a compromised Traefik could reach is kept small on purpose:
 #   - It is not in the modules namespace: a module's NetworkPolicy admits it as the ingress
 #     controller (on the API port only where networkPolicy.ingressPorts is set), not through a
-#     "same namespace" rule. Namespace-wide baseline policies the operator adds on top (labs64.io-devops
-#     kubernetes/network-policies/) must not re-open that.
+#     "same namespace" rule. Namespace-wide baseline policies the operator adds on top
+#     must not re-open that.
 #   - It watches the listed namespaces only, and the Gateway accepts routes from them only: a route
 #     in any other namespace is ignored.
 #   - It may read Secrets in those namespaces only (RBAC below), not cluster-wide. It cannot do
@@ -25,7 +24,7 @@
 #   - No Ingress provider: an Ingress object, in any namespace, is not a way to publish a route.
 
 service:
-  # The public edge is a Terraform-owned ALB + WAF (labs64.io-devops terraform/edge.tf) whose target
+  # The public edge is an operator-owned ALB + WAF whose target
   # group is kept in sync with these pods by a TargetGroupBinding, so the Service stays ClusterIP.
   # (Traefik's chart reads service.spec.type; a top-level service.type is silently ignored.)
   spec:
@@ -129,7 +128,7 @@ rbac:
 extraObjects:
   - |
     {{- if not .Values.providers.kubernetesGateway.namespaces }}
-    {{- fail "overrides/traefik/values.aws.yaml: providers.kubernetesGateway.namespaces must list the namespaces Traefik serves (rendered by labs64.io-devops `just helm-values`)" }}
+    {{- fail "overrides/traefik/values.aws.yaml: providers.kubernetesGateway.namespaces must list the namespaces Traefik serves (set it in your environment values)" }}
     {{- end }}
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole

@@ -1,22 +1,30 @@
-# AWS managed-services profile.
+# AWS reference profile: EKS with managed data stores.
 #
 # Data stores are AWS-managed — RDS PostgreSQL and ElastiCache Valkey per module, one Amazon MQ
 # (RabbitMQ) broker — and credentials come from AWS Secrets Manager through External Secrets
-# Operator (>= 0.16, external-secrets.io/v1). All of it is provisioned by labs64.io-devops.
+# Operator (>= 0.16, external-secrets.io/v1). Provisioning them is the operator's job; this file
+# only tells the chart that they exist.
 #
-# This file holds only what is true for every AWS environment. Environment-specific coordinates
-# (hosts, Secrets Manager keys, IRSA role ARNs) are rendered from Terraform outputs by
-# labs64.io-devops (`just helm-values <env>`) and passed as the last values file:
+# This file holds what is true for every environment of this shape. You supply the
+# environment-specific coordinates in a second values file, passed last:
+#
+#   global.domain                                   public base domain (routes use gateway.<domain>)
+#   <module>.enabled                                which modules this environment runs
+#   <module>.applicationYaml                        data-store hosts and ports
+#   <module>.externalSecrets.secretKey              the Secrets Manager entry of each module
+#   <module>.serviceAccount.annotations             the IRSA role, where a module needs AWS APIs
+#   <module>.networkPolicy.extraEgress              your VPC CIDR on the data-store ports
+#   auditflow.tenants                               the environment's tenants, quotas and pipelines
 #
 #   helm upgrade --install labs64io labs64io/labs64io-ecosystem -n labs64io \
-#     -f values.aws.yaml -f <generated-values>.yaml
+#     -f values.aws.yaml -f <your-environment-values>.yaml
 #
 # The gateway (Traefik) is a separate release in the tools namespace, installed first:
 # overrides/traefik/values.aws.yaml.
 #
 # Throwaway smoke test with demo identity (mock-oidc) — demo first, so this file wins:
 #
-#   ... -f values.demo.yaml -f values.aws.yaml -f <generated-values>.yaml
+#   ... -f values.demo.yaml -f values.aws.yaml -f <your-environment-values>.yaml
 
 global:
   # Each module gets its own data-store coordinates (see the generated values). The shared
@@ -44,16 +52,15 @@ redis:
 
 traefik:
   # Not part of this release on AWS. The gateway is the only pod the public edge reaches, so it does
-  # not run in the modules' namespace or share their release: labs64.io-devops installs the upstream
-  # chart as its own release in the tools namespace (`just traefik-install <env>`, values in
+  # not run in the modules' namespace or share their release: install the upstream
+  # chart as its own release in the tools namespace (values in
   # overrides/traefik/values.aws.yaml), before this chart. That release owns the GatewayClass and the
   # labs64io-gateway the module routes attach to (gateway.parentRefs: labs64io-gateway in tools).
   enabled: false
 
-# Data-store egress (`networkPolicy.extraEgress`) is VPC-CIDR-scoped and rendered per environment
-# by `just helm-values <env>` (labs64.io-devops) — it needs each environment's actual VPC CIDR,
-# which differs per environment (dev/qa/prod each get their own /16) and so can't live in this
-# shared file. `networkPolicy.enabled` is what's true everywhere and belongs here.
+# Data-store egress (`networkPolicy.extraEgress`) is VPC-CIDR-scoped and supplied per environment
+# — it needs each environment's actual VPC CIDR, which differs per environment and so can't live
+# in this shared file. `networkPolicy.enabled` is what's true everywhere and belongs here.
 #
 # api-gateway/api-docs/authz-pdp aren't in this list yet: they don't talk to a data store
 # directly, but their exact egress needs (e.g. a real external IdP once Keycloak lands) haven't
@@ -105,10 +112,10 @@ api-docs:
 
 auditflow:
   # Publish the AuditFlow route (POST /auditflow/api/v1/audit/publish behind ForwardAuth) on the
-  # gateway. The route host is gateway.<global.domain>; `just helm-values` sets global.domain.
+  # gateway. The route host is gateway.<global.domain>; your environment values set global.domain.
   gateway:
     enabled: true
-  # Tenants are provisioned with the release (labs64.io-devops tenant files): the backend may read
+  # Tenants are provisioned with the release: the backend may read
   # their credential Secrets by name and no other Secret of the namespace.
   rbac:
     tenantSecretsOnly: true

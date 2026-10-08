@@ -1,12 +1,11 @@
-# AWS QA / Staging / Prod: the metrics collector (`just metrics-install <env>` in labs64.io-devops,
+# AWS QA / Staging / Prod: the metrics collector (its own release:
 # upstream opentelemetry-collector chart, release `metrics-collector` in the `monitoring` namespace).
 #
 # One pod scrapes the modules' /actuator/prometheus and writes the series to an Amazon Managed
 # Service for Prometheus workspace (remote write signed with SigV4). Metrics only: on AWS traces go
 # to the CloudWatch agent and logs to Fluent Bit (the amazon-cloudwatch-observability EKS add-on).
 #
-# What labs64.io-devops renders per environment and passes as the last values file
-# (`just helm-values <env>`):
+# What you supply per environment, as the last values file:
 #   serviceAccount.annotations   the IAM role that may write to the workspace (IRSA)
 #   extraEnvs                    AMP_REMOTE_WRITE_ENDPOINT, AWS_REGION
 #   networkPolicy.egressRules    DNS, the API server, the module pods and HTTPS
@@ -26,7 +25,7 @@ image:
 
 serviceAccount:
   create: true
-  # The IAM role's trust policy names this ServiceAccount (labs64.io-devops terraform/metrics.tf).
+  # The IAM role's trust policy names this ServiceAccount.
   name: metrics-collector
 
 # kubernetes_sd (role: pod) lists and watches pods; nothing else.
@@ -74,7 +73,7 @@ securityContext:
     drop: ["ALL"]
 
 # Nothing may connect to the pod (the kubelet's probes of health_check on 13133 are not subject to
-# NetworkPolicy), and it may connect only to what labs64.io-devops lists as egressRules (they name
+# NetworkPolicy), and it may connect only to what your environment values list as egressRules (they name
 # the environment's namespaces). The chart's policy always has one ingress rule for the enabled
 # ports; with none enabled and no `from` that rule would admit everything, so it is given a source
 # that is only the collector itself.
@@ -124,7 +123,7 @@ alternateConfig:
                 replacement: $$1:$$2
                 target_label: __address__
               # job = <namespace>/<app.kubernetes.io/name>: the form the charts' SLO rules select by
-              # (chart-libs.slo.prometheusrule) and the rules in labs64.io-devops use. Set here in
+              # (chart-libs.slo.prometheusrule) and an operator's own alert rules use. Set here in
               # full, so it does not depend on how an exporter combines resource attributes.
               - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_label_app_kubernetes_io_name]
                 action: replace
