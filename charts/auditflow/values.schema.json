@@ -1599,7 +1599,7 @@
     },
     "resources": {
       "additionalProperties": false,
-      "description": "Resource limits and requests for the container\nFor production, it's recommended to set both requests and limits\nSized off observed steady-state usage (~3m CPU / 310Mi mem on labs64-io-dev — JVM heap holds\nsteady once warmed up) with headroom for GC/startup spikes.",
+      "description": "Resource limits and requests for the container\nFor production, it's recommended to set both requests and limits\nSized off observed steady-state usage (~3m CPU / 310Mi mem on a small EKS development cluster — JVM heap holds\nsteady once warmed up) with headroom for GC/startup spikes.",
       "properties": {
         "limits": {
           "additionalProperties": false,
@@ -1829,7 +1829,7 @@
         },
         "resources": {
           "additionalProperties": false,
-          "description": "Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service).\nSized off observed steady-state usage (~3m CPU / 77Mi mem on labs64-io-dev) with headroom.",
+          "description": "Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service).\nSized off observed steady-state usage (~3m CPU / 77Mi mem on a small EKS development cluster) with headroom.",
           "properties": {
             "limits": {
               "additionalProperties": false,
@@ -2157,7 +2157,7 @@
         },
         "resources": {
           "additionalProperties": false,
-          "description": "Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service).\nSized off observed steady-state usage (~3m CPU / 38Mi mem on labs64-io-dev) with headroom.",
+          "description": "Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service).\nSized off observed steady-state usage (~3m CPU / 38Mi mem on a small EKS development cluster) with headroom.",
           "properties": {
             "limits": {
               "additionalProperties": false,

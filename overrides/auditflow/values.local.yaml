@@ -109,7 +109,7 @@ tenants:
             access-key-id: "${AWS_ACCESS_KEY_ID}"
             secret-access-key: "${AWS_SECRET_ACCESS_KEY}"
             region: "us-east-1"
-            bucket: "labs64-io-dev-01"
+            bucket: "example-audit-archive"
             compress: "false"
             partition-by-date: "true"
             partition-format: "year=%Y/month=%m/day=%d/"

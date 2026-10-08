@@ -1,7 +1,7 @@
 apiVersion: v2
 name: authz-pdp
 type: application
-version: 0.8.6
+version: 0.8.7
 # The Cerbos image tag (values.yaml image.tag defaults to it). Also pinned by the module
 # compose files and labs64.io-commons' validate.sh — `just check-pins` keeps them equal.
 # renovate: datasource=docker depName=ghcr.io/cerbos/cerbos
@@ -25,5 +25,5 @@ maintainers:
     url: https://labs64.io
 dependencies:
   - name: chart-libs
-    version: 0.8.6
+    version: 0.8.7
     repository: file://../chart-libs

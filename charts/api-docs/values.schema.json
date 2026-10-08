@@ -487,7 +487,7 @@
     },
     "resources": {
       "additionalProperties": false,
-      "description": "Sized off observed steady-state usage (~1m CPU / 3Mi mem on labs64-io-dev — a static Swagger UI\nbehind nginx) with headroom for burst. The chart's original 100m/512Mi request was ~170x actual\nmemory use.",
+      "description": "Sized off observed steady-state usage (~1m CPU / 3Mi mem on a small EKS development cluster — a static Swagger UI\nbehind nginx) with headroom for burst. The chart's original 100m/512Mi request was ~170x actual\nmemory use.",
       "properties": {
         "limits": {
           "additionalProperties": false,

@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.15.10](https://img.shields.io/badge/Version-0.15.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.19](https://img.shields.io/badge/AppVersion-0.0.19-informational?style=flat-square)
+![Version: 0.15.11](https://img.shields.io/badge/Version-0.15.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.19](https://img.shields.io/badge/AppVersion-0.0.19-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
@@ -21,7 +21,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.6 |
+| file://../chart-libs | chart-libs | 0.8.7 |
 
 ## Values
 
@@ -131,7 +131,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | rbac.tenantSecretsOnly | bool | `false` | Limit the Secret rule below to the credential Secrets of the tenants this release provisions (`auditflow-tenant-<tenant>-creds` for `tenants.platform` and every `tenants.additional` entry), by name. false lets the backend read every Secret of the namespace, which a tenant onboarded out-of-band (a ConfigMap applied after the install) needs for its credentials. |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/actuator/health/readiness","port":8080},"initialDelaySeconds":0,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
-| resources | object | `{"limits":{"cpu":"500m","memory":"768Mi"},"requests":{"cpu":"100m","memory":"384Mi"}}` | Resource limits and requests for the container For production, it's recommended to set both requests and limits Sized off observed steady-state usage (~3m CPU / 310Mi mem on labs64-io-dev — JVM heap holds steady once warmed up) with headroom for GC/startup spikes. |
+| resources | object | `{"limits":{"cpu":"500m","memory":"768Mi"},"requests":{"cpu":"100m","memory":"384Mi"}}` | Resource limits and requests for the container For production, it's recommended to set both requests and limits Sized off observed steady-state usage (~3m CPU / 310Mi mem on a small EKS development cluster — JVM heap holds steady once warmed up) with headroom for GC/startup spikes. |
 | secrets | object | `{"data":{}}` | Secret data to be used as environment variables (delivered via envFrom). External installs supply broker credentials here, e.g.   SPRING_RABBITMQ_USERNAME / SPRING_RABBITMQ_PASSWORD. When rabbitmq.enabled=true the chart adds these keys automatically from rabbitmq.auth. Keys you set here take precedence over the bundled-dep keys. On helm upgrade the Secret is deleted and recreated (hook-managed). Note: the Secret is hook-managed (pre-install) and survives helm uninstall. @schema type: object properties:   data:     type: object     additionalProperties: true @schema |
 | securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | securityContext.capabilities.drop[0] | string | `"ALL"` |  |
@@ -151,7 +151,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | sink.image.pullPolicy | string | `"IfNotPresent"` |  |
 | sink.image.repository | string | `"labs64/auditflow-sink"` |  |
 | sink.image.tag | string | `""` |  |
-| sink.resources | object | `{"limits":{"cpu":"150m","memory":"192Mi"},"requests":{"cpu":"30m","memory":"96Mi"}}` | Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service). Sized off observed steady-state usage (~3m CPU / 77Mi mem on labs64-io-dev) with headroom. |
+| sink.resources | object | `{"limits":{"cpu":"150m","memory":"192Mi"},"requests":{"cpu":"30m","memory":"96Mi"}}` | Resource requests/limits for the sink sidecar (lightweight Python/FastAPI service). Sized off observed steady-state usage (~3m CPU / 77Mi mem on a small EKS development cluster) with headroom. |
 | sink.service | object | `{"port":8082}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | sink.service.port | int | `8082` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | slo | object | `{"availability":{"targetRatio":0.999},"enabled":true,"latency":{"targetRatio":0.99,"thresholdSeconds":0.5}}` | SLO recording rules and dashboards (rendered by chart-libs.slo.*) |
@@ -172,7 +172,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | transformer.image.repository | string | `"labs64/auditflow-transformer"` |  |
 | transformer.image.tag | string | `""` |  |
 | transformer.promotedKeys | object | `{}` | `extra` keys to promote into dedicated sink fields/columns, as {extra key: target field}. Applies to every bundled transformer in this deployment, on top of the generic audit-semantics vocabulary they already promote — the no-code alternative to shipping a transformer module. Target names must match ^[a-zA-Z_][a-zA-Z0-9_]*$ (they land in SQL identifier position), and each promoted key needs a matching column in the sink schema or it is dropped at insert time. An invalid mapping fails the transformer module's import and shows in GET /registry. @schema type: object additionalProperties: true @schema |
-| transformer.resources | object | `{"limits":{"cpu":"100m","memory":"128Mi"},"requests":{"cpu":"20m","memory":"64Mi"}}` | Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service). Sized off observed steady-state usage (~3m CPU / 38Mi mem on labs64-io-dev) with headroom. |
+| transformer.resources | object | `{"limits":{"cpu":"100m","memory":"128Mi"},"requests":{"cpu":"20m","memory":"64Mi"}}` | Resource requests/limits for the transformer sidecar (lightweight Python/FastAPI service). Sized off observed steady-state usage (~3m CPU / 38Mi mem on a small EKS development cluster) with headroom. |
 | transformer.service | object | `{"port":8081}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | transformer.service.port | int | `8081` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |

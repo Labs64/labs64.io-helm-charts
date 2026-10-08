@@ -555,7 +555,7 @@
       "properties": {
         "architecture": {
           "default": "standalone",
-          "description": "This is bitnami/valkey (Chart.yaml aliases it \"redis\" — see the dependency comment\nthere), matching the engine AWS ElastiCache runs (labs64.io-devops pins Valkey 9.1).\nTODO: pin this image — see the note under `postgresql` above. Same situation:\ndocker.io/bitnami/valkey carries only `latest` (currently Valkey 9.1.x). Lower\nstakes than PostgreSQL (no on-disk major-version barrier), but still mutable.",
+          "description": "This is bitnami/valkey (Chart.yaml aliases it \"redis\" — see the dependency comment\nthere), matching the engine AWS ElastiCache runs (Valkey 9.1).\nTODO: pin this image — see the note under `postgresql` above. Same situation:\ndocker.io/bitnami/valkey carries only `latest` (currently Valkey 9.1.x). Lower\nstakes than PostgreSQL (no on-disk major-version barrier), but still mutable.",
           "title": "architecture",
           "type": "string"
         },

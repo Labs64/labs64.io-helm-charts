@@ -84,7 +84,7 @@ service:
   # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 8081
 
-# Sized off observed steady-state usage (~3m CPU / 65Mi mem on labs64-io-dev) with headroom for
+# Sized off observed steady-state usage (~3m CPU / 65Mi mem on a small EKS development cluster) with headroom for
 # burst — the chart's original 100m/512Mi request was ~35x actual memory use. Right-sizing this
 # matters beyond cost: the HPA's CPU-utilization target is actual-usage / this request, so an
 # inflated request silently mutes the signal HPA scales on.

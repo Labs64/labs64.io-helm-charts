@@ -1,11 +1,10 @@
 # AWS (dev/qa/prod) deltas on top of values.yaml — production mode on RDS PostgreSQL, credentials
-# from Secrets Manager. Installed by labs64.io-devops (`just keycloak-install <env>`), which appends
-# its Terraform-rendered generated/keycloak.<env>.yaml as the last values file with:
+# from Secrets Manager. You supply the environment's coordinates as the last values file:
 #   labs64io.hostname, labs64io.externalSecrets.secretKey, database.hostname/port/username,
 #   networkPolicy.egress (full list — DNS, replicas, the VPC CIDR on 5432), replicas.
-# Realm: realm.base.json; plus realm.test-fixtures.json in dev only (generated labs64io.testFixtures,
-# from Terraform's keycloak_test_fixtures, which refuses prod); plus the machine clients of the
-# environment's tenants (generated labs64io.serviceClients).
+# Realm: realm.base.json; plus realm.test-fixtures.json in development environments only
+# (labs64io.testFixtures — never in production); plus the machine clients of the environment's
+# tenants (labs64io.serviceClients).
 labs64io:
   realmSslRequired: external
   externalSecrets:
@@ -18,7 +17,7 @@ command:
   - start
 
 # The public edge is ALB → Traefik → Keycloak; both send X-Forwarded-* (not RFC 7239 Forwarded).
-# Traefik only passes the ALB's headers through from the VPC CIDR (labs64.io-devops helm-values).
+# Traefik only passes the ALB's headers through from the VPC CIDR (set in its environment values).
 proxy:
   mode: xforwarded
 

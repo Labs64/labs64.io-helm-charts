@@ -98,24 +98,24 @@ sequenceDiagram
     LocalConfig-->>K3d: Overrides inject localhost defaults & static secrets
 ```
 
-### 2. AWS QA / Staging / Prod Environment (Terraform + umbrella chart)
+### 2. AWS QA / Staging / Prod Environment (managed data stores + umbrella chart)
 
-Provisioned and installed from [`labs64.io-devops`](https://github.com/Labs64/labs64.io-devops) — `Helmfile` is **not** used here. The umbrella chart version each environment runs is the `CHART_VERSION` pinned in that repository.
+The umbrella chart with [`values.aws.yaml`](charts/labs64io-ecosystem/values.aws.yaml) is a reference profile for EKS with managed data stores (RDS, ElastiCache, Amazon MQ, Secrets Manager). `Helmfile` is **not** used here. You provision the infrastructure with the tool of your choice and pass the resulting coordinates as a second values file; the header of `values.aws.yaml` lists them. Each environment pins the umbrella chart version it runs.
 
-- **Infrastructure**: Terraform — EKS, RDS PostgreSQL and ElastiCache Valkey per module, Amazon MQ (RabbitMQ, AMQPS only), S3.
-- **Install**: `just modules-install <env>` in `labs64.io-devops` installs `labs64io-ecosystem` with [`values.aws.yaml`](charts/labs64io-ecosystem/values.aws.yaml) (bundled infra off, per-module hosts, TLS to the managed services, Traefik + the AuditFlow route on a `ClusterIP` gateway behind devops' Terraform-owned ALB + WAF) plus values rendered from Terraform outputs.
+- **Infrastructure**: yours, e.g. Terraform — EKS, RDS PostgreSQL and ElastiCache Valkey per module, Amazon MQ (RabbitMQ, AMQPS only), S3.
+- **Install**: Traefik, Keycloak and the metrics collector first, each as its own release from the publisher's chart with the matching `overrides/<tool>/values*.aws.yaml` file; then `helm upgrade --install labs64io labs64io/labs64io-ecosystem -f values.aws.yaml -f <your-environment-values>.yaml` (bundled infra off, per-module hosts, TLS to the managed services, the AuditFlow route on a `ClusterIP` gateway behind your own load balancer and WAF).
 - **Secrets**: `externalSecrets.enabled: true`; each module's `ExternalSecret` (`external-secrets.io/v1`) reads `labs64/<env>/<module>` from AWS Secrets Manager through the `aws-secretsmanager-cluster` `ClusterSecretStore`.
 
 ```mermaid
 sequenceDiagram
-    participant TF as Terraform (labs64.io-devops)
+    participant TF as Your IaC (e.g. Terraform)
     participant AWS as AWS (RDS, Valkey, MQ, Secrets Manager)
-    participant Just as just modules-install
+    participant Just as helm upgrade --install
     participant Cluster as AWS EKS Cluster
 
     TF->>AWS: Provision data stores + per-module secrets
-    TF-->>Just: terraform output (hosts, secret keys, IRSA roles)
-    Just->>Cluster: helm upgrade --install labs64io-ecosystem -f values.aws.yaml -f generated values
+    TF-->>Just: outputs (hosts, secret keys, IRSA roles) as environment values
+    Just->>Cluster: labs64io-ecosystem -f values.aws.yaml -f your environment values
     Cluster->>AWS: ESO fetches labs64/<env>/<module> from Secrets Manager
 ```
 

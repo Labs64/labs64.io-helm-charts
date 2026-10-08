@@ -242,7 +242,7 @@ rabbitmq:
 redis:
   enabled: true
   # This is bitnami/valkey (Chart.yaml aliases it "redis" — see the dependency comment
-  # there), matching the engine AWS ElastiCache runs (labs64.io-devops pins Valkey 9.1).
+  # there), matching the engine AWS ElastiCache runs (Valkey 9.1).
   # TODO: pin this image — see the note under `postgresql` above. Same situation:
   # docker.io/bitnami/valkey carries only `latest` (currently Valkey 9.1.x). Lower
   # stakes than PostgreSQL (no on-disk major-version barrier), but still mutable.

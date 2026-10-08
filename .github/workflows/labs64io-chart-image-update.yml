@@ -9,8 +9,8 @@ name: Labs64.IO - Helm Charts - Chart Image Update
 # A PR rather than a direct push, deliberately — chart CI (lint, schema, docs,
 # authoring checklist, version-bump gate) must pass before a chart change can
 # reach master: every push to master that touches charts/** is published by
-# chart-releaser, and the published umbrella version is what labs64.io-devops
-# pins (CHART_VERSION, proposed there by Renovate).
+# chart-releaser, and the published umbrella version is what an operator
+# pins per environment.
 #
 # Trigger it either way:
 #   * repository_dispatch `module-released` — from the module's publish workflow
@@ -190,7 +190,7 @@ jobs:
             nor GHCR can enforce tag immutability, so `:${{ steps.event.outputs.version }}` may resolve to
             different content later.
 
-            Merging this publishes a new umbrella chart version. Environments move to it when `CHART_VERSION` in labs64.io-devops is bumped (Renovate opens that PR) — review the digests against the release before approving.
+            Merging this publishes a new umbrella chart version. Environments move to it when their operator pins the new version — review the digests against the release before approving.
           labels: |
             chart-update
             automated
