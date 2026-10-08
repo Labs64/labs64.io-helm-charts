@@ -1,6 +1,6 @@
 # api-gateway
 
-![Version: 0.15.4](https://img.shields.io/badge/Version-0.15.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.3](https://img.shields.io/badge/AppVersion-0.0.3-informational?style=flat-square)
+![Version: 0.15.5](https://img.shields.io/badge/Version-0.15.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.0](https://img.shields.io/badge/AppVersion-0.1.0-informational?style=flat-square)
 
 Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
@@ -53,8 +53,8 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
 | extraConfigChecksums | list | `["configmap-routes","configmap-static-policies"]` | Roll the ACS whenever the generated routes / static-route ConfigMaps change (checksum/config already covers configmap.yaml; these are the extra dynamically generated ConfigMaps this chart mounts). |
 | fullnameOverride | string | `"gateway-common"` | Fixed resource-name prefix (instead of the default "<release>-api-gateway") so module charts can reference the shared middlewares by a stable name regardless of release name. Also fixes the name of this chart's own Deployment/Service, which is why authProxy.serviceName below must match this value. |
-| image | object | `{"digest":"sha256:dfc6086dfbce4d58ee62bc7d44afbf1bf819928f4118b309cc380f80f20b50f9","pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
-| image.digest | string | `"sha256:dfc6086dfbce4d58ee62bc7d44afbf1bf819928f4118b309cc380f80f20b50f9"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| image | object | `{"digest":"sha256:1b187f19efb919d4eb868574f98352972f63f3988026de5157b1ece0beb03825","pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image.digest | string | `"sha256:1b187f19efb919d4eb868574f98352972f63f3988026de5157b1ece0beb03825"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
