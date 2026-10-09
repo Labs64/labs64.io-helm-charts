@@ -648,6 +648,14 @@ extraContainers: |
         - name: OTEL_METRICS_EXPORTER
           value: "otlp"
       {{- end }}
+      {{- /* Every delivery the backend still finishes during its shutdown (its preStop sleep, then
+      gracefulShutdown.timeout) calls this container on localhost, and all containers of a pod get
+      SIGTERM together: stay up until the backend is done. Needs a timeout in seconds, and the sum
+      must stay below terminationGracePeriodSeconds (45). */}}
+      lifecycle:
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "sleep {{ add (int ($.Values.lifecycle.preStopDrainSeconds | default 5)) (int (trimSuffix "s" ($.Values.gracefulShutdown.timeout | default "30s"))) }}"]
       livenessProbe:
         httpGet:
           path: /live
@@ -710,6 +718,14 @@ extraContainers: |
         - name: OTEL_METRICS_EXPORTER
           value: "otlp"
       {{- end }}
+      {{- /* Every delivery the backend still finishes during its shutdown (its preStop sleep, then
+      gracefulShutdown.timeout) calls this container on localhost, and all containers of a pod get
+      SIGTERM together: stay up until the backend is done. Needs a timeout in seconds, and the sum
+      must stay below terminationGracePeriodSeconds (45). */}}
+      lifecycle:
+        preStop:
+          exec:
+            command: ["/bin/sh", "-c", "sleep {{ add (int ($.Values.lifecycle.preStopDrainSeconds | default 5)) (int (trimSuffix "s" ($.Values.gracefulShutdown.timeout | default "30s"))) }}"]
       livenessProbe:
         httpGet:
           path: /live

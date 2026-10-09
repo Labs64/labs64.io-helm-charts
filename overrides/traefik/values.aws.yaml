@@ -74,6 +74,18 @@ resources:
 # Omit spec.replicas once autoscaling owns it (the chart's own convention).
 deployment:
   replicas: null
+  # The load balancer in front registers each pod by IP (TargetGroupBinding) and knows nothing of
+  # Kubernetes readiness. A new pod serves no request until the load balancer's health checks have
+  # passed (two checks, 15 s apart), so a rollout waits that long before it stops the next old pod;
+  # otherwise both old pods are deregistered while both new ones are still unchecked.
+  minReadySeconds: 45
+  # A stopping pod keeps serving while the load balancer takes it out of rotation (the kubelet runs
+  # this before SIGTERM; `sleep` needs Kubernetes 1.30+). Traefik then has its own 10 s for the
+  # requests in flight, all within terminationGracePeriodSeconds (60).
+  lifecycle:
+    preStop:
+      sleep:
+        seconds: 15
 autoscaling:
   enabled: true
   minReplicas: 2

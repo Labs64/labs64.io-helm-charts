@@ -110,6 +110,14 @@ alternateConfig:
               - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
                 action: keep
                 regex: "true"
+              # Only the namespaces this collector may reach. Discovery is cluster-wide, so it also
+              # finds annotated pods its NetworkPolicy (and theirs) keeps it away from, the gateway
+              # and the load balancer controller for example: each of them then costs a 10 s timeout
+              # every minute and an `up == 0` series. SCRAPE_NAMESPACES is a regex over namespace
+              # names (extraEnvs in your environment values); unset, every namespace is scraped.
+              - source_labels: [__meta_kubernetes_namespace]
+                action: keep
+                regex: ${env:SCRAPE_NAMESPACES:-.+}
               - source_labels: [__meta_kubernetes_pod_phase]
                 action: drop
                 regex: Pending|Succeeded|Failed

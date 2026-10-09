@@ -63,6 +63,11 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.rabbitmq.auth.existingPasswordSecret }}
                   key: {{ .Values.rabbitmq.auth.existingSecretPasswordKey }}
+            {{- /* RabbitMQ sizes its memory alarm (publishers are blocked at 60%) from the node's
+            memory, not from the container limit below: on an 8 GiB node it would be OOM-killed at
+            512 Mi long before it slowed anyone down. Tell it the limit, in bytes (512 Mi). */}}
+            - name: RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS
+              value: "-rabbit total_memory_available_override_value 536870912"
           volumeMounts:
             - name: data
               mountPath: /var/lib/rabbitmq
