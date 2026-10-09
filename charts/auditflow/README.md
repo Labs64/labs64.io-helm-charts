@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.15.16](https://img.shields.io/badge/Version-0.15.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.5](https://img.shields.io/badge/AppVersion-0.1.5-informational?style=flat-square)
+![Version: 0.15.17](https://img.shields.io/badge/Version-0.15.17-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.6](https://img.shields.io/badge/AppVersion-0.1.6-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
@@ -86,8 +86,8 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |
 | global.security.allowInsecureImages | bool | `true` | Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard) |
 | gracefulShutdown.timeout | string | `"30s"` | Max time Spring Boot waits for in-flight work before forced shutdown |
-| image | object | `{"digest":"sha256:c9bf4a4e786b8fbd423d2f54c7156c4ed855b013d4b34238d8df95e22a0c2109","pullPolicy":"IfNotPresent","repository":"labs64/auditflow","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
-| image.digest | string | `"sha256:c9bf4a4e786b8fbd423d2f54c7156c4ed855b013d4b34238d8df95e22a0c2109"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| image | object | `{"digest":"sha256:9c1bd414fcfb392169f5c16a02033a3d947817ebffc88c4ba7f6e8040fed07d5","pullPolicy":"IfNotPresent","repository":"labs64/auditflow","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image.digest | string | `"sha256:9c1bd414fcfb392169f5c16a02033a3d947817ebffc88c4ba7f6e8040fed07d5"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
@@ -147,7 +147,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | serviceAccount.automount | bool | `true` | Automatically mount a ServiceAccount's API credentials? |
 | serviceAccount.create | bool | `true` | Specifies whether a service account should be created |
 | serviceAccount.name | string | `""` | The name of the service account to use. If not set and create is true, a name is generated using the fullname template |
-| sink.image.digest | string | `"sha256:bace599c834dceccfd1f17cece1485a8a88b1840d1f6d50bdfb5d0c295a13a1b"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| sink.image.digest | string | `"sha256:e57dbd1fa6fb270428587d8b2ddcdb87742a3388f22767845ec203cfb3242996"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | sink.image.pullPolicy | string | `"IfNotPresent"` |  |
 | sink.image.repository | string | `"labs64/auditflow-sink"` |  |
 | sink.image.tag | string | `""` |  |
@@ -167,7 +167,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | tests.healthPath | string | `"/actuator/health"` | Health endpoint probed by `helm test` |
 | tolerations | list | `[]` | Tolerations for pod assignment For more information: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
 | topologySpreadConstraints | list | `[]` | Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable). labelSelector defaults to this chart's own selector labels when a constraint omits one. |
-| transformer.image.digest | string | `"sha256:d4f6f5a72bc138d9f5bfb6fcb8fb09774808a2ed3441b339275adeee3281981a"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| transformer.image.digest | string | `"sha256:4740d064b923a29af93dc4c17ca8b09bf21d7c9867f664a5007719e95b7608de"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | transformer.image.pullPolicy | string | `"IfNotPresent"` |  |
 | transformer.image.repository | string | `"labs64/auditflow-transformer"` |  |
 | transformer.image.tag | string | `""` |  |
