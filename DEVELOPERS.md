@@ -2,6 +2,11 @@
 
 Step-by-step guide to spin up the full Labs64.IO stack on a local Kubernetes cluster, deploy all modules, and run regression tests.
 
+> **Which guide do you need?**
+> - To *try* Labs64.IO, you need neither this guide nor a checkout: [`install.sh`](README.md#quick-start) installs the published charts on any cluster in about five minutes.
+> - To *build and run everything from source*, start in [`labs64.io-workspace`](https://github.com/Labs64/labs64.io-workspace#readme): its `just up` creates the cluster, builds every image and calls into this repository to deploy.
+> - This guide explains what that deployment consists of, and how to drive each step by hand when you work on the charts themselves.
+
 ## Architecture Overview
 
 The diagram below outlines the local Kubernetes (`k3d`) setup for the Labs64.IO microservices ecosystem. It covers the configuration artifacts, third-party (3PP) infrastructure dependencies, and the proprietary Labs64 modules.
@@ -150,10 +155,10 @@ Before building images, you must ensure the local Docker registry (`localhost:50
 k3d cluster create --config k3d/labs64io.yaml
 
 # 2. Build and push all images
-# From the workspace root (one level up from labs64.io-helm-charts/) — this recipe
-# lives in the top-level justfile, not this repo's, and builds every sibling module
-# repo via scripts/build-images.sh in a containerized builder.
-cd .. && just build
+# From the sibling labs64.io-workspace repository — this recipe lives in its justfile,
+# not this repo's, and builds every sibling module repo via scripts/build-images.sh
+# in a containerized builder.
+(cd ../labs64.io-workspace && just build)
 ```
 
 ### Build individually
@@ -196,20 +201,21 @@ curl -s http://localhost:5005/v2/_catalog
 # Should list: auditflow, auditflow-transformer, auditflow-sink, checkout, checkout-ui, payment-gateway, traefik-authproxy, customer-portal-ui
 ```
 
-## Quick start (one command)
+## Quick start
 
-From `labs64.io-helm-charts/`:
+**One command, from `labs64.io-workspace/`:**
 
 ```bash
 just up
 ```
 
-This creates a k3d cluster, installs Traefik, the mock OIDC provider, all necessary infrastructure (RabbitMQ, PostgreSQL, Redis), and deploys all Labs64.IO modules. Takes ~5-10 minutes depending on your internet speed.
+The workspace recipe creates the k3d cluster and its registry, builds every module image from the sibling checkouts, and deploys Traefik, the mock OIDC provider, the infrastructure (RabbitMQ, PostgreSQL, Redis) and all Labs64.IO modules.
 
-**Important:** Before running `just up`, you must create the cluster and push all module images to the local registry.
+**From this repository alone**, `just up` creates the cluster and deploys the same charts, but it does not build images. They have to be in the local registry first, so the sequence is:
+
 ```bash
-k3d cluster create --config k3d/labs64io.yaml
-(cd .. && just build)   # workspace-root recipe — see "Building module images" above
+just cluster-up          # k3d cluster + registry on localhost:5005 (and the kubeconfig fix inside a dev container)
+(cd ../labs64.io-workspace && just build)   # workspace recipe — see "Building module images" above
 just up
 ```
 
@@ -297,7 +303,7 @@ kubectl get pods -n tools
 
 **Build images (Required if not available in localhost:5005):**
 ```bash
-(cd .. && just build)   # workspace-root recipe — see "Building module images" above
+(cd ../labs64.io-workspace && just build)   # workspace recipe — see "Building module images" above
 ```
 
 ### Unified secret management
@@ -382,7 +388,7 @@ TOKEN=$(just generate-jwt admin | python3 -c 'import sys,json; print(json.load(s
 curl -H "Authorization: Bearer $TOKEN" \
   http://gateway.localhost/auditflow/api/v1/audit/publish \
   -H "Content-Type: application/json" \
-  -d '{"source": "test", "event": "test.event"}'
+  -d '{"eventType": "test.event", "sourceSystem": "test"}'
 ```
 
 ## Regression tests
@@ -393,7 +399,7 @@ Authentication through the full Traefik → auth-proxy → upstream path is cove
 Robot Framework suite in `labs64.io-tests` (`tests/auditflow/authz.robot`):
 
 ```bash
-cd labs64.io-tests
+cd ../labs64.io-tests
 robot --include auditflow tests/auditflow/authz.robot
 ```
 

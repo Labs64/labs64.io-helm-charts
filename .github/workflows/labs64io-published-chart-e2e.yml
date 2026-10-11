@@ -88,7 +88,10 @@ jobs:
                    -H 'Content-Type: application/json' -d '{}')
           [ "$code" = "401" ] || { echo "::error::unauthenticated call returned $code, expected 401"; exit 1; }
 
+          # mock-oidc names itself after the Host header and the gateway only accepts the
+          # in-cluster name (install.sh's MOCK_OIDC_HOST), so the token request carries it.
           TOKEN=$(curl -s -m 30 -X POST "$BASE/labs64io/token" \
+            -H 'Host: mock-oidc.labs64io.svc.cluster.local:8080' \
             -H 'Content-Type: application/x-www-form-urlencoded' \
             --data-urlencode 'grant_type=client_credentials' \
             --data-urlencode 'client_id=local-test' \

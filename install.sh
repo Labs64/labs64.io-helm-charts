@@ -12,7 +12,7 @@
 # mapfile/readarray, no ${var^^}. No jq. `base64 -w0` is GNU-only.
 set -euo pipefail
 
-WIZARD_VERSION="1.0.0"
+WIZARD_VERSION="1.1.0"
 REPO_ALIAS="labs64io"
 REPO_URL="https://labs64.github.io/labs64.io-helm-charts"
 SCRIPT_URL="https://raw.githubusercontent.com/Labs64/labs64.io-helm-charts/master/install.sh"
@@ -39,6 +39,13 @@ else
   CHART="${LABS64_CHART:-$REPO_ALIAS/labs64io-ecosystem}"
 fi
 STOP_ANNOTATION="labs64io.install/original-replicas"
+# Name the demo identity provider goes by. mock-oidc has no configured issuer: it names
+# itself after the Host header of each request, so a token fetched through the gateway
+# address (localhost, a LoadBalancer IP, a port-forward) carries THAT address as issuer.
+# The gateway validates against this in-cluster name, the one its discovery URL uses, so
+# demo token requests send it as their Host header. One variable for both, so the
+# discovery URL and the header cannot drift apart.
+MOCK_OIDC_HOST="mock-oidc.${NS_MODULES}.svc.cluster.local:8080"
 
 usage() {
   cat <<'USAGE'
@@ -67,6 +74,9 @@ Environment:
   LABS64_RELEASE              Helm release name (default: labs64io)
   LABS64_WORKDIR              where generated values/logs go (default: ./labs64.io-install)
   LABS64_OIDC_DISCOVERY_URL   issuer discovery URL (required by the byo profile)
+  LABS64_GATEWAY_URL          address the gateway is reachable at from this machine, e.g.
+                              http://localhost:8000 (default: detected — LoadBalancer
+                              address, or the host port a k3d cluster publishes)
   LABS64_CHART                chart to install (default: labs64io/labs64io-ecosystem);
                               set to a local path to test unpublished chart changes
   LABS64_CHART_VERSION        published chart version to install (default: the version
@@ -736,7 +746,7 @@ EOF
     ENABLE_API_GATEWAY=true; ENABLE_AUTHZ_PDP=true; ENABLE_API_DOCS=true
     ENABLE_AUDITFLOW=true; ENABLE_PAYMENT_GATEWAY=true
     ENABLE_CHECKOUT=false; ENABLE_CUSTOMER_PORTAL=false
-    OIDC_DISCOVERY_URL="http://mock-oidc.${NS_MODULES}.svc.cluster.local:8080/labs64io/.well-known/openid-configuration"
+    OIDC_DISCOVERY_URL="http://${MOCK_OIDC_HOST}/labs64io/.well-known/openid-configuration"
   else
     DEMO_MODE=false; MOCK_OIDC_ENABLED=false
     prompt OIDC_DISCOVERY_URL "OIDC discovery URL" "${LABS64_OIDC_DISCOVERY_URL:-}"
@@ -882,7 +892,11 @@ traefik_svc() {
 }
 
 gateway_address() {
-  local svc ns name ip host port
+  local svc ns name ip host port ctx hostport p
+  # An explicit address always wins: nothing here can detect a port-forward on a
+  # non-default port, an Ingress or proxy in front of the gateway, or a cluster
+  # reached from inside a dev container.
+  if [ -n "${LABS64_GATEWAY_URL:-}" ]; then printf '%s' "${LABS64_GATEWAY_URL%/}"; return 0; fi
   svc=$(traefik_svc); [ -n "$svc" ] || { printf ''; return 0; }
   ns=${svc%% *}; name=${svc##* }
   ip=$(kubectl -n "$ns" get svc "$name" \
@@ -898,14 +912,21 @@ gateway_address() {
   # is real from inside Docker's network namespace, but unreachable from the host on
   # Docker Desktop (macOS/Windows), where that namespace lives inside a VM — so it is
   # useless as a "browse to this URL" answer even though kubectl reports it as ready.
-  # k3d also always publishes that same service port straight through to localhost
-  # (k3d/labs64io.yaml maps 80:80/443:443), so prefer localhost whenever it actually
-  # answers, and only fall back to the reported address if it doesn't.
-  case "$(kubectl config current-context 2>/dev/null)" in
+  # k3d publishes that service port on localhost instead, on whichever host port the
+  # cluster was created with: k3d/labs64io.yaml maps 80:80, `-p 8000:80@loadbalancer`
+  # maps 8000. Ask Docker for this cluster's own mapping first — a bare localhost:$port
+  # may be answered by a different local cluster — then try the service port itself, and
+  # only fall back to the reported address if neither answers.
+  ctx=$(kubectl config current-context 2>/dev/null || true)
+  case "$ctx" in
     k3d-*)
-      if curl -s -o /dev/null -m 2 "http://localhost:$port" 2>/dev/null; then
-        printf 'http://localhost:%s' "$port"; return 0
-      fi
+      hostport=$(docker port "${ctx}-serverlb" "${port}/tcp" 2>/dev/null \
+                   | sed -n '1s/.*://p' || true)
+      for p in $hostport $port; do
+        if curl -s -o /dev/null -m 2 "http://localhost:$p" 2>/dev/null; then
+          printf 'http://localhost:%s' "$p"; return 0
+        fi
+      done
       ;;
   esac
 
@@ -979,8 +1000,11 @@ print_try_it_yourself() {
   cat <<EOF
 
  Try it yourself (DEV ONLY — mock-oidc authenticates nobody):
-   Get a demo token:
+   Get a demo token (the Host header is the name the gateway knows the demo IdP by;
+   mock-oidc names itself after it, and a token issued under any other name is refused
+   with 401 "Invalid issuer"):
      TOKEN=\$(curl -s -X POST $addr/labs64io/token \\
+       -H 'Host: $MOCK_OIDC_HOST' \\
        -H 'Content-Type: application/x-www-form-urlencoded' \\
        --data-urlencode 'grant_type=client_credentials' \\
        --data-urlencode 'client_id=local-test' \\
@@ -1132,7 +1156,9 @@ do_smoke() {
     # connection or a non-2xx (curl -f) exits nonzero, and this bare assignment
     # would trip `set -e` and kill the whole script instead of recording a FAIL.
     local token_resp token
+    # The Host header carries the issuer the gateway expects — see MOCK_OIDC_HOST.
     token_resp=$(curl -fsS -m 5 -X POST "$addr/labs64io/token" \
+      -H "Host: $MOCK_OIDC_HOST" \
       -H 'Content-Type: application/x-www-form-urlencoded' \
       --data-urlencode 'grant_type=client_credentials' \
       --data-urlencode 'client_id=local-test' \

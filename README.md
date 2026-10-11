@@ -7,6 +7,46 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![📖 Documentation](https://img.shields.io/badge/📖-Documentation-AB6543.svg)](https://labs64.io/docs/index.html)
 
+Helm charts for every Labs64.IO module, the `labs64io-ecosystem` umbrella chart that installs them together, and `install.sh`, an installer that puts the whole thing on a cluster and checks that it works.
+
+## Quick start
+
+You need `kubectl`, Helm 4 and a Kubernetes cluster. A local one is enough, and the install takes about five minutes.
+
+```bash
+# No cluster yet? Create one with k3d; the gateway is published on http://localhost:8000.
+k3d cluster create labs64io-demo -p "8000:80@loadbalancer" --k3s-arg "--disable=traefik@server:0"
+
+curl -fsSL https://raw.githubusercontent.com/Labs64/labs64.io-helm-charts/master/install.sh -o install.sh
+bash install.sh        # confirm the cluster, then choose "Install or update" and "Quickstart"
+```
+
+The installer applies the Gateway API CRDs if they are missing, installs the latest published `labs64io-ecosystem` chart into the `labs64io` namespace (gateway, Auth Gateway, policy engine, AuditFlow, Payment Gateway, Swagger UI, bundled PostgreSQL, RabbitMQ and Valkey, and a demo identity provider), then requests a token and publishes an audit event through the gateway to prove the install is callable. It prints the commands so you can repeat them.
+
+> The Quickstart profile is for evaluation. Its demo identity provider issues a valid token to anyone, so keep it off clusters that are reachable from outside.
+
+| Command | What it does |
+|---|---|
+| `bash install.sh` | Menu: install or update, status, start, stop, uninstall, smoke test |
+| `LABS64_PROFILE=quickstart bash install.sh` | Install without questions: everything bundled, demo identity provider |
+| `LABS64_PROFILE=byo LABS64_OIDC_DISCOVERY_URL=<url> bash install.sh` | Install without questions, with your own OIDC issuer and no demo identity provider |
+| `bash install.sh status` | What is installed and whether it is healthy; exits non-zero if not |
+| `bash install.sh smoke` | Repeat the token and publish check |
+| `bash install.sh stop` / `start` | Scale to zero and back; data and secrets stay |
+| `bash install.sh uninstall` | Remove what the installer created; asks before deleting data |
+| `bash install.sh --help` | Every setting, including `LABS64_NAMESPACE`, `LABS64_CHART_VERSION` and `LABS64_GATEWAY_URL` |
+
+Generated values, passwords and the transcript of the last run are kept in `./labs64.io-install/`. Running the installer again is safe: it reuses the recorded chart version and the existing passwords.
+
+**Where to go next**
+
+| You want to… | Read |
+|---|---|
+| Follow the first request step by step | [Quickstart](https://labs64.io/docs/getting-started/quickstart/) |
+| Install on your own cluster: AWS, Azure, Google Cloud, on-premises | [Deploy to your Kubernetes cluster](https://labs64.io/docs/getting-started/deploy-to-kubernetes/) and [Deployment Modes](#deployment-modes) below |
+| Install a single module chart | [Building-Box](#building-box-cherry-pick-your-modules) below |
+| Work on the charts with a local cluster built from source | [DEVELOPERS.md](DEVELOPERS.md) |
+
 ## High-Level Architecture Overview
 
 The ecosystem separates resources logically into namespaces. Application workloads (the proprietary Labs64 microservices) reside in `labs64io`, while third-party (3PP) platform dependencies reside in `tools` or `monitoring`.
@@ -213,15 +253,26 @@ cloning this repo:
 
 ```
 helm pull labs64io/labs64io-ecosystem --untar
-ls labs64io-ecosystem/values*.yaml   # values.yaml, values.demo.yaml
+ls labs64io-ecosystem/values*.yaml   # values.yaml, values.demo.yaml, values.aws.yaml
 ```
 
-`values.demo.yaml` is the evaluation profile: every module plus bundled
-PostgreSQL/RabbitMQ/Redis, Traefik + a `Gateway`, and the dev-only mock IdP.
+`values.demo.yaml` is the evaluation profile: AuditFlow and Payment Gateway behind the gateway, plus
+bundled PostgreSQL/RabbitMQ/Redis, Traefik + a `Gateway`, and the dev-only mock IdP. It expects the
+Gateway API CRDs and the `tools` namespace to exist, and the release to be named `labs64io`:
 
 ```
-helm install labs64io labs64io/labs64io-ecosystem -f labs64io-ecosystem/values.demo.yaml
+kubectl create namespace tools
+helm install labs64io labs64io/labs64io-ecosystem -n labs64io --create-namespace \
+  -f labs64io-ecosystem/values.demo.yaml
 ```
+
+To call a protected route on this profile, request the demo token with the header
+`Host: mock-oidc:8080`: mock-oidc names itself after the Host it is called on, and the gateway
+accepts only the name its discovery URL uses.
+
+`values.aws.yaml`, in the same package, is the AWS reference profile described under
+[Deployment Modes](#deployment-modes). For an evaluation, [`install.sh`](#quick-start) is the
+shorter way to the same result.
 
 `overrides/<module>/values.prod-example.yaml` in this git repo is a richer BYO starting
 point, but it lives outside `charts/` and is therefore **not** part of the published
@@ -234,7 +285,7 @@ Every module chart is standalone - install only what you need. Infrastructure
 bundles them as a dependency. Point `applicationYaml` at whatever broker/database you
 provide (the shared local toolset installed by `just install-tools`, or your own
 infrastructure in a real environment); see [Capability requirements](#capability-requirements-bring-your-own-infrastructure)
-below for what each module needs.
+above for what each module needs.
 
 | Module | Purpose | Infra required (BYO) | Gateway routes (opt-in) | Install |
 |---|---|---|---|---|
@@ -308,12 +359,18 @@ default) with credentials pre-wired end-to-end via a shared `Secret`. Cherry-pic
 with `--set <module>.enabled=false`:
 
 ```
-helm install labs64io labs64io/labs64io-ecosystem
+helm install labs64io labs64io/labs64io-ecosystem -f my-values.yaml
 ```
 
+The chart refuses to render while a bundled-infra password is still at its shipped default, unless
+`demoMode` is set: pass your own `secrets.*Password` values, or use the `values.demo.yaml` profile
+from [Example values](#example-values) for a throwaway install. [`install.sh`](#quick-start) does
+all of this for you, generates the passwords, and verifies the result.
+
 Use the umbrella chart for a full local/demo stack; install individual module charts directly
-(table above) to cherry-pick just what you need against your own infrastructure. It does not
-bundle Traefik or a `Gateway` — see [Gateway API setup](#gateway-api-setup) above for that.
+(table above) to cherry-pick just what you need against your own infrastructure. Traefik and the
+shared `Gateway` are opt-in (`traefik.enabled`, on in the demo profile and in the installer) — see
+[Gateway API setup](#gateway-api-setup) above to provide your own instead.
 
 ## Observability
 
