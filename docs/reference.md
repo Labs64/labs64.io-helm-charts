@@ -36,8 +36,8 @@ Generated values, passwords and the transcript of the last run are kept in `./la
 
 | You want to… | Read |
 |---|---|
-| Follow the first request step by step | [Quickstart](https://labs64.io/docs/getting-started/quickstart/) |
-| Install on your own cluster: AWS, Azure, Google Cloud, on-premises | [Deploy to your Kubernetes cluster](https://labs64.io/docs/getting-started/deploy-to-kubernetes/) and [Deployment Modes](#deployment-modes) below |
+| Follow the first request step by step | [Quickstart](https://labs64.io/docs/getting-started/quickstart.html) |
+| Install on your own cluster: AWS, Azure, Google Cloud, on-premises | [Deploy to your Kubernetes cluster](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html) and [Deployment Modes](#deployment-modes) below |
 | Install a single module chart | [Building-Box](#building-box-cherry-pick-your-modules) below |
 | Work on the charts with a local cluster built from source | [DEVELOPERS.md](../DEVELOPERS.md) |
 
@@ -115,7 +115,7 @@ The Helm charts adapt seamlessly from local environments to robust GitOps-manage
 
 The local environment optimizes for speed and developer convenience.
 
-- **Orchestration**: Managed by [Helmfile](https://helmfile.io/) and `just`.
+- **Orchestration**: Managed by [Helmfile](https://github.com/helmfile/helmfile) and `just`.
 - **Infrastructure**: Spun up locally on `k3d`. Helmfile applies Bitnami charts to the `tools` namespace.
 - **Secrets**: `externalSecrets.enabled: false`. Developers populate local `values.secrets.local.yaml` files (git-ignored) which directly render plain Kubernetes `Secret` resources.
 
