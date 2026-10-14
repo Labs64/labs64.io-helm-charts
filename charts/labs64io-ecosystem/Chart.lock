@@ -1,7 +1,7 @@
 dependencies:
 - name: api-gateway
   repository: file://../api-gateway
-  version: 0.15.5
+  version: 0.15.6
 - name: authz-pdp
   repository: file://../authz-pdp
   version: 0.8.7
