@@ -51,6 +51,39 @@ jobs:
           done
           ls -la ./charts
 
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+
+      - name: Install gate dependencies
+        run: pip install pyyaml
+
+      - name: Build chart dependencies
+        # Vendored deps (charts/*/charts/) are gitignored, so this checkout has none, and
+        # chart-releaser only packages the charts that changed in this push. Every module
+        # chart that did NOT change would reach the umbrella without its `chart-libs`
+        # dependency, and the released umbrella then fails at render time with
+        # `no template "chart-libs.test-connection"`. Build every chart's dependencies
+        # up front, the umbrella last (it vendors the module charts, deps included).
+        run: |
+          set -euo pipefail
+          for chart_dir in charts/*/; do
+            chart_dir="${chart_dir%/}"
+            [ -f "$chart_dir/Chart.yaml" ] || continue
+            [ "$(basename "$chart_dir")" = "labs64io-ecosystem" ] && continue
+            helm dependency build "$chart_dir"
+          done
+          helm dependency build charts/labs64io-ecosystem
+
+      - name: Verify the umbrella package is self-contained
+        # A published chart version is immutable (skip_existing), so a broken package cannot
+        # be fixed in place — only superseded. Fail before anything is released.
+        run: |
+          set -euo pipefail
+          helm package charts/labs64io-ecosystem --destination "$RUNNER_TEMP/verify"
+          python scripts/check-packaged-chart.py "$RUNNER_TEMP"/verify/labs64io-ecosystem-*.tgz
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:

@@ -103,6 +103,13 @@ What the updater guarantees, and why you should not hand-edit around it:
   time, so the same PR bumps the umbrella's version; publishing it is what makes the
   release installable. Operators then move their environments to the new umbrella
   version.
+- **The package must be self-contained.** `charts/*/charts/` is gitignored and
+  chart-releaser only packages the charts that changed, so without an explicit
+  `helm dependency build` of every chart the umbrella ships unchanged module charts
+  *without* `chart-libs` (installs then fail with `no template "chart-libs.…"`). The
+  release workflow builds all dependencies first and gates on
+  `scripts/check-packaged-chart.py`; run it locally with `just check-package`. A
+  published version is immutable, so a broken one is only ever superseded by a new bump.
 - **Idempotent.** Replaying a release event is a no-op, so a redelivered dispatch cannot
   inflate the chart version.
 - **Comments survive.** Edits are line-level; a PyYAML round-trip would strip every `# --`

@@ -573,6 +573,26 @@ check-bumps base="origin/master":
 test-check-bumps:
     python3 -m pytest scripts/test_check_chart_version_bumps.py -q
 
+# Build every chart's dependencies, package the umbrella and fail unless it is self-contained
+# (each bundled module chart carries chart-libs) — the same gate the release workflow runs
+#
+# Check that the packaged umbrella chart bundles every dependency
+check-package:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for d in charts/*/; do
+        d="${d%/}"
+        [ -f "$d/Chart.yaml" ] && [ "$(basename "$d")" != labs64io-ecosystem ] && helm dependency build "$d" >/dev/null
+    done
+    helm dependency build charts/labs64io-ecosystem >/dev/null
+    out=$(mktemp -d); trap 'rm -rf "$out"' EXIT
+    helm package charts/labs64io-ecosystem --destination "$out" >/dev/null
+    python3 scripts/check-packaged-chart.py "$out"/labs64io-ecosystem-*.tgz
+
+# Run the tests of the packaged-chart gate
+test-check-package:
+    python3 -m pytest scripts/test_check_packaged_chart.py -q
+
 # Render one application exactly as Helmfile would install it, with all value layers
 template app:
     helmfile -e {{ENV}} $(just _observability-args) template -l name=labs64io-{{app}}

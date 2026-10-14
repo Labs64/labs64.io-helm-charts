@@ -80,6 +80,17 @@ jobs:
             helm dependency build "$chart_dir"
           done
 
+      - name: Test the packaged-chart gate
+        run: pytest scripts/test_check_packaged_chart.py -q
+
+      - name: Umbrella package is self-contained
+        # The released umbrella must carry every dependency of every chart it bundles
+        # (chart-libs in each module chart). Same check the release workflow gates on.
+        run: |
+          set -euo pipefail
+          helm package charts/labs64io-ecosystem --destination "$RUNNER_TEMP/package"
+          python scripts/check-packaged-chart.py "$RUNNER_TEMP"/package/labs64io-ecosystem-*.tgz
+
       - name: Test the ConfigMap credential linter
         # A linter nobody tests reports "clean" forever. These tests plant
         # credentials and assert the linter catches them.
