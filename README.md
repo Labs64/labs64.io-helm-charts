@@ -8,7 +8,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![📖 Documentation](https://img.shields.io/badge/📖-Documentation-AB6543.svg)](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html)
 
-<p align="center"><img src="docs/assets/helm-charts-hero.svg" alt="Helm Charts: evaluators, platform teams, CI pipelines and contributors install the umbrella chart or a single module chart and get a gateway with authentication, AuditFlow, Payment Gateway and optional Checkout and Customer Portal." width="880"></p>
+<p align="center"><img src="docs/assets/helm-charts-hero.svg" alt="Helm Charts: The umbrella chart as a container ship: Traefik, AuthProxy, Cerbos and AuditFlow are on board, Checkout and Customer Portal are optional, and a crane lowers Payment Gateway into place." width="880"></p>
 
 [**Get started**](#get-started) · [Features](#features) · [Architecture](#architecture) · [AI agents](#using-helm-charts-with-ai-agents) · [Ecosystem](#the-labs64io-ecosystem) · [Documentation](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html) · [labs64.io](https://labs64.io)
 
