@@ -45,13 +45,14 @@ extraPorts:
     containerPort: 57800
     protocol: TCP
 
-# CPU request: 2m used on dev outside of a login or startup burst, so 250m only kept a quarter of
-# a node's requests from the autoscaler's bin-packing. There is no CPU limit, so JVM startup and
-# login bursts still use what the node has free; the request only decides how many CPU shares
-# Keycloak gets when the node is contended.
+# CPU request: ~2m idle, but 118m p95 / 134m peak while a load test fetched tokens (dev, `just
+# loadtest`). 250m kept a quarter of a node's requests from the autoscaler's bin-packing for
+# nothing; 100m was below the busy case. There is no CPU limit, so JVM startup and login bursts
+# still use what the node has free; the request decides how many CPU shares Keycloak gets when the
+# node is contended, and that is when it matters.
 resources:
   requests:
-    cpu: 100m
+    cpu: 150m
     memory: 768Mi
   limits:
     memory: 1536Mi
