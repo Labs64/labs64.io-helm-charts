@@ -53,9 +53,11 @@ ports:
   zipkin:
     enabled: false
 
+# CPU request ~2m used on dev between scrapes. There is no CPU limit, so a scrape burst still uses what
+# the node has idle; the request only reserves scheduling room.
 resources:
   requests:
-    cpu: 50m
+    cpu: 10m
     memory: 128Mi
   limits:
     memory: 384Mi
