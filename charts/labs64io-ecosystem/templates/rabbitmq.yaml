@@ -72,7 +72,16 @@ spec:
             - name: data
               mountPath: /var/lib/rabbitmq
           resources:
-            {{- toYaml (.Values.rabbitmq.resources | default (dict "limits" (dict "cpu" "500m" "memory" "512Mi") "requests" (dict "cpu" "100m" "memory" "256Mi"))) | nindent 12 }}
+            {{- with .Values.rabbitmq.resources }}
+            {{- toYaml . | nindent 12 }}
+            {{- else }}
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            {{- end }}
           readinessProbe:
             exec:
               command: ["rabbitmq-diagnostics", "check_port_connectivity"]
