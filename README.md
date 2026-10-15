@@ -3,7 +3,7 @@
 **Kubernetes charts for every Labs64.IO module, and the installer that puts them to work.**
 *Part of the [Labs64.IO Ecosystem](https://labs64.io): how the whole platform, or a single module, gets onto a cluster.*
 
-[![Lint Charts](https://github.com/Labs64/labs64.io-helm-charts/actions/workflows/labs64io-lint-charts.yml/badge.svg)](https://github.com/Labs64/labs64.io-helm-charts/actions/workflows/labs64io-lint-charts.yml)
+[![Labs64.IO - Helm Charts - Release Charts](https://github.com/Labs64/labs64.io-helm-charts/actions/workflows/labs64io-release-charts.yml/badge.svg)](https://github.com/Labs64/labs64.io-helm-charts/actions/workflows/labs64io-release-charts.yml)
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/labs64io-helm-charts)](https://artifacthub.io/packages/search?repo=labs64io-helm-charts)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![📖 Documentation](https://img.shields.io/badge/📖-Documentation-AB6543.svg)](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html)
