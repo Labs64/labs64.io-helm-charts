@@ -85,9 +85,21 @@ jobs:
           python scripts/check-packaged-chart.py "$RUNNER_TEMP"/verify/labs64io-ecosystem-*.tgz
 
       - name: Run chart-releaser
+        id: releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
           charts_dir: charts
           skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      # The deployed umbrella pin of an environment is a Renovate PR: ask the runner to
+      # look now instead of at its next scheduled run. Only when a chart was actually published; the step
+      # never fails the release (without the secret it warns).
+      - name: Ask Renovate to propose the new chart
+        if: steps.releaser.outputs.changed_charts != ''
+        uses: Labs64/labs64.io-workspace/.github/actions/renovate-trigger@v1
+        with:
+          token: ${{ secrets.RENOVATE_TRIGGER_TOKEN }}
+          runner-repository: ${{ vars.RENOVATE_RUNNER_REPOSITORY }}
+          reason: charts released (${{ steps.releaser.outputs.changed_charts }})
