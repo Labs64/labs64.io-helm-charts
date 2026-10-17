@@ -165,7 +165,7 @@ extraManifests:
     {{- $_ := set $realm "sslRequired" .Values.labs64io.realmSslRequired }}
     {{- with .Values.realmFixtures }}
     {{- if not $.Values.labs64io.testFixtures }}
-    {{- fail "realmFixtures (test clients) need labs64io.testFixtures: true — local, or AWS dev via keycloak_test_fixtures" }}
+    {{- fail "realmFixtures (test clients) need labs64io.testFixtures: true — local, or AWS dev via the operator's test_fixtures" }}
     {{- end }}
     {{- $fx := fromJson . }}
     {{- $_ := set $realm "clients" (concat $realm.clients $fx.clients) }}

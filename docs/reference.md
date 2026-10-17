@@ -138,7 +138,7 @@ The umbrella chart with [`values.aws.yaml`](../charts/labs64io-ecosystem/values.
 
 - **Infrastructure**: yours, e.g. Terraform — EKS, RDS PostgreSQL and ElastiCache Valkey per module, Amazon MQ (RabbitMQ, AMQPS only), S3.
 - **Install**: Traefik, Keycloak and the metrics collector first, each as its own release from the publisher's chart with the matching `overrides/<tool>/values*.aws.yaml` file; then `helm upgrade --install labs64io labs64io/labs64io-ecosystem -f values.aws.yaml -f <your-environment-values>.yaml` (bundled infra off, per-module hosts, TLS to the managed services, the AuditFlow route on a `ClusterIP` gateway behind your own load balancer and WAF).
-- **Secrets**: `externalSecrets.enabled: true`; each module's `ExternalSecret` (`external-secrets.io/v1`) reads `labs64/<env>/<module>` from AWS Secrets Manager through the `aws-secretsmanager-cluster` `ClusterSecretStore`.
+- **Secrets**: `externalSecrets.enabled: true`; each module's `ExternalSecret` (`external-secrets.io/v1`) reads `<prefix>/<env>/<module>` (the `externalSecrets.secretKey` your environment values set) from AWS Secrets Manager through the `aws-secretsmanager-cluster` `ClusterSecretStore`.
 
 ```mermaid
 sequenceDiagram
@@ -150,7 +150,7 @@ sequenceDiagram
     TF->>AWS: Provision data stores + per-module secrets
     TF-->>Just: outputs (hosts, secret keys, IRSA roles) as environment values
     Just->>Cluster: labs64io-ecosystem -f values.aws.yaml -f your environment values
-    Cluster->>AWS: ESO fetches labs64/<env>/<module> from Secrets Manager
+    Cluster->>AWS: ESO fetches <prefix>/<env>/<module> from Secrets Manager
 ```
 
 ### 3. Users' Own Infrastructure (BYO Infra)
