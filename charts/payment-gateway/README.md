@@ -1,6 +1,6 @@
 # payment-gateway
 
-![Version: 0.10.10](https://img.shields.io/badge/Version-0.10.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.5](https://img.shields.io/badge/AppVersion-0.0.5-informational?style=flat-square)
+![Version: 0.10.11](https://img.shields.io/badge/Version-0.10.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.6](https://img.shields.io/badge/AppVersion-0.0.6-informational?style=flat-square)
 
 Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 
@@ -70,8 +70,8 @@ Labs64.IO :: Payment Gateway - Universal Payment Gateway for PSP Integration
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |
 | global.security.allowInsecureImages | bool | `true` | Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard) |
 | gracefulShutdown.timeout | string | `"30s"` | Max time Spring Boot waits for in-flight requests before forced shutdown |
-| image | object | `{"digest":"sha256:1261e4620333a864a7a2499bd5e47674d7281852c8730b16672f54a4ea619610","pullPolicy":"IfNotPresent","repository":"labs64/payment-gateway","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
-| image.digest | string | `"sha256:1261e4620333a864a7a2499bd5e47674d7281852c8730b16672f54a4ea619610"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| image | object | `{"digest":"sha256:65207cd5120432de962724d1ceb68fba44f97ad8c96c6f285d4e072ad5e26eb9","pullPolicy":"IfNotPresent","repository":"labs64/payment-gateway","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image.digest | string | `"sha256:65207cd5120432de962724d1ceb68fba44f97ad8c96c6f285d4e072ad5e26eb9"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
