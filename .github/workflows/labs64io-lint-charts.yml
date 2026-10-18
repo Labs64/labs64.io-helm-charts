@@ -87,16 +87,12 @@ jobs:
       - name: Build chart dependencies
         # Vendored deps (charts/*/charts/) are gitignored, so a fresh checkout is
         # missing them (e.g. chart-libs, a file://../chart-libs local dependency);
-        # without this, every dependent chart fails to lint/template below.
-        run: |
-          set -euo pipefail
-          for chart_dir in charts/*/; do
-            [ -f "$chart_dir/Chart.yaml" ] || continue
-            helm dependency build "$chart_dir"
-          done
+        # without this, every dependent chart fails to lint/template below. The umbrella is built last, which
+        # the script takes care of: an alphabetical loop here packaged it before payment-gateway had its own.
+        run: bash scripts/build-chart-dependencies.sh
 
-      - name: Test the packaged-chart gate
-        run: pytest scripts/test_check_packaged_chart.py -q
+      - name: Test the packaged-chart gate and the dependency build order
+        run: pytest scripts/test_check_packaged_chart.py scripts/test_build_chart_dependencies.py -q
 
       - name: Umbrella package is self-contained
         # The released umbrella must carry every dependency of every chart it bundles

@@ -65,16 +65,8 @@ jobs:
         # chart that did NOT change would reach the umbrella without its `chart-libs`
         # dependency, and the released umbrella then fails at render time with
         # `no template "chart-libs.test-connection"`. Build every chart's dependencies
-        # up front, the umbrella last (it vendors the module charts, deps included).
-        run: |
-          set -euo pipefail
-          for chart_dir in charts/*/; do
-            chart_dir="${chart_dir%/}"
-            [ -f "$chart_dir/Chart.yaml" ] || continue
-            [ "$(basename "$chart_dir")" = "labs64io-ecosystem" ] && continue
-            helm dependency build "$chart_dir"
-          done
-          helm dependency build charts/labs64io-ecosystem
+        # up front, the umbrella last (it vendors the module charts, deps included): scripts/build-chart-dependencies.sh.
+        run: bash scripts/build-chart-dependencies.sh
 
       - name: Verify the umbrella package is self-contained
         # A published chart version is immutable (skip_existing), so a broken package cannot

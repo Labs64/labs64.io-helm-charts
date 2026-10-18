@@ -580,18 +580,14 @@ test-check-bumps:
 check-package:
     #!/usr/bin/env bash
     set -euo pipefail
-    for d in charts/*/; do
-        d="${d%/}"
-        [ -f "$d/Chart.yaml" ] && [ "$(basename "$d")" != labs64io-ecosystem ] && helm dependency build "$d" >/dev/null
-    done
-    helm dependency build charts/labs64io-ecosystem >/dev/null
+    bash scripts/build-chart-dependencies.sh >/dev/null
     out=$(mktemp -d); trap 'rm -rf "$out"' EXIT
     helm package charts/labs64io-ecosystem --destination "$out" >/dev/null
     python3 scripts/check-packaged-chart.py "$out"/labs64io-ecosystem-*.tgz
 
 # Run the tests of the packaged-chart gate
 test-check-package:
-    python3 -m pytest scripts/test_check_packaged_chart.py -q
+    python3 -m pytest scripts/test_check_packaged_chart.py scripts/test_build_chart_dependencies.py -q
 
 # Render one application exactly as Helmfile would install it, with all value layers
 template app:
