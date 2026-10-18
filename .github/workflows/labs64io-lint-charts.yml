@@ -4,6 +4,14 @@ on:
   pull_request:
     paths:
       - "charts/**"
+  # The chart-update PRs are opened with the workflow token, for which GitHub starts no (or only failing) pull
+  # request checks, and some changes go straight to master: so the same gates also run on what lands there.
+  push:
+    branches:
+      - master
+    paths:
+      - "charts/**"
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -48,10 +56,17 @@ jobs:
         # ecosystem release number). `just bump <chart>` does all of it.
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref || 'master' }}
+          PUSHED_FROM: ${{ github.event.before }}
         run: |
           set -euo pipefail
           git fetch origin "$BASE_REF" --depth=1 2>/dev/null || true
-          python scripts/check-chart-version-bumps.py --base "origin/$BASE_REF"
+          base="origin/$BASE_REF"
+          # After a push, master is its own base: compare with the commit before the push instead.
+          if [[ "$GITHUB_EVENT_NAME" == push && "$PUSHED_FROM" =~ ^[0-9a-f]{40}$ && ! "$PUSHED_FROM" =~ ^0+$ ]] \
+            && git cat-file -e "$PUSHED_FROM^{commit}" 2>/dev/null; then
+            base="$PUSHED_FROM"
+          fi
+          python scripts/check-chart-version-bumps.py --base "$base"
 
       - name: Enforce schema generation
         run: |
