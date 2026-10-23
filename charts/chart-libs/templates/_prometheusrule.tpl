@@ -47,23 +47,136 @@ spec:
             /
             sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[5m]))
 
-        # Alerting rules (scoped to this service's job)
-        - alert: AvailabilitySLOViolation
-          expr: slo:availability:ratio_rate5m{job="{{ $svc }}"} < {{ $availTarget }}
-          for: 5m
+        # Alerting rules (scoped to this service's job). The block below is evaluated word for word, but
+        # for the job and the targets, by the managed Prometheus of the Labs64.IO environments as well; a
+        # check there fails when the two differ, so change both together.
+        # slo-burn-rate: begin
+        # Error-budget burn rates over a 30-day SLO (multiwindow, multi-burn-rate): an alert fires when the
+        # long and the short window both burn faster than the factor, so it pages for a real outage, not a
+        # blip, and resolves soon after it ends. 14.4x spends 2% of the budget in an hour, 6x 5% in six
+        # hours, 3x 10% in a day.
+        - record: slo:availability:error_ratio_rate5m
+          expr: |
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}", status=~"5.."}[5m]))
+            /
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[5m]))
+        - record: slo:availability:error_ratio_rate30m
+          expr: |
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}", status=~"5.."}[30m]))
+            /
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[30m]))
+        - record: slo:availability:error_ratio_rate1h
+          expr: |
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}", status=~"5.."}[1h]))
+            /
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[1h]))
+        - record: slo:availability:error_ratio_rate2h
+          expr: |
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}", status=~"5.."}[2h]))
+            /
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[2h]))
+        - record: slo:availability:error_ratio_rate6h
+          expr: |
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}", status=~"5.."}[6h]))
+            /
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[6h]))
+        - record: slo:availability:error_ratio_rate1d
+          expr: |
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}", status=~"5.."}[1d]))
+            /
+            sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[1d]))
+        - record: slo:latency:slow_ratio_rate5m
+          expr: |
+            1 - (
+              sum by (job) (rate(http_server_requests_seconds_bucket{job="{{ $svc }}", le="{{ $le }}"}[5m]))
+              /
+              sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[5m]))
+            )
+        - record: slo:latency:slow_ratio_rate30m
+          expr: |
+            1 - (
+              sum by (job) (rate(http_server_requests_seconds_bucket{job="{{ $svc }}", le="{{ $le }}"}[30m]))
+              /
+              sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[30m]))
+            )
+        - record: slo:latency:slow_ratio_rate1h
+          expr: |
+            1 - (
+              sum by (job) (rate(http_server_requests_seconds_bucket{job="{{ $svc }}", le="{{ $le }}"}[1h]))
+              /
+              sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[1h]))
+            )
+        - record: slo:latency:slow_ratio_rate2h
+          expr: |
+            1 - (
+              sum by (job) (rate(http_server_requests_seconds_bucket{job="{{ $svc }}", le="{{ $le }}"}[2h]))
+              /
+              sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[2h]))
+            )
+        - record: slo:latency:slow_ratio_rate6h
+          expr: |
+            1 - (
+              sum by (job) (rate(http_server_requests_seconds_bucket{job="{{ $svc }}", le="{{ $le }}"}[6h]))
+              /
+              sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[6h]))
+            )
+        - record: slo:latency:slow_ratio_rate1d
+          expr: |
+            1 - (
+              sum by (job) (rate(http_server_requests_seconds_bucket{job="{{ $svc }}", le="{{ $le }}"}[1d]))
+              /
+              sum by (job) (rate(http_server_requests_seconds_count{job="{{ $svc }}"}[1d]))
+            )
+        - alert: AvailabilityBudgetBurnFast
+          expr: |
+            slo:availability:error_ratio_rate1h{job="{{ $svc }}"} > (14.4 * (1 - {{ $availTarget }}))
+            and
+            slo:availability:error_ratio_rate5m{job="{{ $svc }}"} > (14.4 * (1 - {{ $availTarget }}))
+          for: 2m
           labels:
             severity: critical
           annotations:
-            summary: Availability SLO violated for {{ $svc }}
-            description: "Availability ratio has been below the target ({{ $availTarget }}) for 5 minutes."
-
-        - alert: LatencySLOViolation
-          expr: slo:latency:ratio_rate5m{job="{{ $svc }}"} < {{ $latTarget }}
-          for: 5m
+            summary: "{{ $svc }}: 5xx answers spend the 30-day availability budget 14.4x too fast (2% of it in an hour)"
+        - alert: AvailabilityBudgetBurnSlow
+          expr: |
+            slo:availability:error_ratio_rate6h{job="{{ $svc }}"} > (6 * (1 - {{ $availTarget }}))
+            and
+            slo:availability:error_ratio_rate30m{job="{{ $svc }}"} > (6 * (1 - {{ $availTarget }}))
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $svc }}: 5xx answers spend the 30-day availability budget 6x too fast (5% of it in six hours)"
+        - alert: AvailabilityBudgetBurnTicket
+          expr: |
+            slo:availability:error_ratio_rate1d{job="{{ $svc }}"} > (3 * (1 - {{ $availTarget }}))
+            and
+            slo:availability:error_ratio_rate2h{job="{{ $svc }}"} > (3 * (1 - {{ $availTarget }}))
+          for: 2m
           labels:
             severity: warning
           annotations:
-            summary: Latency SLO violated for {{ $svc }}
-            description: "Less than {{ $latTarget }} of requests are completing within {{ $le }}s for the last 5 minutes."
+            summary: "{{ $svc }}: 5xx answers spend the 30-day availability budget 3x too fast (10% of it in a day)"
+        - alert: LatencyBudgetBurnFast
+          expr: |
+            slo:latency:slow_ratio_rate1h{job="{{ $svc }}"} > (14.4 * (1 - {{ $latTarget }}))
+            and
+            slo:latency:slow_ratio_rate5m{job="{{ $svc }}"} > (14.4 * (1 - {{ $latTarget }}))
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "{{ $svc }}: requests slower than {{ $le }} s spend the 30-day latency budget 14.4x too fast"
+        - alert: LatencyBudgetBurnSlow
+          expr: |
+            slo:latency:slow_ratio_rate6h{job="{{ $svc }}"} > (6 * (1 - {{ $latTarget }}))
+            and
+            slo:latency:slow_ratio_rate30m{job="{{ $svc }}"} > (6 * (1 - {{ $latTarget }}))
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "{{ $svc }}: requests slower than {{ $le }} s spend the 30-day latency budget 6x too fast"
+        # slo-burn-rate: end
 {{- end }}
 {{- end }}

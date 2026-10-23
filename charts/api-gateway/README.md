@@ -1,6 +1,6 @@
 # api-gateway
 
-![Version: 0.15.8](https://img.shields.io/badge/Version-0.15.8-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.3](https://img.shields.io/badge/AppVersion-0.1.3-informational?style=flat-square)
+![Version: 0.15.9](https://img.shields.io/badge/Version-0.15.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.3](https://img.shields.io/badge/AppVersion-0.1.3-informational?style=flat-square)
 
 Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
@@ -21,7 +21,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.7 |
+| file://../chart-libs | chart-libs | 0.8.8 |
 
 ## Values
 
