@@ -134,7 +134,7 @@ topologySpreadConstraints:
 #   helm template traefik traefik/traefik --version <v> -f overrides/traefik/values.aws.yaml N \
 #     --show-only templates/extra-objects.yaml
 # The only difference allowed is the chart's rule on `secrets`. Then update chart-pin.
-# chart-pin: traefik 41.6.1
+# chart-pin: traefik 42.0.0
 rbac:
   enabled: false
 extraObjects:

@@ -30,7 +30,7 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | file://../payment-gateway | payment-gateway | >=0.1.0 |
 | https://charts.bitnami.com/bitnami | postgresql | 18.12.4 |
 | https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.4 |
-| https://traefik.github.io/charts | traefik | 41.6.1 |
+| https://traefik.github.io/charts | traefik | 42.0.0 |
 
 ## Values
 

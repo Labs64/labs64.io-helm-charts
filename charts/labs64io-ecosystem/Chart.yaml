@@ -73,7 +73,7 @@ dependencies:
   # version helmfile.yaml.gotmpl uses (the `traefik` release) so local dev and the published
   # path agree.
   - name: traefik
-    version: "41.6.1"
+    version: "42.0.0"
     repository: https://traefik.github.io/charts
     condition: traefik.enabled
   # Dev-only IdP (opt-in, additionally gated on demoMode — see templates/_guards.tpl).
