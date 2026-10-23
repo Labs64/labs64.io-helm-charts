@@ -16,7 +16,7 @@
 # (labs64.io-workspace) fails if they differ; any other install path must pin the same version. install.sh is a standalone script users download and run, so it cannot
 # read this file and carries its own annotated copy.
 # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
-GATEWAY_API_VERSION := "v1.6.2"
+GATEWAY_API_VERSION := "v1.6.3"
 
 # Traefik's own CRDs, installed separately from the `traefik` release (see install-tools).
 # renovate: datasource=helm depName=traefik-crds registryUrl=https://traefik.github.io/charts
