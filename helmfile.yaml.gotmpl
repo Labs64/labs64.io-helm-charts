@@ -78,7 +78,7 @@ releases:
     # overrides/eso to match). Any other install path must pin the same version:
     # `check-version-pins.py --print-pins` (labs64.io-workspace) lists it.
     chart: oci://ghcr.io/external-secrets/charts/external-secrets
-    version: 2.11.0
+    version: 2.14.0
     set:
       - name: installCRDs
         value: true
@@ -139,7 +139,7 @@ releases:
     installed: {{ eq $idp "keycloak" }}
     namespace: tools
     chart: oci://ghcr.io/codecentric/helm-charts/keycloakx
-    version: 7.3.2
+    version: 7.4.0
     values:
       - ./overrides/keycloak/values.yaml
       - ./overrides/keycloak/values.{{ .Environment.Name }}.yaml
@@ -181,7 +181,7 @@ releases:
   - name: opentelemetry-collector
     namespace: monitoring
     chart: open-telemetry/opentelemetry-collector
-    version: 0.175.0
+    version: 0.176.0
     values:
       - overrides/opentelemetry/values-collector.{{ .Environment.Name }}.yaml
     labels:
