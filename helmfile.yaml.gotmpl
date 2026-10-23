@@ -190,7 +190,7 @@ releases:
   - name: prometheus
     namespace: monitoring
     chart: prometheus-community/kube-prometheus-stack
-    version: 91.9.0
+    version: 92.10.1
     values:
       - overrides/prometheus/values.{{ .Environment.Name }}.yaml
     labels:
