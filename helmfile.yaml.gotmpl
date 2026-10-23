@@ -172,7 +172,7 @@ releases:
   - name: opentelemetry-operator
     namespace: monitoring
     chart: open-telemetry/opentelemetry-operator
-    version: 0.124.1
+    version: 0.126.0
     values:
       - overrides/opentelemetry/values-operator.{{ .Environment.Name }}.yaml
     labels:
@@ -190,7 +190,7 @@ releases:
   - name: prometheus
     namespace: monitoring
     chart: prometheus-community/kube-prometheus-stack
-    version: 91.9.0
+    version: 92.10.1
     values:
       - overrides/prometheus/values.{{ .Environment.Name }}.yaml
     labels:
@@ -199,7 +199,7 @@ releases:
   - name: loki
     namespace: monitoring
     chart: grafana-community/loki
-    version: 18.13.8
+    version: 18.17.1
     values:
       - overrides/loki/values.{{ .Environment.Name }}.yaml
     labels:
@@ -208,7 +208,7 @@ releases:
   - name: tempo
     namespace: monitoring
     chart: grafana-community/tempo
-    version: 3.1.0
+    version: 3.2.0
     values:
       - overrides/tempo/values.{{ .Environment.Name }}.yaml
     labels:
@@ -217,7 +217,7 @@ releases:
   - name: grafana
     namespace: monitoring
     chart: grafana-community/grafana
-    version: 13.2.7
+    version: 13.7.0
     values:
       - overrides/grafana/values.{{ .Environment.Name }}.yaml
     labels:
