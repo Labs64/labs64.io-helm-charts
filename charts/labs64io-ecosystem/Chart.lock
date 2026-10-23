@@ -4,7 +4,7 @@ dependencies:
   version: 0.15.9
 - name: authz-pdp
   repository: file://../authz-pdp
-  version: 0.8.8
+  version: 0.8.9
 - name: checkout
   repository: file://../checkout
   version: 0.11.13
@@ -32,5 +32,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.3
-digest: sha256:c927f2ec5866cffc5b0772686e6ce59a89ec9927afcda2b7e8bafdbb202ae9a1
-generated: "2026-10-24T01:22:16.829055+02:00"
+digest: sha256:d725ef9f32b2d23347c529202641811fceb159b0847216a556549e85219d3179
+generated: "2026-10-24T01:43:23.746113+02:00"
