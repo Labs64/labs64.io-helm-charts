@@ -25,7 +25,7 @@ LOGFILE="$WORKDIR/install.log"
 # Must match GATEWAY_API_VERSION in this repo's justfile.versions (`just check-pins`, labs64.io-workspace).
 # This script is downloaded and run standalone, so it cannot read justfile.versions.
 # renovate: datasource=github-releases depName=kubernetes-sigs/gateway-api
-GATEWAY_API_VERSION="${LABS64_GATEWAY_API_VERSION:-v1.6.2}"
+GATEWAY_API_VERSION="${LABS64_GATEWAY_API_VERSION:-v1.6.3}"
 # Published chart version to install. Unset, it is resolved at install time: the version
 # an earlier run recorded for this cluster (so a re-run reproduces the same release), or
 # else the latest published one. There is deliberately no hard-coded default — one would
