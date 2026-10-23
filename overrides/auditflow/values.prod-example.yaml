@@ -32,6 +32,29 @@ secrets:
     SPRING_RABBITMQ_USERNAME: <your-broker-username>
     SPRING_RABBITMQ_PASSWORD: <your-broker-password>
 
+# ALTERNATIVE: Amazon SQS instead of RabbitMQ (no broker credentials; the pod's IAM role
+# needs sqs:SendMessage/ReceiveMessage/DeleteMessage/ChangeMessageVisibility/GetQueueUrl/
+# GetQueueAttributes/CreateQueue on arn:aws:sqs:<region>:<account>:<queue-prefix>*).
+# Drop spring.rabbitmq and the SPRING_RABBITMQ_* secrets above and use:
+# applicationYaml:
+#   auditflow:
+#     broker:
+#       type: sqs
+#       sqs:
+#         region: eu-west-1
+#         queue-prefix: auditflow-prod-
+# serviceAccount:
+#   annotations:
+#     eks.amazonaws.com/role-arn: arn:aws:iam::<account>:role/<auditflow-role>
+# networkPolicy:
+#   extraEgress:
+#     - to:
+#         - ipBlock:
+#             cidr: 0.0.0.0/0   # or your SQS VPC endpoint's subnets
+#       ports:
+#         - protocol: TCP
+#           port: 443
+
 # RECOMMENDED for production: replace the inline secrets.data above with an
 # ExternalSecret sourced from your real secret backend (AWS Secrets Manager, Vault,
 # etc.) via a ClusterSecretStore you define — do not reuse the local dev

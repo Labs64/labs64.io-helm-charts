@@ -1,9 +1,13 @@
 # AWS reference profile: EKS with managed data stores.
 #
-# Data stores are AWS-managed — RDS PostgreSQL and ElastiCache Valkey per module, one Amazon MQ
-# (RabbitMQ) broker — and credentials come from AWS Secrets Manager through External Secrets
-# Operator (>= 0.16, external-secrets.io/v1). Provisioning them is the operator's job; this file
-# only tells the chart that they exist.
+# Data stores are AWS-managed — RDS PostgreSQL and ElastiCache Valkey per module, Amazon SQS queues
+# for AuditFlow's message broker — and credentials come from AWS Secrets Manager through External
+# Secrets Operator (>= 0.16, external-secrets.io/v1) or, for SQS, from the module's IAM role (IRSA).
+# Provisioning them is the operator's job; this file only tells the chart that they exist.
+#
+# AuditFlow on an Amazon MQ (RabbitMQ) broker instead of SQS: set
+# auditflow.applicationYaml.auditflow.broker.type=rabbitmq and the broker's host/port
+# (global.rabbitmq) in your environment values; AMQPS is already on below.
 #
 # This file holds what is true for every environment of this shape. You supply the
 # environment-specific coordinates in a second values file, passed last:
@@ -13,6 +17,8 @@
 #   <module>.applicationYaml                        data-store hosts and ports
 #   <module>.externalSecrets.secretKey              the Secrets Manager entry of each module
 #   <module>.serviceAccount.annotations             the IRSA role, where a module needs AWS APIs
+#                                                   (AuditFlow: SQS on its queues, plus S3 for an S3 sink)
+#   auditflow.applicationYaml.auditflow.broker.sqs  queue-prefix (and region) of AuditFlow's SQS queues
 #   <module>.networkPolicy.extraEgress              your VPC CIDR on the data-store ports
 #   auditflow.tenants                               the environment's tenants, quotas and pipelines
 #
@@ -125,10 +131,15 @@ auditflow:
     enabled: true
     storeName: aws-secretsmanager-cluster
   applicationYaml:
+    auditflow:
+      broker:
+        # Amazon SQS through the pod's IAM role. Your environment values set
+        # broker.sqs.queue-prefix, the IRSA role (serviceAccount.annotations) and egress to SQS (443).
+        type: sqs
     spring:
       rabbitmq:
         ssl:
-          # Amazon MQ accepts AMQPS (TLS, 5671) only.
+          # Used only with broker.type=rabbitmq: Amazon MQ accepts AMQPS (TLS, 5671) only.
           enabled: true
       data:
         redis:

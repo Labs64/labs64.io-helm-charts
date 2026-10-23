@@ -22,6 +22,54 @@
           "additionalProperties": false,
           "description": "AuditFlow application properties (bound by",
           "properties": {
+            "broker": {
+              "additionalProperties": false,
+              "description": "Message broker the backend buffers events on. Keys are exact Spring property paths\n(kebab-case). Exactly one broker is used; the other one's settings are ignored.",
+              "properties": {
+                "sqs": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "create-queues": {
+                      "default": true,
+                      "description": "Create missing queues (IAM sqs:CreateQueue on \u003cprefix\u003e*). Tenant DLQs are created on\nfirst use, so with false every tenant's DLQ must exist beforehand",
+                      "title": "create-queues",
+                      "type": "boolean"
+                    },
+                    "queue-prefix": {
+                      "default": "labs64-audit-",
+                      "description": "Queue name prefix: \u003cprefix\u003eingest, \u003cprefix\u003eingest-dlq, \u003cprefix\u003edelivery,\n\u003cprefix\u003equarantine and one \u003cprefix\u003edlq-\u003ctenant\u003e per tenant (at most 40 characters of [A-Za-z0-9_-])",
+                      "title": "queue-prefix",
+                      "type": "string"
+                    },
+                    "region": {
+                      "default": "",
+                      "description": "AWS region of the queues; empty = the AWS SDK default (AWS_REGION, set by IRSA / Pod Identity)",
+                      "title": "region",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "region",
+                    "queue-prefix",
+                    "create-queues"
+                  ],
+                  "title": "sqs",
+                  "type": "object"
+                },
+                "type": {
+                  "default": "rabbitmq",
+                  "description": "\"rabbitmq\" (default; connection in `spring.rabbitmq` below, credentials\nSPRING_RABBITMQ_USERNAME/PASSWORD in `secrets.data`) or \"sqs\" (Amazon SQS; `sqs` below,\ncredentials from the pod's IAM role via IRSA or EKS Pod Identity — set\n`serviceAccount.annotations` — and egress to the SQS endpoint on 443 in `networkPolicy.extraEgress`)",
+                  "title": "type",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "sqs"
+              ],
+              "title": "broker",
+              "type": "object"
+            },
             "idempotency": {
               "additionalProperties": false,
               "description": "Idempotency/dedup store. \"redis\" (default) is required for more than one replica;\n\"memory\" is single-replica only and lets a self-hoster skip running Redis entirely — pair\nit with `tenants.ratelimit.backend: in-memory` below and the autoconfigure exclude further\ndown, or Redis connection beans still get created even though nothing uses them.",
@@ -84,6 +132,7 @@
           "required": [
             "pipelines",
             "redaction",
+            "broker",
             "idempotency"
           ],
           "title": "auditflow",
@@ -540,7 +589,7 @@
       "type": "object"
     },
     "extraContainers": {
-      "default": "- name: auditflow-transformer\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.transformer.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-trn\n      containerPort: {{ .Values.transformer.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-transformer\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.transformer.promotedKeys }}\n    - name: AUDITFLOW_PROMOTED_KEYS\n      value: {{ $.Values.transformer.promotedKeys | toJson | quote }}\n  {{- end }}\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-transformer\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-trn\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-trn\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.transformer.resources | nindent 8 }}\n\n- name: auditflow-sink\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.sink.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-snk\n      containerPort: {{ .Values.sink.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-sink\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-sink\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-snk\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-snk\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.sink.resources | nindent 8 }}\n",
+      "default": "- name: auditflow-transformer\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.transformer.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-trn\n      containerPort: {{ .Values.transformer.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-transformer\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.transformer.promotedKeys }}\n    - name: AUDITFLOW_PROMOTED_KEYS\n      value: {{ $.Values.transformer.promotedKeys | toJson | quote }}\n  {{- end }}\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-transformer\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  {{- /* Every delivery the backend still finishes during its shutdown (its preStop sleep, then\n  gracefulShutdown.timeout) calls this container on localhost, and all containers of a pod get\n  SIGTERM together: stay up until the backend is done. Needs a timeout in seconds, and the sum\n  must stay below terminationGracePeriodSeconds (45). */}}\n  lifecycle:\n    preStop:\n      exec:\n        command: [\"/bin/sh\", \"-c\", \"sleep {{ add (int ($.Values.lifecycle.preStopDrainSeconds | default 5)) (int (trimSuffix \"s\" ($.Values.gracefulShutdown.timeout | default \"30s\"))) }}\"]\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-trn\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-trn\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.transformer.resources | nindent 8 }}\n\n- name: auditflow-sink\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.sink.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-snk\n      containerPort: {{ .Values.sink.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-sink\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-sink\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  {{- /* Every delivery the backend still finishes during its shutdown (its preStop sleep, then\n  gracefulShutdown.timeout) calls this container on localhost, and all containers of a pod get\n  SIGTERM together: stay up until the backend is done. Needs a timeout in seconds, and the sum\n  must stay below terminationGracePeriodSeconds (45). */}}\n  lifecycle:\n    preStop:\n      exec:\n        command: [\"/bin/sh\", \"-c\", \"sleep {{ add (int ($.Values.lifecycle.preStopDrainSeconds | default 5)) (int (trimSuffix \"s\" ($.Values.gracefulShutdown.timeout | default \"30s\"))) }}\"]\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-snk\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-snk\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.sink.resources | nindent 8 }}\n",
       "title": "extraContainers",
       "type": "string"
     },
@@ -802,7 +851,7 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "sha256:bcc129c406771d3e5d286f42aca86ea927e3189e342fdf01da896c3448c1b932",
+          "default": "sha256:a3a8a1aef03f12468b12d17c6934c0b82a56bc7064d752551fd0b4b9bd4b46fe",
           "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
@@ -1797,7 +1846,7 @@
           "additionalProperties": false,
           "properties": {
             "digest": {
-              "default": "sha256:aeab2c1433a52679749b31f16282fc9b200c7a2ba911d7bfb8160aec509b52e8",
+              "default": "sha256:5e8e0e4455881ef30375bd080f4086eb446acac9cc29506e65753859dbd8c68e",
               "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
@@ -2118,7 +2167,7 @@
           "additionalProperties": false,
           "properties": {
             "digest": {
-              "default": "sha256:f4df4c162917e2ad25041eba7e5660382b433350a5ca5fa75f53b0fee6640e34",
+              "default": "sha256:ca10a23eb8265241b7d78c3cea3371ce0619ec6ede4940cc1b312a809f2c5b4d",
               "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"

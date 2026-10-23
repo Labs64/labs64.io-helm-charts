@@ -92,6 +92,12 @@ helm repo update
 helm install my-auditflow labs64io/auditflow -n labs64io --create-namespace \
   --set global.rabbitmq.host=rabbitmq.mycompany.internal
 
+# ...or on Amazon SQS (credentials from the pod's IAM role; see overrides/auditflow/values.prod-example.yaml)
+helm install my-auditflow labs64io/auditflow -n labs64io --create-namespace \
+  --set applicationYaml.auditflow.broker.type=sqs \
+  --set applicationYaml.auditflow.broker.sqs.region=eu-west-1 \
+  --set serviceAccount.annotations."eks\.amazonaws\.com/role-arn"=arn:aws:iam::<account>:role/<auditflow-role>
+
 # The whole platform: needs the Gateway API CRDs, which install.sh applies for you
 helm pull labs64io/labs64io-ecosystem --untar
 kubectl create namespace tools
@@ -99,7 +105,7 @@ helm install labs64io labs64io/labs64io-ecosystem -n labs64io --create-namespace
   -f labs64io-ecosystem/values.demo.yaml
 ```
 
-Each module declares the infrastructure it needs (RabbitMQ, PostgreSQL, Redis); the `preflight` chart checks it from inside your cluster before you install. Guides: [Deploy to your Kubernetes cluster](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html) · [Helm repository on Artifact Hub](https://artifacthub.io/packages/search?repo=labs64io-helm-charts).
+Each module declares the infrastructure it needs (a message broker — RabbitMQ or Amazon SQS — PostgreSQL, Redis); the `preflight` chart checks it from inside your cluster before you install. Guides: [Deploy to your Kubernetes cluster](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html) · [Helm repository on Artifact Hub](https://artifacthub.io/packages/search?repo=labs64io-helm-charts).
 
 ### 3. Docker: a local cluster on your machine
 

@@ -402,6 +402,24 @@ applicationYaml:
       # @schema
       rules: []
 
+    # -- Message broker the backend buffers events on. Keys are exact Spring property paths
+    # (kebab-case). Exactly one broker is used; the other one's settings are ignored.
+    broker:
+      # -- "rabbitmq" (default; connection in `spring.rabbitmq` below, credentials
+      # SPRING_RABBITMQ_USERNAME/PASSWORD in `secrets.data`) or "sqs" (Amazon SQS; `sqs` below,
+      # credentials from the pod's IAM role via IRSA or EKS Pod Identity — set
+      # `serviceAccount.annotations` — and egress to the SQS endpoint on 443 in `networkPolicy.extraEgress`)
+      type: rabbitmq
+      sqs:
+        # -- AWS region of the queues; empty = the AWS SDK default (AWS_REGION, set by IRSA / Pod Identity)
+        region: ""
+        # -- Queue name prefix: <prefix>ingest, <prefix>ingest-dlq, <prefix>delivery,
+        # <prefix>quarantine and one <prefix>dlq-<tenant> per tenant (at most 40 characters of [A-Za-z0-9_-])
+        queue-prefix: "labs64-audit-"
+        # -- Create missing queues (IAM sqs:CreateQueue on <prefix>*). Tenant DLQs are created on
+        # first use, so with false every tenant's DLQ must exist beforehand
+        create-queues: true
+
     # -- Idempotency/dedup store. "redis" (default) is required for more than one replica;
     # "memory" is single-replica only and lets a self-hoster skip running Redis entirely — pair
     # it with `tenants.ratelimit.backend: in-memory` below and the autoconfigure exclude further
