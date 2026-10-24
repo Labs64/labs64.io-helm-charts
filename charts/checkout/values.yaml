@@ -226,7 +226,7 @@ migrationJob:
   initResources: {}
 
 # -- Optional bundled PostgreSQL (Bitnami subchart) for standalone/local installs.
-# Dev-grade credentials - NOT for AWS QA / Prod or Users' Own Infrastructure; point applicationYaml at your own database instead.
+# Dev-grade credentials - NOT for PROD or Users' Own Infrastructure; point applicationYaml at your own database instead.
 # @schema
 # type: object
 # additionalProperties: true

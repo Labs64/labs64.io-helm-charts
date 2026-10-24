@@ -7,13 +7,13 @@ dependencies:
   version: 0.8.9
 - name: checkout
   repository: file://../checkout
-  version: 0.11.15
+  version: 0.11.16
 - name: payment-gateway
   repository: file://../payment-gateway
-  version: 0.10.16
+  version: 0.10.17
 - name: auditflow
   repository: file://../auditflow
-  version: 0.15.25
+  version: 0.15.26
 - name: api-docs
   repository: file://../api-docs
   version: 0.9.11
@@ -32,5 +32,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.4
-digest: sha256:4ee7b3af1fa3ec73ebec1854098f42b93d149b26a9d8589b38978f3c5a5a04ff
-generated: "2026-10-24T08:10:00.241268285Z"
+digest: sha256:80f2467b3630bd9e62c5a5f607eb69bbc774d24596a7edccdcfe7944f9a1f84d
+generated: "2026-10-24T10:22:06.676529+02:00"
