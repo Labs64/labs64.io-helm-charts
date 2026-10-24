@@ -22,7 +22,7 @@ dependencies:
   version: 0.10.8
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
-  version: 18.12.4
+  version: 18.12.15
 - name: valkey
   repository: https://charts.bitnami.com/bitnami
   version: 6.3.4
@@ -32,5 +32,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.4
-digest: sha256:a06848a37350b70ce97ff339e9ef289bdf88cf7e436e2fbda21e090e9ca38b75
-generated: "2026-10-24T01:58:27.745811+02:00"
+digest: sha256:d482ef45e661a421fcea50bec1c3e46256c187b6deafa859e15e29c97f0c492d
+generated: "2026-10-24T02:04:42.248384+02:00"
