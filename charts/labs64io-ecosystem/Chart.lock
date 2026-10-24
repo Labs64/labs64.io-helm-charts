@@ -10,7 +10,7 @@ dependencies:
   version: 0.11.15
 - name: payment-gateway
   repository: file://../payment-gateway
-  version: 0.10.15
+  version: 0.10.16
 - name: auditflow
   repository: file://../auditflow
   version: 0.15.25
@@ -32,5 +32,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.4
-digest: sha256:4551a629398749c78cfeae26b3f003efbb7dbf571747cf89fe4d243f9e10ba17
-generated: "2026-10-24T08:02:59.599534895Z"
+digest: sha256:4ee7b3af1fa3ec73ebec1854098f42b93d149b26a9d8589b38978f3c5a5a04ff
+generated: "2026-10-24T08:10:00.241268285Z"
