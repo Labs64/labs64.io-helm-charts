@@ -206,7 +206,7 @@
           "type": "string"
         },
         "curl": {
-          "default": "curlimages/curl:8.22.0",
+          "default": "curlimages/curl:8.23.0",
           "title": "curl",
           "type": "string"
         },
