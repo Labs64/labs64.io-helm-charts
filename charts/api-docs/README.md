@@ -1,6 +1,6 @@
 # api-docs
 
-![Version: 0.9.9](https://img.shields.io/badge/Version-0.9.9-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.33.3](https://img.shields.io/badge/AppVersion-v5.33.3-informational?style=flat-square)
+![Version: 0.9.11](https://img.shields.io/badge/Version-0.9.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.34.0](https://img.shields.io/badge/AppVersion-v5.34.0-informational?style=flat-square)
 
 Labs64.IO :: Swagger UI
 
