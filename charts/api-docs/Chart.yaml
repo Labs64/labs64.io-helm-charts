@@ -1,7 +1,7 @@
 apiVersion: v2
 name: api-docs
 type: application
-version: 0.9.9
+version: 0.9.11
 # The swagger-ui image tag (values.yaml image.tag defaults to it).
 # renovate: datasource=docker depName=swaggerapi/swagger-ui
 appVersion: v5.34.0
