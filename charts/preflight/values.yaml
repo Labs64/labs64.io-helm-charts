@@ -45,4 +45,4 @@ images:
   postgresql: postgres:18-alpine
   # redis-cli speaks RESP, so it works unchanged against Valkey (AWS ElastiCache, local dev).
   redis: valkey/valkey:9.1-alpine
-  curl: curlimages/curl:8.22.0
+  curl: curlimages/curl:8.23.0
