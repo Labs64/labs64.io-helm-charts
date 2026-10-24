@@ -4,6 +4,10 @@ on:
   pull_request:
     paths:
       - "charts/**"
+      # The checks are recipes (just ci): a change to them, or to the scripts they run, is checked too.
+      - "justfile"
+      - "just/**"
+      - "scripts/**"
   # The chart-update PRs are opened with the workflow token, for which GitHub starts no (or only failing) pull
   # request checks, and some changes go straight to master: so the same gates also run on what lands there.
   push:
@@ -11,6 +15,9 @@ on:
       - master
     paths:
       - "charts/**"
+      - "justfile"
+      - "just/**"
+      - "scripts/**"
   workflow_dispatch: {}
 
 permissions:
@@ -26,11 +33,12 @@ jobs:
           # Full history needed to diff each chart against the PR base ref below.
           fetch-depth: 0
 
-      # Helm (and plugins) at the versions pinned in labs64.io-workspace/tool-versions.env —
+      # Helm (and plugins) and just at the versions pinned in labs64.io-workspace/tool-versions.env —
       # the same file the dev container installs from. Also exports HELM_DOCS_VERSION etc.
       - uses: Labs64/labs64.io-workspace/.github/actions/setup-k8s-tools@v1
         with:
           helm-plugins: schema
+          just: "true"
       - name: Add dependent repositories
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -44,9 +52,11 @@ jobs:
       - name: Install linter dependencies
         run: pip install pyyaml pytest
 
-      - name: Test the version-bump gate
+      # Every check below is a recipe of just/quality-gates.just, in the order of `just ci`, which runs the same
+      # chain locally. Change a check there, not here.
+      - name: Test the gate scripts and the chart image updater
         # A gate nobody tests reports "clean" forever.
-        run: pytest scripts/test_check_chart_version_bumps.py -q
+        run: just test
 
       - name: Enforce chart version bumps
         # chart-releaser skips re-publishing a chart whose Chart.yaml version already has a
@@ -66,136 +76,25 @@ jobs:
             && git cat-file -e "$PUSHED_FROM^{commit}" 2>/dev/null; then
             base="$PUSHED_FROM"
           fi
-          python scripts/check-chart-version-bumps.py --base "$base"
+          just check-bumps "$base"
 
-      - name: Enforce schema generation
-        run: |
-          helm schema --chart-search-root ./charts --no-dependencies --append-newline
-          if ! git diff --exit-code; then
-            echo "ERROR: values.schema.json files are out of date. Please run 'just generate-schema' and commit the changes."
-            exit 1
-          fi
-
-      - name: Enforce docs generation
-        run: |
-          docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" "jnorwood/helm-docs:v${HELM_DOCS_VERSION}" --chart-search-root ./charts --log-level warning
-          if ! git diff --exit-code; then
-            echo "ERROR: README.md files are out of date. Please run 'just generate-docu' and commit the changes."
-            exit 1
-          fi
-
-      - name: Build chart dependencies
-        # Vendored deps (charts/*/charts/) are gitignored, so a fresh checkout is
-        # missing them (e.g. chart-libs, a file://../chart-libs local dependency);
-        # without this, every dependent chart fails to lint/template below. The umbrella is built last, which
-        # the script takes care of: an alphabetical loop here packaged it before payment-gateway had its own.
-        run: bash scripts/build-chart-dependencies.sh
-
-      - name: Test the packaged-chart gate and the dependency build order
-        run: pytest scripts/test_check_packaged_chart.py scripts/test_build_chart_dependencies.py -q
+      - name: Generated schemas and chart READMEs are committed
+        run: just check-generated
 
       - name: Umbrella package is self-contained
         # The released umbrella must carry every dependency of every chart it bundles
         # (chart-libs in each module chart). Same check the release workflow gates on.
-        run: |
-          set -euo pipefail
-          helm package charts/labs64io-ecosystem --destination "$RUNNER_TEMP/package"
-          python scripts/check-packaged-chart.py "$RUNNER_TEMP"/package/labs64io-ecosystem-*.tgz
-
-      - name: Test the ConfigMap credential linter
-        # A linter nobody tests reports "clean" forever. These tests plant
-        # credentials and assert the linter catches them.
-        run: pytest scripts/test_lint_configmap_secrets.py -q
+        run: just check-package
 
       - name: No credentials in ConfigMaps
-        # Guardrail 3: credentials are Kubernetes Secrets, never ConfigMaps.
-        # Renders every chart (default values + each overrides profile) and walks
-        # the rendered ConfigMaps — including trees nested inside `applicationYaml`,
-        # which no template-level grep can see.
-        run: python scripts/lint-configmap-secrets.py --format github
-
-      - name: Test the chart authoring checklist
-        # Same discipline as the ConfigMap linter above — pins each rule
-        # against synthetic input so it can't quietly stop catching anything.
-        run: pytest scripts/test_lint_chart_authoring.py -q
-
-      - name: Test the chart image updater
-        # The updater rewrites Chart.yaml/values.yaml unattended from a release
-        # event; its all-or-nothing, idempotency and payload-validation rules
-        # need the same gate as the linters.
-        run: pytest scripts/test_update_chart_images.py -q
+        # Guardrail 3: credentials are Kubernetes Secrets, never ConfigMaps. Renders every chart (default values +
+        # each overrides profile) and walks the rendered ConfigMaps — including trees nested inside
+        # `applicationYaml`, which no template-level grep can see.
+        run: just lint-secrets --format github
 
       - name: Chart authoring checklist
-        # Item 30: ingress annotations (no module chart may hand-roll kind:
-        # Ingress — only chart-libs.gateway-routes may, and it hard-fails on
-        # non-public routes), sub-path PV mounts (allowlisted only — a subPath
-        # mount doesn't receive live ConfigMap/Secret updates), probe defaults
-        # (every container needs a live/ready probe with sane bounds), and
-        # NetworkPolicy egress (guardrail 10 — every long-running workload
-        # must be able to restrict its own egress, and never to an allow-all).
-        run: python scripts/lint-chart-authoring.py
+        # Ingress annotations, sub-path PV mounts, probe defaults and NetworkPolicy egress (guardrail 10).
+        run: just lint-authoring
 
       - name: Lint and validate charts
-        run: |
-          set -euo pipefail
-          FAILED=0
-          for chart_dir in charts/*/; do
-            chart_name=$(basename "$chart_dir")
-            # Skip non-chart directories
-            if [ ! -f "$chart_dir/Chart.yaml" ]; then
-              continue
-            fi
-            chart_type=$(sed -n -E 's/^type: *//p' "$chart_dir/Chart.yaml")
-            echo "=== Linting: $chart_name ==="
-
-            # helm lint
-            if ! helm lint "$chart_dir"; then
-              echo "FAIL: helm lint $chart_name"
-              FAILED=1
-            fi
-
-            # Schema validation metadata is required for both application and library charts.
-            if [ ! -f "$chart_dir/values.schema.json" ]; then
-              echo "FAIL: Missing values.schema.json in $chart_name"
-              FAILED=1
-            fi
-
-            # A library chart only defines named templates for its consumers. Helm deliberately
-            # rejects installing or rendering it on its own; consumer charts in this loop
-            # exercise those templates through their file://chart-libs dependency.
-            if [ "$chart_type" = "library" ]; then
-              echo "SKIP: standalone template validation is not applicable to library chart $chart_name"
-              echo "PASS: $chart_name"
-              continue
-            fi
-
-            EXTRA_ARGS=""
-            if [ "$chart_name" = "labs64io-ecosystem" ]; then
-              EXTRA_ARGS="--set demoMode=true"
-            fi
-
-            # helm template (syntax + render check)
-            if ! helm template "test-$chart_name" "$chart_dir" $EXTRA_ARGS > /dev/null 2>&1; then
-              echo "FAIL: helm template $chart_name"
-              helm template "test-$chart_name" "$chart_dir" $EXTRA_ARGS 2>&1 | tail -5
-              FAILED=1
-            fi
-
-            # Render once with the committed values to exercise values.schema.json validation.
-            if ! helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" $EXTRA_ARGS > /dev/null 2>&1; then
-              echo "FAIL: schema validation $chart_name"
-              helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" $EXTRA_ARGS 2>&1 | tail -5
-              FAILED=1
-            fi
-
-            echo "PASS: $chart_name"
-          done
-
-          if [ "$FAILED" -ne 0 ]; then
-            echo ""
-            echo "Some charts failed linting. See errors above."
-            exit 1
-          fi
-
-          echo ""
-          echo "All charts passed."
+        run: just lint-charts

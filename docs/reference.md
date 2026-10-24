@@ -186,7 +186,7 @@ Modules need capabilities, not specific tools:
 
 Reference versions: the shared local toolset (`just install-tools`) runs exactly the chart
 versions pinned in `helmfile.yaml.gotmpl` — the single place they are written; print one with
-`just chart-version postgresql` (or `redis`, `traefik`, …). RabbitMQ is the official image via
+`just show-chart-version postgresql` (or `redis`, `traefik`, …). RabbitMQ is the official image via
 `overrides/rabbitmq/chart`. For local development, images must be built and pushed to the local
 registry (`localhost:5005`) — see DEVELOPERS.md.
 
@@ -204,7 +204,7 @@ runs as one container; the Job succeeds only if all pass.
 
     just up               # k3d cluster + registry + all modules (Helmfile-driven)
     just up-otel          # + monitoring stack, observability enabled
-    just cluster-down     # delete the k3d cluster
+    just down             # delete the k3d cluster
 
 ## Usage
 
