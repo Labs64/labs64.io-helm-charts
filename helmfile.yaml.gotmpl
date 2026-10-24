@@ -169,15 +169,6 @@ releases:
     labels:
       layer: monitoring
 
-  - name: opentelemetry-operator
-    namespace: monitoring
-    chart: open-telemetry/opentelemetry-operator
-    version: 0.126.2
-    values:
-      - overrides/opentelemetry/values-operator.{{ .Environment.Name }}.yaml
-    labels:
-      layer: monitoring
-
   - name: opentelemetry-collector
     namespace: monitoring
     chart: open-telemetry/opentelemetry-collector
