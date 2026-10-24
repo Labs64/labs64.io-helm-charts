@@ -1,8 +1,9 @@
 # AWS QA / Staging / Prod: the metrics collector (its own release:
 # upstream opentelemetry-collector chart, release `metrics-collector` in the `monitoring` namespace).
 #
-# One pod scrapes the modules' /actuator/prometheus and writes the series to an Amazon Managed
-# Service for Prometheus workspace (remote write signed with SigV4). Metrics only: on AWS traces go
+# One pod scrapes the modules' /actuator/prometheus, reads a few cluster-state series from the Kubernetes
+# API (pod phase, node conditions, HPA replicas), and writes both to an Amazon Managed Service for
+# Prometheus workspace (remote write signed with SigV4). Metrics only: on AWS traces go
 # to the CloudWatch agent and logs to Fluent Bit (the amazon-cloudwatch-observability EKS add-on).
 #
 # What you supply per environment, as the last values file:
@@ -28,12 +29,23 @@ serviceAccount:
   # The IAM role's trust policy names this ServiceAccount.
   name: metrics-collector
 
-# kubernetes_sd (role: pod) lists and watches pods; nothing else.
+# kubernetes_sd (role: pod) lists and watches pods; the k8s_cluster receiver (cluster state, below) reads
+# what it builds its metrics from. Read-only.
 clusterRole:
   create: true
   rules:
     - apiGroups: [""]
-      resources: ["pods"]
+      resources: ["pods", "pods/status", "nodes", "nodes/spec", "namespaces", "namespaces/status", "events",
+                  "replicationcontrollers", "replicationcontrollers/status", "resourcequotas", "services"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["apps"]
+      resources: ["daemonsets", "deployments", "replicasets", "statefulsets"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["batch"]
+      resources: ["jobs", "cronjobs"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: ["autoscaling"]
+      resources: ["horizontalpodautoscalers"]
       verbs: ["get", "list", "watch"]
 
 # Nothing sends to this collector: no receiver ports and no Service (one without ports is invalid).
@@ -145,8 +157,21 @@ alternateConfig:
               - source_labels: [__meta_kubernetes_pod_name]
                 action: replace
                 target_label: pod
+    # Cluster state from the Kubernetes API, for the alert rules that would otherwise need CloudWatch
+    # Container Insights' enhanced mode: pods stuck Pending, nodes under memory or disk pressure, an HPA
+    # at its maximum. Only those series are kept (filter/cluster): a handful per node and pod.
+    k8s_cluster:
+      auth_type: serviceAccount
+      collection_interval: 60s
+      node_conditions_to_report: [Ready, MemoryPressure, DiskPressure, PIDPressure]
+      allocatable_types_to_report: []
 
   processors:
+    filter/cluster:
+      error_mode: ignore
+      metrics:
+        metric:
+          - 'not IsMatch(name, "^k8s\\.(pod\\.phase|node\\.condition_.+|hpa\\.(current|max)_replicas)$")'
     memory_limiter:
       check_interval: 5s
       limit_percentage: 80
@@ -169,6 +194,25 @@ alternateConfig:
         initial_interval: 5s
         max_interval: 30s
         max_elapsed_time: 300s
+    # The cluster state: its resource attributes (k8s.namespace.name, k8s.pod.name, k8s.node.name,
+    # k8s.hpa.name) become labels, and names stay the receiver's with dots as underscores
+    # (k8s_pod_phase, k8s_node_condition_memory_pressure, k8s_hpa_current_replicas): no unit suffixes.
+    prometheusremotewrite/cluster:
+      endpoint: ${env:AMP_REMOTE_WRITE_ENDPOINT}
+      auth:
+        authenticator: sigv4auth
+      # Deprecated in favour of resource_constant_labels (warned at start), still supported; switch when
+      # the collector removes it.
+      resource_to_telemetry_conversion:
+        enabled: true
+      translation_strategy: UnderscoreEscapingWithoutSuffixes
+      target_info:
+        enabled: false
+      retry_on_failure:
+        enabled: true
+        initial_interval: 5s
+        max_interval: 30s
+        max_elapsed_time: 300s
 
   service:
     extensions: [health_check, sigv4auth]
@@ -177,3 +221,7 @@ alternateConfig:
         receivers: [prometheus]
         processors: [memory_limiter, batch]
         exporters: [prometheusremotewrite]
+      metrics/cluster:
+        receivers: [k8s_cluster]
+        processors: [memory_limiter, filter/cluster, batch]
+        exporters: [prometheusremotewrite/cluster]
