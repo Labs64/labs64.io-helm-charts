@@ -20,8 +20,8 @@ image:
   # The appVersion of the collector chart pinned in helmfile.yaml.gotmpl, as in
   # values-collector.local.yaml (which says how to update it): the image and the chart's config
   # schema move together, and `just check-pins` fails while the stamp below differs from the chart.
-  # chart-pin: opentelemetry-collector 0.176.0
-  tag: 0.162.0
+  # chart-pin: opentelemetry-collector 0.177.0
+  tag: 0.163.2
 
 serviceAccount:
   create: true
