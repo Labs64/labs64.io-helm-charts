@@ -10,7 +10,7 @@
 
 <p align="center"><img src="docs/assets/helm-charts-hero.svg" alt="Helm Charts: The umbrella chart as a container ship: Traefik, AuthProxy, Cerbos and AuditFlow are on board, Checkout and Customer Portal are optional, and a crane lowers Payment Gateway into place." width="880"></p>
 
-[**Get started**](https://labs64.io/docs/getting-started/quickstart.html) · [Features](#features) · [AI agents](#using-helm-charts-with-ai-agents) · [Ecosystem](#the-labs64io-ecosystem) · [Documentation](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html) · [labs64.io](https://labs64.io)
+[**Get started**](https://labs64.io/docs/getting-started/quickstart.html) · [Features](#features) · [AI agents](#using-it-with-ai-agents) · [Ecosystem](#the-labs64io-ecosystem) · [Documentation](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html) · [labs64.io](https://labs64.io)
 
 > [!NOTE]
 > `install.sh` is for evaluation: its Quickstart profile ships a demo identity provider that issues a token to anyone. For anything reachable by other people, install with your own identity provider and follow the go-live checks.
@@ -60,14 +60,9 @@ Running a platform of several services means one chart per service, gateway wiri
 - **Keep secrets out of values files.** Use Kubernetes Secrets or External Secrets Operator, and generate strong passwords.
 - **Pin chart versions.** Set `LABS64_CHART_VERSION` (installer) or `--version` (Helm) so upgrades are a decision, not a surprise.
 
-## Using Helm Charts with AI agents
+## Using it with AI agents
 
-Helm Charts is how an agent (or a CI job) gets a Labs64.IO environment it can test against.
-
-- **Unattended installs.** `LABS64_PROFILE=quickstart` or `byo` skips every prompt; `bash install.sh status` exits non-zero when something is unhealthy and `smoke` repeats the token and publish check.
-- **Everything is labelled.** The installer records what it created, so `uninstall` never touches resources it did not create.
-- **Dry run first.** `bash install.sh --dry-run` shows what would change.
-- **Working on the charts with an agent?** [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md) describe the layout, conventions and checks.
+The installer runs unattended, so an agent or a CI job can get an environment to test against. The [guide for AI agents](https://labs64.io/docs/introduction/ai-agents.html) covers authentication, retries and errors across all modules. Working on this repository with an agent? [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md) describe the layout, conventions and checks.
 
 ## The Labs64.IO Ecosystem
 
