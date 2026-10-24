@@ -8348,6 +8348,29 @@ entries:
   preflight:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2026-10-24T06:30:59.996567218Z"
+    description: 'Labs64.IO :: Preflight - verify tenant infrastructure (broker, database,
+      cache, OIDC) before installing modules'
+    digest: 245ee78432e994f4ea9945b7120853a179f2224b4e5d85ba3cff2ade65fd41bb
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - preflight
+    maintainers:
+    - email: info@labs64.com
+      name: Labs64
+      url: https://labs64.io
+    name: preflight
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/preflight-0.2.7/preflight-0.2.7.tgz
+    version: 0.2.7
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2026-10-05T05:54:24.220223962Z"
     description: 'Labs64.IO :: Preflight - verify tenant infrastructure (broker, database,
       cache, OIDC) before installing modules'
@@ -8548,4 +8571,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/preflight-0.0.1/preflight-0.0.1.tgz
     version: 0.0.1
-generated: "2026-10-24T00:30:29.814086116Z"
+generated: "2026-10-24T06:30:59.996974156Z"
