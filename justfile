@@ -384,9 +384,8 @@ validate-otel-config:
         exit 1
     fi
 
-# Install the OpenTelemetry operator and collector after validating the collector config
+# Install the OpenTelemetry collector after validating the collector config
 install-tool-opentelemetry: validate-otel-config
-    helmfile -e {{ENV}} apply -l name=opentelemetry-operator
     helmfile -e {{ENV}} apply -l name=opentelemetry-collector
 
 # Install Grafana with its route and dashboards
