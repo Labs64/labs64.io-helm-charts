@@ -1,6 +1,6 @@
 # checkout
 
-![Version: 0.11.15](https://img.shields.io/badge/Version-0.11.15-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.8](https://img.shields.io/badge/AppVersion-0.0.8-informational?style=flat-square)
+![Version: 0.11.16](https://img.shields.io/badge/Version-0.11.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.8](https://img.shields.io/badge/AppVersion-0.0.8-informational?style=flat-square)
 
 Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
