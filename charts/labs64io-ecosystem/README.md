@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.20.46](https://img.shields.io/badge/Version-0.20.46-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.20.47](https://img.shields.io/badge/Version-0.20.47-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 
@@ -29,7 +29,7 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | file://../mock-oidc | mock-oidc | >=0.1.0 |
 | file://../payment-gateway | payment-gateway | >=0.1.0 |
 | https://charts.bitnami.com/bitnami | postgresql | 18.12.15 |
-| https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.4 |
+| https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.12 |
 | https://traefik.github.io/charts | traefik | 42.1.3 |
 
 ## Values
