@@ -3786,6 +3786,76 @@ entries:
     version: 0.4.0
   labs64io-ecosystem:
   - apiVersion: v2
+    created: "2026-10-24T00:13:46.974351228Z"
+    dependencies:
+    - condition: api-gateway.enabled
+      name: api-gateway
+      repository: file://../api-gateway
+      version: '>=0.1.0'
+    - condition: authz-pdp.enabled
+      name: authz-pdp
+      repository: file://../authz-pdp
+      version: '>=0.1.0'
+    - condition: checkout.enabled
+      name: checkout
+      repository: file://../checkout
+      version: '>=0.1.0'
+    - condition: payment-gateway.enabled
+      name: payment-gateway
+      repository: file://../payment-gateway
+      version: '>=0.1.0'
+    - condition: auditflow.enabled
+      name: auditflow
+      repository: file://../auditflow
+      version: '>=0.1.0'
+    - condition: api-docs.enabled
+      name: api-docs
+      repository: file://../api-docs
+      version: '>=0.1.0'
+    - condition: customer-portal.enabled
+      name: customer-portal
+      repository: file://../customer-portal
+      version: '>=0.1.0'
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 18.12.15
+    - alias: redis
+      condition: redis.enabled
+      name: valkey
+      repository: https://charts.bitnami.com/bitnami
+      version: 6.3.4
+    - condition: traefik.enabled
+      name: traefik
+      repository: https://traefik.github.io/charts
+      version: 42.0.0
+    - condition: mock-oidc.enabled
+      name: mock-oidc
+      repository: file://../mock-oidc
+      version: '>=0.1.0'
+    description: 'Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem
+      and optional infrastructure'
+    digest: 8e9b3eb38006f20970d5ecd10623abde2cddeb02a70df6813508aa012550900f
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64
+    - labs64io
+    - ecosystem
+    - microservices
+    - platform
+    maintainers:
+    - email: info@labs64.com
+      name: Labs64
+      url: https://labs64.io
+    name: labs64io-ecosystem
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/labs64io-ecosystem-0.20.43/labs64io-ecosystem-0.20.43.tgz
+    version: 0.20.43
+  - apiVersion: v2
     created: "2026-10-24T00:05:43.242660508Z"
     dependencies:
     - condition: api-gateway.enabled
@@ -8408,4 +8478,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/preflight-0.0.1/preflight-0.0.1.tgz
     version: 0.0.1
-generated: "2026-10-24T00:05:43.501238826Z"
+generated: "2026-10-24T00:13:46.974837307Z"
