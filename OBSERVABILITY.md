@@ -59,7 +59,7 @@ flowchart LR
     PYI -- "traces + logs + metrics (OTLP)" --> COL
     appcode -- "/actuator/prometheus<br/>(Micrometer, always on)" --> SCRAPE["Prometheus scrape"]
     COL --> TEMPO["Tempo<br/>(traces)"]
-    COL --> LOGS["Loki (k8s)<br/>Loki (compose)"]
+    COL --> LOGS["Loki<br/>(logs)"]
     COL --> PROM["Prometheus<br/>(metrics)"]
     SCRAPE --> PROM
     PROM & TEMPO & LOGS --> GRAF["Grafana<br/>(single pane)"]
@@ -196,9 +196,9 @@ flowchart LR
     OTLP -- logs --> LOKI["Loki"]
     OTLP -- metrics --> PROM["Prometheus<br/>(remote write)"]
     PROMR -- metrics --> PROM
-    FILE -- logs --> VL
+    FILE -- logs --> LOKI
     TEMPO --> GRAF["Grafana"]
-    VL --> GRAF
+    LOKI --> GRAF
     PROM --> GRAF
 ```
 
@@ -210,8 +210,11 @@ flowchart LR
 | **Metrics (Python)** | auto-instr (OTLP) | `otlp` → `prometheusremotewrite` | **Prometheus** |
 | **Dashboards** | — | — | **Grafana** (Prometheus + Tempo + Loki datasources) |
 
-> **Logs backend differs by environment:** Kubernetes uses **Loki**; the local Docker
-> Compose observability overlay uses **Loki**. Both are queried through Grafana.
+> **On AWS** the collector is a different, metrics-only release
+> (`overrides/opentelemetry/values-collector.aws.yaml`): one replica scrapes the same annotated pods with
+> the same `job` relabeling, adds a few cluster-state series from the Kubernetes API, and remote-writes
+> to Amazon Managed Service for Prometheus. Logs go to CloudWatch through the EKS add-on's Fluent Bit;
+> traces are not collected by default.
 
 ---
 
