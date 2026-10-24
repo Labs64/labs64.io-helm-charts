@@ -132,7 +132,7 @@ sequenceDiagram
     LocalConfig-->>K3d: Overrides inject localhost defaults & static secrets
 ```
 
-### 2. AWS QA / Staging / Prod Environment (managed data stores + umbrella chart)
+### 2. AWS Staging / Prod Environment (managed data stores + umbrella chart)
 
 The umbrella chart with [`values.aws.yaml`](../charts/labs64io-ecosystem/values.aws.yaml) is a reference profile for EKS with managed data stores (RDS, ElastiCache, Amazon MQ, Secrets Manager). `Helmfile` is **not** used here. You provision the infrastructure with the tool of your choice and pass the resulting coordinates as a second values file; the header of `values.aws.yaml` lists them. Each environment pins the umbrella chart version it runs.
 

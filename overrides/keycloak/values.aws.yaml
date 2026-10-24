@@ -1,4 +1,4 @@
-# AWS (dev/qa/prod) deltas on top of values.yaml — production mode on RDS PostgreSQL, credentials
+# AWS (staging/prod) deltas on top of values.yaml — production mode on RDS PostgreSQL, credentials
 # from Secrets Manager. You supply the environment's coordinates as the last values file:
 #   labs64io.hostname, labs64io.externalSecrets.secretKey, database.hostname/port/username,
 #   networkPolicy.egress (full list — DNS, replicas, the VPC CIDR on 5432), replicas.

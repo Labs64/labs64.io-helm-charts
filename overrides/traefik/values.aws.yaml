@@ -1,4 +1,4 @@
-# AWS QA / Staging / Prod: Traefik as its own release in the tools namespace, like the local
+# AWS Staging / Prod: Traefik as its own release in the tools namespace, like the local
 # helmfile release (installed before the umbrella chart, whose values.aws.yaml switches its
 # bundled Traefik off). It is the in-cluster gateway (Gateway API
 # implementation) every module route attaches to, and the only pod the public edge can reach.

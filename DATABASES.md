@@ -31,9 +31,9 @@ Each service uses its own **logical database name** on the shared PostgreSQL
 instance — this is the database-per-service pattern enforced at the
 application level.
 
-### AWS QA / Staging / Prod Environment & Users' Own Infrastructure (BYO Infra)
+### AWS Staging / Prod Environment & Users' Own Infrastructure (BYO Infra)
 
-Infrastructure is decoupled from application charts. Point `applicationYaml` at your own infrastructure (e.g. Terraform-provisioned AWS RDS/Elasticache for AWS QA, or your custom databases for BYO Infra). Each service needs its own database credentials via `secrets.data`:
+Infrastructure is decoupled from application charts. Point `applicationYaml` at your own infrastructure (e.g. Terraform-provisioned AWS RDS/Elasticache for AWS Staging / Prod, or your custom databases for BYO Infra). Each service needs its own database credentials via `secrets.data`:
 
 ```yaml
 secrets:

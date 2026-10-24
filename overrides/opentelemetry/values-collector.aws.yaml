@@ -1,4 +1,4 @@
-# AWS QA / Staging / Prod: the metrics collector (its own release:
+# AWS Staging / Prod: the metrics collector (its own release:
 # upstream opentelemetry-collector chart, release `metrics-collector` in the `monitoring` namespace).
 #
 # One pod scrapes the modules' /actuator/prometheus, reads a few cluster-state series from the Kubernetes
