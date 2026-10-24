@@ -94,13 +94,23 @@ def test_a_failed_build_stops_before_the_umbrella_is_built_from_a_broken_module(
 def test_this_script_is_the_only_place_that_builds_chart_dependencies():
     """A loop of its own in a workflow or the justfile is how the lint run drifted from the release (PR #73)."""
     offenders = []
-    for path in [REPO / "justfile", *sorted((REPO / ".github" / "workflows").glob("*.yml"))]:
+    for path in [*justfiles(), *sorted((REPO / ".github" / "workflows").glob("*.yml"))]:
         for number, line in enumerate(path.read_text().splitlines(), 1):
             if re.search(r"helm\s+dependency\s+build", line) and not line.lstrip().startswith("#"):
                 offenders.append(f"{path.relative_to(REPO)}:{number}: {line.strip()}")
     assert not offenders, "call scripts/build-chart-dependencies.sh instead:\n" + "\n".join(offenders)
 
 
+def justfiles():
+    """The justfile and the group files it imports (just/*.just)."""
+    return [REPO / "justfile", *sorted((REPO / "just").glob("*.just"))]
+
+
 def test_every_caller_runs_the_script():
-    for path in (".github/workflows/labs64io-lint-charts.yml", ".github/workflows/labs64io-release-charts.yml", "justfile"):
-        assert "scripts/build-chart-dependencies.sh" in (REPO / path).read_text(), path
+    # The release workflow calls the script itself; the recipes call it (_build-chart-dependencies), and the lint
+    # workflow runs those recipes rather than a copy of their commands.
+    release = (REPO / ".github/workflows/labs64io-release-charts.yml").read_text()
+    assert "scripts/build-chart-dependencies.sh" in release
+    assert "scripts/build-chart-dependencies.sh" in "\n".join(p.read_text() for p in justfiles())
+    lint = (REPO / ".github/workflows/labs64io-lint-charts.yml").read_text()
+    assert "just check-package" in lint and "just lint-charts" in lint

@@ -3,7 +3,7 @@
 #
 # What is NOT here, on purpose:
 #   * third-party chart versions and Helm repositories — helmfile.yaml.gotmpl is their only
-#     home (`just chart-version <release>` prints one), so Renovate's native helmfile support
+#     home (`just show-chart-version <release>` prints one), so Renovate's native helmfile support
 #     keeps each version next to its repository;
 #   * CLI tool versions — labs64.io-workspace/tool-versions.env;
 #   * the Kubernetes line — k3d/labs64io.yaml, which tracks the Kubernetes minor of the managed

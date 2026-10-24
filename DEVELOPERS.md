@@ -214,7 +214,7 @@ The workspace recipe creates the k3d cluster and its registry, builds every modu
 **From this repository alone**, `just up` creates the cluster and deploys the same charts, but it does not build images. They have to be in the local registry first, so the sequence is:
 
 ```bash
-just cluster-up          # k3d cluster + registry on localhost:5005 (and the kubeconfig fix inside a dev container)
+just start-cluster          # k3d cluster + registry on localhost:5005 (and the kubeconfig fix inside a dev container)
 (cd ../labs64.io-workspace && just build)   # workspace recipe — see "Building module images" above
 just up
 ```
@@ -252,7 +252,7 @@ kubectl get nodes
 ### 2. Add Helm repositories
 
 ```bash
-just repo-update   # adds + refreshes exactly the repositories helmfile.yaml.gotmpl declares
+just update-repos   # adds + refreshes exactly the repositories helmfile.yaml.gotmpl declares
 ```
 
 This adds repositories for: traefik, bitnami (PostgreSQL, Valkey), open-telemetry, grafana, prometheus-community, metrics-server.
@@ -283,12 +283,11 @@ development environments only — enabled there by the operator, never in produc
 
 To (re)install a single tool, name its Helmfile release: `just install-tool rabbitmq`,
 `just install-tool postgresql`, `just install-tool redis`, … (`helmfile -e local list` shows
-them all). A few have prerequisites and keep a recipe of their own: `just install-tool-traefik`
-(CRDs first), `just install-tool-opentelemetry` (validates the collector config),
-`just install-tool-grafana` (route + dashboards), `just install-tool-mock-oidc` /
-`just install-tool-keycloak` (only the provider selected in the identity overrides). Chart
+them all). Five need more than their release, and `install-tool` does that too: `traefik`
+(its CRDs first), `opentelemetry` (validates the collector config first), `grafana` (route +
+dashboards), `mock-oidc` / `keycloak` (only the provider selected in the identity overrides). Chart
 versions are never passed on the command line — they come from `helmfile.yaml.gotmpl`
-(`just chart-version <release>` prints one). Or target a Helmfile release/layer directly:
+(`just show-chart-version <release>` prints one). Or target a Helmfile release/layer directly:
 ```bash
 helmfile -e local -l name=rabbitmq apply
 helmfile -e local -l layer=identity apply
@@ -473,7 +472,7 @@ kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 909
 
 ```bash
 # All modules
-just logs-errors
+just logs
 
 # Specific module
 kubectl logs -n labs64io -l app.kubernetes.io/name=checkout --tail=100
@@ -490,11 +489,11 @@ just install-app checkout     # applies that module's helmfile release (all valu
 ### Uninstall everything
 
 ```bash
-just uninstall-all-apps
+just uninstall-apps
 just uninstall-monitoring
 just uninstall-tools          # every core tool + whichever identity provider is installed
 just uninstall-tool redis     # …or a single tool, by helmfile release name
-just cluster-down             # delete the k3d cluster
+just down             # delete the k3d cluster
 ```
 
 ## Local development with hot reload

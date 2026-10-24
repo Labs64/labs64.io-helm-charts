@@ -220,7 +220,7 @@ config:
       # NOTE: no sending_queue here. Unlike the OTLP exporters, prometheusremotewrite
       # rejects that key outright ("has invalid keys: sending_queue") and the collector
       # refuses to start; it keeps its own internal queue instead. Still true as of
-      # 0.158.0 — `just validate-otel-config` re-checks this against the pinned image.
+      # 0.158.0 — `just check-otel-config` re-checks this against the pinned image.
       retry_on_failure:
         enabled: true
         initial_interval: 5s

@@ -31,7 +31,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
    ConfigMaps — including trees nested inside `applicationYaml`, which a template-level grep cannot
    see. False positives go in `scripts/configmap-secrets-allowlist.yaml` **with a stated reason**.
 4. **Observability is infrastructure-owned** — toggle it via `observability.enabled` (env/annotation injection only); never add OTel SDK deps to services. See [`OBSERVABILITY.md`](OBSERVABILITY.md).
-5. **Local + CI deployments go through Helmfile** (`helmfile.yaml.gotmpl`, drives `just up`/`install-tools`/`install-all-apps`) — do not reintroduce raw per-tool `helm upgrade --install` calls into that path; AWS Staging / Prod installs the published umbrella chart with `charts/labs64io-ecosystem/values.aws.yaml` plus the operator's environment values, at the umbrella version pinned for that environment (see [Deployment Modes](#deployment-modes) below). `helmfile.yaml.gotmpl` is also the **only** place a third-party chart version, a Helm repository or a release's value layering is written — the `justfile` reads them from it (`just chart-version <release>`, `just install-tool <release>`); never add a version constant or a `helm repo add` list back to the `justfile`. The only versions kept outside the helmfile are the two CRD sets applied with `kubectl`; they live in `justfile.versions` (which the justfile imports), and `just check-pins` fails if a `*_VERSION :=` constant reappears in the justfile.
+5. **Local + CI deployments go through Helmfile** (`helmfile.yaml.gotmpl`, drives `just up`/`install-tools`/`install-apps`) — do not reintroduce raw per-tool `helm upgrade --install` calls into that path; AWS Staging / Prod installs the published umbrella chart with `charts/labs64io-ecosystem/values.aws.yaml` plus the operator's environment values, at the umbrella version pinned for that environment (see [Deployment Modes](#deployment-modes) below). `helmfile.yaml.gotmpl` is also the **only** place a third-party chart version, a Helm repository or a release's value layering is written — the `justfile` reads them from it (`just show-chart-version <release>`, `just install-tool <release>`); never add a version constant or a `helm repo add` list back to the `justfile`. The only versions kept outside the helmfile are the two CRD sets applied with `kubectl`; they live in `justfile.versions` (which the justfile imports), and `just check-pins` fails if a `*_VERSION :=` constant reappears in the justfile.
 6. **Secret management is unified via `externalSecrets.enabled`** on every chart with a `secret.yaml`: `false` (default) renders a plain `Secret` from `.Values.secrets.data`; `true` renders an `ExternalSecret` resolved through a `ClusterSecretStore` (local: `overrides/eso/cluster-secret-store.yaml`'s `kubernetes`-provider store; AWS Staging / Prod Environment: `aws-secretsmanager-cluster` with `externalSecrets.secretKey` naming the module's Secrets Manager entry, which the operator's environment values set, e.g. `<prefix>/<env>/<module>`). Same object shape everywhere — only the backing store differs. The API is `external-secrets.io/v1` — the ESO version is pinned in `helmfile.yaml.gotmpl`; any other install path must pin the same one (`check-version-pins.py --print-pins` in `labs64.io-workspace` lists it).
 7. **Chart authoring checklist** (`just lint-authoring` / `scripts/lint-chart-authoring.py`, chart CI) — four rules, each a running gate, not prose:
    - No module chart may declare `kind: Ingress` directly — only `chart-libs.gateway-routes` may (it hard-fails the render if a non-public route would be served through it, since Ingress has no ForwardAuth/Cerbos equivalent).
@@ -69,16 +69,24 @@ profile — evaluate a single module against the shared local toolset (`just ins
 
 ## Build, run, test
 
+`just` lists the recipes by group; from the workspace the same recipes are `just helm-charts <recipe>`. The justfile
+follows the ecosystem convention (labs64.io-workspace `docs/justfiles.md`): settings and variables in `justfile`, every
+recipe in `just/<group>.just` (`local-stack`, `local-apps`, `local-tools`, `charts`, `quality-gates`, `setup`).
+
 ```bash
+just ci                      # what the pull-request check (labs64io-lint-charts.yml) runs: run it before pushing
 just up                      # k3d cluster + registry + all modules (Helmfile-driven)
 just up-otel                 # + monitoring stack, observability enabled
 just reset                   # uninstall apps/monitoring/tools, keep the cluster
-just cluster-down            # delete the k3d cluster
+just down                    # delete the k3d cluster
 just install-app auditflow   # install/reinstall a single module (its helmfile release)
-just install-tool postgresql # (re)install one core/monitoring tool (its helmfile release)
+just install-tool postgresql # (re)install one core/monitoring tool (its helmfile release; traefik, grafana… included)
 just bump auditflow          # bump a chart and every chart that vendors it
 just generate-all            # regenerate chart README + values.schema.json
 ```
+
+A new gate is a recipe in `just/quality-gates.just`, added to `ci` and called from the workflow as `just <recipe>`:
+the workflow never repeats a command, so a local `just ci` and the pull-request check cannot drift.
 
 ## Release propagation
 
@@ -137,3 +145,4 @@ still succeed and print the exact `gh api` command to run manually.
 | Bump a chart (+ everything vendoring it) | `just bump <chart> [patch\|minor\|major]` |
 | Release digest propagation | `scripts/update-chart-images.py` + `.github/workflows/labs64io-chart-image-update.yml` |
 | Observability wiring / collector pipelines | `OBSERVABILITY.md` + `overrides/opentelemetry/` |
+| A `just` recipe (add, change, rename) | `just/<group>.just` per labs64.io-workspace `docs/justfiles.md`; a renamed one keeps a failing stub in `just/renamed.just` |

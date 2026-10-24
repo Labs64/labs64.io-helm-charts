@@ -1,4 +1,4 @@
-# Applied only by `just payment-gateway-psp-stub-enable`.
+# Applied only by `just enable-payment-gateway-stub`.
 # The orchestration recipe overrides this default with an endpoint it has probed from the
 # current k3d node. Absence of this profile leaves both providers on their official API endpoints.
 applicationYaml:
