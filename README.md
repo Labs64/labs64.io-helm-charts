@@ -10,7 +10,7 @@
 
 <p align="center"><img src="docs/assets/helm-charts-hero.svg" alt="Helm Charts: The umbrella chart as a container ship: Traefik, AuthProxy, Cerbos and AuditFlow are on board, Checkout and Customer Portal are optional, and a crane lowers Payment Gateway into place." width="880"></p>
 
-[Why Helm Charts?](#why-helm-charts) · [Documentation](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html) · [Build and test](#build-and-test) · [Ecosystem](#the-labs64io-ecosystem) · [labs64.io](https://labs64.io)
+[**Get started**](https://labs64.io/docs/getting-started/quickstart.html) · [Features](#features) · [AI agents](#using-helm-charts-with-ai-agents) · [Ecosystem](#the-labs64io-ecosystem) · [Documentation](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html) · [labs64.io](https://labs64.io)
 
 > [!NOTE]
 > `install.sh` is for evaluation: its Quickstart profile ships a demo identity provider that issues a token to anyone. For anything reachable by other people, install with your own identity provider and follow the go-live checks.
@@ -34,46 +34,67 @@ Running a platform of several services means one chart per service, gateway wiri
 - You do not run Kubernetes: the Docker option in each module's README is the simpler way to evaluate a single service.
 - You want a fully managed hosted offering: these charts are for running it yourself.
 
-## Documentation
+## Features
 
-Install, configure and operate Helm Charts in the **[Helm Charts documentation](https://labs64.io/docs/getting-started/deploy-to-kubernetes.html)**.
+- **`install.sh`**: install, status, start, stop, uninstall and smoke test for the whole platform on any cluster.
+- **Umbrella chart**: `labs64io-ecosystem` installs the platform together, with demo and AWS reference profiles.
+- **Module charts**: `auditflow`, `payment-gateway`, `checkout`, `customer-portal`, `api-gateway`, `authz-pdp` and `api-docs`, each standalone.
+- **Gateway API routing**: modules own their routes; Traefik is the Gateway implementation.
+- **Preflight**: a one-shot job that tests your broker, database, Redis and OIDC endpoint from inside the cluster.
+- **Bring your own infrastructure**: no application chart bundles RabbitMQ, PostgreSQL or Redis as a dependency.
+- **Secrets your way**: plain Kubernetes Secrets, or External Secrets Operator.
 
-[Quickstart](https://labs64.io/docs/getting-started/quickstart.html) · [Choose a deployment path](https://labs64.io/docs/getting-started/choose-a-deployment-path.html)
+## Which path is for whom
 
-New to Labs64.IO? The [Quickstart](https://labs64.io/docs/getting-started/quickstart.html) puts the platform on any Kubernetes cluster in about five minutes with one script.
+| You are… | Start with | Why |
+|---|---|---|
+| Evaluating, with a laptop | `install.sh` on a k3d cluster | Five minutes to a working gateway, with a smoke test |
+| A platform team on a real cluster | Module charts or the umbrella chart with your own identity provider | You decide the data stores, the DNS and TLS, and the secrets |
+| Adopting one module | That module's chart (`auditflow`, `payment-gateway`, …) | Every chart is standalone; infrastructure is yours |
+| In CI | `LABS64_PROFILE=quickstart bash install.sh` | No prompts, and `status` and `smoke` exit non-zero on failure |
 
-## Build and test
+## Before you go live
 
-```bash
-just ci                       # what the pull-request check runs: run it before pushing
-just up                       # k3d cluster, registry and all modules
-just down                     # delete the k3d cluster
-helm dependency build charts/auditflow && helm lint charts/auditflow
-```
+- **Replace the demo identity provider.** The Quickstart profile hands out valid tokens to anyone; use the `byo` profile or your own values with your provider's discovery URL.
+- **Bring real infrastructure.** Point the charts at your PostgreSQL, RabbitMQ and Redis (`global.<service>.host`) and run the `preflight` chart first to verify reachability.
+- **Keep secrets out of values files.** Use Kubernetes Secrets or External Secrets Operator, and generate strong passwords.
+- **Pin chart versions.** Set `LABS64_CHART_VERSION` (installer) or `--version` (Helm) so upgrades are a decision, not a surprise.
 
-Needs Helm 4, Git, and Docker with k3d for the local cluster. [`DEVELOPERS.md`](DEVELOPERS.md) and [`docs/reference.md`](docs/reference.md) cover the layout and every chart. Working on the code with an AI agent? [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md) describe the layout, conventions and checks.
+## Using Helm Charts with AI agents
+
+Helm Charts is how an agent (or a CI job) gets a Labs64.IO environment it can test against.
+
+- **Unattended installs.** `LABS64_PROFILE=quickstart` or `byo` skips every prompt; `bash install.sh status` exits non-zero when something is unhealthy and `smoke` repeats the token and publish check.
+- **Everything is labelled.** The installer records what it created, so `uninstall` never touches resources it did not create.
+- **Dry run first.** `bash install.sh --dry-run` shows what would change.
+- **Working on the charts with an agent?** [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md) describe the layout, conventions and checks.
 
 ## The Labs64.IO Ecosystem
 
-This repository is part of the [Labs64.IO Ecosystem](https://labs64.io): open-source building blocks for secure commerce platforms. Every module is documented at [labs64.io/docs](https://labs64.io/docs/).
+Helm Charts is one module of the [Labs64.IO Ecosystem](https://labs64.io); [every module is documented here](https://labs64.io/docs/).
 
-| Module | What it does |
-|---|---|
-| [**AuditFlow**](https://github.com/Labs64/labs64.io-auditflow) | Publish once, route anywhere, lose nothing |
-| [**Auth Gateway**](https://github.com/Labs64/labs64.io-authproxy) | One authenticated edge for every module |
-| [**Payment Gateway**](https://github.com/Labs64/labs64.io-payment-gateway) | One API across multiple payment providers |
-| [**Checkout**](https://github.com/Labs64/labs64.io-checkout) | Whitelabel checkout and order workflow |
-| [**Customer Portal**](https://github.com/Labs64/labs64.io-customer-portal) | Self-service portal for your customers |
-
-Built on [Commons](https://github.com/Labs64/labs64.io-commons), deployed with [Helm Charts](https://github.com/Labs64/labs64.io-helm-charts), developed in the [Workspace](https://github.com/Labs64/labs64.io-workspace), verified by [Tests](https://github.com/Labs64/labs64.io-tests) and documented in [Docs](https://github.com/Labs64/labs64.io-docs). Also from Labs64: [NetLicensing](https://netlicensing.io) for licensing-as-a-service and [GuideChimp](https://www.labs64.com/guidechimp/) for guided product tours.
+| Module | What it does | Link |
+|---|---|---|
+| **AuditFlow** | Audit-event routing pipeline | [labs64.io-auditflow](https://github.com/Labs64/labs64.io-auditflow) |
+| **API Gateway** | Authenticating, policy-enforcing edge for all modules | [labs64.io-authproxy](https://github.com/Labs64/labs64.io-authproxy) |
+| **Payment Gateway** | One API over multiple payment providers | [labs64.io-payment-gateway](https://github.com/Labs64/labs64.io-payment-gateway) |
+| **Checkout** | Embeddable, brandable checkout | [labs64.io-checkout](https://github.com/Labs64/labs64.io-checkout) |
+| **Customer Portal** | Customer self-service UI | [labs64.io-customer-portal](https://github.com/Labs64/labs64.io-customer-portal) |
+| **Commons** | Shared Java and Python libraries | [labs64.io-commons](https://github.com/Labs64/labs64.io-commons) |
+| **Helm Charts** | Kubernetes deployment for every module | [labs64.io-helm-charts](https://github.com/Labs64/labs64.io-helm-charts) |
+| **Workspace** | Dev container and multi-repo tooling | [labs64.io-workspace](https://github.com/Labs64/labs64.io-workspace) |
+| **Tests** | Cross-module regression suite | [labs64.io-tests](https://github.com/Labs64/labs64.io-tests) |
+| **Docs** | Published documentation | [labs64.io-docs](https://github.com/Labs64/labs64.io-docs) |
+| **NetLicensing** | Licensing-as-a-Service: license and entitlement management | [netlicensing.io](https://netlicensing.io) |
+| **GuideChimp** | Interactive guided product tours | [labs64.com/guidechimp](https://www.labs64.com/guidechimp/) |
 
 ## Contributing
 
-We would love your help. Chart fixes and documentation improvements are very welcome, and so are reports from a cluster setup we have not tried. Fork the repository, make your change on a branch, run the checks described in [`AGENTS.md`](AGENTS.md) and open a pull request. Not sure whether an idea fits? Open an issue first.
+We would love your help. Chart fixes and documentation improvements are very welcome, and so are reports from a cluster setup we have not tried. Fork the repository, make your change on a branch, run the checks described in [`AGENTS.md`](AGENTS.md) and open a pull request. Not sure whether an idea fits? Open an issue first and we will talk it through; that is a perfectly good way to start.
 
 ## License
 
-Open source under the [Apache License 2.0](LICENSE): use it, change it and ship it commercially.
+Everything in this repository is open source under the [Apache License 2.0](LICENSE): you can use it, change it and ship it commercially. The core of the *Labs64.IO Ecosystem* is free forever; community modules are Apache-2.0 licensed.
 
 ---
 
