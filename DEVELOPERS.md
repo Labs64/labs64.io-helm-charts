@@ -3,8 +3,8 @@
 Step-by-step guide to spin up the full Labs64.IO stack on a local Kubernetes cluster, deploy all modules, and run regression tests.
 
 > **Which guide do you need?**
-> - To *try* Labs64.IO, you need neither this guide nor a checkout: [`install.sh`](README.md#quick-start) installs the published charts on any cluster in about five minutes.
-> - To *build and run everything from source*, start in [`labs64.io-workspace`](https://github.com/Labs64/labs64.io-workspace#readme): its `just up` creates the cluster, builds every image and calls into this repository to deploy.
+> - To *try* Labs64.IO, you need neither this guide nor a checkout: [`install.sh`](https://labs64.io/docs/getting-started/quickstart.html) installs the published charts on any cluster in about five minutes.
+> - To *build and run everything from source*, start in [`labs64.io-workspace`](https://github.com/Labs64/labs64.io-workspace/blob/master/docs/reference.md): its `just up` creates the cluster, builds every image and calls into this repository to deploy.
 > - This guide explains what that deployment consists of, and how to drive each step by hand when you work on the charts themselves.
 
 ## Architecture Overview
