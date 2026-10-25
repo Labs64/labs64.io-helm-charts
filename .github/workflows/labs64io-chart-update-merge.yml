@@ -1,0 +1,73 @@
+name: Labs64.IO - Helm Charts - Chart Update Merge
+
+# Merges a chart-update PR once chart CI has passed on its current head.
+#
+# The module release was the decision; the PR only carries its digests into the umbrella. Waking
+# up on the completion of each chart workflow, this merges the PR when BOTH have succeeded on the
+# same head and master has not moved under it (scripts/merge-chart-update-pr.py says which rule
+# stopped it otherwise). A rebuilt PR (labs64io-chart-update-refresh.yml) has a new head, so it
+# is judged again on its own runs.
+#
+# The merge must be made with CHART_UPDATE_TOKEN, not GITHUB_TOKEN: a push made with GITHUB_TOKEN
+# starts no workflow, so the release workflow (chart-releaser) would not run and the merged
+# version would never be published. Without the secret this does nothing.
+#
+# Switch it off without a commit: set the repository variable CHART_UPDATE_AUTOMERGE to `false`.
+#
+# This runs from the default branch with a write token and must never check out or run code
+# from the PR: it only reads the PR through the API and merges it.
+
+on:
+  workflow_run:
+    workflows:
+      - "Labs64.IO - Helm Charts - Lint Charts"
+      - "Labs64.IO - Helm Charts - Published Chart E2E"
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Per PR: of several evaluations of one PR only the newest is worth running (it reads the live
+  # state), and different PRs never wait for each other.
+  group: chart-update-merge-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge ${{ github.event.workflow_run.head_branch }}
+    # Cheap conditions first, so every other run of the two workflows (master, schedule, forks,
+    # failures) ends here without a runner.
+    if: >-
+      github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.head_repository.full_name == github.repository
+      && startsWith(github.event.workflow_run.head_branch, 'chart-update/')
+      && vars.CHART_UPDATE_AUTOMERGE != 'false'
+    runs-on: ubuntu-latest
+    steps:
+      # The default branch: this workflow does not run anything from the PR.
+      - uses: actions/checkout@v7
+        with:
+          # Every PR branch and the merge base with master (the staleness rule).
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.15"
+
+      # The merge script loads the updater, which reads and writes YAML.
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Merge when chart CI has passed
+        env:
+          GH_TOKEN: ${{ secrets.CHART_UPDATE_TOKEN }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::notice::CHART_UPDATE_TOKEN is not configured: not merging (a merge made with GITHUB_TOKEN would not publish the chart)."
+            exit 0
+          fi
+          python3 scripts/merge-chart-update-pr.py --branch "$BRANCH" --sha "$SHA" | tee -a "$GITHUB_STEP_SUMMARY"

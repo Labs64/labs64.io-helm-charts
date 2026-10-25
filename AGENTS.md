@@ -123,6 +123,14 @@ What the updater guarantees, and why you should not hand-edit around it:
   inflate the chart version.
 - **Comments survive.** Edits are line-level; a PyYAML round-trip would strip every `# --`
   helm-docs annotation in `values.yaml`.
+- **Merged by the pipeline, not by hand.** The module release was the decision; the PR only carries
+  its digests. `labs64io-chart-update-merge.yml` (`scripts/merge-chart-update-pr.py`) wakes up when
+  `Lint Charts` or `Published Chart E2E` completes and squash-merges the PR when both succeeded on its
+  current head and master has not moved under it; the merge pins that head. Not GitHub auto-merge on
+  a ruleset with required checks, on purpose: both workflows are path-filtered, and a required check
+  that does not run blocks every PR outside `charts/**`. It merges as `CHART_UPDATE_TOKEN` — a push made
+  with `GITHUB_TOKEN` starts no workflow, so chart-releaser would never publish the merged version. Stop
+  it without a commit by setting the repository variable `CHART_UPDATE_AUTOMERGE` to `false`.
 - **Conflicts are regenerated, never resolved.** Modules released together each get a PR from the
   same master, and each rewrites the umbrella's version, README badge and `Chart.lock`. The PR body
   carries the release event as a hidden comment; when a push to `master` changes a file a
@@ -139,8 +147,19 @@ Replay or pin by hand with `just update-chart-images <chart> <version> --image r
 (repeat `--image` per image), or re-run the workflow via `workflow_dispatch`.
 
 Requires `CHART_DISPATCH_TOKEN` (a PAT with `contents: write` here) on the module repo, and
-`CHART_UPDATE_TOKEN` here so the generated PR triggers chart CI. Without the first, releases
-still succeed and print the exact `gh api` command to run manually.
+`CHART_UPDATE_TOKEN` here. Without the first, releases still succeed and print the exact `gh api`
+command to run manually. Without the second the PR is still opened, with `GITHUB_TOKEN`, and the
+updater warns: chart CI does not run on it without a manual approval, and it is not merged.
+
+`CHART_UPDATE_TOKEN` is a repository secret of this repository only: a fine-grained PAT whose
+resource owner is the `Labs64` organisation, with **repository access limited to
+`Labs64/labs64.io-helm-charts`** and the repository permissions **Contents** and **Pull requests**,
+both *Read and write* (Metadata read is added by GitHub; everything else stays *No access*). Its owner
+must be able to push to this repository: the PR and the merge are made as that account, which is also
+why chart CI starts without an approval (GitHub holds back only workflows of contributors who are
+not collaborators). It is not `CHART_DISPATCH_TOKEN`, which lives on the module repositories and
+can only send the event. Setup, rotation and the check that it works: `labs64.io-docs-internal`
+`architecture/release-process.md`, section *Secrets and tokens*.
 
 ## Where to make common changes
 
