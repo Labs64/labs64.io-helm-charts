@@ -52,6 +52,13 @@ permissions:
 concurrency:
   # Serialize per chart: two releases of the same module racing would produce
   # two PRs branched off different versions of the same file.
+  #
+  # Deliberately NOT one group for all charts: a group holds one running and ONE pending
+  # run, and a newer pending run cancels the older one. With three modules released
+  # together, the middle release event would be dropped and its PR never opened. Releases
+  # of different modules may therefore run side by side; the PRs they open conflict on the
+  # umbrella's files, and labs64io-chart-update-refresh.yml (one global group, safe because
+  # it rescans the live state) rebuilds each stale one on the current master.
   group: chart-image-update-${{ github.event.client_payload.chart || inputs.chart }}
   cancel-in-progress: false
 
@@ -124,6 +131,12 @@ jobs:
         id: event
         run: python3 scripts/update-chart-images.py --event-file event.json --print-event >> "$GITHUB_OUTPUT"
 
+      # The validated event, kept in the PR body (a hidden comment): when master moves under
+      # this PR, labs64io-chart-update-refresh.yml replays it on the new master.
+      - name: Record the event for regeneration
+        id: marker
+        run: python3 scripts/refresh-chart-update-prs.py marker event.json >> "$GITHUB_OUTPUT"
+
       - name: Pin the released digests
         run: python3 scripts/update-chart-images.py --event-file event.json
 
@@ -162,13 +175,23 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
+      # Said where it is seen, because the failure is quiet: the PR appears, but chart CI waits for an
+      # approval (or never starts) and labs64io-chart-update-merge.yml does nothing with it.
+      - name: Warn when CHART_UPDATE_TOKEN is missing
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          TOKEN: ${{ secrets.CHART_UPDATE_TOKEN }}
+        run: |
+          [ -n "$TOKEN" ] || echo "::warning::CHART_UPDATE_TOKEN is not configured. The PR is opened with GITHUB_TOKEN: chart CI will not run on it without a manual approval, and it will not be merged automatically."
+
       - name: Open the chart update PR
         if: steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
-          # A PAT is needed for the PR to trigger chart CI — GitHub does not run
-          # workflows on PRs opened with GITHUB_TOKEN. Falls back so the PR still
-          # gets created (unchecked) if the secret is not configured.
+          # A PAT is needed twice over: GitHub does not run workflows on PRs opened with GITHUB_TOKEN (chart
+          # CI), and a push made with it starts none either (the merge would not reach chart-releaser).
+          # Falls back so the PR still gets created (unchecked) if the secret is not configured.
+          # Setup: AGENTS.md "Release propagation".
           token: ${{ secrets.CHART_UPDATE_TOKEN || secrets.GITHUB_TOKEN }}
           branch: chart-update/${{ steps.event.outputs.chart }}-${{ steps.event.outputs.version }}
           # Stable branch name: a replayed release event updates the open PR
@@ -190,7 +213,13 @@ jobs:
             nor GHCR can enforce tag immutability, so `:${{ steps.event.outputs.version }}` may resolve to
             different content later.
 
-            Merging this publishes a new umbrella chart version. Environments move to it when their operator pins the new version — review the digests against the release before approving.
+            Merging this publishes a new umbrella chart version. Environments move to it when their operator pins the new version.
+
+            The release was the decision, so this merges itself once chart CI passes (`labs64io-chart-update-merge.yml`; set the repository variable `CHART_UPDATE_AUTOMERGE` to `false` to stop that). To check it first, compare the digests with the release run's summary.
+
+            This PR is generated output. When another chart update lands first, `labs64io-chart-update-refresh.yml` rebuilds it on the new master; do not resolve conflicts by hand.
+
+            ${{ steps.marker.outputs.marker }}
           labels: |
             chart-update
             automated
