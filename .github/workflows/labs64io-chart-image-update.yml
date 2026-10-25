@@ -52,6 +52,13 @@ permissions:
 concurrency:
   # Serialize per chart: two releases of the same module racing would produce
   # two PRs branched off different versions of the same file.
+  #
+  # Deliberately NOT one group for all charts: a group holds one running and ONE pending
+  # run, and a newer pending run cancels the older one. With three modules released
+  # together, the middle release event would be dropped and its PR never opened. Releases
+  # of different modules may therefore run side by side; the PRs they open conflict on the
+  # umbrella's files, and labs64io-chart-update-refresh.yml (one global group, safe because
+  # it rescans the live state) rebuilds each stale one on the current master.
   group: chart-image-update-${{ github.event.client_payload.chart || inputs.chart }}
   cancel-in-progress: false
 
@@ -124,6 +131,12 @@ jobs:
         id: event
         run: python3 scripts/update-chart-images.py --event-file event.json --print-event >> "$GITHUB_OUTPUT"
 
+      # The validated event, kept in the PR body (a hidden comment): when master moves under
+      # this PR, labs64io-chart-update-refresh.yml replays it on the new master.
+      - name: Record the event for regeneration
+        id: marker
+        run: python3 scripts/refresh-chart-update-prs.py marker event.json >> "$GITHUB_OUTPUT"
+
       - name: Pin the released digests
         run: python3 scripts/update-chart-images.py --event-file event.json
 
@@ -191,6 +204,10 @@ jobs:
             different content later.
 
             Merging this publishes a new umbrella chart version. Environments move to it when their operator pins the new version — review the digests against the release before approving.
+
+            This PR is generated output. When another chart update lands first, `labs64io-chart-update-refresh.yml` rebuilds it on the new master; do not resolve conflicts by hand.
+
+            ${{ steps.marker.outputs.marker }}
           labels: |
             chart-update
             automated

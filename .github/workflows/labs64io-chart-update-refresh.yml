@@ -1,0 +1,58 @@
+name: Labs64.IO - Helm Charts - Chart Update Refresh
+
+# Rebuilds open chart-update PRs on the current master.
+#
+# Modules released together each get a PR (labs64io-chart-image-update.yml) branched from the
+# same master, and every one rewrites the umbrella's version, README badge and Chart.lock. The
+# first to merge is fine; the next conflicts, or merges cleanly with the same umbrella version
+# (chart-releaser skips a version that already exists, so that module would reach no cluster).
+# These PRs are generator output, so the fix is to generate them again, not to resolve them:
+# for each stale one this replays the release event recorded in its body through the updater,
+# which updates the PR on its stable branch name.
+#
+# What counts as stale and why a PR is left alone: scripts/refresh-chart-update-prs.py.
+#
+# Needs a push to master that starts workflows: a merge made with GITHUB_TOKEN (for example
+# auto-merge enabled with it) starts none, and so does no refresh.
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "charts/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: read
+  # Dispatches the updater workflow (workflow_dispatch is exempt from "GITHUB_TOKEN starts no workflow").
+  actions: write
+
+concurrency:
+  # One scan at a time, repository-wide. Safe to coalesce — a scan looks at the live state of every
+  # open PR, so the one that runs after a burst of merges sees everything the skipped ones would have.
+  group: chart-update-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Every PR branch and the merge base with master.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.15"
+
+      # The refresher loads the updater, which reads and writes YAML.
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Regenerate stale chart-update PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/refresh-chart-update-prs.py refresh

@@ -123,6 +123,17 @@ What the updater guarantees, and why you should not hand-edit around it:
   inflate the chart version.
 - **Comments survive.** Edits are line-level; a PyYAML round-trip would strip every `# --`
   helm-docs annotation in `values.yaml`.
+- **Conflicts are regenerated, never resolved.** Modules released together each get a PR from the
+  same master, and each rewrites the umbrella's version, README badge and `Chart.lock`. The PR body
+  carries the release event as a hidden comment; when a push to `master` changes a file a
+  `chart-update` PR also changes, `labs64io-chart-update-refresh.yml`
+  (`scripts/refresh-chart-update-prs.py`) replays that event through the updater, which rebuilds the
+  PR on the current master under its stable branch name. Do not merge `master` into a chart-update
+  branch by hand — the umbrella version would be bumped to a number the other PR already took. A
+  PR opened before the marker existed is reported and left alone: replay it with the updater's
+  `workflow_dispatch`. The updater's own concurrency stays **per chart**: a group keeps only one
+  pending run, so a single group for all charts would drop the middle one of three simultaneous
+  releases.
 
 Replay or pin by hand with `just update-chart-images <chart> <version> --image repo@sha256:…`
 (repeat `--image` per image), or re-run the workflow via `workflow_dispatch`.
