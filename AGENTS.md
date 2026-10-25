@@ -158,8 +158,9 @@ both *Read and write* (Metadata read is added by GitHub; everything else stays *
 must be able to push to this repository: the PR and the merge are made as that account, which is also
 why chart CI starts without an approval (GitHub holds back only workflows of contributors who are
 not collaborators). It is not `CHART_DISPATCH_TOKEN`, which lives on the module repositories and
-can only send the event. Setup, rotation and the check that it works: `labs64.io-docs-internal`
-`architecture/release-process.md`, section *Secrets and tokens*.
+can only send the event. Rotate it before it expires: create a new token the same way and replace the
+secret's value. To check one, `gh api repos/Labs64/labs64.io-helm-charts --jq .permissions.push` with it as
+`GH_TOKEN` must print `true`; the updater also warns, on every run, while the secret is missing.
 
 ## Where to make common changes
 
