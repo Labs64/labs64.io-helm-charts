@@ -13,6 +13,9 @@ Enabled modules:
 {{- if index .Values "payment-gateway" "enabled" }}
   - payment-gateway ({{ .Release.Name }}-payment-gateway)
 {{- end }}
+{{- if .Values.reporting.enabled }}
+  - reporting     ({{ .Release.Name }}-reporting)
+{{- end }}
 {{- if .Values.auditflow.enabled }}
   - auditflow     ({{ .Release.Name }}-auditflow)
 {{- end }}

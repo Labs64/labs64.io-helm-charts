@@ -182,6 +182,7 @@ Modules need capabilities, not specific tools:
 | auditflow | AMQP 0-9-1 broker |
 | checkout | PostgreSQL (db `checkout`, login with CREATE DATABASE for first install) |
 | payment-gateway | PostgreSQL (db `payment_gateway`); Redis; reaches AuditFlow over HTTP |
+| reporting | ClickHouse (a reader user with row policies); optional S3 for bodies; a mounted catalogue per tenant |
 | gateway stack | any OIDC provider supporting client_credentials; scope/role claims are configurable via `TOKEN_SCOPES_CLAIM_PATHS` (default: `scope,realm_access.roles,resource_access.{audience}.roles`) |
 
 Reference versions: the shared local toolset (`just install-tools`) runs exactly the chart
@@ -286,6 +287,7 @@ above for what each module needs.
 | auditflow | Audit logging | RabbitMQ | `/auditflow/api` (protected), `/auditflow/v3/api-docs` (public) | `helm install my-auditflow labs64io/auditflow` |
 | checkout | Checkout API + UI (`ui.enabled`) | PostgreSQL | `/checkout/api` (protected), `/checkout/v3/api-docs` (public), `/checkout` UI (public — static assets, no Bearer token on plain navigation) | `helm install my-checkout labs64io/checkout` |
 | payment-gateway | Payments API | PostgreSQL, Redis | `/payment-gateway/api` (protected), `/payment-gateway/v3/api-docs` (public) | `helm install my-payments labs64io/payment-gateway` |
+| reporting | Reports over stored events | ClickHouse, optional S3 | `/reporting/api` (protected), `/reporting/v3/api-docs` (public) | `helm install my-reporting labs64io/reporting` |
 | customer-portal | Customer portal UI (no backend yet; `ui.enabled`) | - | `/customer-portal` (public — static assets, no Bearer token on plain navigation) | `helm install my-portal labs64io/customer-portal` |
 | api-gateway | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (auth, rate limit, headers) | - | n/a | `helm install api-gateway labs64io/api-gateway` |
 | authz-pdp | Cerbos PDP — central authorization decision point | - | n/a | `helm install authz-pdp labs64io/authz-pdp` |

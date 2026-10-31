@@ -1,0 +1,1182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "affinity": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "affinity",
+      "type": "object"
+    },
+    "applicationType": {
+      "default": "java",
+      "title": "applicationType",
+      "type": "string"
+    },
+    "applicationYaml": {
+      "additionalProperties": true,
+      "description": "Additional application properties, including top-level prefixes owned by provider JARs",
+      "properties": {
+        "labs64": {
+          "additionalProperties": false,
+          "properties": {
+            "reporting": {
+              "additionalProperties": false,
+              "properties": {
+                "clickhouse": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "url": {
+                      "default": "http://labs64io-clickhouse:8123",
+                      "description": "The umbrella chart's pinned ClickHouse Service. The password is a Secret: CLICKHOUSE_PASSWORD.",
+                      "title": "url",
+                      "type": "string"
+                    },
+                    "username": {
+                      "default": "reporting",
+                      "title": "username",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "url",
+                    "username"
+                  ],
+                  "title": "clickhouse",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "clickhouse"
+              ],
+              "title": "reporting",
+              "type": "object"
+            }
+          },
+          "required": [
+            "reporting"
+          ],
+          "title": "labs64",
+          "type": "object"
+        }
+      },
+      "required": [
+        "labs64"
+      ],
+      "title": "applicationYaml",
+      "type": "object"
+    },
+    "autoscaling": {
+      "additionalProperties": false,
+      "description": "This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "maxReplicas": {
+          "default": 3,
+          "title": "maxReplicas",
+          "type": "integer"
+        },
+        "minReplicas": {
+          "default": 1,
+          "title": "minReplicas",
+          "type": "integer"
+        },
+        "targetCPUUtilizationPercentage": {
+          "default": 80,
+          "title": "targetCPUUtilizationPercentage",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minReplicas",
+        "maxReplicas",
+        "targetCPUUtilizationPercentage"
+      ],
+      "title": "autoscaling",
+      "type": "object"
+    },
+    "chart-libs": {
+      "additionalProperties": true,
+      "description": "Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)",
+      "required": [],
+      "title": "chart-libs",
+      "type": "object"
+    },
+    "enabled": {
+      "default": true,
+      "title": "enabled",
+      "type": "boolean"
+    },
+    "env": {
+      "items": {
+        "required": []
+      },
+      "title": "env",
+      "type": "array"
+    },
+    "envFrom": {
+      "items": {
+        "required": []
+      },
+      "title": "envFrom",
+      "type": "array"
+    },
+    "externalSecrets": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "secretKey": {
+          "default": "",
+          "description": "Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname.",
+          "title": "secretKey",
+          "type": "string"
+        },
+        "storeName": {
+          "default": "local-kubernetes-store",
+          "title": "storeName",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "storeName",
+        "secretKey"
+      ],
+      "title": "externalSecrets",
+      "type": "object"
+    },
+    "fastStartup": {
+      "default": false,
+      "description": "Optimize for container startup time (-XX:TieredStopAtLevel=1, C1-only JIT) instead of\nsustained throughput. Local dev wants it on; prod wants it off (the default).",
+      "title": "fastStartup",
+      "type": "boolean"
+    },
+    "fullnameOverride": {
+      "default": "",
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "gateway": {
+      "additionalProperties": false,
+      "description": "Gateway routes published by this module (rendered by chart-libs.gateway-routes)",
+      "properties": {
+        "annotations": {
+          "additionalProperties": false,
+          "description": "Annotations for fallback Ingress",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "authPolicy": {
+          "additionalProperties": false,
+          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/api-gateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
+          "properties": {
+            "basePath": {
+              "default": "",
+              "description": "External base path prepended to the module's OpenAPI paths; defaults to \u003cprefix\u003e/api/v1",
+              "title": "basePath",
+              "type": "string"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Publish this module's auth policy to the gateway ACS",
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "basePath"
+          ],
+          "title": "authPolicy",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "description": "Publish this module's routes on the Traefik gateway",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "ingressClassName": {
+          "default": "",
+          "description": "Ingress Class Name for fallback Ingress",
+          "title": "ingressClassName",
+          "type": "string"
+        },
+        "parentRefs": {
+          "description": "Gateway API parent Gateway(s) this module's HTTPRoute attaches to",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "default": "labs64io-gateway",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "namespace": {
+                    "default": "tools",
+                    "title": "namespace",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "namespace"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "parentRefs",
+          "type": "array"
+        },
+        "prefix": {
+          "default": "",
+          "description": "External path prefix; defaults to /\u003cchart-name\u003e",
+          "title": "prefix",
+          "type": "string"
+        },
+        "routes": {
+          "description": "Routes exposed by this module.\nThe whole API surface is ONE route through ForwardAuth: the authproxy is the\nPEP and derives public-vs-protected per operation from OpenAPI OAuth security\nplus x-labs64.auth\n(generated into the authproxy routes manifest + the central Cerbos PDP). Public\noperations.",
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/api/v1",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "stripPath": {
+                    "default": true,
+                    "title": "stripPath",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "stripPath"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "default": "/v3/api-docs",
+                    "title": "path",
+                    "type": "string"
+                  },
+                  "port": {
+                    "default": 8080,
+                    "title": "port",
+                    "type": "integer"
+                  },
+                  "public": {
+                    "default": true,
+                    "title": "public",
+                    "type": "boolean"
+                  },
+                  "stripPrefix": {
+                    "default": true,
+                    "title": "stripPrefix",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "path",
+                  "port",
+                  "public",
+                  "stripPrefix"
+                ],
+                "type": "object"
+              }
+            ],
+            "required": []
+          },
+          "title": "routes",
+          "type": "array"
+        },
+        "sharedMiddlewares": {
+          "additionalProperties": false,
+          "description": "Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)",
+          "properties": {
+            "auth": {
+              "default": "gateway-common-auth",
+              "title": "auth",
+              "type": "string"
+            },
+            "compress": {
+              "default": "gateway-common-compress",
+              "title": "compress",
+              "type": "string"
+            },
+            "rateLimit": {
+              "default": "gateway-common-ratelimit",
+              "title": "rateLimit",
+              "type": "string"
+            }
+          },
+          "required": [
+            "auth",
+            "rateLimit",
+            "compress"
+          ],
+          "title": "sharedMiddlewares",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "annotations",
+        "ingressClassName",
+        "prefix",
+        "parentRefs",
+        "sharedMiddlewares",
+        "authPolicy",
+        "routes"
+      ],
+      "title": "gateway",
+      "type": "object"
+    },
+    "global": {
+      "additionalProperties": true,
+      "description": "Global values shared across Labs64.IO charts and Bitnami subcharts",
+      "properties": {
+        "security": {
+          "additionalProperties": false,
+          "properties": {
+            "allowInsecureImages": {
+              "default": true,
+              "description": "Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard)",
+              "title": "allowInsecureImages",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowInsecureImages"
+          ],
+          "title": "security",
+          "type": "object"
+        }
+      },
+      "required": [
+        "security"
+      ],
+      "title": "global",
+      "type": "object"
+    },
+    "gracefulShutdown": {
+      "additionalProperties": false,
+      "properties": {
+        "timeout": {
+          "default": "30s",
+          "description": "Max time Spring Boot waits for in-flight requests before forced shutdown",
+          "title": "timeout",
+          "type": "string"
+        }
+      },
+      "required": [
+        "timeout"
+      ],
+      "title": "gracefulShutdown",
+      "type": "object"
+    },
+    "image": {
+      "additionalProperties": false,
+      "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
+      "properties": {
+        "digest": {
+          "default": "",
+          "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
+          "title": "digest",
+          "type": "string"
+        },
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "This sets the pull policy for images.",
+          "title": "pullPolicy",
+          "type": "string"
+        },
+        "repository": {
+          "default": "labs64/reporting",
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "description": "Overrides the image tag whose default is the chart appVersion.",
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "pullPolicy",
+        "tag",
+        "digest"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "description": "This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/",
+      "items": {
+        "required": []
+      },
+      "title": "imagePullSecrets",
+      "type": "array"
+    },
+    "lifecycle": {
+      "additionalProperties": false,
+      "properties": {
+        "preStopDrainSeconds": {
+          "default": 5,
+          "description": "preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables",
+          "title": "preStopDrainSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "preStopDrainSeconds"
+      ],
+      "title": "lifecycle",
+      "type": "object"
+    },
+    "livenessProbe": {
+      "additionalProperties": false,
+      "description": "This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "properties": {
+        "failureThreshold": {
+          "default": 3,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/actuator/health/liveness",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8080,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "default": 0,
+          "title": "initialDelaySeconds",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "default": 10,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "initialDelaySeconds",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "livenessProbe",
+      "type": "object"
+    },
+    "nameOverride": {
+      "default": "",
+      "description": "This is to override the chart name.",
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "networkPolicy": {
+      "additionalProperties": false,
+      "description": "NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)",
+      "properties": {
+        "egress": {
+          "description": "ClickHouse and S3 are added per environment under extraEgress.",
+          "items": {
+            "required": []
+          },
+          "title": "egress",
+          "type": "array"
+        },
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "extraEgress": {
+          "description": "Additional raw egress rules",
+          "items": {
+            "required": []
+          },
+          "title": "extraEgress",
+          "type": "array"
+        },
+        "extraIngress": {
+          "description": "Additional raw ingress rules",
+          "items": {
+            "required": []
+          },
+          "title": "extraIngress",
+          "type": "array"
+        },
+        "gatewayNamespace": {
+          "default": "tools",
+          "description": "Namespace where Traefik runs",
+          "title": "gatewayNamespace",
+          "type": "string"
+        },
+        "ingressControllerLabels": {
+          "additionalProperties": true,
+          "description": "Ingress controller pod-selector labels; defaults to the internal Traefik standard\n(app.kubernetes.io/name: traefik) when empty",
+          "required": [],
+          "title": "ingressControllerLabels",
+          "type": "object"
+        },
+        "observabilityNamespace": {
+          "default": "monitoring",
+          "description": "Namespace the observability/OTel collector runs in",
+          "title": "observabilityNamespace",
+          "type": "string"
+        },
+        "toolsEgress": {
+          "description": "Tools-namespace destinations this service needs (name + port pairs); rendered as\nscoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve\nisolation.",
+          "items": {
+            "required": []
+          },
+          "title": "toolsEgress",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "gatewayNamespace",
+        "observabilityNamespace",
+        "extraIngress",
+        "extraEgress",
+        "toolsEgress",
+        "egress"
+      ],
+      "title": "networkPolicy",
+      "type": "object"
+    },
+    "nodeSelector": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "observability": {
+      "additionalProperties": false,
+      "description": "Observability is infrastructure-owned: the same image runs with or without it.\nWhen enabled, the bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and\nPrometheus scrape annotations (Micrometer /actuator/prometheus) are added.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable runtime instrumentation (traces + logs via OTLP; metrics via Prometheus scrape)",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "metricsPath": {
+          "default": "/actuator/prometheus",
+          "description": "Prometheus metrics path scraped from the pod",
+          "title": "metricsPath",
+          "type": "string"
+        },
+        "otlpEndpoint": {
+          "default": "http://$(NODE_IP):4318",
+          "description": "OTLP endpoint of the OpenTelemetry Collector",
+          "title": "otlpEndpoint",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "otlpEndpoint",
+        "metricsPath"
+      ],
+      "title": "observability",
+      "type": "object"
+    },
+    "podAnnotations": {
+      "additionalProperties": true,
+      "description": "This is for setting Kubernetes Annotations to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+      "required": [],
+      "title": "podAnnotations",
+      "type": "object"
+    },
+    "podDisruptionBudget": {
+      "additionalProperties": false,
+      "description": "PodDisruptionBudget (rendered by chart-libs.pdb)",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "minAvailable": {
+          "default": 1,
+          "title": "minAvailable",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "minAvailable"
+      ],
+      "title": "podDisruptionBudget",
+      "type": "object"
+    },
+    "podLabels": {
+      "additionalProperties": false,
+      "description": "This is for setting Kubernetes Labels to a Pod.\nFor more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+      "required": [],
+      "title": "podLabels",
+      "type": "object"
+    },
+    "podSecurityContext": {
+      "additionalProperties": false,
+      "required": [],
+      "title": "podSecurityContext",
+      "type": "object"
+    },
+    "rbac": {
+      "additionalProperties": false,
+      "description": "RBAC configuration (create RBAC resources: Role, RoleBinding)",
+      "properties": {
+        "create": {
+          "default": false,
+          "title": "create",
+          "type": "boolean"
+        },
+        "rules": {
+          "items": {
+            "required": []
+          },
+          "title": "rules",
+          "type": "array"
+        }
+      },
+      "required": [
+        "create",
+        "rules"
+      ],
+      "title": "rbac",
+      "type": "object"
+    },
+    "readinessProbe": {
+      "additionalProperties": false,
+      "description": "This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "properties": {
+        "failureThreshold": {
+          "default": 3,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/actuator/health/readiness",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8080,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "default": 0,
+          "title": "initialDelaySeconds",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "default": 5,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "initialDelaySeconds",
+        "periodSeconds",
+        "failureThreshold",
+        "timeoutSeconds"
+      ],
+      "title": "readinessProbe",
+      "type": "object"
+    },
+    "replicaCount": {
+      "default": 1,
+      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/",
+      "title": "replicaCount",
+      "type": "integer"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "description": "Sized off observed steady-state usage (~2m CPU / 327Mi mem on a small EKS development cluster — JVM heap holds\nsteady once warmed up) with headroom for GC/startup spikes.",
+      "properties": {
+        "limits": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "500m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "768Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "limits",
+          "type": "object"
+        },
+        "requests": {
+          "additionalProperties": false,
+          "properties": {
+            "cpu": {
+              "default": "100m",
+              "title": "cpu",
+              "type": "string"
+            },
+            "memory": {
+              "default": "384Mi",
+              "title": "memory",
+              "type": "string"
+            }
+          },
+          "required": [
+            "cpu",
+            "memory"
+          ],
+          "title": "requests",
+          "type": "object"
+        }
+      },
+      "required": [
+        "limits",
+        "requests"
+      ],
+      "title": "resources",
+      "type": "object"
+    },
+    "secrets": {
+      "additionalProperties": false,
+      "description": "Secret data to be used as environment variables (delivered via envFrom).\nThe ClickHouse reader's password, as CLICKHOUSE_PASSWORD.",
+      "properties": {
+        "data": {
+          "additionalProperties": false,
+          "required": [],
+          "title": "data",
+          "type": "object"
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "title": "secrets",
+      "type": "object"
+    },
+    "securityContext": {
+      "additionalProperties": false,
+      "properties": {
+        "allowPrivilegeEscalation": {
+          "default": false,
+          "title": "allowPrivilegeEscalation",
+          "type": "boolean"
+        },
+        "capabilities": {
+          "additionalProperties": false,
+          "properties": {
+            "drop": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "drop",
+              "type": "array"
+            }
+          },
+          "required": [
+            "drop"
+          ],
+          "title": "capabilities",
+          "type": "object"
+        },
+        "readOnlyRootFilesystem": {
+          "default": true,
+          "title": "readOnlyRootFilesystem",
+          "type": "boolean"
+        },
+        "runAsGroup": {
+          "default": 1064,
+          "title": "runAsGroup",
+          "type": "integer"
+        },
+        "runAsNonRoot": {
+          "default": true,
+          "title": "runAsNonRoot",
+          "type": "boolean"
+        },
+        "runAsUser": {
+          "default": 1064,
+          "title": "runAsUser",
+          "type": "integer"
+        },
+        "seccompProfile": {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "default": "RuntimeDefault",
+              "title": "type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "title": "seccompProfile",
+          "type": "object"
+        }
+      },
+      "required": [
+        "capabilities",
+        "runAsNonRoot",
+        "runAsUser",
+        "runAsGroup",
+        "seccompProfile",
+        "allowPrivilegeEscalation",
+        "readOnlyRootFilesystem"
+      ],
+      "title": "securityContext",
+      "type": "object"
+    },
+    "service": {
+      "additionalProperties": false,
+      "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
+      "properties": {
+        "port": {
+          "default": 8080,
+          "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports",
+          "title": "port",
+          "type": "integer"
+        },
+        "type": {
+          "default": "ClusterIP",
+          "description": "This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types",
+          "title": "type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "port"
+      ],
+      "title": "service",
+      "type": "object"
+    },
+    "serviceAccount": {
+      "additionalProperties": false,
+      "description": "This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/",
+      "properties": {
+        "annotations": {
+          "additionalProperties": true,
+          "description": "Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA)",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "automount": {
+          "default": false,
+          "description": "Automatically mount a ServiceAccount's API credentials? This workload never calls the\nKubernetes API — a mounted token is pure attack surface.",
+          "title": "automount",
+          "type": "boolean"
+        },
+        "create": {
+          "default": true,
+          "description": "Specifies whether a service account should be created",
+          "title": "create",
+          "type": "boolean"
+        },
+        "name": {
+          "default": "",
+          "description": "The name of the service account to use.\nIf not set and create is true, a name is generated using the fullname template",
+          "title": "name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "create",
+        "automount",
+        "name"
+      ],
+      "title": "serviceAccount",
+      "type": "object"
+    },
+    "slo": {
+      "additionalProperties": false,
+      "description": "SLO recording rules and dashboards (rendered by chart-libs.slo.*)",
+      "properties": {
+        "availability": {
+          "additionalProperties": false,
+          "properties": {
+            "targetRatio": {
+              "default": 0.999,
+              "title": "targetRatio",
+              "type": "number"
+            }
+          },
+          "required": [
+            "targetRatio"
+          ],
+          "title": "availability",
+          "type": "object"
+        },
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "latency": {
+          "additionalProperties": false,
+          "properties": {
+            "targetRatio": {
+              "default": 0.99,
+              "title": "targetRatio",
+              "type": "number"
+            },
+            "thresholdSeconds": {
+              "default": 0.5,
+              "title": "thresholdSeconds",
+              "type": "number"
+            }
+          },
+          "required": [
+            "targetRatio",
+            "thresholdSeconds"
+          ],
+          "title": "latency",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "availability",
+        "latency"
+      ],
+      "title": "slo",
+      "type": "object"
+    },
+    "startupProbe": {
+      "additionalProperties": false,
+      "description": "Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts\n(Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting\npod. Max boot budget = failureThreshold * periodSeconds.",
+      "properties": {
+        "failureThreshold": {
+          "default": 60,
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "default": "/actuator/health/liveness",
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": 8080,
+              "title": "port",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "periodSeconds": {
+          "default": 2,
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 2,
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet",
+        "failureThreshold",
+        "periodSeconds",
+        "timeoutSeconds"
+      ],
+      "title": "startupProbe",
+      "type": "object"
+    },
+    "terminationGracePeriodSeconds": {
+      "default": 45,
+      "description": "Graceful shutdown: drain in-flight requests on rolling updates / scale-in.\nKeep terminationGracePeriodSeconds \u003e lifecycle.preStopDrainSeconds + gracefulShutdown.timeout.",
+      "title": "terminationGracePeriodSeconds",
+      "type": "integer"
+    },
+    "tests": {
+      "additionalProperties": false,
+      "description": "helm test hook (rendered by chart-libs.test-connection)",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "healthPath": {
+          "default": "/actuator/health",
+          "description": "Health endpoint probed by `helm test`",
+          "title": "healthPath",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "healthPath"
+      ],
+      "title": "tests",
+      "type": "object"
+    },
+    "tolerations": {
+      "items": {
+        "required": []
+      },
+      "title": "tolerations",
+      "type": "array"
+    },
+    "topologySpreadConstraints": {
+      "description": "Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).\nlabelSelector defaults to this chart's own selector labels when a constraint omits one.",
+      "items": {
+        "required": []
+      },
+      "title": "topologySpreadConstraints",
+      "type": "array"
+    },
+    "volumeMounts": {
+      "description": "Additional volumeMounts on the output Deployment definition.",
+      "items": {
+        "required": []
+      },
+      "title": "volumeMounts",
+      "type": "array"
+    },
+    "volumes": {
+      "description": "Additional volumes on the output Deployment definition.\nNo manual tmp entry needed here (unlike api-gateway): chart-libs auto-provisions a tmp emptyDir\n+ mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on.",
+      "items": {
+        "required": []
+      },
+      "title": "volumes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "enabled",
+    "externalSecrets",
+    "replicaCount",
+    "image",
+    "imagePullSecrets",
+    "nameOverride",
+    "fullnameOverride",
+    "serviceAccount",
+    "rbac",
+    "podLabels",
+    "podSecurityContext",
+    "securityContext",
+    "service",
+    "resources",
+    "livenessProbe",
+    "readinessProbe",
+    "startupProbe",
+    "terminationGracePeriodSeconds",
+    "gracefulShutdown",
+    "lifecycle",
+    "observability",
+    "autoscaling",
+    "volumes",
+    "volumeMounts",
+    "nodeSelector",
+    "tolerations",
+    "affinity",
+    "topologySpreadConstraints",
+    "env",
+    "envFrom",
+    "secrets",
+    "gateway",
+    "podDisruptionBudget",
+    "networkPolicy",
+    "slo",
+    "tests",
+    "applicationType",
+    "fastStartup"
+  ],
+  "type": "object"
+}

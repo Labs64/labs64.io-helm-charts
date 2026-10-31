@@ -53,6 +53,8 @@ postgresql:
   enabled: false
 rabbitmq:
   enabled: false
+clickhouse:
+  enabled: false
 redis:
   enabled: false
 
@@ -146,6 +148,26 @@ auditflow:
           ssl:
             # ElastiCache in-transit encryption is mandatory.
             enabled: true
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+  podDisruptionBudget:
+    enabled: true
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: DoNotSchedule
+    - maxSkew: 1
+      minDomains: 2
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+
+reporting:
+  networkPolicy:
+    enabled: true
+  externalSecrets:
+    enabled: true
+    storeName: aws-secretsmanager-cluster
   autoscaling:
     enabled: true
     minReplicas: 2

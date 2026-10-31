@@ -11,6 +11,9 @@
         "name": "audit-event:write"
       },
       {
+        "name": "reporting:read-delegated"
+      },
+      {
         "name": "customer:read"
       },
       {
@@ -164,6 +167,10 @@
     },
     {
       "name": "audit-event:write",
+      "protocol": "openid-connect"
+    },
+    {
+      "name": "reporting:read-delegated",
       "protocol": "openid-connect"
     },
     {

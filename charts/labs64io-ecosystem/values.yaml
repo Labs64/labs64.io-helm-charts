@@ -235,6 +235,76 @@ rabbitmq:
     existingPasswordSecret: "labs64io-shared-secret"
     existingSecretPasswordKey: "SPRING_RABBITMQ_PASSWORD"
 
+# Reads a tenant's ClickHouse tables; needs `clickhouse`.
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+reporting:
+  enabled: false
+
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+clickhouse:
+  # -- One in-cluster node for AuditFlow's clickhouse_sink (templates/clickhouse.yaml).
+  enabled: false
+  # -- Pinned so a sink's service-url can be a plain address.
+  fullnameOverride: "labs64io-clickhouse"
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    registry: docker.io
+    repository: clickhouse/clickhouse-server
+    tag: "26.10"
+  # -- Size of the data volume (StatefulSet volumeClaimTemplate).
+  persistence:
+    size: 20Gi
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  auth:
+    database: "audit"
+    # -- The server's admin, for the schema only. A deployment creates AuditFlow's writer and any reader itself.
+    username: "admin"
+    # -- The Secret holding the password; required when enabled.
+    existingPasswordSecret: ""
+    existingSecretPasswordKey: "CLICKHOUSE_PASSWORD"
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  resources:
+    requests:
+      cpu: 250m
+      memory: 2Gi
+    limits:
+      memory: 3Gi
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  networkPolicy:
+    enabled: true
+    # -- Who may reach the HTTP port.
+    # @schema
+    # type: array
+    # items:
+    #   type: object
+    #   additionalProperties: true
+    # @schema
+    ingressFrom:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: auditflow
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: reporting
+
 # @schema
 # type: object
 # additionalProperties: true

@@ -1,0 +1,54 @@
+# GENERATED from x-labs64.auth by OpenApiAuthPreprocessor — do not edit.
+version: 1
+module: reporting
+basePath: /reporting/api/v1
+routes:
+- operationId: listMetrics
+  method: POST
+  path: /metrics/list
+  public: false
+  tenantRequired: true
+  scopes:
+  - reporting:read-delegated
+- operationId: queryMetric
+  method: POST
+  path: /metrics/query
+  public: false
+  tenantRequired: true
+  scopes:
+  - reporting:read-delegated
+- operationId: searchEvents
+  method: POST
+  path: /events/search
+  public: false
+  tenantRequired: true
+  scopes:
+  - reporting:read-delegated
+- operationId: getEvent
+  method: POST
+  path: /events/get
+  public: false
+  tenantRequired: true
+  scopes:
+  - reporting:read-delegated
+- operationId: getEventBody
+  method: POST
+  path: /events/body
+  public: false
+  tenantRequired: true
+  scopes:
+  - reporting:read-delegated
+- operationId: getTrace
+  method: POST
+  path: /traces/get
+  public: false
+  tenantRequired: true
+  scopes:
+  - reporting:read-delegated
+- operationId: getStatus
+  method: POST
+  path: /status
+  public: false
+  tenantRequired: true
+  scopes:
+  - reporting:read-delegated

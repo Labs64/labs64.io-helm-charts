@@ -1,0 +1,313 @@
+enabled: true
+
+externalSecrets:
+  enabled: false
+  storeName: local-kubernetes-store
+  # -- Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname.
+  secretKey: ""
+# -- Global values shared across Labs64.IO charts and Bitnami subcharts
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+global:
+  security:
+    # -- Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard)
+    allowInsecureImages: true
+
+# -- This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: labs64/reporting
+  # -- This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
+  digest: ""
+
+# -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+# -- This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# -- This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Automatically mount a ServiceAccount's API credentials? This workload never calls the
+  # Kubernetes API — a mounted token is pure attack surface.
+  automount: false
+  # -- Annotations to add to the service account (e.g. `eks.amazonaws.com/role-arn` for IRSA)
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  annotations: {}
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# RBAC configuration (create RBAC resources: Role, RoleBinding)
+rbac:
+  create: false
+  rules: []
+    #- apiGroups: [""]
+    #  resources: ["pods"]
+    #  verbs: ["get", "list", "watch"]
+
+# -- This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+podAnnotations: {}
+# -- This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  runAsNonRoot: true
+  runAsUser: 1064
+  runAsGroup: 1064
+  seccompProfile:
+    type: RuntimeDefault
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+
+# -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # -- This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 8080
+
+# Sized off observed steady-state usage (~2m CPU / 327Mi mem on a small EKS development cluster — JVM heap holds
+# steady once warmed up) with headroom for GC/startup spikes.
+resources:
+  limits:
+    cpu: 500m
+    memory: 768Mi
+  requests:
+    cpu: 100m
+    memory: 384Mi
+
+# -- This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  failureThreshold: 3
+  timeoutSeconds: 2
+
+# -- This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8080
+  initialDelaySeconds: 0
+  periodSeconds: 5
+  failureThreshold: 3
+  timeoutSeconds: 2
+
+# -- Startup probe (rendered by chart-libs.startupProbe): guards slow cold starts
+# (Spring Boot + OTel Java Agent) so the liveness probe never kills a still-booting
+# pod. Max boot budget = failureThreshold * periodSeconds.
+startupProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8080
+  failureThreshold: 60
+  periodSeconds: 2
+  timeoutSeconds: 2
+
+# -- Graceful shutdown: drain in-flight requests on rolling updates / scale-in.
+# Keep terminationGracePeriodSeconds > lifecycle.preStopDrainSeconds + gracefulShutdown.timeout.
+terminationGracePeriodSeconds: 45
+gracefulShutdown:
+  # -- Max time Spring Boot waits for in-flight requests before forced shutdown
+  timeout: 30s
+lifecycle:
+  # -- preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables
+  preStopDrainSeconds: 5
+
+# -- Observability is infrastructure-owned: the same image runs with or without it.
+# When enabled, the bundled OTel Java Agent is activated via JAVA_TOOL_OPTIONS and
+# Prometheus scrape annotations (Micrometer /actuator/prometheus) are added.
+observability:
+  # -- Enable runtime instrumentation (traces + logs via OTLP; metrics via Prometheus scrape)
+  enabled: false
+  # -- OTLP endpoint of the OpenTelemetry Collector
+  otlpEndpoint: "http://$(NODE_IP):4318"
+  # -- Prometheus metrics path scraped from the pod
+  metricsPath: /actuator/prometheus
+
+# -- This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Additional volumes on the output Deployment definition.
+# No manual tmp entry needed here (unlike api-gateway): chart-libs auto-provisions a tmp emptyDir
+# + mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# -- Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# -- Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable).
+# labelSelector defaults to this chart's own selector labels when a constraint omits one.
+topologySpreadConstraints: []
+
+env: []
+envFrom: []
+
+# -- Secret data to be used as environment variables (delivered via envFrom).
+# The ClickHouse reader's password, as CLICKHOUSE_PASSWORD.
+secrets:
+  data: {}
+
+# -- Additional application properties, including top-level prefixes owned by provider JARs
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+applicationYaml:
+  labs64:
+    reporting:
+      clickhouse:
+        # -- The umbrella chart's pinned ClickHouse Service. The password is a Secret: CLICKHOUSE_PASSWORD.
+        url: "http://labs64io-clickhouse:8123"
+        username: reporting
+
+# -- Gateway routes published by this module (rendered by chart-libs.gateway-routes)
+gateway:
+  # -- Publish this module's routes on the Traefik gateway
+  enabled: false
+  # -- Annotations for fallback Ingress
+  annotations: {}
+  # -- Ingress Class Name for fallback Ingress
+  ingressClassName: ""
+  # -- External path prefix; defaults to /<chart-name>
+  prefix: ""
+  # -- Gateway API parent Gateway(s) this module's HTTPRoute attaches to
+  parentRefs:
+    - name: labs64io-gateway
+      namespace: tools
+  # -- Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)
+  sharedMiddlewares:
+    auth: gateway-common-auth
+    rateLimit: gateway-common-ratelimit
+    compress: gateway-common-compress
+  # -- Auth-policy publication. NOTE: the traefik-authproxy no longer
+  # live-discovers per-module policies via /.well-known/auth-policy — it loads a
+  # generated routes manifest (charts/api-gateway/routes/) and asks the
+  # central Cerbos PDP for every decision. This block is retained for backward
+  # compatibility and is a no-op for edge enforcement.
+  authPolicy:
+    # -- Publish this module's auth policy to the gateway ACS
+    enabled: true
+    # -- External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1
+    basePath: ""
+  # -- Routes exposed by this module.
+  # The whole API surface is ONE route through ForwardAuth: the authproxy is the
+  # PEP and derives public-vs-protected per operation from OpenAPI OAuth security
+  # plus x-labs64.auth
+  # (generated into the authproxy routes manifest + the central Cerbos PDP). Public
+  # operations.
+  routes:
+    # -- Whole Reporting API (ForwardAuth PEP decides per-op from OpenAPI;
+    # strips '<prefix>/api/v1' — backend is root-mapped)
+    - path: /api/v1
+      port: 8080
+      stripPath: true
+    # -- OpenAPI docs (springdoc endpoint — NOT an OpenAPI operation, so it has no
+    # generated OpenAPI auth policy at the authproxy; public at the edge, prefix stripped)
+    - path: /v3/api-docs
+      port: 8080
+      public: true
+      stripPrefix: true
+
+# -- PodDisruptionBudget (rendered by chart-libs.pdb)
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# -- NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy)
+networkPolicy:
+  enabled: false
+  # -- Namespace where Traefik runs
+  gatewayNamespace: tools
+  # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard
+  # (app.kubernetes.io/name: traefik) when empty
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  ingressControllerLabels: {}
+  # -- Namespace the observability/OTel collector runs in
+  observabilityNamespace: monitoring
+  # -- Additional raw ingress rules
+  extraIngress: []
+  # -- Additional raw egress rules
+  extraEgress: []
+  # -- Tools-namespace destinations this service needs (name + port pairs); rendered as
+  # scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve
+  # isolation.
+  toolsEgress: []
+  # -- ClickHouse and S3 are added per environment under extraEgress.
+  egress: []
+# -- SLO recording rules and dashboards (rendered by chart-libs.slo.*)
+slo:
+  enabled: true
+  availability:
+    targetRatio: 0.999
+  latency:
+    targetRatio: 0.99
+    thresholdSeconds: 0.5
+
+# -- Values passed to the chart-libs library dependency (present so the generated schema accepts the key Helm injects for the dependency)
+# @schema
+# type: object
+# additionalProperties: true
+# @schema
+chart-libs: {}
+
+# -- helm test hook (rendered by chart-libs.test-connection)
+tests:
+  enabled: true
+  # -- Health endpoint probed by `helm test`
+  healthPath: /actuator/health
+applicationType: java
+
+# -- Optimize for container startup time (-XX:TieredStopAtLevel=1, C1-only JIT) instead of
+# sustained throughput. Local dev wants it on; prod wants it off (the default).
+fastStartup: false

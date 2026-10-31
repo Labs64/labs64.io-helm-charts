@@ -1,0 +1,11 @@
+image:
+  repository: localhost:5005/reporting
+  tag: latest
+  digest: ""
+  pullPolicy: Always
+
+gateway:
+  enabled: true
+
+networkPolicy:
+  enabled: true

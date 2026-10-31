@@ -310,6 +310,21 @@ releases:
       # Middlewares by name against what api-gateway creates.
       - labs64io/labs64io-api-gateway
 
+  - name: labs64io-reporting
+    # Not in the default set: it needs a ClickHouse, which the local toolset does not run. `just install-app reporting`
+    # installs it on explicit request (state value installReporting).
+    installed: {{ .Values | get "installReporting" false }}
+    namespace: labs64io
+    chart: ./charts/reporting
+    values:
+      - ./charts/reporting/values.yaml
+      - ./overrides/global-values.yaml
+      - ./overrides/reporting/values.{{ .Environment.Name }}.yaml
+    labels:
+      layer: apps
+    needs:
+      - labs64io/labs64io-api-gateway
+
   - name: labs64io-payment-gateway
     namespace: labs64io
     chart: ./charts/payment-gateway

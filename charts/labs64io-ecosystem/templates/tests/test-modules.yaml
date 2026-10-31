@@ -58,6 +58,9 @@ spec:
           {{- if index .Values "payment-gateway" "enabled" }}
           probe payment-gateway "http://{{ .Release.Name }}-payment-gateway:8080/actuator/health/readiness"
           {{- end }}
+          {{- if .Values.reporting.enabled }}
+          probe reporting "http://{{ .Release.Name }}-reporting:8080/actuator/health/readiness"
+          {{- end }}
           {{- if index .Values "api-gateway" "enabled" }}
           {{/* api-gateway pins fullnameOverride: gateway-common, so it is NOT <release>-api-gateway. */}}
           probe api-gateway "http://gateway-common:8081/health/ready"

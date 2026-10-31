@@ -29,3 +29,5 @@ swaggerUI:
       name: Checkout API
     - url: http://gateway.{{ .Values.global.domain }}/payment-gateway/v3/api-docs
       name: Payment Gateway API
+    - url: http://gateway.{{ .Values.global.domain }}/reporting/v3/api-docs
+      name: Reporting API
