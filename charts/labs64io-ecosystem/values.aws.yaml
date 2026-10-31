@@ -163,6 +163,10 @@ auditflow:
       whenUnsatisfiable: DoNotSchedule
 
 reporting:
+  # Publish the Reporting route (POST /reporting/api/v1/... behind ForwardAuth) on the gateway, like AuditFlow's.
+  # Without it the module runs and the gateway answers 404.
+  gateway:
+    enabled: true
   networkPolicy:
     enabled: true
   externalSecrets:
