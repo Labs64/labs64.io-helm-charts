@@ -1,0 +1,6 @@
+dependencies:
+- name: chart-libs
+  repository: file://../chart-libs
+  version: 0.8.8
+digest: sha256:622ca8ad06b6f55103adbe75afad8797394edeb1243886e142d8441a97d5c997
+generated: "2026-10-31T13:40:08.14972+01:00"

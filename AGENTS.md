@@ -9,6 +9,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | `charts/auditflow/` | AuditFlow backend + transformer + sink |
 | `charts/checkout/` | Checkout backend + UI (`ui.enabled`, templates prefixed `ui-*`) |
 | `charts/payment-gateway/` | Payment gateway backend |
+| `charts/reporting/` | Reporting: read API over ClickHouse and S3. No catalogue of its own: a deployment mounts it |
 | `charts/customer-portal/` | Customer portal UI (no backend yet; `ui.enabled`, templates prefixed `ui-*`) |
 | `charts/api-docs/` | Swagger UI aggregator (formerly `swagger-ui`) |
 | `charts/api-gateway/` | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (merged `traefik-authproxy` + `gateway-common`; `fullnameOverride: gateway-common` keeps the stable middleware-name prefix) |

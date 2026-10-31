@@ -198,7 +198,7 @@ docker push localhost:5005/customer-portal-ui:latest
 
 ```bash
 curl -s http://localhost:5005/v2/_catalog
-# Should list: auditflow, auditflow-transformer, auditflow-sink, checkout, checkout-ui, payment-gateway, traefik-authproxy, customer-portal-ui
+# Should list: auditflow, auditflow-transformer, auditflow-sink, checkout, checkout-ui, payment-gateway, reporting, traefik-authproxy, customer-portal-ui
 ```
 
 ## Quick start
@@ -346,6 +346,7 @@ just install-app api-docs            # Swagger UI
 just install-app auditflow           # audit logging
 just install-app checkout            # checkout backend + UI (ui.enabled)
 just install-app payment-gateway     # payment gateway
+just install-app reporting           # reporting (not in the default set; needs a ClickHouse)
 just install-app customer-portal      # customer portal UI (no backend yet)
 ```
 

@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.20.59](https://img.shields.io/badge/Version-0.20.59-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.20.60](https://img.shields.io/badge/Version-0.20.60-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 
@@ -28,6 +28,7 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | file://../customer-portal | customer-portal | >=0.1.0 |
 | file://../mock-oidc | mock-oidc | >=0.1.0 |
 | file://../payment-gateway | payment-gateway | >=0.1.0 |
+| file://../reporting | reporting | >=0.1.0 |
 | https://charts.bitnami.com/bitnami | postgresql | 18.12.15 |
 | https://charts.bitnami.com/bitnami | redis(valkey) | 6.3.12 |
 | https://traefik.github.io/charts | traefik | 42.1.3 |
@@ -41,6 +42,21 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | auditflow.enabled | bool | `true` |  |
 | authz-pdp.enabled | bool | `true` |  |
 | checkout | object | `{"enabled":false,"migrationJob":{"enabled":false}}` | Not GA. The labs64/checkout and labs64/checkout-ui images have never been published (both repositories 404 on Docker Hub), so enabling this yields ImagePullBackOff. Toggle retained for when they are. |
+| clickhouse.auth.database | string | `"audit"` |  |
+| clickhouse.auth.existingPasswordSecret | string | `""` | The Secret holding the password; required when enabled. |
+| clickhouse.auth.existingSecretPasswordKey | string | `"CLICKHOUSE_PASSWORD"` |  |
+| clickhouse.auth.username | string | `"admin"` | The server's admin, for the schema only. A deployment creates AuditFlow's writer and any reader itself. |
+| clickhouse.enabled | bool | `false` | One in-cluster node for AuditFlow's clickhouse_sink (templates/clickhouse.yaml). |
+| clickhouse.fullnameOverride | string | `"labs64io-clickhouse"` | Pinned so a sink's service-url can be a plain address. |
+| clickhouse.image.registry | string | `"docker.io"` |  |
+| clickhouse.image.repository | string | `"clickhouse/clickhouse-server"` |  |
+| clickhouse.image.tag | string | `"26.10"` |  |
+| clickhouse.networkPolicy.enabled | bool | `true` |  |
+| clickhouse.networkPolicy.ingressFrom | list | `[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"auditflow"}}},{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"reporting"}}}]` | Who may reach the HTTP port. @schema type: array items:   type: object   additionalProperties: true @schema |
+| clickhouse.persistence | object | `{"size":"20Gi"}` | Size of the data volume (StatefulSet volumeClaimTemplate). |
+| clickhouse.resources.limits.memory | string | `"3Gi"` |  |
+| clickhouse.resources.requests.cpu | string | `"250m"` |  |
+| clickhouse.resources.requests.memory | string | `"2Gi"` |  |
 | customer-portal | object | `{"enabled":false}` | Not GA. labs64/customer-portal-ui publishes no tags. Enable only once you have a published customer-portal-ui image. |
 | demoMode | bool | `false` | Demo mode. Permits the dev-grade default passwords below and unlocks the dev-only mock-oidc subchart. MUST be false for any real deployment: with it false, the chart refuses to render while any password is still at its default. |
 | global.postgresql.database | string | `"labs64io"` |  |
@@ -82,6 +98,7 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | redis.enabled | bool | `true` |  |
 | redis.fullnameOverride | string | `"labs64io-redis"` | Pinned so `global.redis.host` above can be a plain string (standalone architecture: the primary service is named "<fullnameOverride>-primary") |
 | redis.networkPolicy.allowExternalEgress | bool | `false` |  |
+| reporting.enabled | bool | `false` |  |
 | secrets.data | object | `{}` | Additional key/value pairs merged into the shared Secret verbatim. Same shape as every module chart's `secrets.data`, so one caller code path covers both. Keys here win over the aliases above on collision. @schema type: object additionalProperties: true @schema |
 | secrets.postgresqlPassword | string | `"labs64_dev_password"` | Convenience aliases for the three bundled-infra passwords, injected into labs64io-shared-secret. The shipped values are dev defaults — with `demoMode: false` (the default) the chart fails to render until they change. |
 | secrets.rabbitmqPassword | string | `"labs64_dev_password"` | See `secrets.postgresqlPassword`. |

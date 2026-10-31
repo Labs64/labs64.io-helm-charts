@@ -95,6 +95,180 @@
       "title": "checkout",
       "type": "object"
     },
+    "clickhouse": {
+      "additionalProperties": true,
+      "properties": {
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "database": {
+              "default": "audit",
+              "title": "database",
+              "type": "string"
+            },
+            "existingPasswordSecret": {
+              "default": "",
+              "description": "The Secret holding the password; required when enabled.",
+              "title": "existingPasswordSecret",
+              "type": "string"
+            },
+            "existingSecretPasswordKey": {
+              "default": "CLICKHOUSE_PASSWORD",
+              "title": "existingSecretPasswordKey",
+              "type": "string"
+            },
+            "username": {
+              "default": "admin",
+              "description": "The server's admin, for the schema only. A deployment creates AuditFlow's writer and any reader itself.",
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "database",
+            "username",
+            "existingPasswordSecret",
+            "existingSecretPasswordKey"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "description": "One in-cluster node for AuditFlow's clickhouse_sink (templates/clickhouse.yaml).",
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "fullnameOverride": {
+          "default": "labs64io-clickhouse",
+          "description": "Pinned so a sink's service-url can be a plain address.",
+          "title": "fullnameOverride",
+          "type": "string"
+        },
+        "image": {
+          "additionalProperties": true,
+          "properties": {
+            "registry": {
+              "default": "docker.io",
+              "title": "registry",
+              "type": "string"
+            },
+            "repository": {
+              "default": "clickhouse/clickhouse-server",
+              "title": "repository",
+              "type": "string"
+            },
+            "tag": {
+              "default": "26.10",
+              "title": "tag",
+              "type": "string"
+            }
+          },
+          "required": [
+            "registry",
+            "repository",
+            "tag"
+          ],
+          "title": "image",
+          "type": "object"
+        },
+        "networkPolicy": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "default": true,
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "ingressFrom": {
+              "description": "Who may reach the HTTP port.",
+              "items": {
+                "additionalProperties": true,
+                "required": [],
+                "type": "object"
+              },
+              "title": "ingressFrom",
+              "type": "array"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
+        },
+        "persistence": {
+          "additionalProperties": false,
+          "description": "Size of the data volume (StatefulSet volumeClaimTemplate).",
+          "properties": {
+            "size": {
+              "default": "20Gi",
+              "title": "size",
+              "type": "string"
+            }
+          },
+          "required": [
+            "size"
+          ],
+          "title": "persistence",
+          "type": "object"
+        },
+        "resources": {
+          "additionalProperties": true,
+          "properties": {
+            "limits": {
+              "additionalProperties": false,
+              "properties": {
+                "memory": {
+                  "default": "3Gi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "memory"
+              ],
+              "title": "limits",
+              "type": "object"
+            },
+            "requests": {
+              "additionalProperties": false,
+              "properties": {
+                "cpu": {
+                  "default": "250m",
+                  "title": "cpu",
+                  "type": "string"
+                },
+                "memory": {
+                  "default": "2Gi",
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "cpu",
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "requests",
+            "limits"
+          ],
+          "title": "resources",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "fullnameOverride",
+        "persistence"
+      ],
+      "title": "clickhouse",
+      "type": "object"
+    },
     "customer-portal": {
       "additionalProperties": true,
       "description": "Not GA. labs64/customer-portal-ui publishes no tags. Enable only once you have\na published customer-portal-ui image.",
@@ -614,6 +788,22 @@
         "fullnameOverride"
       ],
       "title": "redis",
+      "type": "object"
+    },
+    "reporting": {
+      "additionalProperties": true,
+      "description": "Reads a tenant's ClickHouse tables; needs `clickhouse`.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "reporting",
       "type": "object"
     },
     "secrets": {

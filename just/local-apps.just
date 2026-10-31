@@ -34,6 +34,10 @@ install-app app extra_values="":
       # Not GA, so not in the default set (helmfile.yaml.gotmpl); asking for it by name installs it.
       STATE_ARGS+=("--state-values-set" "installCheckout=true")
     fi
+    if [ "{{app}}" = "reporting" ]; then
+      # Needs a ClickHouse, so not in the default set either (helmfile.yaml.gotmpl).
+      STATE_ARGS+=("--state-values-set" "installReporting=true")
+    fi
     helmfile -e {{ENV}} $(just _observability-args) "${STATE_ARGS[@]}" apply -l name=labs64io-{{app}} "${ARGS[@]}"
 
 # Point only the existing local Payment Gateway deployment at the host-side PSP stub.
