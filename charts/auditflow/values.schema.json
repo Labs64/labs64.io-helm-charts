@@ -31,13 +31,13 @@
                   "properties": {
                     "create-queues": {
                       "default": true,
-                      "description": "Create missing queues (IAM sqs:CreateQueue on \u003cprefix\u003e*). Tenant DLQs are created on\nfirst use, so with false every tenant's DLQ must exist beforehand",
+                      "description": "Create missing queues (IAM sqs:CreateQueue on <prefix>*). Tenant DLQs are created on\nfirst use, so with false every tenant's DLQ must exist beforehand",
                       "title": "create-queues",
                       "type": "boolean"
                     },
                     "queue-prefix": {
                       "default": "labs64-audit-",
-                      "description": "Queue name prefix: \u003cprefix\u003eingest, \u003cprefix\u003eingest-dlq, \u003cprefix\u003edelivery,\n\u003cprefix\u003equarantine and one \u003cprefix\u003edlq-\u003ctenant\u003e per tenant (at most 40 characters of [A-Za-z0-9_-])",
+                      "description": "Queue name prefix: <prefix>ingest, <prefix>ingest-dlq, <prefix>delivery,\n<prefix>quarantine and one <prefix>dlq-<tenant> per tenant (at most 40 characters of [A-Za-z0-9_-])",
                       "title": "queue-prefix",
                       "type": "string"
                     },
@@ -140,7 +140,7 @@
         },
         "secretRef": {
           "additionalProperties": false,
-          "description": "Resolver for `${secretRef:\u003ckey\u003e}` sink-credential indirection; \"k8s-secret\" reads the\ntenant's own Secret `auditflow-tenant-\u003ctenantId\u003e-creds` (requires rbac.create), \"env\" reads\n`AUDITFLOW_TENANT_\u003cTENANTID\u003e_\u003cKEY\u003e` environment variables",
+          "description": "Resolver for `${secretRef:<key>}` sink-credential indirection; \"k8s-secret\" reads the\ntenant's own Secret `auditflow-tenant-<tenantId>-creds` (requires rbac.create), \"env\" reads\n`AUDITFLOW_TENANT_<TENANTID>_<KEY>` environment variables",
           "properties": {
             "resolver": {
               "default": "k8s-secret",
@@ -384,7 +384,7 @@
               "properties": {
                 "backend": {
                   "default": "redis",
-                  "description": "Per-tenant ingest rate-limit backend; \"redis\" is correct with \u003e1 replica (the\napplication default \"in-memory\" is single-replica only)",
+                  "description": "Per-tenant ingest rate-limit backend; \"redis\" is correct with >1 replica (the\napplication default \"in-memory\" is single-replica only)",
                   "title": "backend",
                   "type": "string"
                 }
@@ -621,7 +621,7 @@
           "properties": {
             "basePath": {
               "default": "",
-              "description": "External base path prepended to the module's OpenAPI paths; defaults to \u003cprefix\u003e/api/v1",
+              "description": "External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1",
               "title": "basePath",
               "type": "string"
             },
@@ -683,7 +683,7 @@
         },
         "prefix": {
           "default": "",
-          "description": "External path prefix; defaults to /\u003cchart-name\u003e",
+          "description": "External path prefix; defaults to /<chart-name>",
           "title": "prefix",
           "type": "string"
         },
@@ -852,7 +852,7 @@
       "properties": {
         "digest": {
           "default": "sha256:d6f4215a5815d7d87c38f5479b9b608cf0f8bfa8f4c858f465a69925e2de2ef4",
-          "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
+          "description": "Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
         },
@@ -1571,7 +1571,7 @@
         },
         "tenantSecretsOnly": {
           "default": false,
-          "description": "Limit the Secret rule below to the credential Secrets of the tenants this release provisions\n(`auditflow-tenant-\u003ctenant\u003e-creds` for `tenants.platform` and every `tenants.additional` entry),\nby name. false lets the backend read every Secret of the namespace, which a tenant onboarded\nout-of-band (a ConfigMap applied after the install) needs for its credentials.",
+          "description": "Limit the Secret rule below to the credential Secrets of the tenants this release provisions\n(`auditflow-tenant-<tenant>-creds` for `tenants.platform` and every `tenants.additional` entry),\nby name. false lets the backend read every Secret of the namespace, which a tenant onboarded\nout-of-band (a ConfigMap applied after the install) needs for its credentials.",
           "title": "tenantSecretsOnly",
           "type": "boolean"
         }
@@ -1847,7 +1847,7 @@
           "properties": {
             "digest": {
               "default": "sha256:53baf537c7c6c9d065b742576c00fa0a081bae5e4b81b60eafd13054f91c2fbd",
-              "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
+              "description": "Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
             },
@@ -2117,7 +2117,7 @@
     },
     "terminationGracePeriodSeconds": {
       "default": 45,
-      "description": "Graceful shutdown: drain in-flight requests / message handlers on rolling\nupdates and scale-in. Keep terminationGracePeriodSeconds \u003e preStop + gracefulShutdown.timeout.",
+      "description": "Graceful shutdown: drain in-flight requests / message handlers on rolling\nupdates and scale-in. Keep terminationGracePeriodSeconds > preStop + gracefulShutdown.timeout.",
       "title": "terminationGracePeriodSeconds",
       "type": "integer"
     },
@@ -2163,12 +2163,19 @@
     "transformer": {
       "additionalProperties": false,
       "properties": {
+        "bootstrapConfigMap": {
+          "default": "",
+          "description": "Name of a ConfigMap of transformer modules (`*.py`) mounted into the transformer's bootstrap\ndirectory, for a module that is not shipped in the image. Empty mounts nothing. The pod also needs\nthe volume: `volumes: [{name: transformers-bootstrap, configMap: {name: <the same name>}}]`.",
+          "required": [],
+          "title": "bootstrapConfigMap",
+          "type": "string"
+        },
         "image": {
           "additionalProperties": false,
           "properties": {
             "digest": {
               "default": "sha256:7e4db4d2221b7051d1383f91e8cdd3a4c56271e27d8741e77575d390701adeb7",
-              "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
+              "description": "Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
             },
