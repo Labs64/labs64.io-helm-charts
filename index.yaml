@@ -3141,6 +3141,35 @@ entries:
     version: 0.0.1
   checkout:
   - apiVersion: v2
+    appVersion: 0.0.11
+    created: "2026-10-31T19:29:38.210392479Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.8.8
+    description: 'Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales
+      Enablement'
+    digest: b0ed4236beafe7d0e0db46ee49a85ccd9880ccbb09df27054e319134d7e3328b
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - ecommerce
+    - checkout
+    maintainers:
+    - email: info@labs64.com
+      name: Labs64
+      url: https://labs64.io
+    name: checkout
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-checkout
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/checkout-0.11.19/checkout-0.11.19.tgz
+    version: 0.11.19
+  - apiVersion: v2
     appVersion: 0.0.10
     created: "2026-10-25T11:14:23.461291456Z"
     dependencies:
@@ -4224,6 +4253,80 @@ entries:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/customer-portal-0.4.0/customer-portal-0.4.0.tgz
     version: 0.4.0
   labs64io-ecosystem:
+  - apiVersion: v2
+    created: "2026-10-31T19:29:38.483656443Z"
+    dependencies:
+    - condition: api-gateway.enabled
+      name: api-gateway
+      repository: file://../api-gateway
+      version: '>=0.1.0'
+    - condition: authz-pdp.enabled
+      name: authz-pdp
+      repository: file://../authz-pdp
+      version: '>=0.1.0'
+    - condition: checkout.enabled
+      name: checkout
+      repository: file://../checkout
+      version: '>=0.1.0'
+    - condition: payment-gateway.enabled
+      name: payment-gateway
+      repository: file://../payment-gateway
+      version: '>=0.1.0'
+    - condition: reporting.enabled
+      name: reporting
+      repository: file://../reporting
+      version: '>=0.1.0'
+    - condition: auditflow.enabled
+      name: auditflow
+      repository: file://../auditflow
+      version: '>=0.1.0'
+    - condition: api-docs.enabled
+      name: api-docs
+      repository: file://../api-docs
+      version: '>=0.1.0'
+    - condition: customer-portal.enabled
+      name: customer-portal
+      repository: file://../customer-portal
+      version: '>=0.1.0'
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 18.12.15
+    - alias: redis
+      condition: redis.enabled
+      name: valkey
+      repository: https://charts.bitnami.com/bitnami
+      version: 6.3.12
+    - condition: traefik.enabled
+      name: traefik
+      repository: https://traefik.github.io/charts
+      version: 42.1.3
+    - condition: mock-oidc.enabled
+      name: mock-oidc
+      repository: file://../mock-oidc
+      version: '>=0.1.0'
+    description: 'Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem
+      and optional infrastructure'
+    digest: 8399c1511d526c0f6eec888d8869754da8d91d9593a5382e6e17e22080bc72aa
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64
+    - labs64io
+    - ecosystem
+    - microservices
+    - platform
+    maintainers:
+    - email: info@labs64.com
+      name: Labs64
+      url: https://labs64.io
+    name: labs64io-ecosystem
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/labs64io-ecosystem-0.20.64/labs64io-ecosystem-0.20.64.tgz
+    version: 0.20.64
   - apiVersion: v2
     created: "2026-10-31T19:24:07.851988341Z"
     dependencies:
@@ -10442,4 +10545,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/reporting-0.1.0/reporting-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-31T19:24:08.012354665Z"
+generated: "2026-10-31T19:29:38.483962866Z"
