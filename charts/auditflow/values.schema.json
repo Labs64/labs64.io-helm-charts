@@ -31,13 +31,13 @@
                   "properties": {
                     "create-queues": {
                       "default": true,
-                      "description": "Create missing queues (IAM sqs:CreateQueue on <prefix>*). Tenant DLQs are created on\nfirst use, so with false every tenant's DLQ must exist beforehand",
+                      "description": "Create missing queues (IAM sqs:CreateQueue on \u003cprefix\u003e*). Tenant DLQs are created on\nfirst use, so with false every tenant's DLQ must exist beforehand",
                       "title": "create-queues",
                       "type": "boolean"
                     },
                     "queue-prefix": {
                       "default": "labs64-audit-",
-                      "description": "Queue name prefix: <prefix>ingest, <prefix>ingest-dlq, <prefix>delivery,\n<prefix>quarantine and one <prefix>dlq-<tenant> per tenant (at most 40 characters of [A-Za-z0-9_-])",
+                      "description": "Queue name prefix: \u003cprefix\u003eingest, \u003cprefix\u003eingest-dlq, \u003cprefix\u003edelivery,\n\u003cprefix\u003equarantine and one \u003cprefix\u003edlq-\u003ctenant\u003e per tenant (at most 40 characters of [A-Za-z0-9_-])",
                       "title": "queue-prefix",
                       "type": "string"
                     },
@@ -140,7 +140,7 @@
         },
         "secretRef": {
           "additionalProperties": false,
-          "description": "Resolver for `${secretRef:<key>}` sink-credential indirection; \"k8s-secret\" reads the\ntenant's own Secret `auditflow-tenant-<tenantId>-creds` (requires rbac.create), \"env\" reads\n`AUDITFLOW_TENANT_<TENANTID>_<KEY>` environment variables",
+          "description": "Resolver for `${secretRef:\u003ckey\u003e}` sink-credential indirection; \"k8s-secret\" reads the\ntenant's own Secret `auditflow-tenant-\u003ctenantId\u003e-creds` (requires rbac.create), \"env\" reads\n`AUDITFLOW_TENANT_\u003cTENANTID\u003e_\u003cKEY\u003e` environment variables",
           "properties": {
             "resolver": {
               "default": "k8s-secret",
@@ -384,7 +384,7 @@
               "properties": {
                 "backend": {
                   "default": "redis",
-                  "description": "Per-tenant ingest rate-limit backend; \"redis\" is correct with >1 replica (the\napplication default \"in-memory\" is single-replica only)",
+                  "description": "Per-tenant ingest rate-limit backend; \"redis\" is correct with \u003e1 replica (the\napplication default \"in-memory\" is single-replica only)",
                   "title": "backend",
                   "type": "string"
                 }
@@ -589,7 +589,7 @@
       "type": "object"
     },
     "extraContainers": {
-      "default": "- name: auditflow-transformer\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.transformer.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-trn\n      containerPort: {{ .Values.transformer.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-transformer\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.transformer.promotedKeys }}\n    - name: AUDITFLOW_PROMOTED_KEYS\n      value: {{ $.Values.transformer.promotedKeys | toJson | quote }}\n  {{- end }}\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-transformer\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  {{- /* Every delivery the backend still finishes during its shutdown (its preStop sleep, then\n  gracefulShutdown.timeout) calls this container on localhost, and all containers of a pod get\n  SIGTERM together: stay up until the backend is done. Needs a timeout in seconds, and the sum\n  must stay below terminationGracePeriodSeconds (45). */}}\n  lifecycle:\n    preStop:\n      exec:\n        command: [\"/bin/sh\", \"-c\", \"sleep {{ add (int ($.Values.lifecycle.preStopDrainSeconds | default 5)) (int (trimSuffix \"s\" ($.Values.gracefulShutdown.timeout | default \"30s\"))) }}\"]\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-trn\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-trn\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.transformer.resources | nindent 8 }}\n\n- name: auditflow-sink\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.sink.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-snk\n      containerPort: {{ .Values.sink.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-sink\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-sink\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  {{- /* Every delivery the backend still finishes during its shutdown (its preStop sleep, then\n  gracefulShutdown.timeout) calls this container on localhost, and all containers of a pod get\n  SIGTERM together: stay up until the backend is done. Needs a timeout in seconds, and the sum\n  must stay below terminationGracePeriodSeconds (45). */}}\n  lifecycle:\n    preStop:\n      exec:\n        command: [\"/bin/sh\", \"-c\", \"sleep {{ add (int ($.Values.lifecycle.preStopDrainSeconds | default 5)) (int (trimSuffix \"s\" ($.Values.gracefulShutdown.timeout | default \"30s\"))) }}\"]\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-snk\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-snk\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.sink.resources | nindent 8 }}\n",
+      "default": "- name: auditflow-transformer\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.transformer.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.transformer.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-trn\n      containerPort: {{ .Values.transformer.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-transformer\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.transformer.promotedKeys }}\n    - name: AUDITFLOW_PROMOTED_KEYS\n      value: {{ $.Values.transformer.promotedKeys | toJson | quote }}\n  {{- end }}\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-transformer\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  {{- /* Every delivery the backend still finishes during its shutdown (its preStop sleep, then\n  gracefulShutdown.timeout) calls this container on localhost, and all containers of a pod get\n  SIGTERM together: stay up until the backend is done. Needs a timeout in seconds, and the sum\n  must stay below terminationGracePeriodSeconds (45). */}}\n  lifecycle:\n    preStop:\n      exec:\n        command: [\"/bin/sh\", \"-c\", \"sleep {{ add (int ($.Values.lifecycle.preStopDrainSeconds | default 5)) (int (trimSuffix \"s\" ($.Values.gracefulShutdown.timeout | default \"30s\"))) }}\"]\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-trn\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-trn\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  {{- if .Values.transformer.bootstrapConfigMap }}\n    - name: transformers-bootstrap\n      mountPath: /home/l64user/transformers_bootstrap\n      readOnly: true\n  {{- end }}\n  resources:\n    {{- toYaml .Values.transformer.resources | nindent 8 }}\n\n- name: auditflow-sink\n  image: '{{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.sink.image \"context\" $) }}'\n  imagePullPolicy: '{{ .Values.sink.image.pullPolicy }}'\n  securityContext:\n    allowPrivilegeEscalation: false\n    readOnlyRootFilesystem: true\n    capabilities:\n      drop:\n        - ALL\n  ports:\n    - name: http-snk\n      containerPort: {{ .Values.sink.service.port }}\n      protocol: TCP\n  env:\n    - name: APP_NAME\n      value: \"auditflow-sink\"\n    - name: HOSTNAME\n      valueFrom:\n        fieldRef:\n          fieldPath: status.podIP\n  {{- if $.Values.observability.enabled }}\n    - name: NODE_IP\n      valueFrom:\n        fieldRef:\n          fieldPath: status.hostIP\n    - name: OTEL_SERVICE_NAME\n      value: \"auditflow-sink\"\n    - name: OTEL_EXPORTER_OTLP_ENDPOINT\n      value: {{ $.Values.observability.otlpEndpoint | quote }}\n    - name: OTEL_EXPORTER_OTLP_PROTOCOL\n      value: \"http/protobuf\"\n    - name: OTEL_PYTHON_LOG_CORRELATION\n      value: \"true\"\n    - name: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED\n      value: \"true\"\n    - name: OTEL_LOGS_EXPORTER\n      value: \"otlp\"\n    - name: OTEL_METRICS_EXPORTER\n      value: \"otlp\"\n  {{- end }}\n  {{- /* Every delivery the backend still finishes during its shutdown (its preStop sleep, then\n  gracefulShutdown.timeout) calls this container on localhost, and all containers of a pod get\n  SIGTERM together: stay up until the backend is done. Needs a timeout in seconds, and the sum\n  must stay below terminationGracePeriodSeconds (45). */}}\n  lifecycle:\n    preStop:\n      exec:\n        command: [\"/bin/sh\", \"-c\", \"sleep {{ add (int ($.Values.lifecycle.preStopDrainSeconds | default 5)) (int (trimSuffix \"s\" ($.Values.gracefulShutdown.timeout | default \"30s\"))) }}\"]\n  livenessProbe:\n    httpGet:\n      path: /live\n      port: http-snk\n    initialDelaySeconds: 10\n    periodSeconds: 10\n    failureThreshold: 3\n    timeoutSeconds: 2\n  readinessProbe:\n    httpGet:\n      path: /ready\n      port: http-snk\n    initialDelaySeconds: 5\n    periodSeconds: 5\n    failureThreshold: 3\n    timeoutSeconds: 2\n  volumeMounts:\n    - name: tmp\n      mountPath: /tmp\n  resources:\n    {{- toYaml .Values.sink.resources | nindent 8 }}\n",
       "title": "extraContainers",
       "type": "string"
     },
@@ -621,7 +621,7 @@
           "properties": {
             "basePath": {
               "default": "",
-              "description": "External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1",
+              "description": "External base path prepended to the module's OpenAPI paths; defaults to \u003cprefix\u003e/api/v1",
               "title": "basePath",
               "type": "string"
             },
@@ -683,7 +683,7 @@
         },
         "prefix": {
           "default": "",
-          "description": "External path prefix; defaults to /<chart-name>",
+          "description": "External path prefix; defaults to /\u003cchart-name\u003e",
           "title": "prefix",
           "type": "string"
         },
@@ -851,8 +851,8 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "sha256:d6f4215a5815d7d87c38f5479b9b608cf0f8bfa8f4c858f465a69925e2de2ef4",
-          "description": "Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
+          "default": "sha256:dd243c0958cc60422c30c545ad7775b92ed754f528c0b03360923e9cea00607d",
+          "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
         },
@@ -1571,7 +1571,7 @@
         },
         "tenantSecretsOnly": {
           "default": false,
-          "description": "Limit the Secret rule below to the credential Secrets of the tenants this release provisions\n(`auditflow-tenant-<tenant>-creds` for `tenants.platform` and every `tenants.additional` entry),\nby name. false lets the backend read every Secret of the namespace, which a tenant onboarded\nout-of-band (a ConfigMap applied after the install) needs for its credentials.",
+          "description": "Limit the Secret rule below to the credential Secrets of the tenants this release provisions\n(`auditflow-tenant-\u003ctenant\u003e-creds` for `tenants.platform` and every `tenants.additional` entry),\nby name. false lets the backend read every Secret of the namespace, which a tenant onboarded\nout-of-band (a ConfigMap applied after the install) needs for its credentials.",
           "title": "tenantSecretsOnly",
           "type": "boolean"
         }
@@ -1846,8 +1846,8 @@
           "additionalProperties": false,
           "properties": {
             "digest": {
-              "default": "sha256:53baf537c7c6c9d065b742576c00fa0a081bae5e4b81b60eafd13054f91c2fbd",
-              "description": "Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
+              "default": "sha256:858fa2ed7dd9593b7625e0e33931996c8f35907aaa867a40b5019079512822dd",
+              "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
             },
@@ -2117,7 +2117,7 @@
     },
     "terminationGracePeriodSeconds": {
       "default": 45,
-      "description": "Graceful shutdown: drain in-flight requests / message handlers on rolling\nupdates and scale-in. Keep terminationGracePeriodSeconds > preStop + gracefulShutdown.timeout.",
+      "description": "Graceful shutdown: drain in-flight requests / message handlers on rolling\nupdates and scale-in. Keep terminationGracePeriodSeconds \u003e preStop + gracefulShutdown.timeout.",
       "title": "terminationGracePeriodSeconds",
       "type": "integer"
     },
@@ -2165,8 +2165,7 @@
       "properties": {
         "bootstrapConfigMap": {
           "default": "",
-          "description": "Name of a ConfigMap of transformer modules (`*.py`) mounted into the transformer's bootstrap\ndirectory, for a module that is not shipped in the image. Empty mounts nothing. The pod also needs\nthe volume: `volumes: [{name: transformers-bootstrap, configMap: {name: <the same name>}}]`.",
-          "required": [],
+          "description": "Name of a ConfigMap of transformer modules (`*.py`) mounted into the transformer's bootstrap\ndirectory, for a module that is not shipped in the image. Empty mounts nothing. The pod also needs\nthe volume: `volumes: [{name: transformers-bootstrap, configMap: {name: \u003cthe same name\u003e}}]`.",
           "title": "bootstrapConfigMap",
           "type": "string"
         },
@@ -2174,8 +2173,8 @@
           "additionalProperties": false,
           "properties": {
             "digest": {
-              "default": "sha256:7e4db4d2221b7051d1383f91e8cdd3a4c56271e27d8741e77575d390701adeb7",
-              "description": "Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
+              "default": "sha256:e46062ea8f7852d275f2c25fa5a4855c5de904df53961268c3e6422951fe8b1a",
+              "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
             },
@@ -2286,6 +2285,7 @@
       "required": [
         "image",
         "service",
+        "bootstrapConfigMap",
         "resources"
       ],
       "title": "transformer",

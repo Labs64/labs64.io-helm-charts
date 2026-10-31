@@ -550,7 +550,7 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "sha256:10a50c4d0ff9d63c6fd1e7b03c3ad5edd329ae7e663a0d204a7e67753d28bcb3",
+          "default": "sha256:9cc96dbebe51474ba4aa7de16c518d6a6afe78f7ad18f6641aee473b37aa05b0",
           "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
