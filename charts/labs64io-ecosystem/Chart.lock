@@ -10,7 +10,7 @@ dependencies:
   version: 0.11.20
 - name: payment-gateway
   repository: file://../payment-gateway
-  version: 0.10.21
+  version: 0.10.22
 - name: reporting
   repository: file://../reporting
   version: 0.1.8
@@ -35,5 +35,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.4
-digest: sha256:e9c2496f6f091eba725ce418123d93ef70cffe5545468d58ab01bfbf37b7b0ef
-generated: "2026-11-03T08:03:17.707353748Z"
+digest: sha256:b277d2ffabe7b5473dc64769ec64b73525d53d898d6488c4700bfe79145e5417
+generated: "2026-11-03T08:08:58.374952626Z"
