@@ -578,6 +578,55 @@ tenants:
             properties:
               log-level: "DEBUG"
               probe-trigger: "${secretRef:regressionMissingKey}"
+        # Pipelines with `steps` (AuditFlow pipeline steps), for pipeline_steps.robot: two logging sinks in order. A
+        # step that fails dead-letters the delivery with how many steps were done (`stepsDone` in the DLQ entry), so
+        # the entry says which step ran last and where a replay resumes.
+        - name: 'probe_steps_second_intentional_fail'
+          enabled: true
+          # The second step always fails (unresolvable secretRef): dead-letter at once, with the first step done.
+          retry:
+            maxAttempts: 1
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'steps_second_fail'
+          steps:
+            - name: 'first'
+              sink:
+                name: 'logging_sink'
+                properties:
+                  log-level: "DEBUG"
+            - name: 'second'
+              sink:
+                name: 'logging_sink'
+                properties:
+                  log-level: "DEBUG"
+                  probe-trigger: "${secretRef:regressionMissingKey}"
+        - name: 'probe_steps_first_intentional_fail'
+          enabled: true
+          # The first step always fails: dead-letter at once, with nothing done, and the second step never runs.
+          retry:
+            maxAttempts: 1
+          condition:
+            match: 'all'
+            rules:
+              - field: 'extra.op'
+                operator: 'eq'
+                value: 'steps_first_fail'
+          steps:
+            - name: 'first'
+              sink:
+                name: 'logging_sink'
+                properties:
+                  log-level: "DEBUG"
+                  probe-trigger: "${secretRef:regressionMissingKey}"
+            - name: 'second'
+              sink:
+                name: 'logging_sink'
+                properties:
+                  log-level: "DEBUG"
     # Dedicated tiny-quota tenant (item 12) so quota_enforcement.robot can trip
     # 429 TENANT_RATE_LIMITED deterministically without affecting t_mock or
     # t_regression's own generous quota.
