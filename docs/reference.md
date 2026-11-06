@@ -75,7 +75,7 @@ graph TB
         subgraph ns_labs64io["Namespace: labs64io (Labs64 Modules)"]
             
             subgraph Gateway["Gateway & Auth"]
-                authproxy["api-gateway"]:::labs64
+                authproxy["Auth Gateway"]:::labs64
                 pdp["authz-pdp (Cerbos)"]:::labs64
             end
             
