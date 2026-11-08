@@ -138,6 +138,12 @@ graph TB
 1. **`tools` Namespace**: Holds all external dependencies (3PP tools). Relies on third-party Helm repositories like Bitnami (Postgres, Valkey) and Traefik; RabbitMQ runs from the local chart in `overrides/rabbitmq/chart` (official image).
 2. **`labs64io` Namespace**: Where all proprietary Labs64 domains execute. All services route internal traffic through the common gateways.
 
+Reference versions: the shared local toolset (`just install-tools`) runs exactly the chart
+versions pinned in `helmfile.yaml.gotmpl` — the single place they are written; print one with
+`just show-chart-version postgresql` (or `redis`, `traefik`, …). RabbitMQ is the official image via
+`overrides/rabbitmq/chart`. For local development, images must be built and pushed to the local
+registry (`localhost:5005`) — see [Building module images](#building-module-images).
+
 ### Request Flow
 
 Traefik receives external requests mapping on ports 80/443 and routes them via Kubernetes Gateway API `HTTPRoute`s (module-owned, attached to the platform `Gateway` `labs64io-gateway` in `tools`). Each protected route strips inbound `X-Auth-*` headers first (native `RequestHeaderModifier`), then calls the `api-gateway` ForwardAuth middleware via an `ExtensionRef` filter. The Auth Gateway validates the `Authorization: Bearer` against the `Mock OIDC Provider` (generating fake JWT tokens for local environments). Validated requests pass through the remaining `api-gateway` middlewares (rate-limit, compress) before hitting the downstream microservices.
