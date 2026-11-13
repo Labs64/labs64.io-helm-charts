@@ -13,7 +13,7 @@ dependencies:
   version: 0.10.24
 - name: reporting
   repository: file://../reporting
-  version: 0.1.10
+  version: 0.1.11
 - name: auditflow
   repository: file://../auditflow
   version: 0.15.35
@@ -35,5 +35,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.4
-digest: sha256:674d13c63b7f9a1c7fa588a59835c519d82d35818ea3964e2900c619aad36aef
-generated: "2026-11-13T20:09:26.548845358Z"
+digest: sha256:1e25a71b9c123d4fd37f87d826587a825f7fb4f529ce1bab2394dd7c1cc90155
+generated: "2026-11-13T20:16:07.541999644Z"
