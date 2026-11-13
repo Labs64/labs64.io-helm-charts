@@ -26,7 +26,7 @@ image:
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
   # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-  digest: "sha256:f39b64f717253873e8533ccbf12adba0cd36678be310aa2ae465e5ac1ecfcd49"
+  digest: "sha256:e19d1f02de1a65aa97fad5217b036f087c08d9d82ad52b0f5e1b9cc0b4d701fb"
 
 transformer:
   image:
@@ -34,7 +34,7 @@ transformer:
     pullPolicy: IfNotPresent
     tag: ""
     # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-    digest: "sha256:5c4c9970a72c17b9a9165beedbe78b490ada3449658c5ef74af18b8314d259ea"
+    digest: "sha256:75089e7a66e94f0f4243c43a8c4853a2f9df822fb60147e645c0c0f3d25e553b"
   # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
@@ -70,7 +70,7 @@ sink:
     pullPolicy: IfNotPresent
     tag: ""
     # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-    digest: "sha256:7e7bdc2962dbf955adecf44afa830a37203edd07333410ce296fe5731307cde4"
+    digest: "sha256:3a4791bc2c8aefea19e76acba86367e76f69043334f2cf97417714a565f77f20"
   # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
     # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
