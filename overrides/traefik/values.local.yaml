@@ -32,6 +32,10 @@ ingressRoute:
 providers:
   kubernetesGateway:
     enabled: true
+  kubernetesCRD:
+    # Explicit: chart 42.4.0 stopped defaulting it, and Traefik then warns at every start. false keeps the
+    # legacy router and middleware names the modules' HTTPRoutes were written against; true renames them.
+    safeNaming: false
 
 # Chart-provisioned GatewayClass (referenced by the Gateway below).
 gatewayClass:

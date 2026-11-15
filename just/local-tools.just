@@ -144,10 +144,13 @@ install-monitoring: install-monitoring-crds
 # "no matches for kind Prometheus/PrometheusRule/ServiceMonitor in version monitoring.coreos.com/v1"
 # on a fresh cluster. Mirrors the Traefik/Gateway API CRD pre-install in `install-crds`.
 #
+# --force-conflicts: on a cluster whose CRDs an earlier release installed (Helm owns the fields), a chart upgrade
+# that changes a CRD would otherwise fail on the field ownership; this step is meant to own them.
+#
 # Install the kube-prometheus-stack CRDs ahead of the monitoring release
 [group('local tools')]
 install-monitoring-crds:
-    helm show crds prometheus-community/kube-prometheus-stack --version "$(just show-chart-version prometheus)" | kubectl apply --server-side -f -
+    helm show crds prometheus-community/kube-prometheus-stack --version "$(just show-chart-version prometheus)" | kubectl apply --server-side --force-conflicts -f -
 
 # Uninstall all monitoring tools
 [group('local tools')]
