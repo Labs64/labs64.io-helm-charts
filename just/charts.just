@@ -45,7 +45,7 @@ generate-docs:
 #
 # Generate values.schema.json for all Helm charts
 [group('charts')]
-generate-schema: install-helm-plugins
+generate-schema: install-helm-plugins _build-chart-dependencies
     #!/usr/bin/env bash
     set -uo pipefail
     helm schema \

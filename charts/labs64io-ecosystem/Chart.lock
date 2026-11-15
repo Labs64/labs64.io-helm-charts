@@ -1,22 +1,22 @@
 dependencies:
 - name: api-gateway
   repository: file://../api-gateway
-  version: 0.15.12
+  version: 0.15.13
 - name: authz-pdp
   repository: file://../authz-pdp
   version: 0.8.10
 - name: checkout
   repository: file://../checkout
-  version: 0.11.20
+  version: 0.11.21
 - name: payment-gateway
   repository: file://../payment-gateway
-  version: 0.10.24
+  version: 0.10.25
 - name: reporting
   repository: file://../reporting
-  version: 0.1.11
+  version: 0.1.12
 - name: auditflow
   repository: file://../auditflow
-  version: 0.15.35
+  version: 0.15.36
 - name: api-docs
   repository: file://../api-docs
   version: 0.9.11
@@ -35,5 +35,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.4
-digest: sha256:545137484de9a138e1d70d6f8b7f935d0e1e5dc5be3392e1dc9a3f511ee4451b
-generated: "2026-11-15T14:53:25.694806+01:00"
+digest: sha256:f94d5c2d1d0de41f44ffa00440dd40263adf47f099870ede11f6b01780a1672b
+generated: "2026-11-15T17:16:50.161836+01:00"

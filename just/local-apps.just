@@ -38,7 +38,7 @@ install-app app extra_values="":
       # Needs a ClickHouse, so not in the default set either (helmfile.yaml.gotmpl).
       STATE_ARGS+=("--state-values-set" "installReporting=true")
     fi
-    helmfile -e {{ENV}} $(just _observability-args) "${STATE_ARGS[@]}" apply -l name=labs64io-{{app}} "${ARGS[@]}"
+    helmfile -e {{ENV}} $(just _observability-args) ${STATE_ARGS[@]+"${STATE_ARGS[@]}"} apply -l name=labs64io-{{app}} ${ARGS[@]+"${ARGS[@]}"}
 
 # Point only the existing local Payment Gateway deployment at the host-side PSP stub.
 # The extra values file deep-merges provider-owned Spring configuration and rolls the PG pod.

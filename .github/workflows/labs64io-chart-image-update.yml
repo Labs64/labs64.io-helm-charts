@@ -140,13 +140,8 @@ jobs:
       - name: Pin the released digests
         run: python3 scripts/update-chart-images.py --event-file event.json
 
-      - name: Generate values schema
-        run: helm schema --chart-search-root ./charts --no-dependencies --append-newline
-
-      - name: Generate docs
-        run: |
-          docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" "jnorwood/helm-docs:v${HELM_DOCS_VERSION}" --chart-search-root ./charts --log-level warning
-
+      # Before the schema is generated: without its dependencies built a module chart's schema is silently not
+      # written, and the digests pinned above would never reach values.schema.json.
       - name: Update chart dependencies
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
@@ -155,6 +150,13 @@ jobs:
             [ -f "$chart_dir/Chart.yaml" ] || continue
             helm dependency update "$chart_dir"
           done
+
+      - name: Generate values schema
+        run: helm schema --chart-search-root ./charts --no-dependencies --append-newline
+
+      - name: Generate docs
+        run: |
+          docker run --rm -v "$(pwd):/helm-docs" -u "$(id -u):$(id -g)" "jnorwood/helm-docs:v${HELM_DOCS_VERSION}" --chart-search-root ./charts --log-level warning
 
       - name: Detect changes
         id: diff

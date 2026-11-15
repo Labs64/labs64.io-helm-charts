@@ -73,15 +73,15 @@ lint-charts: _build-chart-dependencies
             EXTRA_ARGS=(--set demoMode=true)
         fi
         # helm template (syntax + render check)
-        if ! helm template "test-$chart_name" "$chart_dir" "${EXTRA_ARGS[@]}" > /dev/null 2>&1; then
+        if ! helm template "test-$chart_name" "$chart_dir" ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} > /dev/null 2>&1; then
             echo "FAIL: helm template $chart_name"
-            helm template "test-$chart_name" "$chart_dir" "${EXTRA_ARGS[@]}" 2>&1 | tail -5
+            helm template "test-$chart_name" "$chart_dir" ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} 2>&1 | tail -5
             FAILED=1
         fi
         # Render once with the committed values to exercise values.schema.json validation.
-        if ! helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" "${EXTRA_ARGS[@]}" > /dev/null 2>&1; then
+        if ! helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} > /dev/null 2>&1; then
             echo "FAIL: schema validation $chart_name"
-            helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" "${EXTRA_ARGS[@]}" 2>&1 | tail -5
+            helm template "test-$chart_name" "$chart_dir" -f "$chart_dir/values.yaml" ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} 2>&1 | tail -5
             FAILED=1
         fi
         echo "PASS: $chart_name"
