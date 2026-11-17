@@ -141,15 +141,15 @@ jobs:
         run: python3 scripts/update-chart-images.py --event-file event.json
 
       # Before the schema is generated: without its dependencies built a module chart's schema is silently not
-      # written, and the digests pinned above would never reach values.schema.json.
+      # written, and the digests pinned above would never reach values.schema.json. Every chart first, the umbrella
+      # last (it vendors the module charts, deps included): an alphabetical loop packages the umbrella's
+      # payment-gateway without its chart-libs, and helm-schema then fails on the ambiguous dependency. `update`
+      # because the updater bumps the umbrella's dependency versions and leaves its Chart.lock behind.
       - name: Update chart dependencies
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add traefik https://traefik.github.io/charts
-          for chart_dir in charts/*/; do
-            [ -f "$chart_dir/Chart.yaml" ] || continue
-            helm dependency update "$chart_dir"
-          done
+          bash scripts/build-chart-dependencies.sh update
 
       - name: Generate values schema
         run: helm schema --chart-search-root ./charts --no-dependencies --append-newline

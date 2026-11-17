@@ -67,6 +67,26 @@ def test_the_umbrella_is_built_after_every_other_chart_whatever_the_alphabet_say
     assert all(call.startswith("dependency build") for call in log.read_text().splitlines())
 
 
+def test_update_mode_keeps_the_order_and_runs_helm_dependency_update(tmp_path):
+    charts = ["api-docs", UMBRELLA, "payment-gateway"]
+    root, log = make_repo(tmp_path / "repo", charts), tmp_path / "helm.log"
+    fake_helm(tmp_path / "bin", log)
+    env = {**os.environ, "PATH": f"{tmp_path / 'bin'}:{os.environ['PATH']}"}
+    result = subprocess.run(["bash", str(root / "scripts" / SCRIPT.name), "update"], cwd=root, env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    assert built(log)[-1] == f"charts/{UMBRELLA}"
+    assert all(call.startswith("dependency update") for call in log.read_text().splitlines())
+
+
+def test_an_unknown_mode_is_refused_before_helm_runs(tmp_path):
+    root, log = make_repo(tmp_path / "repo", ["a", UMBRELLA]), tmp_path / "helm.log"
+    fake_helm(tmp_path / "bin", log)
+    env = {**os.environ, "PATH": f"{tmp_path / 'bin'}:{os.environ['PATH']}"}
+    result = subprocess.run(["bash", str(root / "scripts" / SCRIPT.name), "wipe"], cwd=root, env=env, capture_output=True, text=True)
+    assert result.returncode == 2
+    assert not log.exists()
+
+
 def test_a_directory_without_a_chart_yaml_is_skipped(tmp_path):
     root, log = make_repo(tmp_path / "repo", ["a", UMBRELLA]), tmp_path / "helm.log"
     fake_helm(tmp_path / "bin", log)
@@ -96,7 +116,7 @@ def test_this_script_is_the_only_place_that_builds_chart_dependencies():
     offenders = []
     for path in [*justfiles(), *sorted((REPO / ".github" / "workflows").glob("*.yml"))]:
         for number, line in enumerate(path.read_text().splitlines(), 1):
-            if re.search(r"helm\s+dependency\s+build", line) and not line.lstrip().startswith("#"):
+            if re.search(r"helm\s+dep(endency)?\s+(build|update)", line) and not line.lstrip().startswith("#"):
                 offenders.append(f"{path.relative_to(REPO)}:{number}: {line.strip()}")
     assert not offenders, "call scripts/build-chart-dependencies.sh instead:\n" + "\n".join(offenders)
 
