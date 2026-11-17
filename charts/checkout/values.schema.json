@@ -442,7 +442,7 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "sha256:f4ca0bc3098441366cf6b6a1a3f95ad1d38a6da69cad0b5a256af44502563156",
+          "default": "sha256:06512575b1190b93bb5411990937618886540e174401ef567aa02fde526521dd",
           "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
@@ -1529,7 +1529,7 @@
           "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
           "properties": {
             "digest": {
-              "default": "sha256:335b83f208154a9035dd1bab6a3be0555f16970a8096e7136fdd5886fdc5b184",
+              "default": "sha256:d6077e2bc66618882efa6c342436241a6e15fb5c2d3f24bb27251d6179d3297f",
               "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
               "title": "digest",
               "type": "string"
