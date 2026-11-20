@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: localhost:5005/traefik-authproxy
+  repository: localhost:5005/authgateway-traefik
   tag: latest
   digest: ""
   pullPolicy: Always
@@ -13,7 +13,7 @@ networkPolicy:
 
 logLevel: DEBUG
 
-# Local development overrides for gateway-common
+# Local development overrides for authgateway
 rateLimit:
   average: 100
   burst: 50

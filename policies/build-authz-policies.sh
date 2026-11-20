@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# generate the Cerbos policy set + authproxy routes manifests from every
+# generate the Cerbos policy set + authgateway routes manifests from every
 # module's OpenAPI OAuth security and x-labs64.auth metadata, via the commons
 # OpenApiAuthPreprocessor.
 #

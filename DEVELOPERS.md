@@ -57,7 +57,7 @@ graph TB
             
             subgraph Gateway["Gateway & Auth"]
                 api_docs["api-docs<br/>(Swagger UI)"]:::labs64
-                authproxy["authgateway<br/>(Auth Gateway + Middlewares)"]:::labs64
+                authgateway["authgateway<br/>(Auth Gateway + Middlewares)"]:::labs64
             end
             
             subgraph AuditFlow["AuditFlow"]
@@ -93,8 +93,8 @@ graph TB
 
     %% User Ingress Flow
     User((Developer)) -->|HTTP 80/443| traefik
-    traefik -.->|"ForwardAuth call (authgateway auth middleware)"| authproxy
-    authproxy -->|Validates JWT against| mock_oidc
+    traefik -.->|"ForwardAuth call (authgateway auth middleware)"| authgateway
+    authgateway -->|Validates JWT against| mock_oidc
     traefik -->|"Routes via Gateway API HTTPRoute (native filters + authgateway middlewares via ExtensionRef)"| api_docs
     traefik --> audit_be
     traefik --> checkout_be
@@ -191,8 +191,8 @@ docker push localhost:5005/payment-gateway:latest
 
 # Python services
 cd ../labs64.io-authgateway
-docker build -t localhost:5005/traefik-authproxy:latest -f traefik/Dockerfile traefik/
-docker push localhost:5005/traefik-authproxy:latest
+docker build -t localhost:5005/authgateway-traefik:latest -f traefik/Dockerfile traefik/
+docker push localhost:5005/authgateway-traefik:latest
 
 # Vue frontends
 cd ../labs64.io-customer-portal
@@ -204,7 +204,7 @@ docker push localhost:5005/customer-portal-ui:latest
 
 ```bash
 curl -s http://localhost:5005/v2/_catalog
-# Should list: auditflow, auditflow-transformer, auditflow-sink, checkout, checkout-ui, payment-gateway, reporting, traefik-authproxy, customer-portal-ui
+# Should list: auditflow, auditflow-transformer, auditflow-sink, checkout, checkout-ui, payment-gateway, reporting, authgateway-traefik, customer-portal-ui
 ```
 
 ## Quick start
@@ -569,7 +569,7 @@ Common causes:
 ### 401/403 on API calls
 
 - Verify token: `just generate-jwt admin`
-- Check the central PDP: `kubectl get deploy,svc -n labs64io -l app.kubernetes.io/name=authz-pdp` and `kubectl exec -n labs64io deploy/labs64io-authz-pdp -- /cerbos healthcheck --kind=grpc` (— the Auth Gateway loads a generated routes manifest and asks Cerbos; there is no `/.well-known/auth-policy` discovery anymore) plus `kubectl exec -n labs64io deploy/gateway-common -- wget -qO- http://localhost:8081/health/ready`
+- Check the central PDP: `kubectl get deploy,svc -n labs64io -l app.kubernetes.io/name=authz-pdp` and `kubectl exec -n labs64io deploy/labs64io-authz-pdp -- /cerbos healthcheck --kind=grpc` (— the Auth Gateway loads a generated routes manifest and asks Cerbos; there is no `/.well-known/auth-policy` discovery anymore) plus `kubectl exec -n labs64io deploy/authgateway -- wget -qO- http://localhost:8081/health/ready`
 - Check static UI policies: `kubectl get configmap -n labs64io -l app.kubernetes.io/name=authgateway -o yaml` (renders `static_policies.yaml` from `staticPolicies`)
 - Check the Auth Gateway logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=authgateway`
 

@@ -179,7 +179,7 @@ spec:
 
 {{/*
 Security response headers as a Gateway API ResponseHeaderModifier `set` list.
-Canonical source (replaces the removed gateway-common security-headers Middleware).
+Canonical source (replaces the removed authgateway security-headers Middleware).
 Values mirror the prior Traefik headers-middleware semantics 1:1.
 Usage: {{ include "chart-libs.securityHeaders" . | nindent N }}
 */}}
@@ -199,7 +199,7 @@ Usage: {{ include "chart-libs.securityHeaders" . | nindent N }}
 {{- end }}
 
 {{/*
-Auth-policy discovery metadata for the module Service. The traefik-authproxy
+Auth-policy discovery metadata for the module Service. The Auth Gateway
 watches Services carrying the label and fetches
 http://<svc>.<ns>:<port>/.well-known/auth-policy, prefixing every OpenAPI
 route with the base-path annotation.

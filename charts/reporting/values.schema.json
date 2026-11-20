@@ -178,7 +178,7 @@
         },
         "authPolicy": {
           "additionalProperties": false,
-          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/authgateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
+          "description": "Auth-policy publication. NOTE: the Auth Gateway no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/authgateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
           "properties": {
             "basePath": {
               "default": "",
@@ -249,7 +249,7 @@
           "type": "string"
         },
         "routes": {
-          "description": "Routes exposed by this module.\nThe whole API surface is ONE route through ForwardAuth: the authproxy is the\nPEP and derives public-vs-protected per operation from OpenAPI OAuth security\nplus x-labs64.auth\n(generated into the authproxy routes manifest + the central Cerbos PDP). Public\noperations.",
+          "description": "Routes exposed by this module.\nThe whole API surface is ONE route through ForwardAuth: the Auth Gateway is the\nPEP and derives public-vs-protected per operation from OpenAPI OAuth security\nplus x-labs64.auth\n(generated into the Auth Gateway routes manifest + the central Cerbos PDP). Public\noperations.",
           "items": {
             "anyOf": [
               {
@@ -318,20 +318,20 @@
         },
         "sharedMiddlewares": {
           "additionalProperties": false,
-          "description": "Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)",
+          "description": "Names of the shared middlewares provided by the authgateway chart (fullnameOverride: authgateway)",
           "properties": {
             "auth": {
-              "default": "gateway-common-auth",
+              "default": "authgateway-auth",
               "title": "auth",
               "type": "string"
             },
             "compress": {
-              "default": "gateway-common-compress",
+              "default": "authgateway-compress",
               "title": "compress",
               "type": "string"
             },
             "rateLimit": {
-              "default": "gateway-common-ratelimit",
+              "default": "authgateway-ratelimit",
               "title": "rateLimit",
               "type": "string"
             }

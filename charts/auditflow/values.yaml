@@ -506,13 +506,13 @@ gateway:
   parentRefs:
     - name: labs64io-gateway
       namespace: tools
-  # -- Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)
+  # -- Names of the shared middlewares provided by the authgateway chart (fullnameOverride: authgateway)
   sharedMiddlewares:
-    auth: gateway-common-auth
-    rateLimit: gateway-common-ratelimit
-    compress: gateway-common-compress
-    buffering: gateway-common-buffering
-  # -- Auth-policy publication. NOTE: the traefik-authproxy no longer
+    auth: authgateway-auth
+    rateLimit: authgateway-ratelimit
+    compress: authgateway-compress
+    buffering: authgateway-buffering
+  # -- Auth-policy publication. NOTE: the Auth Gateway no longer
   # live-discovers per-module policies via /.well-known/auth-policy — it loads a
   # generated routes manifest (charts/authgateway/routes/) and asks the
   # central Cerbos PDP for every decision. This block is retained for backward

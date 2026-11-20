@@ -12,7 +12,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 | `charts/reporting/` | Reporting: read API over ClickHouse and S3. No catalogue of its own: a deployment mounts it |
 | `charts/customer-portal/` | Customer portal UI (no backend yet; `ui.enabled`, templates prefixed `ui-*`) |
 | `charts/api-docs/` | Swagger UI aggregator (formerly `swagger-ui`) |
-| `charts/authgateway/` | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (merged `traefik-authproxy` + `gateway-common`; `fullnameOverride: gateway-common` keeps the stable middleware-name prefix) |
+| `charts/authgateway/` | ForwardAuth OIDC/JWT verifier + shared Traefik middlewares (merged `authgateway-traefik` + `authgateway`; `fullnameOverride: authgateway` keeps the stable middleware-name prefix) |
 | `charts/authz-pdp/` | Cerbos PDP — central authorization decision point (formerly `cerbos`) |
 | `charts/preflight/` | Infrastructure readiness checks |
 | `charts/chart-libs/` | Shared Helm library (all charts depend on this) |

@@ -1,8 +1,8 @@
 # authgateway
 
-![Version: 0.15.16](https://img.shields.io/badge/Version-0.15.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.8](https://img.shields.io/badge/AppVersion-0.1.8-informational?style=flat-square)
+![Version: 0.15.17](https://img.shields.io/badge/Version-0.15.17-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.9](https://img.shields.io/badge/AppVersion-0.1.9-informational?style=flat-square)
 
-Labs64.IO :: Auth Gateway (AuthProxy + Middlewares)
+Labs64.IO :: Auth Gateway (ForwardAuth + Middlewares)
 
 **Homepage:** <https://labs64.io>
 
@@ -21,7 +21,7 @@ Labs64.IO :: Auth Gateway (AuthProxy + Middlewares)
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.9 |
+| file://../chart-libs | chart-libs | 0.8.10 |
 
 ## Values
 
@@ -29,13 +29,13 @@ Labs64.IO :: Auth Gateway (AuthProxy + Middlewares)
 |-----|------|---------|-------------|
 | affinity | object | `{}` |  |
 | applicationType | string | `"python"` | Security response headers are now emitted as a native Gateway API ResponseHeaderModifier filter on each HTTPRoute rule; the canonical values live in the chart-libs "chart-libs.securityHeaders" helper. (The former Traefik security-headers Middleware has been removed.) |
-| authProxy | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"],"maxResponseBodySize":8192,"port":8081,"serviceName":"gateway-common","trustForwardHeader":false}` | ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container) |
-| authProxy.address | string | `""` | Full URL override for the /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth |
-| authProxy.authResponseHeaders | list | `["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"]` | Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through) |
-| authProxy.maxResponseBodySize | int | `8192` | Maximum size (bytes) of the authproxy's /auth response Traefik will read. The response carries only identity headers and no body, so this is a DoS guard, not a functional limit — set well above authResponseHeaders' combined size. |
-| authProxy.port | int | `8081` | Service port of the authproxy container |
-| authProxy.serviceName | string | `"gateway-common"` | Service name backing the ForwardAuth address. Must match fullnameOverride above since the authproxy Service is rendered by this same chart. |
-| authProxy.trustForwardHeader | bool | `false` | Pass a caller-supplied X-Forwarded-Method / X-Forwarded-Uri on to the authproxy instead of the method and path Traefik actually serves. Keep it false: the authproxy authorises whatever those two headers name, so with true a caller behind a trusted proxy (the entry point's forwardedHeaders.trustedIPs, e.g. a load balancer that passes request headers through) could have a protected route checked as a public one. |
+| authGateway | object | `{"address":"","authResponseHeaders":["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"],"maxResponseBodySize":8192,"port":8081,"serviceName":"authgateway","trustForwardHeader":false}` | ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authgateway container) |
+| authGateway.address | string | `""` | Full URL override for the /auth endpoint; when empty the address is derived as http://<serviceName>.<release-namespace>.svc.cluster.local:<port>/auth |
+| authGateway.authResponseHeaders | list | `["X-Auth-User","X-Auth-Scopes","X-Auth-Tenant","X-Request-ID"]` | Identity headers copied from the Auth Gateway response onto the upstream request (the Auth Gateway emits every one on each 2xx, so client values can never pass through) |
+| authGateway.maxResponseBodySize | int | `8192` | Maximum size (bytes) of the Auth Gateway's /auth response Traefik will read. The response carries only identity headers and no body, so this is a DoS guard, not a functional limit — set well above authResponseHeaders' combined size. |
+| authGateway.port | int | `8081` | Service port of the Auth Gateway container |
+| authGateway.serviceName | string | `"authgateway"` | Service name backing the ForwardAuth address. Must match fullnameOverride above since the Auth Gateway Service is rendered by this same chart. |
+| authGateway.trustForwardHeader | bool | `false` | Pass a caller-supplied X-Forwarded-Method / X-Forwarded-Uri on to the Auth Gateway instead of the method and path Traefik actually serves. Keep it false: the Auth Gateway authorises whatever those two headers name, so with true a caller behind a trusted proxy (the entry point's forwardedHeaders.trustedIPs, e.g. a load balancer that passes request headers through) could have a protected route checked as a public one. |
 | autoscaling | object | `{"enabled":false,"maxReplicas":3,"minReplicas":1,"targetCPUUtilizationPercentage":80}` | This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/ |
 | buffering | object | `{"enabled":true,"maxRequestBodyBytes":2621440}` | Buffering middleware configuration (limits payload sizes to prevent OOM / large event attacks) |
 | buffering.enabled | bool | `true` | Enable the shared buffering middleware |
@@ -52,9 +52,9 @@ Labs64.IO :: Auth Gateway (AuthProxy + Middlewares)
 | externalSecrets.secretKey | string | `""` | Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname. |
 | externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
 | extraConfigChecksums | list | `["configmap-routes","configmap-static-policies"]` | Roll the ACS whenever the generated routes / static-route ConfigMaps change (checksum/config already covers configmap.yaml; these are the extra dynamically generated ConfigMaps this chart mounts). |
-| fullnameOverride | string | `"gateway-common"` | Fixed resource-name prefix (instead of the default "<release>-authgateway") so module charts can reference the shared middlewares by a stable name regardless of release name. Also fixes the name of this chart's own Deployment/Service, which is why authProxy.serviceName below must match this value. |
-| image | object | `{"digest":"sha256:c66e36110863cb18b34cb58a6cd5e0abb25589486845140e940f0fc61b18102c","pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
-| image.digest | string | `"sha256:c66e36110863cb18b34cb58a6cd5e0abb25589486845140e940f0fc61b18102c"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| fullnameOverride | string | `"authgateway"` | Fixed resource-name prefix (instead of the default "<release>-authgateway") so module charts can reference the shared middlewares by a stable name regardless of release name. Also fixes the name of this chart's own Deployment/Service, which is why authGateway.serviceName below must match this value. |
+| image | object | `{"digest":"sha256:9df24d9612b93b7defe3ac8cd6fe2051fd3b4e81c7068a5a4bebb5cc37f65036","pullPolicy":"IfNotPresent","repository":"labs64/authgateway-traefik","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image.digest | string | `"sha256:9df24d9612b93b7defe3ac8cd6fe2051fd3b4e81c7068a5a4bebb5cc37f65036"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
@@ -72,7 +72,7 @@ Labs64.IO :: Auth Gateway (AuthProxy + Middlewares)
 | nodeSelector | object | `{}` |  |
 | observability | object | `{"enabled":false,"metricsScrape":false,"otlpEndpoint":"http://$(NODE_IP):4318"}` | Observability is infrastructure-owned: the same image runs with or without it. When enabled, the image's opentelemetry-instrument entrypoint auto-instruments FastAPI (traces + correlated logs + metrics via OTLP). |
 | observability.enabled | bool | `false` | Enable runtime auto-instrumentation (traces + logs + metrics via OTLP) |
-| observability.metricsScrape | bool | `false` | Emit prometheus.io/* scrape annotations. Disabled here: the authproxy is a FastAPI service that pushes metrics over OTLP and serves no Prometheus endpoint (its only routes are /health, /health/ready, /reload and /auth). With this on, the collector scraped /actuator/prometheus on the service port and logged a 404 every interval. |
+| observability.metricsScrape | bool | `false` | Emit prometheus.io/* scrape annotations. Disabled here: the Auth Gateway is a FastAPI service that pushes metrics over OTLP and serves no Prometheus endpoint (its only routes are /health, /health/ready, /reload and /auth). With this on, the collector scraped /actuator/prometheus on the service port and logged a 404 every interval. |
 | observability.otlpEndpoint | string | `"http://$(NODE_IP):4318"` | OTLP endpoint of the OpenTelemetry Collector |
 | oidc | object | `{"audience":"account","discoveryUrl":"http://keycloak-http.tools.svc.cluster.local/realms/labs64io/.well-known/openid-configuration","issuer":"","scopesClaimPaths":"scope,realm_access.roles,resource_access.{audience}.roles","tenantClaimPath":"tenant"}` | OIDC provider settings. Rendered into this chart's ConfigMap and delivered via envFrom, as scalars rather than a raw env list: Helm replaces lists wholesale on merge, so with a list a caller overriding one field had to restate all eight — and silently lost any entry added upstream later. |
 | oidc.audience | string | `"account"` | Expected JWT audience. |
@@ -90,7 +90,7 @@ Labs64.IO :: Auth Gateway (AuthProxy + Middlewares)
 | rateLimit.global | bool | `false` | One bucket per request host instead of per user: a fixed ceiling on the gateway's total ingress, identical for every caller, with per-tenant limits left to the services. Overrides perUser. Traefik keeps buckets in memory, so the ceiling applies per Traefik replica. |
 | rateLimit.perUser | bool | `true` | Rate-limit per authenticated user (X-Auth-User header set by the auth middleware); falls back to per-IP when absent |
 | readinessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/health/ready","port":8081},"initialDelaySeconds":0,"periodSeconds":5,"timeoutSeconds":2}` | This is to setup the readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
-| replicaCount | int | `2` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ The authproxy sits on the hot path of every protected request - keep at least 2 replicas. |
+| replicaCount | int | `2` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ The Auth Gateway sits on the hot path of every protected request - keep at least 2 replicas. |
 | resources.limits.cpu | string | `"200m"` |  |
 | resources.limits.memory | string | `"256Mi"` |  |
 | resources.requests.cpu | string | `"50m"` |  |

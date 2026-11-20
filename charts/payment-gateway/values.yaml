@@ -302,12 +302,12 @@ gateway:
   parentRefs:
     - name: labs64io-gateway
       namespace: tools
-  # -- Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)
+  # -- Names of the shared middlewares provided by the authgateway chart (fullnameOverride: authgateway)
   sharedMiddlewares:
-    auth: gateway-common-auth
-    rateLimit: gateway-common-ratelimit
-    compress: gateway-common-compress
-  # -- Auth-policy publication. NOTE: the traefik-authproxy no longer
+    auth: authgateway-auth
+    rateLimit: authgateway-ratelimit
+    compress: authgateway-compress
+  # -- Auth-policy publication. NOTE: the Auth Gateway no longer
   # live-discovers per-module policies via /.well-known/auth-policy — it loads a
   # generated routes manifest (charts/authgateway/routes/) and asks the
   # central Cerbos PDP for every decision. This block is retained for backward
@@ -318,12 +318,12 @@ gateway:
     # -- External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1
     basePath: ""
   # -- Routes exposed by this module.
-  # The whole API surface is ONE route through ForwardAuth: the authproxy is the
+  # The whole API surface is ONE route through ForwardAuth: the Auth Gateway is the
   # PEP and derives public-vs-protected per operation from OpenAPI OAuth security
   # plus x-labs64.auth
-  # (generated into the authproxy routes manifest + the central Cerbos PDP). Public
+  # (generated into the Auth Gateway routes manifest + the central Cerbos PDP). Public
   # operations (payment-definitions, PSP webhooks, provider/checkout redirect returns
-  # — none can carry a JWT) are allowed without a token by the authproxy itself, so
+  # — none can carry a JWT) are allowed without a token by the Auth Gateway itself, so
   # they MUST NOT be re-declared here. Re-declaring them as edge routes duplicates
   # the OpenAPI PEP and mis-strips their paths. OpenAPI stays the single source of truth.
   routes:
@@ -333,7 +333,7 @@ gateway:
       port: 8080
       stripPath: true
     # -- OpenAPI docs (springdoc endpoint — NOT an OpenAPI operation, so it has no
-    # generated OpenAPI auth policy at the authproxy; public at the edge, prefix stripped)
+    # generated OpenAPI auth policy at the Auth Gateway; public at the edge, prefix stripped)
     - path: /v3/api-docs
       port: 8080
       public: true

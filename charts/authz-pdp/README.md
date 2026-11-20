@@ -1,6 +1,6 @@
 # authz-pdp
 
-![Version: 0.8.11](https://img.shields.io/badge/Version-0.8.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.57.0](https://img.shields.io/badge/AppVersion-0.57.0-informational?style=flat-square)
+![Version: 0.8.12](https://img.shields.io/badge/Version-0.8.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.57.0](https://img.shields.io/badge/AppVersion-0.57.0-informational?style=flat-square)
 
 Labs64.IO :: Cerbos PDP — central authorization decision point
 
@@ -21,7 +21,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.9 |
+| file://../chart-libs | chart-libs | 0.8.10 |
 
 ## Values
 
@@ -44,7 +44,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 | livenessProbe.initialDelaySeconds | int | `10` |  |
 | livenessProbe.periodSeconds | int | `15` |  |
 | nameOverride | string | `""` |  |
-| networkPolicy | object | `{"enabled":true,"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring"}` | Restrict ingress to same-namespace callers (authproxy + module apps). The chart-libs helper allows all same-namespace pods on all ports; no egress needed. |
+| networkPolicy | object | `{"enabled":true,"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring"}` | Restrict ingress to same-namespace callers (authgateway + module apps). The chart-libs helper allows all same-namespace pods on all ports; no egress needed. |
 | networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
 | networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | nodeSelector | object | `{}` |  |
@@ -70,7 +70,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 | securityContext.runAsUser | int | `1064` |  |
 | securityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | service.grpcPort | int | `3593` |  |
-| service.httpPort | int | `3592` | HTTP API (authproxy edge client) and gRPC API (Java @Authorize SDK). |
+| service.httpPort | int | `3592` | HTTP API (authgateway edge client) and gRPC API (Java @Authorize SDK). |
 | service.port | int | `3592` | Alias of httpPort: chart-libs' shared NetworkPolicy helper (monitoring ingress rule) reads .Values.service.port, not the httpPort/grpcPort pair below. Cerbos serves Prometheus metrics on the HTTP listener. |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |

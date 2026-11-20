@@ -214,7 +214,7 @@
         },
         "authPolicy": {
           "additionalProperties": false,
-          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/authgateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
+          "description": "Auth-policy publication. NOTE: the Auth Gateway no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/authgateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
           "properties": {
             "basePath": {
               "default": "",
@@ -354,20 +354,20 @@
         },
         "sharedMiddlewares": {
           "additionalProperties": false,
-          "description": "Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)",
+          "description": "Names of the shared middlewares provided by the authgateway chart (fullnameOverride: authgateway)",
           "properties": {
             "auth": {
-              "default": "gateway-common-auth",
+              "default": "authgateway-auth",
               "title": "auth",
               "type": "string"
             },
             "compress": {
-              "default": "gateway-common-compress",
+              "default": "authgateway-compress",
               "title": "compress",
               "type": "string"
             },
             "rateLimit": {
-              "default": "gateway-common-ratelimit",
+              "default": "authgateway-ratelimit",
               "title": "rateLimit",
               "type": "string"
             }
@@ -1485,20 +1485,20 @@
             },
             "sharedMiddlewares": {
               "additionalProperties": false,
-              "description": "Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)",
+              "description": "Names of the shared middlewares provided by the authgateway chart (fullnameOverride: authgateway)",
               "properties": {
                 "auth": {
-                  "default": "gateway-common-auth",
+                  "default": "authgateway-auth",
                   "title": "auth",
                   "type": "string"
                 },
                 "compress": {
-                  "default": "gateway-common-compress",
+                  "default": "authgateway-compress",
                   "title": "compress",
                   "type": "string"
                 },
                 "rateLimit": {
-                  "default": "gateway-common-ratelimit",
+                  "default": "authgateway-ratelimit",
                   "title": "rateLimit",
                   "type": "string"
                 }

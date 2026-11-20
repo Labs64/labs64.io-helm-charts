@@ -119,15 +119,15 @@ ui:
     parentRefs:
       - name: labs64io-gateway
         namespace: tools
-    # -- Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)
+    # -- Names of the shared middlewares provided by the authgateway chart (fullnameOverride: authgateway)
     sharedMiddlewares:
-      auth: gateway-common-auth
-      rateLimit: gateway-common-ratelimit
-      compress: gateway-common-compress
+      auth: authgateway-auth
+      rateLimit: authgateway-ratelimit
+      compress: authgateway-compress
     # -- Routes exposed by this module
     routes:
       # -- Customer Portal UI static assets. Public: a plain browser navigation can't
-      # attach a Bearer token, and the auth-proxy's ForwardAuth policy set is generated
+      # attach a Bearer token, and the Auth Gateway's ForwardAuth policy set is generated
       # from module OpenAPI specs, so it has no entry for a bare UI path anyway (would
       # 403 regardless). This module has no backend API of its own yet.
       - path: ""

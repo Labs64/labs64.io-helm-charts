@@ -14,9 +14,9 @@
       "title": "applicationType",
       "type": "string"
     },
-    "authProxy": {
+    "authGateway": {
       "additionalProperties": false,
-      "description": "ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authproxy container)",
+      "description": "ForwardAuth middleware configuration (OIDC/JWT validation via this chart's own authgateway container)",
       "properties": {
         "address": {
           "default": "",
@@ -25,7 +25,7 @@
           "type": "string"
         },
         "authResponseHeaders": {
-          "description": "Identity headers copied from the authproxy response onto the upstream request (the authproxy emits every one on each 2xx, so client values can never pass through)",
+          "description": "Identity headers copied from the Auth Gateway response onto the upstream request (the Auth Gateway emits every one on each 2xx, so client values can never pass through)",
           "items": {
             "anyOf": [
               {
@@ -48,25 +48,25 @@
         },
         "maxResponseBodySize": {
           "default": 8192,
-          "description": "Maximum size (bytes) of the authproxy's /auth response Traefik will read. The\nresponse carries only identity headers and no body, so this is a DoS guard, not a\nfunctional limit — set well above authResponseHeaders' combined size.",
+          "description": "Maximum size (bytes) of the Auth Gateway's /auth response Traefik will read. The\nresponse carries only identity headers and no body, so this is a DoS guard, not a\nfunctional limit — set well above authResponseHeaders' combined size.",
           "title": "maxResponseBodySize",
           "type": "integer"
         },
         "port": {
           "default": 8081,
-          "description": "Service port of the authproxy container",
+          "description": "Service port of the Auth Gateway container",
           "title": "port",
           "type": "integer"
         },
         "serviceName": {
-          "default": "gateway-common",
-          "description": "Service name backing the ForwardAuth address. Must match fullnameOverride above\nsince the authproxy Service is rendered by this same chart.",
+          "default": "authgateway",
+          "description": "Service name backing the ForwardAuth address. Must match fullnameOverride above\nsince the Auth Gateway Service is rendered by this same chart.",
           "title": "serviceName",
           "type": "string"
         },
         "trustForwardHeader": {
           "default": false,
-          "description": "Pass a caller-supplied X-Forwarded-Method / X-Forwarded-Uri on to the authproxy instead of\nthe method and path Traefik actually serves. Keep it false: the authproxy authorises whatever\nthose two headers name, so with true a caller behind a trusted proxy (the entry point's\nforwardedHeaders.trustedIPs, e.g. a load balancer that passes request headers through) could\nhave a protected route checked as a public one.",
+          "description": "Pass a caller-supplied X-Forwarded-Method / X-Forwarded-Uri on to the Auth Gateway instead of\nthe method and path Traefik actually serves. Keep it false: the Auth Gateway authorises whatever\nthose two headers name, so with true a caller behind a trusted proxy (the entry point's\nforwardedHeaders.trustedIPs, e.g. a load balancer that passes request headers through) could\nhave a protected route checked as a public one.",
           "title": "trustForwardHeader",
           "type": "boolean"
         }
@@ -79,7 +79,7 @@
         "maxResponseBodySize",
         "authResponseHeaders"
       ],
-      "title": "authProxy",
+      "title": "authGateway",
       "type": "object"
     },
     "autoscaling": {
@@ -271,8 +271,8 @@
       "type": "array"
     },
     "fullnameOverride": {
-      "default": "gateway-common",
-      "description": "Fixed resource-name prefix (instead of the default \"\u003crelease\u003e-authgateway\") so\nmodule charts can reference the shared middlewares by a stable name regardless of\nrelease name. Also fixes the name of this chart's own Deployment/Service, which is\nwhy authProxy.serviceName below must match this value.",
+      "default": "authgateway",
+      "description": "Fixed resource-name prefix (instead of the default \"\u003crelease\u003e-authgateway\") so\nmodule charts can reference the shared middlewares by a stable name regardless of\nrelease name. Also fixes the name of this chart's own Deployment/Service, which is\nwhy authGateway.serviceName below must match this value.",
       "title": "fullnameOverride",
       "type": "string"
     },
@@ -287,7 +287,7 @@
       "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
       "properties": {
         "digest": {
-          "default": "sha256:c66e36110863cb18b34cb58a6cd5e0abb25589486845140e940f0fc61b18102c",
+          "default": "sha256:9df24d9612b93b7defe3ac8cd6fe2051fd3b4e81c7068a5a4bebb5cc37f65036",
           "description": "Pin the image by digest (`sha256:\u003c64 hex\u003e`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.",
           "title": "digest",
           "type": "string"
@@ -299,7 +299,7 @@
           "type": "string"
         },
         "repository": {
-          "default": "labs64/traefik-authproxy",
+          "default": "labs64/authgateway-traefik",
           "title": "repository",
           "type": "string"
         },
@@ -599,7 +599,7 @@
         },
         "metricsScrape": {
           "default": false,
-          "description": "Emit prometheus.io/* scrape annotations. Disabled here: the authproxy is a FastAPI\nservice that pushes metrics over OTLP and serves no Prometheus endpoint (its only\nroutes are /health, /health/ready, /reload and /auth). With this on, the collector\nscraped /actuator/prometheus on the service port and logged a 404 every interval.",
+          "description": "Emit prometheus.io/* scrape annotations. Disabled here: the Auth Gateway is a FastAPI\nservice that pushes metrics over OTLP and serves no Prometheus endpoint (its only\nroutes are /health, /health/ready, /reload and /auth). With this on, the collector\nscraped /actuator/prometheus on the service port and logged a 404 every interval.",
           "title": "metricsScrape",
           "type": "boolean"
         },
@@ -801,7 +801,7 @@
     },
     "replicaCount": {
       "default": 2,
-      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/\nThe authproxy sits on the hot path of every protected request - keep at least 2 replicas.",
+      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/\nThe Auth Gateway sits on the hot path of every protected request - keep at least 2 replicas.",
       "title": "replicaCount",
       "type": "integer"
     },
@@ -1444,7 +1444,7 @@
     "staticPolicies",
     "podDisruptionBudget",
     "networkPolicy",
-    "authProxy",
+    "authGateway",
     "rateLimit",
     "buffering",
     "compress",

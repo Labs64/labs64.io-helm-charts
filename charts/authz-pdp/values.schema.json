@@ -175,7 +175,7 @@
     },
     "networkPolicy": {
       "additionalProperties": false,
-      "description": "Restrict ingress to same-namespace callers (authproxy + module apps). The\nchart-libs helper allows all same-namespace pods on all ports; no egress needed.",
+      "description": "Restrict ingress to same-namespace callers (authgateway + module apps). The\nchart-libs helper allows all same-namespace pods on all ports; no egress needed.",
       "properties": {
         "enabled": {
           "default": true,
@@ -445,7 +445,7 @@
         },
         "httpPort": {
           "default": 3592,
-          "description": "HTTP API (authproxy edge client) and gRPC API (Java",
+          "description": "HTTP API (authgateway edge client) and gRPC API (Java",
           "title": "httpPort",
           "type": "integer"
         },

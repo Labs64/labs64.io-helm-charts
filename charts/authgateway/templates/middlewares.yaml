@@ -6,15 +6,15 @@ metadata:
     {{- include "chart-libs.labels" . | nindent 4 }}
 spec:
   forwardAuth:
-    address: {{ .Values.authProxy.address | default (printf "http://%s.%s.svc.cluster.local:%v/auth" .Values.authProxy.serviceName .Release.Namespace .Values.authProxy.port) | quote }}
-    trustForwardHeader: {{ .Values.authProxy.trustForwardHeader }}
-    maxResponseBodySize: {{ .Values.authProxy.maxResponseBodySize }}
+    address: {{ .Values.authGateway.address | default (printf "http://%s.%s.svc.cluster.local:%v/auth" .Values.authGateway.serviceName .Release.Namespace .Values.authGateway.port) | quote }}
+    trustForwardHeader: {{ .Values.authGateway.trustForwardHeader }}
+    maxResponseBodySize: {{ .Values.authGateway.maxResponseBodySize }}
     authResponseHeaders:
-      {{- toYaml .Values.authProxy.authResponseHeaders | nindent 6 }}
+      {{- toYaml .Values.authGateway.authResponseHeaders | nindent 6 }}
 ---
 # NOTE: inbound X-Auth-* stripping is now a native Gateway API RequestHeaderModifier
 # filter emitted first in every route by chart-libs.gateway-routes (spec §3.2). The
-# former gateway-common-strip-auth-headers Middleware was removed 2026-07-12 after the
+# former authgateway-strip-auth-headers Middleware was removed 2026-07-12 after the
 # live ordering gate proved the native filter runs before the ExtensionRef ForwardAuth.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware

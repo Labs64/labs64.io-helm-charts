@@ -66,10 +66,10 @@ generate-schema: install-helm-plugins _build-chart-dependencies
 [group('charts')]
 generate-all: generate-docs generate-schema
 
-# Generate the Cerbos policy set + authproxy routes manifests from module OpenAPI
+# Generate the Cerbos policy set + authgateway routes manifests from module OpenAPI
 # specs. Writes charts/authz-pdp/{policies,schemas} + charts/authgateway/routes.
 #
-# Generate the Cerbos policies and authproxy routes from the module OpenAPI specs
+# Generate the Cerbos policies and authgateway routes from the module OpenAPI specs
 [group('charts')]
 generate-policies:
     ./policies/build-authz-policies.sh

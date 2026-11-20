@@ -1,5 +1,5 @@
 # Hand-authored: gateway surfaces without an OpenAPI spec (UI bundles).
-# Routing metadata lives in the authproxy's static_routes.yaml; THIS decides.
+# Routing metadata lives in the Auth Gateway's static_routes.yaml; THIS decides.
 # Mirrors the retired static policy semantics.
 apiVersion: api.cerbos.dev/v1
 resourcePolicy:

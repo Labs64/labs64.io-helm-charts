@@ -226,7 +226,7 @@ check_prereqs() {
   printf '\n  Cluster context: %s\n' "$ctx" >> "$LOGFILE"
   printf '  Namespaces:      %s — modules, bundled infra (PostgreSQL/RabbitMQ/Redis), and\n' "$NS_MODULES" >> "$LOGFILE"
   printf '                   the gateway workload itself (%s-traefik, and the ForwardAuth\n' "$RELEASE" >> "$LOGFILE"
-  printf '                   proxy "gateway-common") all run here\n' >> "$LOGFILE"
+  printf '                   proxy "authgateway") all run here\n' >> "$LOGFILE"
   printf '                   %s — holds only the Gateway API Gateway object; no pods\n' "$NS_GATEWAY" >> "$LOGFILE"
   printf '                   are ever created here\n' >> "$LOGFILE"
 
@@ -239,7 +239,7 @@ check_prereqs() {
   # (helmfile.yaml.gotmpl), which installs Traefik as its own release inside NS_GATEWAY.
   printf "  Namespaces:      %b%s%b — modules, bundled infra (PostgreSQL/RabbitMQ/Redis), and\n" "${C_BOLD}${C_CYAN}" "$NS_MODULES" "${C_RESET}"
   printf "                   the gateway workload itself (%s-traefik, and the ForwardAuth\n" "$RELEASE"
-  printf "                   proxy \"gateway-common\") all run here\n"
+  printf "                   proxy \"authgateway\") all run here\n"
   printf "                   %b%s%b — holds only the Gateway API's Gateway object; no pods\n" "${C_BOLD}${C_CYAN}" "$NS_GATEWAY" "${C_RESET}"
   printf "                   are ever created here\n"
   confirm "  Install into this cluster?" y \

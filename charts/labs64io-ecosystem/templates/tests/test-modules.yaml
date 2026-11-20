@@ -62,8 +62,8 @@ spec:
           probe reporting "http://{{ .Release.Name }}-reporting:8080/actuator/health/readiness"
           {{- end }}
           {{- if index .Values "authgateway" "enabled" }}
-          {{/* authgateway pins fullnameOverride: gateway-common, so it is NOT <release>-authgateway. */}}
-          probe authgateway "http://gateway-common:8081/health/ready"
+          {{/* authgateway pins fullnameOverride: authgateway, so it is NOT <release>-authgateway. */}}
+          probe authgateway "http://authgateway:8081/health/ready"
           {{- end }}
           {{- if index .Values "authz-pdp" "enabled" }}
           probe authz-pdp "http://{{ .Release.Name }}-authz-pdp:3592/_cerbos/health"
