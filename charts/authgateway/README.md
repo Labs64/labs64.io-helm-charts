@@ -1,8 +1,8 @@
-# api-gateway
+# authgateway
 
-![Version: 0.15.15](https://img.shields.io/badge/Version-0.15.15-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.8](https://img.shields.io/badge/AppVersion-0.1.8-informational?style=flat-square)
+![Version: 0.15.16](https://img.shields.io/badge/Version-0.15.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.8](https://img.shields.io/badge/AppVersion-0.1.8-informational?style=flat-square)
 
-Labs64.IO :: API Gateway (AuthProxy + Middlewares)
+Labs64.IO :: Auth Gateway (AuthProxy + Middlewares)
 
 **Homepage:** <https://labs64.io>
 
@@ -21,7 +21,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.8 |
+| file://../chart-libs | chart-libs | 0.8.9 |
 
 ## Values
 
@@ -52,7 +52,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 | externalSecrets.secretKey | string | `""` | Key/path of this module's secret in the external backend; every key becomes an env var. Defaults to the release fullname. |
 | externalSecrets.storeName | string | `"local-kubernetes-store"` |  |
 | extraConfigChecksums | list | `["configmap-routes","configmap-static-policies"]` | Roll the ACS whenever the generated routes / static-route ConfigMaps change (checksum/config already covers configmap.yaml; these are the extra dynamically generated ConfigMaps this chart mounts). |
-| fullnameOverride | string | `"gateway-common"` | Fixed resource-name prefix (instead of the default "<release>-api-gateway") so module charts can reference the shared middlewares by a stable name regardless of release name. Also fixes the name of this chart's own Deployment/Service, which is why authProxy.serviceName below must match this value. |
+| fullnameOverride | string | `"gateway-common"` | Fixed resource-name prefix (instead of the default "<release>-authgateway") so module charts can reference the shared middlewares by a stable name regardless of release name. Also fixes the name of this chart's own Deployment/Service, which is why authProxy.serviceName below must match this value. |
 | image | object | `{"digest":"sha256:c66e36110863cb18b34cb58a6cd5e0abb25589486845140e940f0fc61b18102c","pullPolicy":"IfNotPresent","repository":"labs64/traefik-authproxy","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | image.digest | string | `"sha256:c66e36110863cb18b34cb58a6cd5e0abb25589486845140e940f0fc61b18102c"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |

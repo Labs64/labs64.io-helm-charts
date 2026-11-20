@@ -1,7 +1,7 @@
 apiVersion: v2
 name: api-docs
 type: application
-version: 0.9.11
+version: 0.9.12
 # The swagger-ui image tag (values.yaml image.tag defaults to it).
 # renovate: datasource=docker depName=swaggerapi/swagger-ui
 appVersion: v5.34.0
@@ -22,5 +22,5 @@ maintainers:
     url: https://labs64.io
 dependencies:
   - name: chart-libs
-    version: 0.8.8
+    version: 0.8.9
     repository: file://../chart-libs

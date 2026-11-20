@@ -6,7 +6,7 @@
 # and realmFixtures (realm.test-fixtures.json — only honoured with labs64io.testFixtures: local, AWS
 # dev). Machine clients of external producers come from labs64io.serviceClients.
 nameOverride: keycloak
-# Stable names (keycloak-http, keycloak-admin, ...): api-gateway's discovery URL and the
+# Stable names (keycloak-http, keycloak-admin, ...): authgateway's discovery URL and the
 # NetworkPolicies of other releases reference them.
 fullnameOverride: keycloak
 replicas: 1
@@ -37,7 +37,7 @@ labs64io:
   #       description: ACME publishing audit events
   serviceClients: []
   # -- Canonical frontend URL (KC_HOSTNAME). Every token's `iss` is <hostname>/realms/labs64io,
-  # whichever URL the client used — api-gateway's oidc.issuer must match it exactly.
+  # whichever URL the client used — authgateway's oidc.issuer must match it exactly.
   hostname: ""
   # -- Realm sslRequired: "external" (TLS except from private networks) or "none" (local http only).
   realmSslRequired: external
@@ -126,7 +126,7 @@ networkPolicy:
           kubernetes.io/metadata.name: labs64io
       podSelector:
         matchLabels:
-          app.kubernetes.io/name: api-gateway
+          app.kubernetes.io/name: authgateway
     # Confidential clients of realm.base.json that request tokens themselves (client_credentials):
     # the modules (credentials delivered as LABS64_OIDC_*) and the preflight Job.
     - namespaceSelector:

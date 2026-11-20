@@ -186,7 +186,7 @@
             },
             "sharedMiddlewares": {
               "additionalProperties": false,
-              "description": "Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)",
+              "description": "Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)",
               "properties": {
                 "auth": {
                   "default": "gateway-common-auth",

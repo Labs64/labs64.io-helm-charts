@@ -1,6 +1,6 @@
 # auditflow
 
-![Version: 0.15.36](https://img.shields.io/badge/Version-0.15.36-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.20](https://img.shields.io/badge/AppVersion-0.1.20-informational?style=flat-square)
+![Version: 0.15.37](https://img.shields.io/badge/Version-0.15.37-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.20](https://img.shields.io/badge/AppVersion-0.1.20-informational?style=flat-square)
 
 Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
@@ -21,7 +21,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.8 |
+| file://../chart-libs | chart-libs | 0.8.9 |
 
 ## Values
 
@@ -77,7 +77,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"annotations":{},"authPolicy":{"basePath":"","enabled":true},"enabled":false,"ingressClassName":"","parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","buffering":"gateway-common-buffering","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
 | gateway.annotations | object | `{}` | Annotations for fallback Ingress |
-| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/api-gateway/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
+| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/authgateway/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
 | gateway.authPolicy.basePath | string | `""` | External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1 |
 | gateway.authPolicy.enabled | bool | `true` | Publish this module's auth policy to the gateway ACS |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
@@ -87,7 +87,7 @@ Labs64.IO :: AuditFlow - Scalable Audit Logging for Modern Microservices
 | gateway.routes | list | `[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
 | gateway.routes[0] | object | `{"path":"/api/v1","port":8080,"stripPath":true}` | AuditFlow API (protected; strips '<prefix>/api/v1' — backend is root-mapped) |
 | gateway.routes[1] | object | `{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}` | OpenAPI docs (public, prefix stripped before forwarding) |
-| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","buffering":"gateway-common-buffering","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common) |
+| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","buffering":"gateway-common-buffering","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common) |
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |
 | global.security.allowInsecureImages | bool | `true` | Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard) |
 | gracefulShutdown.timeout | string | `"30s"` | Max time Spring Boot waits for in-flight work before forced shutdown |

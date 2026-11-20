@@ -113,7 +113,7 @@
       "properties": {
         "applicationNamespace": {
           "default": "",
-          "description": "Namespace containing api-gateway when it differs from this release.",
+          "description": "Namespace containing authgateway when it differs from this release.",
           "title": "applicationNamespace",
           "type": "string"
         },

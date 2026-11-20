@@ -512,8 +512,8 @@ write_values() {
 # durable customisation in your own file and pass it with -f instead.
 demoMode: $DEMO_MODE
 
-api-gateway:
-  enabled: $ENABLE_API_GATEWAY
+authgateway:
+  enabled: $ENABLE_AUTHGATEWAY
   oidc:
     discoveryUrl: "$yaml_oidc"
 authz-pdp:
@@ -743,7 +743,7 @@ EOF
 
   if [ "$profile" = quickstart ]; then
     DEMO_MODE=true; TRAEFIK_ENABLED=true; MOCK_OIDC_ENABLED=true
-    ENABLE_API_GATEWAY=true; ENABLE_AUTHZ_PDP=true; ENABLE_API_DOCS=true
+    ENABLE_AUTHGATEWAY=true; ENABLE_AUTHZ_PDP=true; ENABLE_API_DOCS=true
     ENABLE_AUDITFLOW=true; ENABLE_PAYMENT_GATEWAY=true
     ENABLE_CHECKOUT=false; ENABLE_CUSTOMER_PORTAL=false
     OIDC_DISCOVERY_URL="http://${MOCK_OIDC_HOST}/labs64io/.well-known/openid-configuration"
@@ -756,7 +756,7 @@ EOF
     if confirm "Install Traefik and a Gateway?" y; then TRAEFIK_ENABLED=true; else TRAEFIK_ENABLED=false; fi
     log ""
     log "Select modules to install:"
-    if confirm "  Enable API Gateway (api-gateway module)?" y; then ENABLE_API_GATEWAY=true; else ENABLE_API_GATEWAY=false; fi
+    if confirm "  Enable Auth Gateway (authgateway module)?" y; then ENABLE_AUTHGATEWAY=true; else ENABLE_AUTHGATEWAY=false; fi
     if confirm "  Enable Authz PDP (authz-pdp module)?" y; then ENABLE_AUTHZ_PDP=true; else ENABLE_AUTHZ_PDP=false; fi
     if confirm "  Enable API Docs (api-docs module)?" y; then ENABLE_API_DOCS=true; else ENABLE_API_DOCS=false; fi
     if confirm "  Enable AuditFlow (auditflow module)?" y; then ENABLE_AUDITFLOW=true; else ENABLE_AUDITFLOW=false; fi
@@ -958,12 +958,12 @@ module_present() {
 
 # The one public route every profile is guaranteed to have *something* behind:
 # prefer Swagger UI (most universally reachable page), then a real module API,
-# then the api-gateway's own /health. Shared by do_verify and do_status so
+# then the authgateway's own /health. Shared by do_verify and do_status so
 # they can never drift into checking two different things and disagreeing.
 pick_health_route() {
   if   module_present api-docs;   then printf '/swagger-ui'
   elif module_present auditflow;  then printf '/auditflow/v3/api-docs'
-  elif module_present api-gateway; then printf '/health'
+  elif module_present authgateway; then printf '/health'
   else printf '/'
   fi
 }
@@ -1047,7 +1047,7 @@ print_notes() {
   fi
 
   printf "\n %bEnabled modules:%b\n" "${C_BOLD}" "${C_RESET}"
-  [ "$ENABLE_API_GATEWAY" = "true" ]     && printf "   %b- api-gateway%b\n" "${C_GREEN}" "${C_RESET}"
+  [ "$ENABLE_AUTHGATEWAY" = "true" ]     && printf "   %b- authgateway%b\n" "${C_GREEN}" "${C_RESET}"
   [ "$ENABLE_AUTHZ_PDP" = "true" ]       && printf "   %b- authz-pdp%b\n" "${C_GREEN}" "${C_RESET}"
   [ "$ENABLE_API_DOCS" = "true" ]        && printf "   %b- api-docs%b\n" "${C_GREEN}" "${C_RESET}"
   [ "$ENABLE_AUDITFLOW" = "true" ]       && printf "   %b- auditflow%b\n" "${C_GREEN}" "${C_RESET}"

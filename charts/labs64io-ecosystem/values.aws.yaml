@@ -70,7 +70,7 @@ traefik:
 # — it needs each environment's actual VPC CIDR, which differs per environment and so can't live
 # in this shared file. `networkPolicy.enabled` is what's true everywhere and belongs here.
 #
-# api-gateway/api-docs/authz-pdp aren't in this list yet: they don't talk to a data store
+# authgateway/api-docs/authz-pdp aren't in this list yet: they don't talk to a data store
 # directly, but their exact egress needs (e.g. a real external IdP once Keycloak lands) haven't
 # been characterized against a default-deny policy — see the README's Known gaps.
 #
@@ -85,7 +85,7 @@ traefik:
 # Autoscaler is running: if the constraint can't be satisfied on current capacity, the pending
 # pod triggers a scale-up rather than sitting stuck forever. maxReplicas/
 # targetCPUUtilizationPercentage are left at chart defaults (3 / 80%).
-api-gateway:
+authgateway:
   autoscaling:
     enabled: true
     minReplicas: 2

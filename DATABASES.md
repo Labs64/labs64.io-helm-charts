@@ -10,7 +10,7 @@ database credentials or connect to another service's database.
 | checkout | `checkout` | — | — | Transaction processing |
 | payment-gateway | `payment_gateway` | yes | — | Billing + idempotency cache; audit events go to AuditFlow over HTTP |
 | auditflow | — | yes | yes | Idempotency/dedup store |
-| api-gateway | — | — | — | Stateless |
+| authgateway | — | — | — | Stateless |
 | authz-pdp | — | — | — | Stateless (policies mounted via ConfigMap) |
 | customer-portal | — | — | — | Stateless |
 | api-docs | — | — | — | Stateless |

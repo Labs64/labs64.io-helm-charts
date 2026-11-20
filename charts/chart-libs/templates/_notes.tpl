@@ -33,7 +33,7 @@ the chart repo's README to provision Traefik + the shared Gateway.
 Once routed, reachable at:
 {{- range $route := .Values.gateway.routes }}
 {{- if not $route.redirectTo }}
-  http://<gateway-host>{{ $prefix }}{{ $route.path }}{{ if not $route.public }} (protected — requires a Bearer token via the api-gateway ForwardAuth chain){{ end }}
+  http://<gateway-host>{{ $prefix }}{{ $route.path }}{{ if not $route.public }} (protected — requires a Bearer token via the authgateway ForwardAuth chain){{ end }}
 {{- end }}
 {{- end }}
 {{- end }}

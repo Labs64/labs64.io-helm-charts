@@ -272,7 +272,7 @@
     },
     "fullnameOverride": {
       "default": "gateway-common",
-      "description": "Fixed resource-name prefix (instead of the default \"\u003crelease\u003e-api-gateway\") so\nmodule charts can reference the shared middlewares by a stable name regardless of\nrelease name. Also fixes the name of this chart's own Deployment/Service, which is\nwhy authProxy.serviceName below must match this value.",
+      "description": "Fixed resource-name prefix (instead of the default \"\u003crelease\u003e-authgateway\") so\nmodule charts can reference the shared middlewares by a stable name regardless of\nrelease name. Also fixes the name of this chart's own Deployment/Service, which is\nwhy authProxy.serviceName below must match this value.",
       "title": "fullnameOverride",
       "type": "string"
     },

@@ -57,7 +57,7 @@ graph TB
             
             subgraph Gateway["Gateway & Auth"]
                 api_docs["api-docs<br/>(Swagger UI)"]:::labs64
-                authproxy["api-gateway<br/>(Auth Gateway + Middlewares)"]:::labs64
+                authproxy["authgateway<br/>(Auth Gateway + Middlewares)"]:::labs64
             end
             
             subgraph AuditFlow["AuditFlow"]
@@ -93,9 +93,9 @@ graph TB
 
     %% User Ingress Flow
     User((Developer)) -->|HTTP 80/443| traefik
-    traefik -.->|"ForwardAuth call (api-gateway auth middleware)"| authproxy
+    traefik -.->|"ForwardAuth call (authgateway auth middleware)"| authproxy
     authproxy -->|Validates JWT against| mock_oidc
-    traefik -->|"Routes via Gateway API HTTPRoute (native filters + api-gateway middlewares via ExtensionRef)"| api_docs
+    traefik -->|"Routes via Gateway API HTTPRoute (native filters + authgateway middlewares via ExtensionRef)"| api_docs
     traefik --> audit_be
     traefik --> checkout_be
     traefik --> pg_be
@@ -146,7 +146,7 @@ registry (`localhost:5005`) — see [Building module images](#building-module-im
 
 ### Request Flow
 
-Traefik receives external requests mapping on ports 80/443 and routes them via Kubernetes Gateway API `HTTPRoute`s (module-owned, attached to the platform `Gateway` `labs64io-gateway` in `tools`). Each protected route strips inbound `X-Auth-*` headers first (native `RequestHeaderModifier`), then calls the `api-gateway` ForwardAuth middleware via an `ExtensionRef` filter. The Auth Gateway validates the `Authorization: Bearer` against the `Mock OIDC Provider` (generating fake JWT tokens for local environments). Validated requests pass through the remaining `api-gateway` middlewares (rate-limit, compress) before hitting the downstream microservices.
+Traefik receives external requests mapping on ports 80/443 and routes them via Kubernetes Gateway API `HTTPRoute`s (module-owned, attached to the platform `Gateway` `labs64io-gateway` in `tools`). Each protected route strips inbound `X-Auth-*` headers first (native `RequestHeaderModifier`), then calls the `authgateway` ForwardAuth middleware via an `ExtensionRef` filter. The Auth Gateway validates the `Authorization: Bearer` against the `Mock OIDC Provider` (generating fake JWT tokens for local environments). Validated requests pass through the remaining `authgateway` middlewares (rate-limit, compress) before hitting the downstream microservices.
 
 ## Building module images
 
@@ -277,8 +277,8 @@ has no per-release CRD-skip equivalent), then via Helmfile: Traefik v3, [Externa
 Operator](https://external-secrets.io/) (ESO), RabbitMQ, PostgreSQL, Redis, and the identity
 provider selected by `identityProvider` in `overrides/helmfile/values.local.yaml` — `mock`
 (default), `keycloak` or `external`. That one value selects the provider release **and**
-api-gateway's OIDC settings + NetworkPolicy egress (`overrides/api-gateway/oidc-<provider>.local.yaml`);
-apply a switch with `just install-tools && just install-app api-gateway`. Keycloak comes from the
+authgateway's OIDC settings + NetworkPolicy egress (`overrides/authgateway/oidc-<provider>.local.yaml`);
+apply a switch with `just install-tools && just install-app authgateway`. Keycloak comes from the
 pinned upstream `codecentric/keycloakx` chart (official Keycloak image), configured in
 `overrides/keycloak/`: `values.yaml` (shared with AWS), `values.local.yaml`, the realm contract
 `realm.base.json` (shared with AWS) and the test clients `realm.test-fixtures.json` (local, and AWS
@@ -347,7 +347,7 @@ just up
 **Or one at a time:**
 ```bash
 just install-app authz-pdp           # Cerbos PDP (required first)
-just install-app api-gateway         # Auth Gateway + shared Traefik middlewares
+just install-app authgateway         # Auth Gateway + shared Traefik middlewares
 just install-app api-docs            # Swagger UI
 just install-app auditflow           # audit logging
 just install-app checkout            # checkout backend + UI (ui.enabled)
@@ -484,7 +484,7 @@ just logs
 # Specific module
 kubectl logs -n labs64io -l app.kubernetes.io/name=checkout --tail=100
 kubectl logs -n labs64io -l app.kubernetes.io/name=payment-gateway --tail=100
-kubectl logs -n labs64io -l app.kubernetes.io/name=api-gateway --tail=100
+kubectl logs -n labs64io -l app.kubernetes.io/name=authgateway --tail=100
 ```
 
 ### Reinstall a single module
@@ -564,14 +564,14 @@ Common causes:
 - Check Traefik is running: `kubectl get pods -n tools -l app.kubernetes.io/name=traefik`
 - Check HTTPRoutes are accepted: `kubectl get httproute -n labs64io` (details: `kubectl describe httproute <name> -n labs64io`)
 - Check the platform Gateway is programmed: `kubectl get gateway -n tools labs64io-gateway`
-- Check the Auth Gateway is running: `kubectl get pods -n labs64io -l app.kubernetes.io/name=api-gateway`
+- Check the Auth Gateway is running: `kubectl get pods -n labs64io -l app.kubernetes.io/name=authgateway`
 
 ### 401/403 on API calls
 
 - Verify token: `just generate-jwt admin`
 - Check the central PDP: `kubectl get deploy,svc -n labs64io -l app.kubernetes.io/name=authz-pdp` and `kubectl exec -n labs64io deploy/labs64io-authz-pdp -- /cerbos healthcheck --kind=grpc` (— the Auth Gateway loads a generated routes manifest and asks Cerbos; there is no `/.well-known/auth-policy` discovery anymore) plus `kubectl exec -n labs64io deploy/gateway-common -- wget -qO- http://localhost:8081/health/ready`
-- Check static UI policies: `kubectl get configmap -n labs64io -l app.kubernetes.io/name=api-gateway -o yaml` (renders `static_policies.yaml` from `staticPolicies`)
-- Check the Auth Gateway logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=api-gateway`
+- Check static UI policies: `kubectl get configmap -n labs64io -l app.kubernetes.io/name=authgateway -o yaml` (renders `static_policies.yaml` from `staticPolicies`)
+- Check the Auth Gateway logs: `kubectl logs -n labs64io -l app.kubernetes.io/name=authgateway`
 
 ### RabbitMQ connection refused
 

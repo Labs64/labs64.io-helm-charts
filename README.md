@@ -38,7 +38,7 @@ Running a platform of several services means one chart per service, gateway wiri
 
 - **`install.sh`**: install, status, start, stop, uninstall and smoke test for the whole platform on any cluster.
 - **Umbrella chart**: `labs64io-ecosystem` installs the platform together, with demo and AWS reference profiles.
-- **Module charts**: `auditflow`, `payment-gateway`, `checkout`, `reporting`, `customer-portal`, `api-gateway`, `authz-pdp` and `api-docs`, each standalone.
+- **Module charts**: `auditflow`, `payment-gateway`, `checkout`, `reporting`, `customer-portal`, `authgateway`, `authz-pdp` and `api-docs`, each standalone.
 - **Gateway API routing**: modules own their routes; Traefik is the Gateway implementation.
 - **Preflight**: a one-shot job that tests your broker, database, Redis and OIDC endpoint from inside the cluster.
 - **Bring your own infrastructure**: no application chart bundles RabbitMQ, PostgreSQL or Redis as a dependency.

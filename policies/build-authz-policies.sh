@@ -6,7 +6,7 @@
 # Outputs (committed and shipped inside the charts — this is the RFC's provenance model):
 #   charts/authz-pdp/policies/*.yaml            resource policies (one edge + per-type domain)
 #   charts/authz-pdp/schemas/*.json             principal + per-type JSON schemas
-#   charts/api-gateway/routes/*.routes.yaml   per-module routing manifests
+#   charts/authgateway/routes/*.routes.yaml   per-module routing manifests
 #
 # Then `cerbos compile` gates the generated set locally.
 set -euo pipefail
@@ -21,7 +21,7 @@ CERBOS_IMAGE="ghcr.io/cerbos/cerbos:${CERBOS_VERSION}"
 
 CERBOS_POLICIES="$REPO/charts/authz-pdp/policies"
 CERBOS_SCHEMAS="$REPO/charts/authz-pdp/schemas"
-ROUTES_OUT="$REPO/charts/api-gateway/routes"
+ROUTES_OUT="$REPO/charts/authgateway/routes"
 
 # --- commons preprocessor classpath (built jar + deps) ----------------------
 [ -d "$COMMONS_DIR" ] || { echo "ERROR: commons not found at $COMMONS_DIR" >&2; exit 1; }

@@ -4,7 +4,7 @@ mock-oidc is installed.
   This server issues tokens to anyone who asks, with whatever scopes they
   request. It performs no authentication. Do not run it anywhere that matters.
 
-Discovery URL (set this as api-gateway's oidc.discoveryUrl):
+Discovery URL (set this as authgateway's oidc.discoveryUrl):
   http://mock-oidc.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}{{ .Values.gateway.pathPrefix }}/.well-known/openid-configuration
 
 Mint a token from inside the cluster:

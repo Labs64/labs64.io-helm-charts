@@ -1,8 +1,8 @@
 labs64io-ecosystem {{ .Chart.Version }} has been installed as "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
 
 Enabled modules:
-{{- if index .Values "api-gateway" "enabled" }}
-  - api-gateway   ({{ .Release.Name }}-api-gateway)
+{{- if index .Values "authgateway" "enabled" }}
+  - authgateway   ({{ .Release.Name }}-authgateway)
 {{- end }}
 {{- if index .Values "authz-pdp" "enabled" }}
   - authz-pdp     ({{ .Release.Name }}-authz-pdp)

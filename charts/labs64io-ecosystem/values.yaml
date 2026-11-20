@@ -11,7 +11,7 @@ networkPolicy:
 # type: object
 # additionalProperties: true
 # @schema
-api-gateway:
+authgateway:
   enabled: true
   # Leave oidc.discoveryUrl unset to use the chart default (Keycloak). It is not set
   # here because the mock-oidc Service resolves as mock-oidc.<namespace>.svc.cluster.local

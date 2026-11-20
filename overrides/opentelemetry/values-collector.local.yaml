@@ -150,11 +150,11 @@ config:
     #   /health /ready /live /info  Python sinks + transformers — this is exactly the set
     #                        those services already suppress from uvicorn access logs
     #                        (HEALTH_PATHS in auditflow-{sink,transformer}/health.py)
-    #   /health/ready /health/live  api-gateway
+    #   /health/ready /health/live  authgateway
     #
     # Deliberately NOT dropped: /actuator/dlq. Spring Boot exposes
     # `health,info,metrics,prometheus,dlq`, and dlq is a real admin-gated business endpoint
-    # (api-gateway route `auditflow-dlq`, admin-role/auditflow-role) whose traces matter.
+    # (authgateway route `auditflow-dlq`, admin-role/auditflow-role) whose traces matter.
     # That is why this enumerates actuator endpoints instead of matching /actuator/**.
     filter/drop_health_checks:
       error_mode: ignore

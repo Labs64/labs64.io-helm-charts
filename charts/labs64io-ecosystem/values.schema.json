@@ -17,22 +17,6 @@
       "title": "api-docs",
       "type": "object"
     },
-    "api-gateway": {
-      "additionalProperties": true,
-      "description": "Sub-charts Toggles",
-      "properties": {
-        "enabled": {
-          "default": true,
-          "title": "enabled",
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "enabled"
-      ],
-      "title": "api-gateway",
-      "type": "object"
-    },
     "auditflow": {
       "additionalProperties": true,
       "properties": {
@@ -46,6 +30,22 @@
         "enabled"
       ],
       "title": "auditflow",
+      "type": "object"
+    },
+    "authgateway": {
+      "additionalProperties": true,
+      "description": "Sub-charts Toggles",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "authgateway",
       "type": "object"
     },
     "authz-pdp": {

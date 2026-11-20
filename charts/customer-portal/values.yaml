@@ -119,7 +119,7 @@ ui:
     parentRefs:
       - name: labs64io-gateway
         namespace: tools
-    # -- Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)
+    # -- Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)
     sharedMiddlewares:
       auth: gateway-common-auth
       rateLimit: gateway-common-ratelimit

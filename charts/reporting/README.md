@@ -1,6 +1,6 @@
 # reporting
 
-![Version: 0.1.12](https://img.shields.io/badge/Version-0.1.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.11](https://img.shields.io/badge/AppVersion-0.0.11-informational?style=flat-square)
+![Version: 0.1.13](https://img.shields.io/badge/Version-0.1.13-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.11](https://img.shields.io/badge/AppVersion-0.0.11-informational?style=flat-square)
 
 Labs64.IO :: Reporting - read-only reports over the events stored by AuditFlow sinks
 
@@ -21,7 +21,7 @@ Labs64.IO :: Reporting - read-only reports over the events stored by AuditFlow s
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.8 |
+| file://../chart-libs | chart-libs | 0.8.9 |
 
 ## Values
 
@@ -43,7 +43,7 @@ Labs64.IO :: Reporting - read-only reports over the events stored by AuditFlow s
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"annotations":{},"authPolicy":{"basePath":"","enabled":true},"enabled":false,"ingressClassName":"","parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
 | gateway.annotations | object | `{}` | Annotations for fallback Ingress |
-| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/api-gateway/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
+| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/authgateway/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
 | gateway.authPolicy.basePath | string | `""` | External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1 |
 | gateway.authPolicy.enabled | bool | `true` | Publish this module's auth policy to the gateway ACS |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
@@ -53,7 +53,7 @@ Labs64.IO :: Reporting - read-only reports over the events stored by AuditFlow s
 | gateway.routes | list | `[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module. The whole API surface is ONE route through ForwardAuth: the authproxy is the PEP and derives public-vs-protected per operation from OpenAPI OAuth security plus x-labs64.auth (generated into the authproxy routes manifest + the central Cerbos PDP). Public operations. |
 | gateway.routes[0] | object | `{"path":"/api/v1","port":8080,"stripPath":true}` | Whole Reporting API (ForwardAuth PEP decides per-op from OpenAPI; strips '<prefix>/api/v1' — backend is root-mapped) |
 | gateway.routes[1] | object | `{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}` | OpenAPI docs (springdoc endpoint — NOT an OpenAPI operation, so it has no generated OpenAPI auth policy at the authproxy; public at the edge, prefix stripped) |
-| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common) |
+| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common) |
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |
 | global.security.allowInsecureImages | bool | `true` | Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard) |
 | gracefulShutdown.timeout | string | `"30s"` | Max time Spring Boot waits for in-flight requests before forced shutdown |
@@ -114,7 +114,7 @@ Labs64.IO :: Reporting - read-only reports over the events stored by AuditFlow s
 | tolerations | list | `[]` |  |
 | topologySpreadConstraints | list | `[]` | Constrain how replicas spread across nodes/zones (e.g. maxSkew/topologyKey/whenUnsatisfiable). labelSelector defaults to this chart's own selector labels when a constraint omits one. |
 | volumeMounts | list | `[]` | Additional volumeMounts on the output Deployment definition. |
-| volumes | list | `[]` | Additional volumes on the output Deployment definition. No manual tmp entry needed here (unlike api-gateway): chart-libs auto-provisions a tmp emptyDir + mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on. |
+| volumes | list | `[]` | Additional volumes on the output Deployment definition. No manual tmp entry needed here (unlike authgateway): chart-libs auto-provisions a tmp emptyDir + mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on. |
 
 ----------------------------------------------
 Autogenerated from chart metadata using [helm-docs v1.14.2](https://github.com/norwoodj/helm-docs/releases/v1.14.2)

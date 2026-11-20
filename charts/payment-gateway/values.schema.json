@@ -322,7 +322,7 @@
         },
         "authPolicy": {
           "additionalProperties": false,
-          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/api-gateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
+          "description": "Auth-policy publication. NOTE: the traefik-authproxy no longer\nlive-discovers per-module policies via /.well-known/auth-policy — it loads a\ngenerated routes manifest (charts/authgateway/routes/) and asks the\ncentral Cerbos PDP for every decision. This block is retained for backward\ncompatibility and is a no-op for edge enforcement.",
           "properties": {
             "basePath": {
               "default": "",
@@ -462,7 +462,7 @@
         },
         "sharedMiddlewares": {
           "additionalProperties": false,
-          "description": "Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)",
+          "description": "Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)",
           "properties": {
             "auth": {
               "default": "gateway-common-auth",
@@ -1509,7 +1509,7 @@
       "type": "array"
     },
     "volumes": {
-      "description": "Additional volumes on the output Deployment definition.\nNo manual tmp entry needed here (unlike api-gateway): chart-libs auto-provisions a tmp emptyDir\n+ mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on.",
+      "description": "Additional volumes on the output Deployment definition.\nNo manual tmp entry needed here (unlike authgateway): chart-libs auto-provisions a tmp emptyDir\n+ mount for applicationType: java below, which readOnlyRootFilesystem (below) now relies on.",
       "items": {
         "required": []
       },

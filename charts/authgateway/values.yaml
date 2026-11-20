@@ -32,7 +32,7 @@ secrets:
 
 # -- This is to override the chart name.
 nameOverride: ""
-# -- Fixed resource-name prefix (instead of the default "<release>-api-gateway") so
+# -- Fixed resource-name prefix (instead of the default "<release>-authgateway") so
 # module charts can reference the shared middlewares by a stable name regardless of
 # release name. Also fixes the name of this chart's own Deployment/Service, which is
 # why authProxy.serviceName below must match this value.

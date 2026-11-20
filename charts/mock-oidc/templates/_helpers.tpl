@@ -1,6 +1,6 @@
 {{/*
 Resource names are deliberately NOT templated with the release name. The
-api-gateway chart's oidc.discoveryUrl and the umbrella's values both reference
+authgateway chart's oidc.discoveryUrl and the umbrella's values both reference
 this service as `mock-oidc.<namespace>.svc.cluster.local` by that exact string,
 so a release-name-derived name would silently break the wiring for no benefit.
 */}}

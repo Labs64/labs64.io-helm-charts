@@ -122,7 +122,7 @@ jobs:
           bash install.sh start
           kubectl -n labs64io get deploy \
             -o custom-columns=N:.metadata.name,R:.spec.replicas --no-headers | sort > /tmp/after
-          # api-gateway runs 2 replicas by default, so this only passes if the
+          # authgateway runs 2 replicas by default, so this only passes if the
           # original counts round-trip through the annotation.
           diff /tmp/before /tmp/after || { echo "::error::replica counts were not restored"; exit 1; }
 

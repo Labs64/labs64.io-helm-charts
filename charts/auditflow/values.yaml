@@ -506,7 +506,7 @@ gateway:
   parentRefs:
     - name: labs64io-gateway
       namespace: tools
-  # -- Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common)
+  # -- Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common)
   sharedMiddlewares:
     auth: gateway-common-auth
     rateLimit: gateway-common-ratelimit
@@ -514,7 +514,7 @@ gateway:
     buffering: gateway-common-buffering
   # -- Auth-policy publication. NOTE: the traefik-authproxy no longer
   # live-discovers per-module policies via /.well-known/auth-policy — it loads a
-  # generated routes manifest (charts/api-gateway/routes/) and asks the
+  # generated routes manifest (charts/authgateway/routes/) and asks the
   # central Cerbos PDP for every decision. This block is retained for backward
   # compatibility and is a no-op for edge enforcement.
   authPolicy:

@@ -121,7 +121,7 @@ releases:
 
   # === IDENTITY ===
   # overrides/helmfile/values.<env>.yaml `identityProvider` installs at most one provider and
-  # (see labs64io-api-gateway below) points api-gateway at it. `external` installs neither.
+  # (see labs64io-authgateway below) points authgateway at it. `external` installs neither.
   - name: mock-oidc
     installed: {{ eq $idp "mock" }}
     namespace: tools
@@ -227,15 +227,15 @@ releases:
     needs:
       - tools/traefik
 
-  - name: labs64io-api-gateway
+  - name: labs64io-authgateway
     namespace: labs64io
-    chart: ./charts/api-gateway
+    chart: ./charts/authgateway
     values:
-      - ./charts/api-gateway/values.yaml
+      - ./charts/authgateway/values.yaml
       - ./overrides/global-values.yaml
-      - ./overrides/api-gateway/values.{{ .Environment.Name }}.yaml
+      - ./overrides/authgateway/values.{{ .Environment.Name }}.yaml
       # OIDC discovery/issuer/audience + egress for the selected identity provider.
-      - ./overrides/api-gateway/oidc-{{ $idp }}.{{ .Environment.Name }}.yaml
+      - ./overrides/authgateway/oidc-{{ $idp }}.{{ .Environment.Name }}.yaml
     {{- if $observability }}
     set:
       - name: observability.enabled
@@ -283,11 +283,11 @@ releases:
     needs:
       - tools/rabbitmq
       # Its HTTPRoute's ExtensionRef filters resolve gateway.sharedMiddlewares
-      # (compress/buffering) by name against the Middleware CRDs api-gateway
+      # (compress/buffering) by name against the Middleware CRDs authgateway
       # creates; without this edge helmfile can schedule both releases
       # concurrently, and Traefik logs transient "middleware ... does not
       # exist" errors if the route is reconciled before the Middleware exists.
-      - labs64io/labs64io-api-gateway
+      - labs64io/labs64io-authgateway
 
   - name: labs64io-checkout
     # Not GA: left out of the default set. `just install-app checkout` installs it on
@@ -307,8 +307,8 @@ releases:
     needs:
       - tools/postgresql
       # See labs64io-auditflow above: its HTTPRoute also resolves shared
-      # Middlewares by name against what api-gateway creates.
-      - labs64io/labs64io-api-gateway
+      # Middlewares by name against what authgateway creates.
+      - labs64io/labs64io-authgateway
 
   - name: labs64io-reporting
     # Not in the default set: it needs a ClickHouse, which the local toolset does not run. `just install-app reporting`
@@ -323,7 +323,7 @@ releases:
     labels:
       layer: apps
     needs:
-      - labs64io/labs64io-api-gateway
+      - labs64io/labs64io-authgateway
 
   - name: labs64io-payment-gateway
     namespace: labs64io
@@ -347,7 +347,7 @@ releases:
       - tools/postgresql
       - tools/redis
       - tools/traefik
-      - labs64io/labs64io-api-gateway
+      - labs64io/labs64io-authgateway
       - labs64io/labs64io-auditflow
 
   - name: labs64io-customer-portal
@@ -362,5 +362,5 @@ releases:
     needs:
       - tools/traefik
       # See labs64io-auditflow above: its HTTPRoute also resolves shared
-      # Middlewares by name against what api-gateway creates.
-      - labs64io/labs64io-api-gateway
+      # Middlewares by name against what authgateway creates.
+      - labs64io/labs64io-authgateway

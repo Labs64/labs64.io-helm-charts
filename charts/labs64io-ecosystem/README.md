@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.20.96](https://img.shields.io/badge/Version-0.20.96-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.20.98](https://img.shields.io/badge/Version-0.20.98-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 
@@ -21,8 +21,8 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | Repository | Name | Version |
 |------------|------|---------|
 | file://../api-docs | api-docs | >=0.1.0 |
-| file://../api-gateway | api-gateway | >=0.1.0 |
 | file://../auditflow | auditflow | >=0.1.0 |
+| file://../authgateway | authgateway | >=0.1.0 |
 | file://../authz-pdp | authz-pdp | >=0.1.0 |
 | file://../checkout | checkout | >=0.1.0 |
 | file://../customer-portal | customer-portal | >=0.1.0 |
@@ -38,8 +38,8 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | api-docs.enabled | bool | `true` |  |
-| api-gateway.enabled | bool | `true` |  |
 | auditflow.enabled | bool | `true` |  |
+| authgateway.enabled | bool | `true` |  |
 | authz-pdp.enabled | bool | `true` |  |
 | checkout | object | `{"enabled":false,"migrationJob":{"enabled":false}}` | Not GA. The labs64/checkout and labs64/checkout-ui images have never been published (both repositories 404 on Docker Hub), so enabling this yields ImagePullBackOff. Toggle retained for when they are. |
 | clickhouse.auth.database | string | `"audit"` |  |

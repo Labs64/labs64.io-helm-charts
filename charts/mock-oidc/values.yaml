@@ -54,5 +54,5 @@ networkPolicy:
   enabled: true
   # -- Namespace the shared Gateway runs in.
   gatewayNamespace: tools
-  # -- Namespace containing api-gateway when it differs from this release.
+  # -- Namespace containing authgateway when it differs from this release.
   applicationNamespace: ""

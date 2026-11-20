@@ -1,6 +1,6 @@
 # checkout
 
-![Version: 0.11.22](https://img.shields.io/badge/Version-0.11.22-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.13](https://img.shields.io/badge/AppVersion-0.0.13-informational?style=flat-square)
+![Version: 0.11.23](https://img.shields.io/badge/Version-0.11.23-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.13](https://img.shields.io/badge/AppVersion-0.0.13-informational?style=flat-square)
 
 Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
@@ -21,7 +21,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.8 |
+| file://../chart-libs | chart-libs | 0.8.9 |
 
 ## Values
 
@@ -47,7 +47,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | fullnameOverride | string | `""` |  |
 | gateway | object | `{"annotations":{},"authPolicy":{"basePath":"","enabled":true},"enabled":false,"ingressClassName":"","parentRefs":[{"name":"labs64io-gateway","namespace":"tools"}],"prefix":"","routes":[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}],"sharedMiddlewares":{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}}` | Gateway routes published by this module (rendered by chart-libs.gateway-routes) |
 | gateway.annotations | object | `{}` | Annotations for fallback Ingress |
-| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/api-gateway/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
+| gateway.authPolicy | object | `{"basePath":"","enabled":true}` | Auth-policy publication. NOTE: the traefik-authproxy no longer live-discovers per-module policies via /.well-known/auth-policy — it loads a generated routes manifest (charts/authgateway/routes/) and asks the central Cerbos PDP for every decision. This block is retained for backward compatibility and is a no-op for edge enforcement. |
 | gateway.authPolicy.basePath | string | `""` | External base path prepended to the module's OpenAPI paths; defaults to <prefix>/api/v1 |
 | gateway.authPolicy.enabled | bool | `true` | Publish this module's auth policy to the gateway ACS |
 | gateway.enabled | bool | `false` | Publish this module's routes on the Traefik gateway |
@@ -57,7 +57,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | gateway.routes | list | `[{"path":"/api/v1","port":8080,"stripPath":true},{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}]` | Routes exposed by this module |
 | gateway.routes[0] | object | `{"path":"/api/v1","port":8080,"stripPath":true}` | Checkout API (protected; strips '<prefix>/api/v1' — backend is root-mapped) |
 | gateway.routes[1] | object | `{"path":"/v3/api-docs","port":8080,"public":true,"stripPrefix":true}` | OpenAPI docs (public, prefix stripped before forwarding) |
-| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common) |
+| gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common) |
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |
 | global.security.allowInsecureImages | bool | `true` | Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard) |
 | gracefulShutdown.timeout | string | `"30s"` | Max time Spring Boot waits for in-flight requests before forced shutdown |
@@ -136,7 +136,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | ui.gateway.prefix | string | `"/checkout"` | External path prefix; checkout-ui serves under /checkout |
 | ui.gateway.routes | list | `[{"path":"","port":8080,"public":true}]` | Routes exposed by this module |
 | ui.gateway.routes[0] | object | `{"path":"","port":8080,"public":true}` | Checkout UI static assets. Public: a plain browser navigation can't attach a Bearer token, and the auth-proxy's ForwardAuth policy set is generated from module OpenAPI specs, so it has no entry for a bare UI path anyway (would 403 regardless). The actual protected surface is the checkout-be API the SPA calls afterward. |
-| ui.gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the api-gateway chart (fullnameOverride: gateway-common) |
+| ui.gateway.sharedMiddlewares | object | `{"auth":"gateway-common-auth","compress":"gateway-common-compress","rateLimit":"gateway-common-ratelimit"}` | Names of the shared middlewares provided by the authgateway chart (fullnameOverride: gateway-common) |
 | ui.image | object | `{"digest":"sha256:d6077e2bc66618882efa6c342436241a6e15fb5c2d3f24bb27251d6179d3297f","pullPolicy":"IfNotPresent","repository":"labs64/checkout-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
 | ui.image.digest | string | `"sha256:d6077e2bc66618882efa6c342436241a6e15fb5c2d3f24bb27251d6179d3297f"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | ui.image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
