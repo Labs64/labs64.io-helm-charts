@@ -1,7 +1,7 @@
 dependencies:
 - name: api-gateway
   repository: file://../api-gateway
-  version: 0.15.14
+  version: 0.15.15
 - name: authz-pdp
   repository: file://../authz-pdp
   version: 0.8.10
@@ -35,5 +35,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.4
-digest: sha256:9ac97675cb919aff17c180f7e1361286267ef8447e34663fda6e54c5834848ff
-generated: "2026-11-20T15:47:07.149818+01:00"
+digest: sha256:e1669922372f45fb9e40dea9967347e5b8ad3b22721100530e78a6dd811499fd
+generated: "2026-11-20T15:02:07.178604681Z"
