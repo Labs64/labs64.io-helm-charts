@@ -60,7 +60,7 @@ Labs64.IO :: Auth Gateway (ForwardAuth + Middlewares)
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | lifecycle.preStopDrainSeconds | int | `5` | preStop sleep (seconds) so Traefik/kube-proxy deregister the pod before shutdown; 0 disables |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/health","port":8081},"initialDelaySeconds":0,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
-| logLevel | string | `"INFO"` | Log level for the auth proxy. |
+| logLevel | string | `"INFO"` | Log level for the Auth Gateway. |
 | nameOverride | string | `""` | This is to override the chart name. |
 | networkPolicy | object | `{"egress":[{"ports":[{"port":3592,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]}],"enabled":false,"extraIngress":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring","toolsEgress":[{"name":"mock-oidc","port":8080}]}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
 | networkPolicy.egress | list | `[{"ports":[{"port":3592,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]}]` | Egress rules enforcing database-per-service isolation. |

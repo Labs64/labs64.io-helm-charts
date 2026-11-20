@@ -68,7 +68,7 @@ Environment:
   LABS64_PROFILE              quickstart | byo — skips the menu and every prompt
                               (`custom` is accepted as a deprecated alias of `byo`)
   LABS64_NAMESPACE            namespace for modules, bundled infra, and the gateway workload
-                              itself (Traefik, the ForwardAuth proxy) (default: labs64io)
+                              itself (Traefik, the Auth Gateway) (default: labs64io)
   LABS64_GATEWAY_NAMESPACE    namespace for the Gateway API `Gateway` object only — no pods
                               ever run here (default: tools)
   LABS64_RELEASE              Helm release name (default: labs64io)
@@ -231,7 +231,7 @@ check_prereqs() {
   printf '                   are ever created here\n' >> "$LOGFILE"
 
   printf "\n  Cluster context: %b%s%b\n" "${C_BOLD}${C_CYAN}" "$ctx" "${C_RESET}"
-  # Everything (modules, bundled infra, Traefik itself, the ForwardAuth proxy) is one Helm
+  # Everything (modules, bundled infra, Traefik itself, the Auth Gateway) is one Helm
   # release installed with --namespace NS_MODULES. NS_GATEWAY holds exactly one object: the
   # Gateway API `Gateway` resource, which the traefik subchart pins there via an explicit
   # metadata.namespace override so it can, in principle, be shared across app namespaces —

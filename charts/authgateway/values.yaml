@@ -202,7 +202,7 @@ oidc:
 cerbos:
   url: http://labs64io-authz-pdp:3592
 
-# -- Log level for the auth proxy.
+# -- Log level for the Auth Gateway.
 logLevel: INFO
 
 # -- Directory of generated <module>.routes.yaml manifests (mounted ConfigMap).

@@ -14,7 +14,7 @@ spec:
     - Egress
   ingress:
     # From the Gateway (so a demo user can mint a token from outside) and from
-    # anything in this namespace (the auth proxy fetching the discovery document
+    # anything in this namespace (the Auth Gateway fetching the discovery document
     # and the JWKS).
     - from:
         - namespaceSelector:

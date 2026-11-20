@@ -401,7 +401,7 @@
     },
     "logLevel": {
       "default": "INFO",
-      "description": "Log level for the auth proxy.",
+      "description": "Log level for the Auth Gateway.",
       "title": "logLevel",
       "type": "string"
     },
