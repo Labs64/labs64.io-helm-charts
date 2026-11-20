@@ -15,7 +15,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 ## Source Code
 
 * <https://github.com/Labs64/labs64.io-helm-charts>
-* <https://github.com/Labs64/labs64.io-authproxy/tree/master/traefik-authproxy>
+* <https://github.com/Labs64/labs64.io-authgateway/tree/master/traefik-authproxy>
 
 ## Requirements
 

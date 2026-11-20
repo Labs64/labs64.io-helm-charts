@@ -190,7 +190,7 @@ docker build -t localhost:5005/payment-gateway:latest -f payment-gateway-be/Dock
 docker push localhost:5005/payment-gateway:latest
 
 # Python services
-cd ../labs64.io-authproxy
+cd ../labs64.io-authgateway
 docker build -t localhost:5005/traefik-authproxy:latest -f traefik-authproxy/Dockerfile traefik-authproxy/
 docker push localhost:5005/traefik-authproxy:latest
 
