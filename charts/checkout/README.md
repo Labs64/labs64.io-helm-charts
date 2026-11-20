@@ -1,6 +1,6 @@
 # checkout
 
-![Version: 0.11.24](https://img.shields.io/badge/Version-0.11.24-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.13](https://img.shields.io/badge/AppVersion-0.0.13-informational?style=flat-square)
+![Version: 0.11.25](https://img.shields.io/badge/Version-0.11.25-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.14](https://img.shields.io/badge/AppVersion-0.0.14-informational?style=flat-square)
 
 Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
@@ -61,8 +61,8 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | global | object | `{"security":{"allowInsecureImages":true}}` | Global values shared across Labs64.IO charts and Bitnami subcharts @schema type: object additionalProperties: true @schema |
 | global.security.allowInsecureImages | bool | `true` | Required by Bitnami subcharts when images are pulled from bitnamilegacy (image substitution guard) |
 | gracefulShutdown.timeout | string | `"30s"` | Max time Spring Boot waits for in-flight requests before forced shutdown |
-| image | object | `{"digest":"sha256:06512575b1190b93bb5411990937618886540e174401ef567aa02fde526521dd","pullPolicy":"IfNotPresent","repository":"labs64/checkout","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
-| image.digest | string | `"sha256:06512575b1190b93bb5411990937618886540e174401ef567aa02fde526521dd"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| image | object | `{"digest":"sha256:0a146a46fc4f5e0fc9f8b9683e0ed2f22aa45988aaceb7b1a0ca5b5a32b50af3","pullPolicy":"IfNotPresent","repository":"labs64/checkout","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| image.digest | string | `"sha256:0a146a46fc4f5e0fc9f8b9683e0ed2f22aa45988aaceb7b1a0ca5b5a32b50af3"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
@@ -137,8 +137,8 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | ui.gateway.routes | list | `[{"path":"","port":8080,"public":true}]` | Routes exposed by this module |
 | ui.gateway.routes[0] | object | `{"path":"","port":8080,"public":true}` | Checkout UI static assets. Public: a plain browser navigation can't attach a Bearer token, and the Auth Gateway's ForwardAuth policy set is generated from module OpenAPI specs, so it has no entry for a bare UI path anyway (would 403 regardless). The actual protected surface is the checkout-be API the SPA calls afterward. |
 | ui.gateway.sharedMiddlewares | object | `{"auth":"authgateway-auth","compress":"authgateway-compress","rateLimit":"authgateway-ratelimit"}` | Names of the shared middlewares provided by the authgateway chart (fullnameOverride: authgateway) |
-| ui.image | object | `{"digest":"sha256:d6077e2bc66618882efa6c342436241a6e15fb5c2d3f24bb27251d6179d3297f","pullPolicy":"IfNotPresent","repository":"labs64/checkout-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
-| ui.image.digest | string | `"sha256:d6077e2bc66618882efa6c342436241a6e15fb5c2d3f24bb27251d6179d3297f"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
+| ui.image | object | `{"digest":"sha256:1438cfd12784f02f2944c9461e5d4fc952c935795bd2222282c030a0c3b9e73d","pullPolicy":"IfNotPresent","repository":"labs64/checkout-ui","tag":""}` | This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/ |
+| ui.image.digest | string | `"sha256:1438cfd12784f02f2944c9461e5d4fc952c935795bd2222282c030a0c3b9e73d"` | Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag. |
 | ui.image.pullPolicy | string | `"IfNotPresent"` | This sets the pull policy for images. |
 | ui.image.tag | string | `""` | Overrides the image tag whose default is the chart appVersion. |
 | ui.imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
