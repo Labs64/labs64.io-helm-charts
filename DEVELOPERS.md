@@ -191,7 +191,7 @@ docker push localhost:5005/payment-gateway:latest
 
 # Python services
 cd ../labs64.io-authgateway
-docker build -t localhost:5005/traefik-authproxy:latest -f traefik-authproxy/Dockerfile traefik-authproxy/
+docker build -t localhost:5005/traefik-authproxy:latest -f traefik/Dockerfile traefik/
 docker push localhost:5005/traefik-authproxy:latest
 
 # Vue frontends

@@ -1,6 +1,6 @@
 # api-gateway
 
-![Version: 0.15.13](https://img.shields.io/badge/Version-0.15.13-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.6](https://img.shields.io/badge/AppVersion-0.1.6-informational?style=flat-square)
+![Version: 0.15.14](https://img.shields.io/badge/Version-0.15.14-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.1.6](https://img.shields.io/badge/AppVersion-0.1.6-informational?style=flat-square)
 
 Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 
@@ -15,7 +15,7 @@ Labs64.IO :: API Gateway (AuthProxy + Middlewares)
 ## Source Code
 
 * <https://github.com/Labs64/labs64.io-helm-charts>
-* <https://github.com/Labs64/labs64.io-authgateway/tree/master/traefik-authproxy>
+* <https://github.com/Labs64/labs64.io-authgateway/tree/master/traefik>
 
 ## Requirements
 
