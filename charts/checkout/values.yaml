@@ -26,7 +26,7 @@ image:
   # -- Overrides the image tag whose default is the chart appVersion.
   tag: ""
   # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-  digest: "sha256:06512575b1190b93bb5411990937618886540e174401ef567aa02fde526521dd"
+  digest: "sha256:0a146a46fc4f5e0fc9f8b9683e0ed2f22aa45988aaceb7b1a0ca5b5a32b50af3"
 
 # -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
@@ -371,7 +371,7 @@ ui:
     # -- Overrides the image tag whose default is the chart appVersion.
     tag: ""
     # -- Pin the image by digest (`sha256:<64 hex>`). Takes precedence over `tag` — the release pipeline sets it so a deployment cannot follow a moved tag.
-    digest: "sha256:d6077e2bc66618882efa6c342436241a6e15fb5c2d3f24bb27251d6179d3297f"
+    digest: "sha256:1438cfd12784f02f2944c9461e5d4fc952c935795bd2222282c030a0c3b9e73d"
   
   # -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
   imagePullSecrets: []
