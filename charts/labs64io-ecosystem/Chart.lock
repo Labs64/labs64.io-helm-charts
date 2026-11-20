@@ -7,7 +7,7 @@ dependencies:
   version: 0.8.12
 - name: checkout
   repository: file://../checkout
-  version: 0.11.25
+  version: 0.11.26
 - name: payment-gateway
   repository: file://../payment-gateway
   version: 0.10.28
@@ -35,5 +35,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.6
-digest: sha256:e7c39e6e10cde03a5a3ab3a73fff8bae1204a91c422e238feb3562bffe91f4ec
-generated: "2026-11-20T19:14:55.348247492Z"
+digest: sha256:be345f4f89834888a427580fb2449713c853e9d0b2da9a76c9239738dc6284c5
+generated: "2026-11-20T19:24:02.499502116Z"
