@@ -1,7 +1,24 @@
+# `-auth` is what every module route references (gateway.sharedMiddlewares.auth). It is a
+# chain, in this order: ForwardAuth first (it needs the caller's bearer token to decide),
+# then removal of `Authorization`, so a module only ever sees the trusted X-Auth-* identity
+# headers (RFC_03 Principle 1: modules never see the JWT). A native Gateway API filter cannot
+# do this: native filters run before ExtensionRef filters, i.e. before ForwardAuth.
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: {{ include "chart-libs.fullname" . }}-auth
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+spec:
+  chain:
+    middlewares:
+      - name: {{ include "chart-libs.fullname" . }}-forwardauth
+      - name: {{ include "chart-libs.fullname" . }}-strip-authorization
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-forwardauth
   labels:
     {{- include "chart-libs.labels" . | nindent 4 }}
 spec:
@@ -11,6 +28,18 @@ spec:
     maxResponseBodySize: {{ .Values.authGateway.maxResponseBodySize }}
     authResponseHeaders:
       {{- toYaml .Values.authGateway.authResponseHeaders | nindent 6 }}
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "chart-libs.fullname" . }}-strip-authorization
+  labels:
+    {{- include "chart-libs.labels" . | nindent 4 }}
+spec:
+  headers:
+    customRequestHeaders:
+      # An empty value deletes the header before the request reaches the module.
+      Authorization: ""
 ---
 # NOTE: inbound X-Auth-* stripping is now a native Gateway API RequestHeaderModifier
 # filter emitted first in every route by chart-libs.gateway-routes (spec §3.2). The
