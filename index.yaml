@@ -5312,6 +5312,80 @@ entries:
     version: 0.4.0
   labs64io-ecosystem:
   - apiVersion: v2
+    created: "2026-11-21T10:21:37.196160787Z"
+    dependencies:
+    - condition: authgateway.enabled
+      name: authgateway
+      repository: file://../authgateway
+      version: '>=0.1.0'
+    - condition: authz-pdp.enabled
+      name: authz-pdp
+      repository: file://../authz-pdp
+      version: '>=0.1.0'
+    - condition: checkout.enabled
+      name: checkout
+      repository: file://../checkout
+      version: '>=0.1.0'
+    - condition: payment-gateway.enabled
+      name: payment-gateway
+      repository: file://../payment-gateway
+      version: '>=0.1.0'
+    - condition: reporting.enabled
+      name: reporting
+      repository: file://../reporting
+      version: '>=0.1.0'
+    - condition: auditflow.enabled
+      name: auditflow
+      repository: file://../auditflow
+      version: '>=0.1.0'
+    - condition: api-docs.enabled
+      name: api-docs
+      repository: file://../api-docs
+      version: '>=0.1.0'
+    - condition: customer-portal.enabled
+      name: customer-portal
+      repository: file://../customer-portal
+      version: '>=0.1.0'
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 18.12.19
+    - alias: redis
+      condition: redis.enabled
+      name: valkey
+      repository: https://charts.bitnami.com/bitnami
+      version: 6.3.15
+    - condition: traefik.enabled
+      name: traefik
+      repository: https://traefik.github.io/charts
+      version: 42.4.0
+    - condition: mock-oidc.enabled
+      name: mock-oidc
+      repository: file://../mock-oidc
+      version: '>=0.1.0'
+    description: 'Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem
+      and optional infrastructure'
+    digest: 5ad2c6648f8b9c2e361d80fd5a4117e7658577cbfedb430e13aadb348403c9bf
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64
+    - labs64io
+    - ecosystem
+    - microservices
+    - platform
+    maintainers:
+    - email: info@labs64.com
+      name: Labs64
+      url: https://labs64.io
+    name: labs64io-ecosystem
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/labs64io-ecosystem-0.20.113/labs64io-ecosystem-0.20.113.tgz
+    version: 0.20.113
+  - apiVersion: v2
     created: "2026-11-21T08:43:54.057377833Z"
     dependencies:
     - condition: authgateway.enabled
@@ -15135,6 +15209,36 @@ entries:
     version: 0.0.1
   reporting:
   - apiVersion: v2
+    appVersion: 0.0.14
+    created: "2026-11-21T10:21:37.320591464Z"
+    dependencies:
+    - name: chart-libs
+      repository: file://../chart-libs
+      version: 0.8.10
+    description: 'Labs64.IO :: Reporting - read-only reports over the events stored
+      by AuditFlow sinks'
+    digest: cfa363abdf45cb5de171d8766eeaaff5549a205c580234dc5b67680b1c108984
+    home: https://labs64.io
+    icon: https://raw.githubusercontent.com/Labs64/.github/refs/heads/master/assets/labs64-avatar-128x128.png
+    keywords:
+    - labs64io
+    - ecosystem
+    - reporting
+    - analytics
+    - clickhouse
+    maintainers:
+    - email: info@labs64.com
+      name: Labs64
+      url: https://labs64.io
+    name: reporting
+    sources:
+    - https://github.com/Labs64/labs64.io-helm-charts
+    - https://github.com/Labs64/labs64.io-reporting
+    type: application
+    urls:
+    - https://github.com/Labs64/labs64.io-helm-charts/releases/download/reporting-0.1.17/reporting-0.1.17.tgz
+    version: 0.1.17
+  - apiVersion: v2
     appVersion: 0.0.13
     created: "2026-11-20T19:48:25.958119001Z"
     dependencies:
@@ -15644,4 +15748,4 @@ entries:
     urls:
     - https://github.com/Labs64/labs64.io-helm-charts/releases/download/reporting-0.1.0/reporting-0.1.0.tgz
     version: 0.1.0
-generated: "2026-11-21T08:43:54.057869103Z"
+generated: "2026-11-21T10:21:37.321868801Z"
