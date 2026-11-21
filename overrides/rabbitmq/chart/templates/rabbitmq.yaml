@@ -44,6 +44,13 @@ spec:
         - name: rabbitmq
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            # NOT readOnlyRootFilesystem: the entrypoint renders config into /etc/rabbitmq and
+            # logs to /var/log/rabbitmq. Same container hardening as the umbrella chart's
+            # templates/rabbitmq.yaml.
           ports:
             - containerPort: 5672
               name: amqp

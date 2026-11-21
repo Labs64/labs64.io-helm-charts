@@ -8,6 +8,7 @@ generate-secrets:
     for dir in overrides/*/; do
         if [ -f "${dir}values.secrets.local.yaml.example" ] && [ ! -f "${dir}values.secrets.local.yaml" ]; then
             cp "${dir}values.secrets.local.yaml.example" "${dir}values.secrets.local.yaml"
+            chmod 600 "${dir}values.secrets.local.yaml"
             echo "Generated ${dir}values.secrets.local.yaml"
         fi
     done

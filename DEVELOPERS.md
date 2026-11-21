@@ -42,6 +42,7 @@ graph TB
             postgres["PostgreSQL<br/>(Database)"]:::tools
             redis["Redis<br/>(Cache)"]:::tools
             mock_oidc["Mock OIDC Provider<br/>(DEV only)"]:::tools
+            eso["External Secrets Operator<br/>(local ClusterSecretStore, no ExternalSecrets by default)"]:::tools
             
             subgraph Observability["Observability Stack (optional)"]
                 otel["OpenTelemetry<br/>Collector"]:::obs
@@ -58,6 +59,7 @@ graph TB
             subgraph Gateway["Gateway & Auth"]
                 api_docs["api-docs<br/>(Swagger UI)"]:::labs64
                 authgateway["authgateway<br/>(Auth Gateway + Middlewares)"]:::labs64
+                authz_pdp["authz-pdp<br/>(Cerbos PDP)"]:::labs64
             end
             
             subgraph AuditFlow["AuditFlow"]
@@ -95,6 +97,7 @@ graph TB
     User((Developer)) -->|HTTP 80/443| traefik
     traefik -.->|"ForwardAuth call (authgateway auth middleware)"| authgateway
     authgateway -->|Validates JWT against| mock_oidc
+    authgateway -->|"Authorization decision (HTTP :3592)"| authz_pdp
     traefik -->|"Routes via Gateway API HTTPRoute (native filters + authgateway middlewares via ExtensionRef)"| api_docs
     traefik --> audit_be
     traefik --> checkout_be
@@ -283,7 +286,7 @@ pinned upstream `codecentric/keycloakx` chart (official Keycloak image), configu
 `overrides/keycloak/`: `values.yaml` (shared with AWS), `values.local.yaml`, the realm contract
 `realm.base.json` (shared with AWS) and the test clients `realm.test-fixtures.json` (local, and AWS
 development environments only — enabled there by the operator, never in production).
-`just generate-jwt <persona>` mints a token from whichever provider is selected. The command also applies the Traefik dashboard HTTPRoute and local
+`just generate-jwt <persona>` mints a token from whichever provider is selected. `just install-tools` also applies the Traefik dashboard HTTPRoute and the local
 `ClusterSecretStore` (`overrides/eso/cluster-secret-store.yaml`) used by charts with
 `externalSecrets.enabled` (see [Unified secret management](#unified-secret-management) below).
 

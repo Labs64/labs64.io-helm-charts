@@ -26,6 +26,13 @@ ingressRoute:
   dashboard:
     enabled: false
 
+# Drop request headers whose name merely aliases another one (X_Auth_User, X.Auth.User for
+# X-Auth-User). The Auth Gateway strips and rewrites the real X-Auth-* headers, but a backend that
+# derives variable names from header names (nginx $http_x_auth_user, CGI/WSGI) would read the alias
+# as the trusted header and let a client spoof it. Traefik warns about it at every start.
+global:
+  aliasHeadersStrategy: delete
+
 # Gateway API is now the routing substrate: modules own HTTPRoutes that attach to
 # the platform Gateway below. ForwardAuth/rate-limit/compress remain Traefik
 # Middlewares referenced from the HTTPRoutes via ExtensionRef.
