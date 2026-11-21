@@ -6,10 +6,9 @@ first rule, which otherwise admits every pod of the namespace on every port:
 other container ports are then closed to the pod network), and
 .Values.networkPolicy.ingressFrom replaces "every pod in the namespace" with the
 ingress controller, the chart's own pods (the helm test hook carries their labels)
-and the listed app.kubernetes.io/name values. The key's presence decides, not its
-content: `ingressFrom: []` admits no other in-namespace caller at all (a workload only
-the gateway reaches); leaving the key out (or setting it to null) keeps the legacy
-namespace-wide rule.
+and the listed app.kubernetes.io/name values. Being a list decides, not its length:
+`ingressFrom: []` admits no other in-namespace caller at all (a workload only the gateway
+reaches); leaving it out or setting it to null keeps the legacy namespace-wide rule.
 .Values.networkPolicy.extraIngressFrom appends app.kubernetes.io/name values to that list without
 restating it — for a caller that belongs to the deployment rather than the module (the umbrella
 chart's helm test pod). Ignored while ingressFrom is absent (the rule is namespace-wide anyway). Egress is restricted to DNS,
@@ -49,7 +48,7 @@ spec:
               {{- else }}
               app.kubernetes.io/name: traefik
               {{- end }}
-        {{- if hasKey .Values.networkPolicy "ingressFrom" }}
+        {{- if kindIs "slice" .Values.networkPolicy.ingressFrom }}
         {{- /* The ingress controller may also run in the release namespace (umbrella install). */}}
         - podSelector:
             matchLabels:

@@ -265,18 +265,20 @@ networkPolicy:
   # additionalProperties: true
   # @schema
   ingressControllerLabels: {}
-  # -- TCP ports open to the ingress controller and the in-namespace callers below.
-  ingressPorts:
-    - 8081
-  # -- In-namespace workloads (app.kubernetes.io/name) allowed to call those ports, besides the
-  # ingress controller and this chart's own pods (helm test). `[]`: only the gateway calls it (ForwardAuth). Remove the key
-  # (set it to null) to fall back to the namespace-wide rule.
+  # -- TCP ports open to the ingress controller and the in-namespace callers in `ingressFrom`.
+  # Empty: every port. Set in overrides/authgateway/values.local.yaml: on AWS this chart's policy is not
+  # enabled, and a chart that narrows its ingress in its defaults must be excluded from the deployment
+  # repository's fallback rules (kubernetes/network-policies/labs64io.yaml).
+  ingressPorts: []
+  # -- In-namespace workloads (app.kubernetes.io/name) allowed to call the ports, besides the ingress
+  # controller and this chart's own pods (helm test). `[]` admits no other caller; null (the default)
+  # keeps the namespace-wide rule.
   # @schema
-  # type: array
+  # type: [array, "null"]
   # items:
   #   type: string
   # @schema
-  ingressFrom: []
+  ingressFrom: null
   # -- Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart
   # adds its own helm test pod here).
   # @schema

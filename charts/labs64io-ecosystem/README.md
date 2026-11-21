@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.20.116](https://img.shields.io/badge/Version-0.20.116-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.20.117](https://img.shields.io/badge/Version-0.20.117-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 
@@ -89,6 +89,7 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | postgresql.auth.username | string | `"labs64"` |  |
 | postgresql.enabled | bool | `true` |  |
 | postgresql.fullnameOverride | string | `"labs64io-postgresql"` | Pinned so `global.postgresql.host` above can be a plain string (standalone architecture: no "-primary" suffix on the resulting service name) |
+| postgresql.image.digest | string | `"sha256:f6165e04250e7db79db6f7edaf894710573d12bd2310cac85b1c8109f79e0fdb"` |  |
 | postgresql.primary | object | `{"initdb":{"scripts":{"00-labs64io-databases.sql":"SELECT 'CREATE DATABASE payment_gateway'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'payment_gateway')\\gexec\nSELECT 'CREATE DATABASE checkout'\n  WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'checkout')\\gexec\n"}},"networkPolicy":{"allowExternalEgress":false}}` | Each module owns its own database (db-per-service isolation — see the note on global.postgresql above). The Bitnami chart creates only `auth.database`, and the modules' own pre-install migration Jobs cannot create the rest: they run before this server exists. Creating them here, at first initdb, is the only point in the release where the ordering works. Runs once, on an empty data directory only — enabling a module later needs the database created by hand. @schema type: object additionalProperties: true @schema |
 | rabbitmq.auth.existingPasswordSecret | string | `"labs64io-shared-secret"` |  |
 | rabbitmq.auth.existingSecretPasswordKey | string | `"SPRING_RABBITMQ_PASSWORD"` |  |
@@ -102,6 +103,7 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | redis.auth.existingSecretPasswordKey | string | `"SPRING_DATA_REDIS_PASSWORD"` |  |
 | redis.enabled | bool | `true` |  |
 | redis.fullnameOverride | string | `"labs64io-redis"` | Pinned so `global.redis.host` above can be a plain string (standalone architecture: the primary service is named "<fullnameOverride>-primary") |
+| redis.image.digest | string | `"sha256:dc39ba054b5d4192d3ebff4ac6643f155e656fc7809c1b2e8df86e2c0a39f204"` |  |
 | redis.networkPolicy.allowExternalEgress | bool | `false` |  |
 | reporting.enabled | bool | `false` |  |
 | reporting.networkPolicy.extraIngressFrom[0] | string | `"labs64io-ecosystem"` |  |

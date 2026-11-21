@@ -1,6 +1,6 @@
 # reporting
 
-![Version: 0.1.18](https://img.shields.io/badge/Version-0.1.18-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.14](https://img.shields.io/badge/AppVersion-0.0.14-informational?style=flat-square)
+![Version: 0.1.19](https://img.shields.io/badge/Version-0.1.19-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.14](https://img.shields.io/badge/AppVersion-0.0.14-informational?style=flat-square)
 
 Labs64.IO :: Reporting - read-only reports over the events stored by AuditFlow sinks
 
@@ -21,7 +21,7 @@ Labs64.IO :: Reporting - read-only reports over the events stored by AuditFlow s
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.11 |
+| file://../chart-libs | chart-libs | 0.8.12 |
 
 ## Values
 

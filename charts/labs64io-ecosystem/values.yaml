@@ -192,13 +192,19 @@ postgresql:
   # -- Pinned so `global.postgresql.host` above can be a plain string (standalone
   # architecture: no "-primary" suffix on the resulting service name)
   fullnameOverride: "labs64io-postgresql"
-  # TODO: pin this image. The subchart defaults to `latest`, which pulls today but is
-  # mutable: a re-pull can move the PostgreSQL MAJOR version under an existing PVC, and
-  # PostgreSQL refuses to start on a data directory written by a different major — a
-  # routine pod restart that presents as data loss. There is currently no tag to pin to:
-  # docker.io/bitnami/postgresql carries only `latest`, and bitnamilegacy/postgresql
-  # stops at 17.6.0 while this subchart (18.7.11) targets appVersion 18.4.0. Pin by
-  # digest, or move to oci://registry-1.docker.io/bitnamicharts, once one is available.
+  # Pinned by digest (the multi-arch image index; PostgreSQL 18.7). The subchart defaults to
+  # `latest`, and docker.io/bitnami/postgresql carries no other tag: a re-pull could move the
+  # PostgreSQL MAJOR under an existing PVC, and PostgreSQL refuses to start on a data directory
+  # written by a different major, a routine pod restart that presents as data loss. The digest
+  # wins over the tag; Renovate moves it (the annotation below), so a major upgrade is a reviewed
+  # pull request, not a pod restart.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    # renovate-digest: datasource=docker depName=docker.io/bitnami/postgresql version=latest
+    digest: "sha256:f6165e04250e7db79db6f7edaf894710573d12bd2310cac85b1c8109f79e0fdb"
   # -- Each module owns its own database (db-per-service isolation — see the note on
   # global.postgresql above). The Bitnami chart creates only `auth.database`, and the
   # modules' own pre-install migration Jobs cannot create the rest: they run before
@@ -367,9 +373,17 @@ redis:
   enabled: true
   # This is bitnami/valkey (Chart.yaml aliases it "redis" — see the dependency comment
   # there), matching the engine AWS ElastiCache runs (Valkey 9.1).
-  # TODO: pin this image — see the note under `postgresql` above. Same situation:
-  # docker.io/bitnami/valkey carries only `latest` (currently Valkey 9.1.x). Lower
-  # stakes than PostgreSQL (no on-disk major-version barrier), but still mutable.
+  # Pinned by digest (the multi-arch image index; Valkey 9.1): docker.io/bitnami/valkey carries only
+  # `latest`, so a re-pull could change the minor line under the same chart. Lower stakes than
+  # PostgreSQL (no on-disk major-version barrier), pinned for the same reproducibility. Renovate
+  # moves it (the annotation below).
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  image:
+    # renovate-digest: datasource=docker depName=docker.io/bitnami/valkey version=latest
+    digest: "sha256:dc39ba054b5d4192d3ebff4ac6643f155e656fc7809c1b2e8df86e2c0a39f204"
   architecture: standalone
   # -- Pinned so `global.redis.host` above can be a plain string (standalone architecture:
   # the primary service is named "<fullnameOverride>-primary")

@@ -273,8 +273,8 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: traefik
-        {{- if hasKey .Values.ui.networkPolicy "ingressFrom" }}
-        {{- /* Same contract as chart-libs.networkpolicy: the key's presence narrows the rule to
+        {{- if kindIs "slice" .Values.ui.networkPolicy.ingressFrom }}
+        {{- /* Same contract as chart-libs.networkpolicy: a list narrows the rule to
                the ingress controller (also when it runs in the release namespace), this UI's own
                pods (the helm test hook carries their labels) and the listed
                app.kubernetes.io/name values; `[]` admits no other in-namespace caller. */}}

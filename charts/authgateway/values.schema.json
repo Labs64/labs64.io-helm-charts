@@ -542,21 +542,21 @@
           "type": "object"
         },
         "ingressFrom": {
-          "description": "In-namespace workloads (app.kubernetes.io/name) allowed to call those ports, besides the\ningress controller and this chart's own pods (helm test). `[]`: only the gateway calls it (ForwardAuth). Remove the key\n(set it to null) to fall back to the namespace-wide rule.",
+          "default": "null",
+          "description": "In-namespace workloads (app.kubernetes.io/name) allowed to call the ports, besides the ingress\ncontroller and this chart's own pods (helm test). `[]` admits no other caller; null (the default)\nkeeps the namespace-wide rule.",
           "items": {
             "type": "string"
           },
+          "required": [],
           "title": "ingressFrom",
-          "type": "array"
+          "type": [
+            "array",
+            "null"
+          ]
         },
         "ingressPorts": {
-          "description": "TCP ports open to the ingress controller and the in-namespace callers below.",
+          "description": "TCP ports open to the ingress controller and the in-namespace callers in `ingressFrom`.\nEmpty: every port. Set in overrides/authgateway/values.local.yaml: on AWS this chart's policy is not\nenabled, and a chart that narrows its ingress in its defaults must be excluded from the deployment\nrepository's fallback rules (kubernetes/network-policies/labs64io.yaml).",
           "items": {
-            "anyOf": [
-              {
-                "type": "integer"
-              }
-            ],
             "required": []
           },
           "title": "ingressPorts",

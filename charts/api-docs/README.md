@@ -1,6 +1,6 @@
 # api-docs
 
-![Version: 0.9.15](https://img.shields.io/badge/Version-0.9.15-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.35.1](https://img.shields.io/badge/AppVersion-v5.35.1-informational?style=flat-square)
+![Version: 0.9.16](https://img.shields.io/badge/Version-0.9.16-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v5.35.1](https://img.shields.io/badge/AppVersion-v5.35.1-informational?style=flat-square)
 
 Labs64.IO :: Swagger UI
 
@@ -20,7 +20,7 @@ Labs64.IO :: Swagger UI
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.11 |
+| file://../chart-libs | chart-libs | 0.8.12 |
 
 ## Values
 
@@ -52,13 +52,13 @@ Labs64.IO :: Swagger UI
 | initContainers | string | `"- name: stage-writable-paths\n  image: {{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.image \"context\" $) | quote }}\n  imagePullPolicy: {{ .Values.image.pullPolicy }}\n  command:\n    - sh\n    - -c\n    - cp -a /usr/share/nginx/html/. /stage/html/ && cp -a /etc/nginx/conf.d/. /stage/conf.d/ && cp -a /etc/nginx/templates/. /stage/templates/\n  securityContext:\n    {{- toYaml .Values.securityContext | nindent 4 }}\n  resources:\n    {{- toYaml .Values.resources | nindent 4 }}\n  volumeMounts:\n    - name: html\n      mountPath: /stage/html\n    - name: nginx-conf\n      mountPath: /stage/conf.d\n    - name: nginx-templates\n      mountPath: /stage/templates\n"` | Init containers (a template string, rendered with `tpl`). The default copies the image's docroot and nginx config into the writable emptyDirs above, so the read-only root filesystem still starts with the content swagger-ui ships. |
 | livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":30,"periodSeconds":10,"timeoutSeconds":2}` | This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/ |
 | nameOverride | string | `""` | This is to override the chart name. |
-| networkPolicy | object | `{"enabled":false,"extraIngress":[],"extraIngressFrom":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"ingressFrom":[],"ingressPorts":[8080],"observabilityNamespace":"monitoring"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy | object | `{"enabled":false,"extraIngress":[],"extraIngressFrom":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"ingressFrom":null,"ingressPorts":[],"observabilityNamespace":"monitoring"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | networkPolicy.extraIngressFrom | list | `[]` | Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart adds its own helm test pod here). @schema type: array items:   type: string @schema |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
-| networkPolicy.ingressFrom | list | `[]` | In-namespace workloads (app.kubernetes.io/name) allowed to call those ports, besides the ingress controller and this chart's own pods (helm test). `[]`: only the gateway serves it. Remove the key (set it to null) to fall back to the namespace-wide rule. @schema type: array items:   type: string @schema |
-| networkPolicy.ingressPorts | list | `[8080]` | TCP ports open to the ingress controller and the in-namespace callers below. |
+| networkPolicy.ingressFrom | string | `nil` | In-namespace workloads (app.kubernetes.io/name) allowed to call the ports, besides the ingress controller and this chart's own pods (helm test). `[]` admits no other caller; null (the default) keeps the namespace-wide rule. @schema type: [array, "null"] items:   type: string @schema |
+| networkPolicy.ingressPorts | list | `[]` | TCP ports open to the ingress controller and the in-namespace callers in `ingressFrom`. Empty: every port. Set in overrides/api-docs/values.local.yaml: on AWS this chart's policy is not enabled, and a chart that narrows its ingress in its defaults must be excluded from the deployment repository's fallback rules (kubernetes/network-policies/labs64io.yaml). |
 | networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |

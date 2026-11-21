@@ -3,6 +3,13 @@ global:
 
 networkPolicy:
   enabled: true
+  # Locally only only the gateway serves it: the port is closed to every other pod. Not in the chart defaults, because
+  # on AWS this chart's policy is not enabled and the deployment repository's fallback rules serve
+  # it (a chart that narrows its ingress must be excluded from them, see its
+  # kubernetes/network-policies/labs64io.yaml).
+  ingressPorts:
+    - 8080
+  ingressFrom: []
 
 gateway:
 

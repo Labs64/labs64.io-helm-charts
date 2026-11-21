@@ -689,9 +689,26 @@
           "title": "fullnameOverride",
           "type": "string"
         },
+        "image": {
+          "additionalProperties": true,
+          "description": "Pinned by digest (the multi-arch image index; PostgreSQL 18.7). The subchart defaults to\n`latest`, and docker.io/bitnami/postgresql carries no other tag: a re-pull could move the\nPostgreSQL MAJOR under an existing PVC, and PostgreSQL refuses to start on a data directory\nwritten by a different major, a routine pod restart that presents as data loss. The digest\nwins over the tag; Renovate moves it (the annotation below), so a major upgrade is a reviewed\npull request, not a pod restart.",
+          "properties": {
+            "digest": {
+              "default": "sha256:f6165e04250e7db79db6f7edaf894710573d12bd2310cac85b1c8109f79e0fdb",
+              "description": "renovate-digest: datasource=docker depName=docker.io/bitnami/postgresql version=latest",
+              "title": "digest",
+              "type": "string"
+            }
+          },
+          "required": [
+            "digest"
+          ],
+          "title": "image",
+          "type": "object"
+        },
         "primary": {
           "additionalProperties": true,
-          "description": "TODO: pin this image. The subchart defaults to `latest`, which pulls today but is\nmutable: a re-pull can move the PostgreSQL MAJOR version under an existing PVC, and\nPostgreSQL refuses to start on a data directory written by a different major — a\nroutine pod restart that presents as data loss. There is currently no tag to pin to:\ndocker.io/bitnami/postgresql carries only `latest`, and bitnamilegacy/postgresql\nstops at 17.6.0 while this subchart (18.7.11) targets appVersion 18.4.0. Pin by\ndigest, or move to oci://registry-1.docker.io/bitnamicharts, once one is available.\nEach module owns its own database (db-per-service isolation — see the note on\nglobal.postgresql above). The Bitnami chart creates only `auth.database`, and the\nmodules' own pre-install migration Jobs cannot create the rest: they run before\nthis server exists. Creating them here, at first initdb, is the only point in the\nrelease where the ordering works. Runs once, on an empty data directory only —\nenabling a module later needs the database created by hand.",
+          "description": "Each module owns its own database (db-per-service isolation — see the note on\nglobal.postgresql above). The Bitnami chart creates only `auth.database`, and the\nmodules' own pre-install migration Jobs cannot create the rest: they run before\nthis server exists. Creating them here, at first initdb, is the only point in the\nrelease where the ordering works. Runs once, on an empty data directory only —\nenabling a module later needs the database created by hand.",
           "properties": {
             "initdb": {
               "additionalProperties": true,
@@ -844,7 +861,6 @@
       "properties": {
         "architecture": {
           "default": "standalone",
-          "description": "This is bitnami/valkey (Chart.yaml aliases it \"redis\" — see the dependency comment\nthere), matching the engine AWS ElastiCache runs (Valkey 9.1).\nTODO: pin this image — see the note under `postgresql` above. Same situation:\ndocker.io/bitnami/valkey carries only `latest` (currently Valkey 9.1.x). Lower\nstakes than PostgreSQL (no on-disk major-version barrier), but still mutable.",
           "title": "architecture",
           "type": "string"
         },
@@ -879,6 +895,23 @@
           "description": "Pinned so `global.redis.host` above can be a plain string (standalone architecture:\nthe primary service is named \"\u003cfullnameOverride\u003e-primary\")",
           "title": "fullnameOverride",
           "type": "string"
+        },
+        "image": {
+          "additionalProperties": true,
+          "description": "This is bitnami/valkey (Chart.yaml aliases it \"redis\" — see the dependency comment\nthere), matching the engine AWS ElastiCache runs (Valkey 9.1).\nPinned by digest (the multi-arch image index; Valkey 9.1): docker.io/bitnami/valkey carries only\n`latest`, so a re-pull could change the minor line under the same chart. Lower stakes than\nPostgreSQL (no on-disk major-version barrier), pinned for the same reproducibility. Renovate\nmoves it (the annotation below).",
+          "properties": {
+            "digest": {
+              "default": "sha256:dc39ba054b5d4192d3ebff4ac6643f155e656fc7809c1b2e8df86e2c0a39f204",
+              "description": "renovate-digest: datasource=docker depName=docker.io/bitnami/valkey version=latest",
+              "title": "digest",
+              "type": "string"
+            }
+          },
+          "required": [
+            "digest"
+          ],
+          "title": "image",
+          "type": "object"
         },
         "networkPolicy": {
           "additionalProperties": true,

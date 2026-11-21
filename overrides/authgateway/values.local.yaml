@@ -10,6 +10,13 @@ image:
 # selected by identityProvider in overrides/helmfile/values.local.yaml (one switch, no edits here).
 networkPolicy:
   enabled: true
+  # Locally only only the gateway calls it (ForwardAuth): the port is closed to every other pod. Not in the chart defaults, because
+  # on AWS this chart's policy is not enabled and the deployment repository's fallback rules serve
+  # it (a chart that narrows its ingress must be excluded from them, see its
+  # kubernetes/network-policies/labs64io.yaml).
+  ingressPorts:
+    - 8081
+  ingressFrom: []
 
 logLevel: DEBUG
 
