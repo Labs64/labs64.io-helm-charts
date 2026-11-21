@@ -18,28 +18,35 @@ from pathlib import Path
 import pytest
 import yaml
 
-CHART = Path(__file__).parent.parent / "charts" / "authgateway"
+CHARTS = Path(__file__).parent.parent / "charts"
 
 pytestmark = pytest.mark.skipif(shutil.which("helm") is None, reason="helm is not installed")
 
 
-def middlewares() -> dict[str, dict]:
-    out = subprocess.run(
-        ["helm", "template", "t", str(CHART)], check=True, capture_output=True, text=True
-    ).stdout
-    docs = [d for d in yaml.safe_load_all(out) if d and d.get("kind") == "Middleware"]
+@pytest.fixture(scope="module")
+def middlewares(tmp_path_factory) -> dict[str, dict]:
+    """Render the chart from a scratch copy: the vendored charts/*/charts/ is gitignored, so a clean
+    checkout has no chart-libs until `helm dependency build` has run (file:// dependency, offline)."""
+    work = tmp_path_factory.mktemp("charts")
+    for name in ("chart-libs", "authgateway"):
+        shutil.copytree(CHARTS / name, work / name, ignore=shutil.ignore_patterns("charts"))
+    chart = work / "authgateway"
+    for cmd in (["helm", "dependency", "build", str(chart)], ["helm", "template", "t", str(chart)]):
+        done = subprocess.run(cmd, capture_output=True, text=True)
+        assert done.returncode == 0, f"{' '.join(cmd)} failed: {done.stderr}"
+    docs = [d for d in yaml.safe_load_all(done.stdout) if d and d.get("kind") == "Middleware"]
     return {d["metadata"]["name"]: d["spec"] for d in docs}
 
 
-def test_auth_is_a_chain_that_runs_forwardauth_before_the_removal():
-    chain = middlewares()["authgateway-auth"]["chain"]["middlewares"]
+def test_auth_is_a_chain_that_runs_forwardauth_before_the_removal(middlewares):
+    chain = middlewares["authgateway-auth"]["chain"]["middlewares"]
     assert [m["name"] for m in chain] == ["authgateway-forwardauth", "authgateway-strip-authorization"]
 
 
-def test_the_removal_deletes_authorization():
-    assert middlewares()["authgateway-strip-authorization"]["headers"]["customRequestHeaders"] == {"Authorization": ""}
+def test_the_removal_deletes_authorization(middlewares):
+    assert middlewares["authgateway-strip-authorization"]["headers"]["customRequestHeaders"] == {"Authorization": ""}
 
 
-def test_forwardauth_still_hands_the_identity_headers_on():
-    forward = middlewares()["authgateway-forwardauth"]["forwardAuth"]
+def test_forwardauth_still_hands_the_identity_headers_on(middlewares):
+    forward = middlewares["authgateway-forwardauth"]["forwardAuth"]
     assert {"X-Auth-User", "X-Auth-Scopes", "X-Auth-Tenant"} <= set(forward["authResponseHeaders"])
