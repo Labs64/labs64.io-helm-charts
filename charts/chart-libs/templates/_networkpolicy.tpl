@@ -6,7 +6,13 @@ first rule, which otherwise admits every pod of the namespace on every port:
 other container ports are then closed to the pod network), and
 .Values.networkPolicy.ingressFrom replaces "every pod in the namespace" with the
 ingress controller, the chart's own pods (the helm test hook carries their labels)
-and the listed app.kubernetes.io/name values. Egress is restricted to DNS,
+and the listed app.kubernetes.io/name values. The key's presence decides, not its
+content: `ingressFrom: []` admits no other in-namespace caller at all (a workload only
+the gateway reaches); leaving the key out (or setting it to null) keeps the legacy
+namespace-wide rule.
+.Values.networkPolicy.extraIngressFrom appends app.kubernetes.io/name values to that list without
+restating it — for a caller that belongs to the deployment rather than the module (the umbrella
+chart's helm test pod). Ignored while ingressFrom is absent (the rule is namespace-wide anyway). Egress is restricted to DNS,
 the observability namespace (OTLP, when observability is enabled), specific tools-namespace destinations declared via
 .Values.networkPolicy.toolsEgress (name + port pairs — NOT a blanket allow to the
 whole tools namespace, to preserve database-per-service isolation), and any
@@ -43,7 +49,7 @@ spec:
               {{- else }}
               app.kubernetes.io/name: traefik
               {{- end }}
-        {{- if .Values.networkPolicy.ingressFrom }}
+        {{- if hasKey .Values.networkPolicy "ingressFrom" }}
         {{- /* The ingress controller may also run in the release namespace (umbrella install). */}}
         - podSelector:
             matchLabels:
@@ -55,7 +61,7 @@ spec:
         - podSelector:
             matchLabels:
               {{- include "chart-libs.selectorLabels" . | nindent 14 }}
-        {{- range .Values.networkPolicy.ingressFrom }}
+        {{- range concat (.Values.networkPolicy.ingressFrom | default list) (.Values.networkPolicy.extraIngressFrom | default list) }}
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: {{ . }}

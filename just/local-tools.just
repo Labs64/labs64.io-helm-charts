@@ -2,7 +2,7 @@
 
 # Install the core tools and the identity provider selected in the overrides
 [group('local tools')]
-install-tools: install-crds
+install-tools: install-crds _pod-security
     # traefik is applied separately with --skip-crds: its chart bundles its own copy of
     # the Traefik CRDs, which can now drift ahead of the traefik-crds chart pinned in
     # install-crds (e.g. a middlewares CRD field newer than TRAEFIK_CRDS_CHART_VERSION).

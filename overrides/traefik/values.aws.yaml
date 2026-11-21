@@ -36,6 +36,13 @@ ingressRoute:
 ingressClass:
   enabled: false
 
+# Drop request headers whose name merely aliases another one (X_Auth_User, X.Auth.User for
+# X-Auth-User). The Auth Gateway strips and rewrites the real X-Auth-* headers, but a backend that
+# derives variable names from header names (nginx $http_x_auth_user, CGI/WSGI) would read the alias
+# as the trusted header and let a client spoof it. Same setting as values.local.yaml.
+global:
+  aliasHeadersStrategy: delete
+
 providers:
   # Routing substrate: modules own HTTPRoutes that attach to the Gateway below.
   kubernetesGateway:

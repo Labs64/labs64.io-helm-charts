@@ -1,6 +1,6 @@
 # labs64io-ecosystem
 
-![Version: 0.20.115](https://img.shields.io/badge/Version-0.20.115-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.20.116](https://img.shields.io/badge/Version-0.20.116-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional infrastructure
 
@@ -38,9 +38,13 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | api-docs.enabled | bool | `true` |  |
+| api-docs.networkPolicy.extraIngressFrom[0] | string | `"labs64io-ecosystem"` |  |
 | auditflow.enabled | bool | `true` |  |
+| auditflow.networkPolicy.extraIngressFrom[0] | string | `"labs64io-ecosystem"` |  |
 | authgateway.enabled | bool | `true` |  |
+| authgateway.networkPolicy.extraIngressFrom[0] | string | `"labs64io-ecosystem"` |  |
 | authz-pdp.enabled | bool | `true` |  |
+| authz-pdp.networkPolicy.extraIngressFrom[0] | string | `"labs64io-ecosystem"` |  |
 | checkout | object | `{"enabled":false,"migrationJob":{"enabled":false}}` | Not GA. The labs64/checkout and labs64/checkout-ui images have never been published (both repositories 404 on Docker Hub), so enabling this yields ImagePullBackOff. Toggle retained for when they are. |
 | clickhouse.auth.database | string | `"audit"` |  |
 | clickhouse.auth.existingPasswordSecret | string | `""` | The Secret holding the password; required when enabled. |
@@ -77,6 +81,7 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | networkPolicy | object | `{"enabled":false}` | NetworkPolicy for this chart's own workload (templates/rabbitmq.yaml — the only long-running workload this chart declares itself; every module's own NetworkPolicy is configured under that module's own key, e.g. `auditflow.networkPolicy`). |
 | payment-gateway.enabled | bool | `true` |  |
 | payment-gateway.migrationJob.enabled | bool | `false` |  |
+| payment-gateway.networkPolicy.extraIngressFrom[0] | string | `"labs64io-ecosystem"` |  |
 | postgresql.auth.database | string | `"labs64io"` |  |
 | postgresql.auth.existingSecret | string | `"labs64io-shared-secret"` |  |
 | postgresql.auth.secretKeys.adminPasswordKey | string | `"SPRING_DATASOURCE_PASSWORD"` |  |
@@ -99,6 +104,7 @@ Labs64.IO :: Umbrella chart for deploying the Labs64.IO ecosystem and optional i
 | redis.fullnameOverride | string | `"labs64io-redis"` | Pinned so `global.redis.host` above can be a plain string (standalone architecture: the primary service is named "<fullnameOverride>-primary") |
 | redis.networkPolicy.allowExternalEgress | bool | `false` |  |
 | reporting.enabled | bool | `false` |  |
+| reporting.networkPolicy.extraIngressFrom[0] | string | `"labs64io-ecosystem"` |  |
 | secrets.data | object | `{}` | Additional key/value pairs merged into the shared Secret verbatim. Same shape as every module chart's `secrets.data`, so one caller code path covers both. Keys here win over the aliases above on collision. @schema type: object additionalProperties: true @schema |
 | secrets.postgresqlPassword | string | `"labs64_dev_password"` | Convenience aliases for the three bundled-infra passwords, injected into labs64io-shared-secret. The shipped values are dev defaults — with `demoMode: false` (the default) the chart fails to render until they change. |
 | secrets.rabbitmqPassword | string | `"labs64_dev_password"` | See `secrets.postgresqlPassword`. |

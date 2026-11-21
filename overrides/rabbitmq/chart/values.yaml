@@ -27,3 +27,12 @@ resources:
   limits:
     cpu: 500m
     memory: 512Mi
+
+# Who may reach the broker. AuditFlow is its only client (see above), so AMQP is open to its pods
+# in the modules namespace and nothing else; the management UI is reached with
+# `kubectl port-forward`, which NetworkPolicy does not govern.
+networkPolicy:
+  enabled: true
+  clientNamespace: labs64io
+  clients:
+    - auditflow

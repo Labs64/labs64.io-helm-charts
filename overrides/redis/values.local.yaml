@@ -14,6 +14,13 @@
 # lives under `primary:`, not the older Redis chart's `master:` key, and its service name
 # is "<fullname>-primary" (not "-master"); fullnameOverride keeps that plain "redis" like
 # before the swap (overrides/global-values.yaml's global.redis.host depends on it).
+# Pinned by digest (the multi-arch image index): docker.io/bitnami/valkey publishes only `latest`,
+# which is mutable. Renovate moves the digest (the annotation above it; labs64.io-workspace
+# default.json).
+image:
+  # renovate-digest: datasource=docker depName=docker.io/bitnami/valkey version=latest
+  digest: "sha256:dc39ba054b5d4192d3ebff4ac6643f155e656fc7809c1b2e8df86e2c0a39f204"
+
 architecture: standalone
 fullnameOverride: "redis"
 
@@ -25,3 +32,11 @@ primary:
   persistence:
     enabled: true
     size: 1Gi
+
+# Only the Labs64.IO modules' namespace may connect (the chart default admits every pod of every
+# namespace); each module's egress policy names the stores it actually uses.
+networkPolicy:
+  allowExternal: false
+  addExternalClientAccess: false
+  ingressNSMatchLabels:
+    kubernetes.io/metadata.name: labs64io

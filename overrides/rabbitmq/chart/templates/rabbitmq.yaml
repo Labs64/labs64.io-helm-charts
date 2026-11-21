@@ -29,6 +29,7 @@ spec:
     spec:
       securityContext:
         # `rabbitmq` user/group in the official alpine image.
+        runAsNonRoot: true
         runAsUser: 100
         runAsGroup: 101
         fsGroup: 101

@@ -1,6 +1,6 @@
 # authz-pdp
 
-![Version: 0.8.12](https://img.shields.io/badge/Version-0.8.12-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.57.0](https://img.shields.io/badge/AppVersion-0.57.0-informational?style=flat-square)
+![Version: 0.8.13](https://img.shields.io/badge/Version-0.8.13-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.57.0](https://img.shields.io/badge/AppVersion-0.57.0-informational?style=flat-square)
 
 Labs64.IO :: Cerbos PDP — central authorization decision point
 
@@ -21,7 +21,7 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.10 |
+| file://../chart-libs | chart-libs | 0.8.11 |
 
 ## Values
 
@@ -44,8 +44,11 @@ Labs64.IO :: Cerbos PDP — central authorization decision point
 | livenessProbe.initialDelaySeconds | int | `10` |  |
 | livenessProbe.periodSeconds | int | `15` |  |
 | nameOverride | string | `""` |  |
-| networkPolicy | object | `{"enabled":true,"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring"}` | Restrict ingress to same-namespace callers (authgateway + module apps). The chart-libs helper allows all same-namespace pods on all ports; no egress needed. |
+| networkPolicy | object | `{"enabled":true,"extraIngressFrom":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"ingressFrom":["authgateway","auditflow","payment-gateway","checkout"],"ingressPorts":[3592,3593],"observabilityNamespace":"monitoring"}` | Restrict ingress to same-namespace callers (authgateway + module apps). The chart-libs helper allows all same-namespace pods on all ports; no egress needed. |
+| networkPolicy.extraIngressFrom | list | `[]` | Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart adds its own helm test pod here). @schema type: array items:   type: string @schema |
 | networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
+| networkPolicy.ingressFrom | list | `["authgateway","auditflow","payment-gateway","checkout"]` | In-namespace workloads (app.kubernetes.io/name) that ask the PDP for decisions, besides this chart's own pods (helm test). A module that starts calling Cerbos must be added here, next to the egress rule it declares to authz-pdp. Remove the key (set it to null) to fall back to the namespace-wide rule. @schema type: array items:   type: string @schema |
+| networkPolicy.ingressPorts | list | `[3592,3593]` | TCP ports open to the in-namespace callers below: HTTP (authgateway) and gRPC (@Authorize SDK). |
 | networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |

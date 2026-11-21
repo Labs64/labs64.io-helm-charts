@@ -1,28 +1,28 @@
 dependencies:
 - name: authgateway
   repository: file://../authgateway
-  version: 0.15.19
+  version: 0.15.20
 - name: authz-pdp
   repository: file://../authz-pdp
-  version: 0.8.12
+  version: 0.8.13
 - name: checkout
   repository: file://../checkout
-  version: 0.11.27
+  version: 0.11.28
 - name: payment-gateway
   repository: file://../payment-gateway
-  version: 0.10.31
+  version: 0.10.32
 - name: reporting
   repository: file://../reporting
-  version: 0.1.17
+  version: 0.1.18
 - name: auditflow
   repository: file://../auditflow
-  version: 0.15.41
+  version: 0.15.42
 - name: api-docs
   repository: file://../api-docs
-  version: 0.9.14
+  version: 0.9.15
 - name: customer-portal
   repository: file://../customer-portal
-  version: 0.10.10
+  version: 0.10.11
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 18.12.19
@@ -35,5 +35,5 @@ dependencies:
 - name: mock-oidc
   repository: file://../mock-oidc
   version: 0.1.6
-digest: sha256:9f6a33cc1b9c34dbe082699ad45f58e040054f82526361199ecf651d18b1459a
-generated: "2026-11-21T10:33:56.349569712Z"
+digest: sha256:48061c6b69f1289ef68a3ce4046db66749af30fbaca3a4be59d07eeb8dd7d85f
+generated: "2026-11-21T11:37:40.072035504Z"

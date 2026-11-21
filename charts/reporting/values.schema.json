@@ -557,6 +557,14 @@
           "title": "extraIngress",
           "type": "array"
         },
+        "extraIngressFrom": {
+          "description": "Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart\nadds its own helm test pod here).",
+          "items": {
+            "type": "string"
+          },
+          "title": "extraIngressFrom",
+          "type": "array"
+        },
         "gatewayNamespace": {
           "default": "tools",
           "description": "Namespace where Traefik runs",
@@ -569,6 +577,27 @@
           "required": [],
           "title": "ingressControllerLabels",
           "type": "object"
+        },
+        "ingressFrom": {
+          "description": "In-namespace workloads (app.kubernetes.io/name) allowed to call those ports, besides the\ningress controller and this chart's own pods (helm test). `[]`: no module calls it directly. Remove the key\n(set it to null) to fall back to the namespace-wide rule.",
+          "items": {
+            "type": "string"
+          },
+          "title": "ingressFrom",
+          "type": "array"
+        },
+        "ingressPorts": {
+          "description": "TCP ports open to the ingress controller and the in-namespace callers below.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              }
+            ],
+            "required": []
+          },
+          "title": "ingressPorts",
+          "type": "array"
         },
         "observabilityNamespace": {
           "default": "monitoring",
@@ -588,6 +617,7 @@
       "required": [
         "enabled",
         "gatewayNamespace",
+        "ingressPorts",
         "observabilityNamespace",
         "extraIngress",
         "extraEgress",

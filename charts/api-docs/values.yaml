@@ -85,11 +85,11 @@ securityContext:
   seccompProfile:
     type: RuntimeDefault
   allowPrivilegeEscalation: false
-  # readOnlyRootFilesystem intentionally NOT set here: swagger-ui's docker-entrypoint.d scripts
-  # rewrite config directly into files under the nginx docroot (/usr/share/nginx/html) at
-  # container startup from env vars — making root read-only needs that path (plus nginx's own
-  # /var/cache/nginx, /var/run) as additional writable mounts, untested here. Revisit with those
-  # mounts added rather than guessing at exactly what swagger-ui's entrypoint touches.
+  # swagger-ui's docker-entrypoint.d scripts rewrite files at every start: the docroot
+  # (swagger-initializer.js, the .gz copies), /etc/nginx/conf.d and /etc/nginx/templates (envsubst,
+  # CORS/embedding toggles), plus nginx's /var/cache/nginx, /run (pid) and /tmp. Each is an emptyDir
+  # (`volumes` below); the image's own content is copied into them first by `initContainers`.
+  readOnlyRootFilesystem: true
 
 # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
@@ -173,13 +173,61 @@ volumes:
   - name: swagger-config
     configMap:
       name: '{{ include "chart-libs.fullname" . }}-swagger-config'
+  # Writable paths for the read-only root filesystem (see securityContext above).
+  - name: html
+    emptyDir: {}
+  - name: nginx-conf
+    emptyDir: {}
+  - name: nginx-templates
+    emptyDir: {}
+  - name: nginx-cache
+    emptyDir: {}
+  - name: run
+    emptyDir: {}
+  - name: tmp
+    emptyDir: {}
 
 # -- Additional volumeMounts on the output Deployment definition.
 volumeMounts:
+  - name: html
+    mountPath: /usr/share/nginx/html
   - name: swagger-config
     mountPath: /usr/share/nginx/html/swagger-config.yaml
     subPath: swagger-config.yaml
     readOnly: true
+  - name: nginx-conf
+    mountPath: /etc/nginx/conf.d
+  - name: nginx-templates
+    mountPath: /etc/nginx/templates
+  - name: nginx-cache
+    mountPath: /var/cache/nginx
+  - name: run
+    mountPath: /run
+  - name: tmp
+    mountPath: /tmp
+
+# -- Init containers (a template string, rendered with `tpl`). The default copies the image's
+# docroot and nginx config into the writable emptyDirs above, so the read-only root filesystem
+# still starts with the content swagger-ui ships.
+initContainers: |
+  - name: stage-writable-paths
+    image: {{ include "chart-libs.image" (dict "imageRoot" .Values.image "context" $) | quote }}
+    imagePullPolicy: {{ .Values.image.pullPolicy }}
+    command:
+      - sh
+      - -c
+      - cp -a /usr/share/nginx/html/. /stage/html/ && cp -a /etc/nginx/conf.d/. /stage/conf.d/ && cp -a /etc/nginx/templates/. /stage/templates/
+    securityContext:
+      {{- toYaml .Values.securityContext | nindent 4 }}
+    resources:
+      {{- toYaml .Values.resources | nindent 4 }}
+    volumeMounts:
+      - name: html
+        mountPath: /stage/html
+      - name: nginx-conf
+        mountPath: /stage/conf.d
+      - name: nginx-templates
+        mountPath: /stage/templates
 
 nodeSelector: {}
 
@@ -203,7 +251,32 @@ env:
     value: swagger-config.yaml
 envFrom: []
 
+# -- Templates (under templates/, without .yaml) whose rendered content is hashed into a pod
+# annotation, so a change rolls the pods. The Swagger config is mounted with subPath, which never
+# receives live updates: without this a changed URL list would wait for the next unrelated restart.
+extraConfigChecksums:
+  - configmap-swagger-config
+
 # -- Swagger UI configuration (ref: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)
+# -- API definitions shown in the Swagger UI's selector, keyed by module and listed in key order
+# after any `swaggerUI.urls`. Each: `name`, `url` (both rendered with `tpl`) and optional `enabled`
+# (default true). A map, unlike `swaggerUI.urls`, so a later values layer can switch one entry off,
+# for instance for a module that is not installed, without restating the whole list.
+# @schema
+# type: object
+# additionalProperties:
+#   type: object
+#   properties:
+#     name:
+#       type: string
+#     url:
+#       type: string
+#     enabled:
+#       type: boolean
+#   required: [name, url]
+# @schema
+apiDefinitions: {}
+
 swaggerUI:
   # -- An array of API definition objects used by Topbar plugin. When used and Topbar plugin is enabled, the url parameter will not be parsed. Names and URLs must be unique among all items in this array, since they’re used as identifiers.
   urls: []
@@ -224,6 +297,26 @@ networkPolicy:
   # additionalProperties: true
   # @schema
   ingressControllerLabels: {}
+  # -- TCP ports open to the ingress controller and the in-namespace callers below.
+  ingressPorts:
+    - 8080
+  # -- In-namespace workloads (app.kubernetes.io/name) allowed to call those ports, besides the
+  # ingress controller and this chart's own pods (helm test). `[]`: only the gateway serves it. Remove the key
+  # (set it to null) to fall back to the namespace-wide rule.
+  # @schema
+  # type: array
+  # items:
+  #   type: string
+  # @schema
+  ingressFrom: []
+  # -- Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart
+  # adds its own helm test pod here).
+  # @schema
+  # type: array
+  # items:
+  #   type: string
+  # @schema
+  extraIngressFrom: []
   # -- Namespace the observability/OTel collector runs in
   observabilityNamespace: monitoring
   # -- Additional raw ingress rules

@@ -141,6 +141,8 @@ graph TB
 1. **`tools` Namespace**: Holds all external dependencies (3PP tools). Relies on third-party Helm repositories like Bitnami (Postgres, Valkey) and Traefik; RabbitMQ runs from the local chart in `overrides/rabbitmq/chart` (official image).
 2. **`labs64io` Namespace**: Where all proprietary Labs64 domains execute. All services route internal traffic through the common gateways.
 
+Both namespaces carry Pod Security Admission labels, set by `just install-tools` / `just install-apps`: `labs64io` enforces `restricted` (charts, helm tests, migration Jobs and test fixtures all comply), `tools` enforces `baseline` and warns/audits on `restricted`. Shared data stores accept connections from the `labs64io` namespace only (RabbitMQ: from AuditFlow only), and each module's own NetworkPolicy names its in-namespace callers (`networkPolicy.ingressFrom`). The Swagger UI lists an API only while its module is installed (`apiDefinitions`, driven by the same state values as the optional checkout/reporting releases).
+
 Reference versions: the shared local toolset (`just install-tools`) runs exactly the chart
 versions pinned in `helmfile.yaml.gotmpl` — the single place they are written; print one with
 `just show-chart-version postgresql` (or `redis`, `traefik`, …). RabbitMQ is the official image via

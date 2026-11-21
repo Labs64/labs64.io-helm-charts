@@ -45,9 +45,18 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: "{{ include "chart-libs.fullname" . }}-ui-test-connection"
+  # Spelled out rather than chart-libs.labels, which already carries the backend's
+  # app.kubernetes.io/name: a second name key would be a duplicate. These match the UI's
+  # selector labels, so the UI NetworkPolicy admits the test pod as one of its own.
   labels:
-    {{- include "chart-libs.labels" . | nindent 4 }}
+    helm.sh/chart: {{ include "chart-libs.chart" . }}
     app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- if .Chart.AppVersion }}
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    {{- end }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: "Labs64.IO"
     app.kubernetes.io/component: ui
   annotations:
     "helm.sh/hook": test

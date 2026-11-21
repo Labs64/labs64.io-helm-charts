@@ -182,6 +182,14 @@
           "title": "enabled",
           "type": "boolean"
         },
+        "extraIngressFrom": {
+          "description": "Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart\nadds its own helm test pod here).",
+          "items": {
+            "type": "string"
+          },
+          "title": "extraIngressFrom",
+          "type": "array"
+        },
         "gatewayNamespace": {
           "default": "tools",
           "title": "gatewayNamespace",
@@ -194,6 +202,30 @@
           "title": "ingressControllerLabels",
           "type": "object"
         },
+        "ingressFrom": {
+          "description": "In-namespace workloads (app.kubernetes.io/name) that ask the PDP for decisions, besides this\nchart's own pods (helm test). A module that starts calling Cerbos must be added here, next to the\negress rule it declares to authz-pdp. Remove the key (set it to null) to fall back to the\nnamespace-wide rule.",
+          "items": {
+            "type": "string"
+          },
+          "title": "ingressFrom",
+          "type": "array"
+        },
+        "ingressPorts": {
+          "description": "TCP ports open to the in-namespace callers below: HTTP (authgateway) and gRPC (",
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "required": []
+          },
+          "title": "ingressPorts",
+          "type": "array"
+        },
         "observabilityNamespace": {
           "default": "monitoring",
           "description": "Namespace the observability/OTel collector runs in",
@@ -204,6 +236,7 @@
       "required": [
         "enabled",
         "gatewayNamespace",
+        "ingressPorts",
         "observabilityNamespace"
       ],
       "title": "networkPolicy",

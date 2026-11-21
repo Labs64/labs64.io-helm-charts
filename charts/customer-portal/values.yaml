@@ -63,7 +63,8 @@ ui:
     capabilities:
       drop:
         - ALL
-    readOnlyRootFilesystem: false
+    # nginx-unprivileged writes only under /tmp, which chart-libs mounts as an emptyDir.
+    readOnlyRootFilesystem: true
   
   # -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
   service:
@@ -148,6 +149,15 @@ ui:
     # additionalProperties: true
     # @schema
     ingressControllerLabels: {}
+    # -- In-namespace workloads (app.kubernetes.io/name) allowed to reach the UI port, besides the
+    # ingress controller and this UI's own pods (helm test). `[]`: only the gateway serves it. Remove
+    # the key (set it to null) to fall back to the namespace-wide rule.
+    # @schema
+    # type: array
+    # items:
+    #   type: string
+    # @schema
+    ingressFrom: []
     # -- Namespace the observability/OTel collector runs in
     observabilityNamespace: monitoring
     # -- Additional raw ingress rules

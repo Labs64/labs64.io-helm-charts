@@ -13,6 +13,15 @@ networkPolicy:
 # @schema
 authgateway:
   enabled: true
+  # The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's
+  # health endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  networkPolicy:
+    extraIngressFrom:
+      - labs64io-ecosystem
   # Leave oidc.discoveryUrl unset to use the chart default (Keycloak). It is not set
   # here because the mock-oidc Service resolves as mock-oidc.<namespace>.svc.cluster.local
   # and the namespace is not knowable at chart-authoring time — install.sh sets it
@@ -23,6 +32,15 @@ authgateway:
 # @schema
 authz-pdp:
   enabled: true
+  # The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's
+  # health endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  networkPolicy:
+    extraIngressFrom:
+      - labs64io-ecosystem
 # @schema
 # type: object
 # additionalProperties: true
@@ -45,6 +63,15 @@ checkout:
 # @schema
 payment-gateway:
   enabled: true
+  # The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's
+  # health endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  networkPolicy:
+    extraIngressFrom:
+      - labs64io-ecosystem
   # The bundled PostgreSQL above creates this database at initdb; the app runs its
   # own Flyway. See the migrationJob comment in charts/payment-gateway/values.yaml.
   # @schema
@@ -59,12 +86,30 @@ payment-gateway:
 # @schema
 auditflow:
   enabled: true
+  # The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's
+  # health endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  networkPolicy:
+    extraIngressFrom:
+      - labs64io-ecosystem
 # @schema
 # type: object
 # additionalProperties: true
 # @schema
 api-docs:
   enabled: true
+  # The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's
+  # health endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  networkPolicy:
+    extraIngressFrom:
+      - labs64io-ecosystem
 # @schema
 # type: object
 # additionalProperties: true
@@ -242,6 +287,15 @@ rabbitmq:
 # @schema
 reporting:
   enabled: false
+  # The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's
+  # health endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.
+  # @schema
+  # type: object
+  # additionalProperties: true
+  # @schema
+  networkPolicy:
+    extraIngressFrom:
+      - labs64io-ecosystem
 
 # @schema
 # type: object

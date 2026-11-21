@@ -165,14 +165,25 @@ def test_flags_a_zero_valued_probe_field(field):
     assert any(f.rule == "invalid-probe" for f in findings)
 
 
-def test_checks_init_containers_too():
+def test_checks_native_sidecar_init_containers_too():
     doc = yaml.safe_load(deployment_with_probes())
     container = doc["spec"]["template"]["spec"]["containers"].pop()
+    container["restartPolicy"] = "Always"
     doc["spec"]["template"]["spec"]["initContainers"] = [container]
     del doc["spec"]["template"]["spec"]["initContainers"][0]["livenessProbe"]
     findings = []
     lint.check_probes(Path("somechart"), yaml.dump(doc), findings)
     assert any(f.rule == "missing-probe" for f in findings)
+
+
+def test_run_to_completion_init_container_needs_no_probes():
+    # Kubernetes rejects liveness/readiness probes on an init container without
+    # restartPolicy: Always, so demanding them would forbid every such init container.
+    doc = yaml.safe_load(deployment_with_probes())
+    doc["spec"]["template"]["spec"]["initContainers"] = [{"name": "stage", "command": ["true"]}]
+    findings = []
+    lint.check_probes(Path("somechart"), yaml.dump(doc), findings)
+    assert findings == []
 
 
 # --- workload detection -----------------------------------------------------------

@@ -74,6 +74,27 @@ _uninstall-layer layer:
             helm uninstall "$name" --namespace "$namespace" 2>/dev/null || true
         done
 
+# Pod Security Admission labels. The modules' namespace enforces `restricted`: every chart, helm
+# test, migration Job and test fixture complies. `tools` enforces `baseline` and only warns and
+# audits on `restricted`, because an identity provider switched in there (Keycloak) is a
+# third-party chart this repository does not check against it. `monitoring` stays unlabelled:
+# the collector agent DaemonSet needs host access.
+#
+# Create the apps and tools namespaces if missing and set their Pod Security Admission labels
+[private]
+_pod-security:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    label() {
+        kubectl get namespace "$1" >/dev/null 2>&1 || kubectl create namespace "$1" >/dev/null
+        kubectl label --overwrite namespace "$1" \
+            pod-security.kubernetes.io/enforce="$2" \
+            pod-security.kubernetes.io/warn=restricted \
+            pod-security.kubernetes.io/audit=restricted >/dev/null
+    }
+    label {{NAMESPACE_TOOLS}} baseline
+    label {{NAMESPACE_LABS64IO}} restricted
+
 # Show pods, services and ingresses in the apps, tools and monitoring namespaces
 [group('local stack')]
 status:

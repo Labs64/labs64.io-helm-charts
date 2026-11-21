@@ -254,6 +254,13 @@ releases:
       - ./charts/api-docs/values.yaml
       - ./overrides/global-values.yaml
       - ./overrides/api-docs/values.{{ .Environment.Name }}.yaml
+      # List an API only when its module is installed, decided by the same state values as the
+      # checkout and reporting releases below (`just install-app` and `just install-apps` pass them).
+      - apiDefinitions:
+          checkout:
+            enabled: {{ .Values | get "installCheckout" false }}
+          reporting:
+            enabled: {{ .Values | get "installReporting" false }}
     labels:
       layer: apps
     needs:

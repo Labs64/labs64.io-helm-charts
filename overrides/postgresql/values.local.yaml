@@ -1,3 +1,11 @@
+# Pinned by digest (the multi-arch image index): docker.io/bitnami/postgresql publishes only
+# `latest`, which is mutable. A re-pull that moved the PostgreSQL major under the existing PVC
+# would refuse to start on the old data directory. Renovate moves the digest (the annotation
+# above it; labs64.io-workspace default.json).
+image:
+  # renovate-digest: datasource=docker depName=docker.io/bitnami/postgresql version=latest
+  digest: "sha256:f6165e04250e7db79db6f7edaf894710573d12bd2310cac85b1c8109f79e0fdb"
+
 auth:
   postgresPassword: postgres
   username: labs64
@@ -7,3 +15,13 @@ primary:
   persistence:
     enabled: true
     size: 1Gi
+
+  # Only the Labs64.IO modules' namespace may connect (the chart default admits every pod of every
+  # namespace). Which module reaches which database is narrowed further by each module's own
+  # egress policy (database-per-service); the namespace rule also admits their migration Jobs,
+  # which carry no workload labels. In-release pods (the chart's own) stay allowed.
+  networkPolicy:
+    allowExternal: false
+    addExternalClientAccess: false
+    ingressNSMatchLabels:
+      kubernetes.io/metadata.name: labs64io

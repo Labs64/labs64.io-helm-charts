@@ -273,6 +273,26 @@ networkPolicy:
   # additionalProperties: true
   # @schema
   ingressControllerLabels: {}
+  # -- TCP ports open to the ingress controller and the in-namespace callers below.
+  ingressPorts:
+    - 8080
+  # -- In-namespace workloads (app.kubernetes.io/name) allowed to call those ports, besides the
+  # ingress controller and this chart's own pods (helm test). `[]`: no module calls it directly. Remove the key
+  # (set it to null) to fall back to the namespace-wide rule.
+  # @schema
+  # type: array
+  # items:
+  #   type: string
+  # @schema
+  ingressFrom: []
+  # -- Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart
+  # adds its own helm test pod here).
+  # @schema
+  # type: array
+  # items:
+  #   type: string
+  # @schema
+  extraIngressFrom: []
   # -- Namespace the observability/OTel collector runs in
   observabilityNamespace: monitoring
   # -- Additional raw ingress rules

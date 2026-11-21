@@ -55,6 +55,10 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.initContainers }}
+      initContainers:
+        {{- tpl .Values.initContainers $ | nindent 8 }}
+      {{- end }}
       containers:
         # Main Application Container
         - name: {{ .Chart.Name }}

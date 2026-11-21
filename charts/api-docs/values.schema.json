@@ -8,6 +8,30 @@
       "title": "affinity",
       "type": "object"
     },
+    "apiDefinitions": {
+      "additionalProperties": {
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "url"
+        ],
+        "type": "object"
+      },
+      "description": "Swagger UI configuration (ref: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)\nAPI definitions shown in the Swagger UI's selector, keyed by module and listed in key order\nafter any `swaggerUI.urls`. Each: `name`, `url` (both rendered with `tpl`) and optional `enabled`\n(default true). A map, unlike `swaggerUI.urls`, so a later values layer can switch one entry off,\nfor instance for a module that is not installed, without restating the whole list.",
+      "required": [],
+      "title": "apiDefinitions",
+      "type": "object"
+    },
     "autoscaling": {
       "additionalProperties": false,
       "description": "This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/",
@@ -118,6 +142,19 @@
       ],
       "title": "externalSecrets",
       "type": "object"
+    },
+    "extraConfigChecksums": {
+      "description": "Templates (under templates/, without .yaml) whose rendered content is hashed into a pod\nannotation, so a change rolls the pods. The Swagger config is mounted with subPath, which never\nreceives live updates: without this a changed URL list would wait for the next unrelated restart.",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          }
+        ],
+        "required": []
+      },
+      "title": "extraConfigChecksums",
+      "type": "array"
     },
     "fullnameOverride": {
       "default": "",
@@ -244,6 +281,12 @@
       "title": "imagePullSecrets",
       "type": "array"
     },
+    "initContainers": {
+      "default": "- name: stage-writable-paths\n  image: {{ include \"chart-libs.image\" (dict \"imageRoot\" .Values.image \"context\" $) | quote }}\n  imagePullPolicy: {{ .Values.image.pullPolicy }}\n  command:\n    - sh\n    - -c\n    - cp -a /usr/share/nginx/html/. /stage/html/ \u0026\u0026 cp -a /etc/nginx/conf.d/. /stage/conf.d/ \u0026\u0026 cp -a /etc/nginx/templates/. /stage/templates/\n  securityContext:\n    {{- toYaml .Values.securityContext | nindent 4 }}\n  resources:\n    {{- toYaml .Values.resources | nindent 4 }}\n  volumeMounts:\n    - name: html\n      mountPath: /stage/html\n    - name: nginx-conf\n      mountPath: /stage/conf.d\n    - name: nginx-templates\n      mountPath: /stage/templates\n",
+      "description": "Init containers (a template string, rendered with `tpl`). The default copies the image's\ndocroot and nginx config into the writable emptyDirs above, so the read-only root filesystem\nstill starts with the content swagger-ui ships.",
+      "title": "initContainers",
+      "type": "string"
+    },
     "livenessProbe": {
       "additionalProperties": false,
       "description": "This is to setup the liveness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
@@ -323,6 +366,14 @@
           "title": "extraIngress",
           "type": "array"
         },
+        "extraIngressFrom": {
+          "description": "Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart\nadds its own helm test pod here).",
+          "items": {
+            "type": "string"
+          },
+          "title": "extraIngressFrom",
+          "type": "array"
+        },
         "gatewayNamespace": {
           "default": "tools",
           "description": "Namespace where Traefik runs",
@@ -336,6 +387,27 @@
           "title": "ingressControllerLabels",
           "type": "object"
         },
+        "ingressFrom": {
+          "description": "In-namespace workloads (app.kubernetes.io/name) allowed to call those ports, besides the\ningress controller and this chart's own pods (helm test). `[]`: only the gateway serves it. Remove the key\n(set it to null) to fall back to the namespace-wide rule.",
+          "items": {
+            "type": "string"
+          },
+          "title": "ingressFrom",
+          "type": "array"
+        },
+        "ingressPorts": {
+          "description": "TCP ports open to the ingress controller and the in-namespace callers below.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              }
+            ],
+            "required": []
+          },
+          "title": "ingressPorts",
+          "type": "array"
+        },
         "observabilityNamespace": {
           "default": "monitoring",
           "description": "Namespace the observability/OTel collector runs in",
@@ -346,6 +418,7 @@
       "required": [
         "enabled",
         "gatewayNamespace",
+        "ingressPorts",
         "observabilityNamespace",
         "extraIngress"
       ],
@@ -584,6 +657,12 @@
           "title": "capabilities",
           "type": "object"
         },
+        "readOnlyRootFilesystem": {
+          "default": true,
+          "description": "swagger-ui's docker-entrypoint.d scripts rewrite files at every start: the docroot\n(swagger-initializer.js, the .gz copies), /etc/nginx/conf.d and /etc/nginx/templates (envsubst,\nCORS/embedding toggles), plus nginx's /var/cache/nginx, /run (pid) and /tmp. Each is an emptyDir\n(`volumes` below); the image's own content is copied into them first by `initContainers`.",
+          "title": "readOnlyRootFilesystem",
+          "type": "boolean"
+        },
         "runAsGroup": {
           "default": 1064,
           "title": "runAsGroup",
@@ -621,7 +700,8 @@
         "runAsUser",
         "runAsGroup",
         "seccompProfile",
-        "allowPrivilegeEscalation"
+        "allowPrivilegeEscalation",
+        "readOnlyRootFilesystem"
       ],
       "title": "securityContext",
       "type": "object"
@@ -690,7 +770,6 @@
     },
     "swaggerUI": {
       "additionalProperties": false,
-      "description": "Swagger UI configuration (ref: https://swagger.io/docs/open-source-tools/swagger-ui/usage/configuration/)",
       "properties": {
         "dom_id": {
           "default": "#swagger-ui",
@@ -744,6 +823,26 @@
             "additionalProperties": false,
             "properties": {
               "mountPath": {
+                "default": "/usr/share/nginx/html",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "html",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
                 "default": "/usr/share/nginx/html/swagger-config.yaml",
                 "title": "mountPath",
                 "type": "string"
@@ -769,6 +868,106 @@
               "mountPath",
               "subPath",
               "readOnly"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/etc/nginx/conf.d",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "nginx-conf",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/etc/nginx/templates",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "nginx-templates",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/var/cache/nginx",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "nginx-cache",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/run",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "run",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "mountPath": {
+                "default": "/tmp",
+                "title": "mountPath",
+                "type": "string"
+              },
+              "name": {
+                "default": "tmp",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "mountPath"
             ],
             "type": "object"
           }
@@ -811,6 +1010,132 @@
               "configMap"
             ],
             "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "emptyDir": {
+                "additionalProperties": false,
+                "required": [],
+                "title": "emptyDir",
+                "type": "object"
+              },
+              "name": {
+                "default": "html",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "emptyDir"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "emptyDir": {
+                "additionalProperties": false,
+                "required": [],
+                "title": "emptyDir",
+                "type": "object"
+              },
+              "name": {
+                "default": "nginx-conf",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "emptyDir"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "emptyDir": {
+                "additionalProperties": false,
+                "required": [],
+                "title": "emptyDir",
+                "type": "object"
+              },
+              "name": {
+                "default": "nginx-templates",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "emptyDir"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "emptyDir": {
+                "additionalProperties": false,
+                "required": [],
+                "title": "emptyDir",
+                "type": "object"
+              },
+              "name": {
+                "default": "nginx-cache",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "emptyDir"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "emptyDir": {
+                "additionalProperties": false,
+                "required": [],
+                "title": "emptyDir",
+                "type": "object"
+              },
+              "name": {
+                "default": "run",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "emptyDir"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "emptyDir": {
+                "additionalProperties": false,
+                "required": [],
+                "title": "emptyDir",
+                "type": "object"
+              },
+              "name": {
+                "default": "tmp",
+                "title": "name",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "emptyDir"
+            ],
+            "type": "object"
           }
         ],
         "required": []
@@ -843,12 +1168,14 @@
     "podDisruptionBudget",
     "volumes",
     "volumeMounts",
+    "initContainers",
     "nodeSelector",
     "tolerations",
     "affinity",
     "topologySpreadConstraints",
     "env",
     "envFrom",
+    "extraConfigChecksums",
     "swaggerUI",
     "networkPolicy"
   ],

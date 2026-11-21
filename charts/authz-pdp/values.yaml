@@ -97,6 +97,32 @@ networkPolicy:
   # additionalProperties: true
   # @schema
   ingressControllerLabels: {}
+  # -- TCP ports open to the in-namespace callers below: HTTP (authgateway) and gRPC (@Authorize SDK).
+  ingressPorts:
+    - 3592
+    - 3593
+  # -- In-namespace workloads (app.kubernetes.io/name) that ask the PDP for decisions, besides this
+  # chart's own pods (helm test). A module that starts calling Cerbos must be added here, next to the
+  # egress rule it declares to authz-pdp. Remove the key (set it to null) to fall back to the
+  # namespace-wide rule.
+  # @schema
+  # type: array
+  # items:
+  #   type: string
+  # @schema
+  ingressFrom:
+    - authgateway
+    - auditflow
+    - payment-gateway
+    - checkout
+  # -- Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart
+  # adds its own helm test pod here).
+  # @schema
+  # type: array
+  # items:
+  #   type: string
+  # @schema
+  extraIngressFrom: []
   # -- Namespace the observability/OTel collector runs in
   observabilityNamespace: monitoring
 

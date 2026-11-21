@@ -37,7 +37,7 @@ Public Helm charts for deploying all Labs64.IO modules to Kubernetes. Each modul
 7. **Chart authoring checklist** (`just lint-authoring` / `scripts/lint-chart-authoring.py`, chart CI) — four rules, each a running gate, not prose:
    - No module chart may declare `kind: Ingress` directly — only `chart-libs.gateway-routes` may (it hard-fails the render if a non-public route would be served through it, since Ingress has no ForwardAuth/Cerbos equivalent).
    - Every `subPath` volume mount must be in `scripts/chart-authoring-allowlist.yaml` with a reason — a subPath mount does not receive live ConfigMap/Secret updates (no kubelet periodic sync).
-   - Every container in a rendered Deployment needs both a `livenessProbe` and a `readinessProbe`, each with `periodSeconds > 0` and `failureThreshold > 0`.
+   - Every long-running container in a rendered Deployment (its containers and any native-sidecar init container, `restartPolicy: Always`) needs both a `livenessProbe` and a `readinessProbe`, each with `periodSeconds > 0` and `failureThreshold > 0`. An init container that runs to completion takes none: Kubernetes rejects probes on it.
    - Every chart with a long-running workload (backend and/or UI) must declare a `networkPolicy` (or `ui.networkPolicy`) key, and its egress rules must never be an allow-all — see the network-policy guardrails (7 and 9) in the workspace `AGENTS.md`. Umbrella charts (no workload of their own) and one-shot Job charts (e.g. `preflight`, which needs broad connectivity by design) are exempt.
 8. **Never render an image reference by hand** — always
    `{{ include "chart-libs.image" (dict "imageRoot" .Values.<path>.image "context" $) }}`, including

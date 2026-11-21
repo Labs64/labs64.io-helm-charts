@@ -1,9 +1,23 @@
 # Group `local apps` (docs/justfiles.md in labs64.io-workspace). Imported by the justfile.
 
-# Install all Labs64.IO apps
+# Install all Labs64.IO apps (and keep an already installed checkout or reporting in step)
 [group('local apps')]
-install-apps:
-    helmfile -e {{ENV}} $(just _observability-args) apply -l layer=apps
+install-apps: _pod-security
+    helmfile -e {{ENV}} $(just _observability-args) $(just _optional-app-args) apply -l layer=apps
+
+# Checkout and Reporting are not in the default set (helmfile.yaml.gotmpl). Once installed they
+# stay selected: every apply passes their state value, so install-apps keeps them current and the
+# Swagger UI (api-docs) keeps listing exactly the APIs that are installed.
+#
+# Print the Helmfile flags that keep the installed optional apps (checkout, reporting) selected
+[private]
+_optional-app-args:
+    #!/usr/bin/env bash
+    for app in checkout reporting; do
+        if helm status "labs64io-${app}" --namespace {{NAMESPACE_LABS64IO}} >/dev/null 2>&1; then
+            echo "--state-values-set install${app^}=true"
+        fi
+    done
 
 # Uninstall all Labs64.IO apps
 [group('local apps')]
@@ -15,7 +29,7 @@ uninstall-apps: (_uninstall-layer "apps")
 #
 # Install one Labs64.IO app the way install-apps does, optionally with an extra values file
 [group('local apps')]
-install-app app extra_values="":
+install-app app extra_values="": _pod-security
     #!/usr/bin/env bash
     set -euo pipefail
     echo "=== Installing Labs64.IO App: {{app}} ==="
@@ -29,7 +43,8 @@ install-app app extra_values="":
       echo "Using additional override: $extra_values"
       ARGS+=("--values" "$extra_values")
     fi
-    STATE_ARGS=()
+    # Optional apps already installed stay selected (see _optional-app-args).
+    read -r -a STATE_ARGS <<< "$(just _optional-app-args | tr '\n' ' ')"
     if [ "{{app}}" = "checkout" ]; then
       # Not GA, so not in the default set (helmfile.yaml.gotmpl); asking for it by name installs it.
       STATE_ARGS+=("--state-values-set" "installCheckout=true")
@@ -39,6 +54,11 @@ install-app app extra_values="":
       STATE_ARGS+=("--state-values-set" "installReporting=true")
     fi
     helmfile -e {{ENV}} $(just _observability-args) ${STATE_ARGS[@]+"${STATE_ARGS[@]}"} apply -l name=labs64io-{{app}} ${ARGS[@]+"${ARGS[@]}"}
+    if [ "{{app}}" = "checkout" ] || [ "{{app}}" = "reporting" ]; then
+      # The Swagger UI lists an API only while its module is installed. Applied on its own, so an
+      # extra values file meant for {{app}} never reaches api-docs.
+      helmfile -e {{ENV}} $(just _observability-args) ${STATE_ARGS[@]+"${STATE_ARGS[@]}"} apply -l name=labs64io-api-docs
+    fi
 
 # Point only the existing local Payment Gateway deployment at the host-side PSP stub.
 # The extra values file deep-merges provider-owned Spring configuration and rolls the PG pod.
@@ -71,6 +91,8 @@ disable-payment-gateway-stub:
 [group('local apps')]
 uninstall-app app:
     helm uninstall labs64io-{{app}} --namespace {{NAMESPACE_LABS64IO}} || true
+    # Drop the API from the Swagger UI list again (see install-app).
+    if [ "{{app}}" = "checkout" ] || [ "{{app}}" = "reporting" ]; then helmfile -e {{ENV}} $(just _observability-args) $(just _optional-app-args) apply -l name=labs64io-api-docs; fi
 
 # Render one application exactly as Helmfile would install it, with all value layers
 [group('local apps')]

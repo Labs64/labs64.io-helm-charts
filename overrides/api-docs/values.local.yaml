@@ -20,14 +20,21 @@ gateway:
       pathType: Exact
       redirectTo: /swagger-ui/
 
-# -- Swagger UI Configuration (urls templated via global.domain)
-swaggerUI:
-  urls:
-    - url: http://gateway.{{ .Values.global.domain }}/auditflow/v3/api-docs
-      name: AuditFlow API
-    - url: http://gateway.{{ .Values.global.domain }}/checkout/v3/api-docs
-      name: Checkout API
-    - url: http://gateway.{{ .Values.global.domain }}/payment-gateway/v3/api-docs
-      name: Payment Gateway API
-    - url: http://gateway.{{ .Values.global.domain }}/reporting/v3/api-docs
-      name: Reporting API
+# -- API definitions in the Swagger UI selector (urls templated via global.domain). Checkout and
+# Reporting are not in the default install set: helmfile.yaml.gotmpl switches their entries on with
+# the same state values that install them (installCheckout / installReporting).
+apiDefinitions:
+  auditflow:
+    name: AuditFlow API
+    url: http://gateway.{{ .Values.global.domain }}/auditflow/v3/api-docs
+  checkout:
+    name: Checkout API
+    url: http://gateway.{{ .Values.global.domain }}/checkout/v3/api-docs
+    enabled: false
+  payment-gateway:
+    name: Payment Gateway API
+    url: http://gateway.{{ .Values.global.domain }}/payment-gateway/v3/api-docs
+  reporting:
+    name: Reporting API
+    url: http://gateway.{{ .Values.global.domain }}/reporting/v3/api-docs
+    enabled: false

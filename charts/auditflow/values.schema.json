@@ -1178,6 +1178,14 @@
           "title": "extraIngress",
           "type": "array"
         },
+        "extraIngressFrom": {
+          "description": "Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart\nadds its own helm test pod here).",
+          "items": {
+            "type": "string"
+          },
+          "title": "extraIngressFrom",
+          "type": "array"
+        },
         "gatewayNamespace": {
           "default": "tools",
           "description": "Namespace where Traefik runs",

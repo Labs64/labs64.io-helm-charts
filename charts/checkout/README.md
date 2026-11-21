@@ -1,6 +1,6 @@
 # checkout
 
-![Version: 0.11.27](https://img.shields.io/badge/Version-0.11.27-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.16](https://img.shields.io/badge/AppVersion-0.0.16-informational?style=flat-square)
+![Version: 0.11.28](https://img.shields.io/badge/Version-0.11.28-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.16](https://img.shields.io/badge/AppVersion-0.0.16-informational?style=flat-square)
 
 Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
@@ -21,7 +21,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.10 |
+| file://../chart-libs | chart-libs | 0.8.11 |
 
 ## Values
 
@@ -72,12 +72,15 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | migrationJob.initResources | object | `{}` | Resources for the ensure-db initContainer (a single psql client). @schema type: object additionalProperties: true @schema |
 | migrationJob.resources | object | `{}` | Resources for the migrate container (the application image running Flyway). Defaults to the workload's own `resources` when empty. @schema type: object additionalProperties: true @schema |
 | nameOverride | string | `""` | This is to override the chart name. |
-| networkPolicy | object | `{"egress":[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]}],"enabled":false,"extraEgress":[],"extraIngress":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring","toolsEgress":[{"name":"postgresql","port":5432},{"name":"valkey","port":6379}]}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| networkPolicy | object | `{"egress":[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]}],"enabled":false,"extraEgress":[],"extraIngress":[],"extraIngressFrom":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"ingressFrom":[],"ingressPorts":[8080],"observabilityNamespace":"monitoring","toolsEgress":[{"name":"postgresql","port":5432},{"name":"valkey","port":6379}]}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
 | networkPolicy.egress | list | `[{"ports":[{"port":3593,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"authz-pdp"}}}]}]` | Egress rules enforcing database-per-service isolation. |
 | networkPolicy.extraEgress | list | `[]` | Additional raw egress rules (e.g. VPC-CIDR access to externally-managed data stores) |
 | networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
+| networkPolicy.extraIngressFrom | list | `[]` | Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart adds its own helm test pod here). @schema type: array items:   type: string @schema |
 | networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
+| networkPolicy.ingressFrom | list | `[]` | In-namespace workloads (app.kubernetes.io/name) allowed to call those ports, besides the ingress controller and this chart's own pods (helm test). `[]`: no module calls it directly. Remove the key (set it to null) to fall back to the namespace-wide rule. @schema type: array items:   type: string @schema |
+| networkPolicy.ingressPorts | list | `[8080]` | TCP ports open to the ingress controller and the in-namespace callers below. |
 | networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | networkPolicy.toolsEgress | list | `[{"name":"postgresql","port":5432},{"name":"valkey","port":6379}]` | Tools-namespace destinations this service needs (name + port pairs); rendered as scoped egress rules — NOT a blanket allow to the whole tools namespace — to preserve database-per-service isolation. |
 | nodeSelector | object | `{}` |  |
@@ -144,10 +147,11 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | ui.imagePullSecrets | list | `[]` | This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/ |
 | ui.livenessProbe | object | `{"failureThreshold":3,"httpGet":{"path":"/","port":8080},"initialDelaySeconds":5,"periodSeconds":10,"timeoutSeconds":2}` | Liveness probe for the nginx-unprivileged container serving the built UI. |
 | ui.nameOverride | string | `""` | This is to override the chart name. |
-| ui.networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"observabilityNamespace":"monitoring"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
+| ui.networkPolicy | object | `{"enabled":false,"extraIngress":[],"gatewayNamespace":"tools","ingressControllerLabels":{},"ingressFrom":[],"observabilityNamespace":"monitoring"}` | NetworkPolicy: allow ingress from Traefik and same-namespace pods only (rendered by chart-libs.networkpolicy) |
 | ui.networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | ui.networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | ui.networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
+| ui.networkPolicy.ingressFrom | list | `[]` | In-namespace workloads (app.kubernetes.io/name) allowed to reach the UI port, besides the ingress controller and this UI's own pods (helm test). `[]`: only the gateway serves it. Remove the key (set it to null) to fall back to the namespace-wide rule. @schema type: array items:   type: string @schema |
 | ui.networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | ui.podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | ui.podDisruptionBudget | object | `{"enabled":false,"minAvailable":1}` | PodDisruptionBudget (rendered by chart-libs.pdb) |
@@ -159,7 +163,7 @@ Labs64.IO :: Checkout - Commerce-Ready Platform for Digital Sales Enablement
 | ui.replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | ui.securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | ui.securityContext.capabilities.drop[0] | string | `"ALL"` |  |
-| ui.securityContext.readOnlyRootFilesystem | bool | `false` |  |
+| ui.securityContext.readOnlyRootFilesystem | bool | `true` |  |
 | ui.service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | ui.service.port | int | `8080` | This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports Non-privileged port served by nginx-unprivileged. |
 | ui.service.type | string | `"ClusterIP"` | This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types |

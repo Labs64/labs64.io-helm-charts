@@ -361,6 +361,14 @@
               "title": "ingressControllerLabels",
               "type": "object"
             },
+            "ingressFrom": {
+              "description": "In-namespace workloads (app.kubernetes.io/name) allowed to reach the UI port, besides the\ningress controller and this UI's own pods (helm test). `[]`: only the gateway serves it. Remove\nthe key (set it to null) to fall back to the namespace-wide rule.",
+              "items": {
+                "type": "string"
+              },
+              "title": "ingressFrom",
+              "type": "array"
+            },
             "observabilityNamespace": {
               "default": "monitoring",
               "description": "Namespace the observability/OTel collector runs in",
@@ -579,7 +587,8 @@
               "type": "object"
             },
             "readOnlyRootFilesystem": {
-              "default": false,
+              "default": true,
+              "description": "nginx-unprivileged writes only under /tmp, which chart-libs mounts as an emptyDir.",
               "title": "readOnlyRootFilesystem",
               "type": "boolean"
             }

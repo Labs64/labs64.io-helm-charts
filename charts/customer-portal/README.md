@@ -1,6 +1,6 @@
 # customer-portal
 
-![Version: 0.10.10](https://img.shields.io/badge/Version-0.10.10-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
+![Version: 0.10.11](https://img.shields.io/badge/Version-0.10.11-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.0.1](https://img.shields.io/badge/AppVersion-0.0.1-informational?style=flat-square)
 
 Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer Portal, built with Vite and Vue 3.
 
@@ -21,7 +21,7 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 
 | Repository | Name | Version |
 |------------|------|---------|
-| file://../chart-libs | chart-libs | 0.8.10 |
+| file://../chart-libs | chart-libs | 0.8.11 |
 
 ## Values
 
@@ -55,6 +55,7 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | ui.networkPolicy.extraIngress | list | `[]` | Additional raw ingress rules |
 | ui.networkPolicy.gatewayNamespace | string | `"tools"` | Namespace where Traefik runs |
 | ui.networkPolicy.ingressControllerLabels | object | `{}` | Ingress controller pod-selector labels; defaults to the internal Traefik standard (app.kubernetes.io/name: traefik) when empty @schema type: object additionalProperties: true @schema |
+| ui.networkPolicy.ingressFrom | list | `[]` | In-namespace workloads (app.kubernetes.io/name) allowed to reach the UI port, besides the ingress controller and this UI's own pods (helm test). `[]`: only the gateway serves it. Remove the key (set it to null) to fall back to the namespace-wide rule. @schema type: array items:   type: string @schema |
 | ui.networkPolicy.observabilityNamespace | string | `"monitoring"` | Namespace the observability/OTel collector runs in |
 | ui.podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. |
 | ui.podDisruptionBudget.enabled | bool | `false` |  |
@@ -67,7 +68,7 @@ Labs64.IO :: Customer Portal UI – Frontend Interface for the Labs64 Customer P
 | ui.replicaCount | int | `1` | This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/ |
 | ui.securityContext.allowPrivilegeEscalation | bool | `false` |  |
 | ui.securityContext.capabilities.drop[0] | string | `"ALL"` |  |
-| ui.securityContext.readOnlyRootFilesystem | bool | `false` |  |
+| ui.securityContext.readOnlyRootFilesystem | bool | `true` |  |
 | ui.service | object | `{"port":8080,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | ui.service.port | int | `8080` | This sets the ports (non-privileged port served by nginx-unprivileged) |
 | ui.service.type | string | `"ClusterIP"` | This sets the service type |

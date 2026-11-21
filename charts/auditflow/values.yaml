@@ -552,6 +552,14 @@ networkPolicy:
   # needs no authentication, so keep this list to the services that publish events directly.
   ingressFrom:
     - payment-gateway
+  # -- Deployment-owned callers appended to `ingressFrom` without restating it (the umbrella chart
+  # adds its own helm test pod here).
+  # @schema
+  # type: array
+  # items:
+  #   type: string
+  # @schema
+  extraIngressFrom: []
   # -- Namespace where Traefik runs
   gatewayNamespace: tools
   # -- Ingress controller pod-selector labels; defaults to the internal Traefik standard

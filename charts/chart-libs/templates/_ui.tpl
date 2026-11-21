@@ -115,6 +115,10 @@ spec:
             - secretRef:
                 name: {{ include "chart-libs.fullname" . }}-ui
           volumeMounts:
+            # nginx-unprivileged keeps its pid and client/proxy temp files under /tmp, the only
+            # path it writes at runtime: with it on an emptyDir the root filesystem can be read-only.
+            - name: tmp
+              mountPath: /tmp
           {{- if and .Values.ui.application .Values.ui.application.runtimeEnv .Values.ui.application.runtimeEnv.enabled }}
             - name: runtime-env
               mountPath: {{ .Values.ui.application.runtimeEnv.path }}
@@ -124,6 +128,8 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
+        - name: tmp
+          emptyDir: {}
       {{- if and .Values.ui.application .Values.ui.application.runtimeEnv .Values.ui.application.runtimeEnv.enabled }}
         - name: runtime-env
           configMap:
@@ -267,7 +273,29 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: traefik
+        {{- if hasKey .Values.ui.networkPolicy "ingressFrom" }}
+        {{- /* Same contract as chart-libs.networkpolicy: the key's presence narrows the rule to
+               the ingress controller (also when it runs in the release namespace), this UI's own
+               pods (the helm test hook carries their labels) and the listed
+               app.kubernetes.io/name values; `[]` admits no other in-namespace caller. */}}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ include "chart-libs.name" . }}-ui
+              app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- range .Values.ui.networkPolicy.ingressFrom }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ . }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.ui.service.port }}
+        {{- else }}
         - podSelector: {}
+        {{- end }}
     - from:
         - namespaceSelector:
             matchLabels:

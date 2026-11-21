@@ -6,4 +6,14 @@ metadata:
     {{- include "chart-libs.labels" . | nindent 4 }}
 data:
   swagger-config.yaml: |-
-{{ tpl (toYaml .Values.swaggerUI) $  | indent 4 }}
+{{- $cfg := deepCopy .Values.swaggerUI }}
+{{- $urls := default (list) $cfg.urls }}
+{{- $defs := default (dict) .Values.apiDefinitions }}
+{{- range $key := keys $defs | sortAlpha }}
+{{- $def := get $defs $key }}
+{{- if or (not (hasKey $def "enabled")) $def.enabled }}
+{{- $urls = append $urls (dict "name" $def.name "url" $def.url) }}
+{{- end }}
+{{- end }}
+{{- $_ := set $cfg "urls" $urls }}
+{{ tpl (toYaml $cfg) $ | indent 4 }}

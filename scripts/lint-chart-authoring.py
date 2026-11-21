@@ -151,14 +151,23 @@ def load_allowlist() -> set[str]:
     return allowed
 
 
-def walk_containers(manifests: str):
+def walk_containers(manifests: str, long_running_only: bool = False):
+    """Yield (deployment name, container) for every container of every Deployment.
+
+    long_running_only leaves out the init containers that run to completion: Kubernetes rejects a
+    liveness or readiness probe on them ("may not be set for init containers without
+    restartPolicy=Always"). Native sidecars (an init container with restartPolicy: Always) run for
+    the pod's lifetime and are kept.
+    """
     for doc in yaml.safe_load_all(manifests):
         if not isinstance(doc, dict) or doc.get("kind") != "Deployment":
             continue
         name = doc.get("metadata", {}).get("name", "<unnamed>")
         pod_spec = (((doc.get("spec") or {}).get("template") or {}).get("spec")) or {}
-        containers = (pod_spec.get("containers") or []) + (pod_spec.get("initContainers") or [])
-        for c in containers:
+        init_containers = pod_spec.get("initContainers") or []
+        if long_running_only:
+            init_containers = [c for c in init_containers if c.get("restartPolicy") == "Always"]
+        for c in (pod_spec.get("containers") or []) + init_containers:
             yield name, c
 
 
@@ -184,7 +193,7 @@ def check_subpath_allowlist(chart_dir: Path, manifests: str, allowed: set[tuple[
 
 
 def check_probes(chart_dir: Path, manifests: str, findings: list[Finding]) -> None:
-    for deployment_name, container in walk_containers(manifests):
+    for deployment_name, container in walk_containers(manifests, long_running_only=True):
         where = f"Deployment/{deployment_name} container={container.get('name')}"
         for probe_kind in ("livenessProbe", "readinessProbe"):
             probe = container.get(probe_kind)

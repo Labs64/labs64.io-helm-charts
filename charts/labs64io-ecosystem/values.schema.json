@@ -9,6 +9,29 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "networkPolicy": {
+          "additionalProperties": true,
+          "description": "The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's\nhealth endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.",
+          "properties": {
+            "extraIngressFrom": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "extraIngressFrom",
+              "type": "array"
+            }
+          },
+          "required": [
+            "extraIngressFrom"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
         }
       },
       "required": [
@@ -24,6 +47,29 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "networkPolicy": {
+          "additionalProperties": true,
+          "description": "The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's\nhealth endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.",
+          "properties": {
+            "extraIngressFrom": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "extraIngressFrom",
+              "type": "array"
+            }
+          },
+          "required": [
+            "extraIngressFrom"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
         }
       },
       "required": [
@@ -40,6 +86,29 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "networkPolicy": {
+          "additionalProperties": true,
+          "description": "The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's\nhealth endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.",
+          "properties": {
+            "extraIngressFrom": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "extraIngressFrom",
+              "type": "array"
+            }
+          },
+          "required": [
+            "extraIngressFrom"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
         }
       },
       "required": [
@@ -55,6 +124,29 @@
           "default": true,
           "title": "enabled",
           "type": "boolean"
+        },
+        "networkPolicy": {
+          "additionalProperties": true,
+          "description": "The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's\nhealth endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.",
+          "properties": {
+            "extraIngressFrom": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "extraIngressFrom",
+              "type": "array"
+            }
+          },
+          "required": [
+            "extraIngressFrom"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
         }
       },
       "required": [
@@ -503,6 +595,29 @@
           ],
           "title": "migrationJob",
           "type": "object"
+        },
+        "networkPolicy": {
+          "additionalProperties": true,
+          "description": "The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's\nhealth endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.",
+          "properties": {
+            "extraIngressFrom": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "extraIngressFrom",
+              "type": "array"
+            }
+          },
+          "required": [
+            "extraIngressFrom"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
         }
       },
       "required": [
@@ -798,6 +913,29 @@
           "default": false,
           "title": "enabled",
           "type": "boolean"
+        },
+        "networkPolicy": {
+          "additionalProperties": true,
+          "description": "The umbrella's own `helm test` pod (templates/tests/test-modules.yaml) probes this module's\nhealth endpoint; its NetworkPolicy names its in-namespace callers, so the probe is added.",
+          "properties": {
+            "extraIngressFrom": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  }
+                ],
+                "required": []
+              },
+              "title": "extraIngressFrom",
+              "type": "array"
+            }
+          },
+          "required": [
+            "extraIngressFrom"
+          ],
+          "title": "networkPolicy",
+          "type": "object"
         }
       },
       "required": [
